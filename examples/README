@@ -1,0 +1,58 @@
+This is a list of the examples in this directory.
+
+Type `make streams' to build them to Ogg/Kate streams interleaved with
+video. This needs a Theora stream named video.theora.ogg in the base
+directory (symlink any Theora to it, 640x480 size should be fine, dark
+background suggested). This also needs either oggz_tools, or a patch
+oggmerge (from ogg-tools). Both of these packages can be found at the
+Xiph website: http://www.xiph.org.
+
+Note that the oggmerge patch found in the diffs directory is needed to
+merge the Kate streams to the Theora streams.
+
+To view the resulting streams, xine needs to be patched as well. The
+patch for xine is also in the diffs directory.
+The Kate decoder can decode a stream back to a form that may be used
+again as input to the encoder (though information like macros, etc,
+will be lost).
+
+Built streams are placed in the built-streams directory.
+
+
+minimal.kate
+  very simple text only stream, no styles, only timing information
+
+karaoke.kate
+  bare bones karaoke-like example, a marker moves above the text
+
+unicode.kate
+  texts in various scripts - needs fonts with characters from several
+  planes in unicode space
+
+demo.kate
+  shows various effects that one can achieve using kate features
+
+path.kate
+  shows how to use text paths
+
+bom.kate
+  a simple example using a BOM (byte order mark)
+
+markup.kate
+  text includes simple in band markup
+
+font.kate
+  shows how to use bitmaps as a custom font
+
+empty.kate
+  nothing in it, should build as an empty stream
+
+utf8test.kate
+  test utf-8 read/write routines with code points around interesting places
+
+kate.kate
+  demonstrates the draw motion semantics
+
+z.kate
+  changes the depth of two texts so they change draw priority
+

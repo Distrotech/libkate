@@ -1,0 +1,44 @@
+/* Tests styles */
+kate {
+  defs {
+    define macro bg background color 128 100 100 100
+    define region { percent position 10 10 size 20 20 }
+    define region { percent position 10 30 size 20 20 }
+    define region { percent position 10 50 size 20 20 }
+    define region { percent position 10 70 size 20 20 }
+    define region { percent position 40 10 size 20 20 }
+    define region { percent position 40 30 size 20 20 }
+    define region { percent position 40 50 size 20 20 }
+    define region { percent position 40 70 size 20 20 }
+    define region { percent position 70 10 size 20 20 }
+    define region { percent position 70 30 size 20 20 }
+    define region { percent position 70 50 size 20 20 }
+    define region { percent position 70 70 size 20 20 }
+    define style { $bg italics }
+    define style { $bg bold }
+    define style { $bg underline }
+    define style { $bg strike }
+    define style { $bg font size 20% }
+    define style { $bg font width 5% font height 10% }
+    define style { $bg italics underline strike }
+    define style { $bg margins 20 5 20 5 }
+    define style { $bg margins 10% 10% 10% 10% }
+    define style { $bg italics bold }
+    define style { }
+    define style { }
+  }
+
+  event 0:0:01 --> 0:1:00 region 0 style 0 text "italics"
+  event 0:0:01 --> 0:1:00 region 1 style 1 text "bold"
+  event 0:0:01 --> 0:1:00 region 2 style 2 text "underline"
+  event 0:0:01 --> 0:1:00 region 3 style 3 text "strike"
+  event 0:0:01 --> 0:1:00 region 4 style 4 text "large"
+  event 0:0:01 --> 0:1:00 region 5 style 5 text "narrow"
+  event 0:0:01 --> 0:1:00 region 6 style 6 text "i/u/s"
+  event 0:0:01 --> 0:1:00 region 7 style 7 text "pixmar"
+  event 0:0:01 --> 0:1:00 region 8 style 8 text "permar"
+  event 0:0:01 --> 0:1:00 region 9 style 9 text "i/b"
+  event 0:0:01 --> 0:1:00 region 10 style 10 text "none"
+  event 0:0:01 --> 0:1:00 region 11 style 11 text "none"
+}
+

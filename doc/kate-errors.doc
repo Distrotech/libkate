@@ -1,0 +1,39 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page errors Error codes
+
+Most of the functions in the libkate API return an integer value so errors
+can be flagged for the client code to check.
+
+When a function succeeds, the return code will usually be 0, or in some
+cases positive, when extra status information needs to be returned. An error
+will be marked by returning a negative value. See each function's documentation
+more information.
+
+It is \b strongly recommended that the client code checks return codes for errors.
+
+These are the error codes that the libkate API can return:
+
+\li \c KATE_E_NOT_FOUND The item that was requested was not found
+\li \c KATE_E_INVALID_PARAMETER A parameter passed to the libkate API was invalid. This can be a NULL parameter, a negative granulepos or time, etc
+\li \c KATE_E_OUT_OF_MEMORY There was not enough memory to perform the requested operation
+\li \c KATE_E_BAD_GRANULE A negative granule was encountered, or a a granule decreased when it should not have
+\li \c KATE_E_INIT An object was initialized twice, or not initialized when it should have been
+\li \c KATE_E_BAD_PACKET An invalid value was read from a Kate packet. This may mean the stream is corrupted, or is not a Kate stream
+\li \c KATE_E_TEXT A text handled by libkate was found to be invalid. This can be an invalid character or sequence of characters in the text, or trying to read and/or write beyond the size of the string.
+\li \c KATE_E_LIMIT An limit was exceeded (a string too long, a pixel value above what can fit in a bitmap's bit depth, etc)
+\li \c KATE_E_VERSION The bitstream version is not supported by this version of libkate
+\li \c KATE_E_NOT_KATE The packet passed the the libkate API is not a Kate packet
+
+
+*/
+

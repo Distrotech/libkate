@@ -1,0 +1,78 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page Format
+
+This page documents the Kate bitstream format.
+
+\section format-overview Overview
+
+The Kate bitstream format consists of a number of sequential packets.
+Packets can be either header packets or data packets. All header packets
+must appear before any data packet.
+
+Header packets must appear in order. Decoding of a data packet is not
+possible until all header packets have been decoded.
+
+Each Kate packet starts with a one byte type. A type with the MSB set
+(eg, between 0x80 and 0xff) indicates a header packet, while a type with
+the MSB cleared (eg, between 0x00 and 0x7f) indicates a data packet.
+All header packets then have the Kate magic, from byte offset 1 to byte
+offset 8 ("kate\0\0\0\0").
+
+Since the ID header must appear first, a Kate stream can be recognized
+by comparing the first nine bytes of the first packet with the signature
+string "\200kate\0\0\0\0".
+
+\section format-ogg-mapping Ogg mapping
+
+The first packet in a Kate stream (always packet type 0x80, the id header
+packet) must be placed on a separate page. The corresponding Ogg packet
+must be marked as beginning of stream (BOS). No other packet may be
+marked as BOS.
+
+All subsequent header packets must be on one or more pages. Each data
+packet must be on a separate page.
+
+The last data packet must be the end of stream packet (packet type 0x7f).
+The corresponding Ogg packet must be marked as end of stream (EOS). There
+can be only one end of stream packet in a Kate stream. No other packet
+may be marked as EOS.
+
+As per the Ogg specification, granule positions must be non decreasing
+within the stream. Header packets have granule position 0.
+
+\section format-detailed Detailed description
+
+Following is a detailed description of the format of each packet type.
+
+Header packets:
+
+\li \ref format_0x80 "0x80 (ID header)"
+\li \ref format_0x81 "0x81 (Vorbis comments)"
+
+Data packets:
+
+\li \ref format_0x01 "0x01 (keepalive packet)"
+\li \ref format_0x7f "0x7f (end packet)"
+
+The remainder of the format will be documented later.
+
+*/
+
+All Kate bitstream packets start with a packet identifier,
+a one byte unsigned integer that identifies the type of the packet.
+All header packets have the first bit set (eg, header packets have
+a type byte between 0x80 and 0xff).
+All data packets have the first bit cleared (eg, data packets have
+a type byte between 0x00 and 0x7f).
+The data following this byte is dependent on the packet type.
+

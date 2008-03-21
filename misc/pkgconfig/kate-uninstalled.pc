@@ -1,0 +1,15 @@
+# This is the pkg-config file for libkate
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../../lib
+includedir=${pcfiledir}/../../include
+
+Name: Kate
+Description: libkate is a codec library for the Kate bitstream format (not installed)
+Version: 0.1.0
+URL: http://wiki.xiph.org/index.php/OggKate
+Requires: ogg >= 1.1.2
+Conflicts: 
+Libs: ${libdir}/libkate.a
+Libs.private: 
+Cflags: -I${includedir}

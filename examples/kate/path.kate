@@ -1,0 +1,43 @@
+kate {
+  defs {
+    timebase 00:01.00
+
+    define curve "c1" {
+      linear 2 points {
+        0.8     1.0
+        0.0     0.2
+      }
+    }
+
+    define curve "c2" {
+      linear 5 points {
+        0.0     1.0
+        0.4     0.6
+        1.0     0.0
+        0.4     0.6
+        0.0     1.0
+      }
+    }
+
+    define curve "whizz_past" { catmull_rom 6 points {  -0.1 -0.1   -0.0 -0.0   0.33 0.66    0.66 0.33   1.0 1.0    1.1 1.1  } }
+
+    define motion "test_motion" {
+      semantics text path section
+      curve "c1" for 50%
+      curve "c2" for 50%
+    }
+
+  }
+
+  event {
+    00:00.00 --> 00:8.00
+    "Thing on a spring"
+    motion {
+      semantics text path
+      mapping frame
+      curve "whizz_past"
+    }
+    motion "test_motion"
+  }
+}
+

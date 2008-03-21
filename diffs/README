@@ -1,0 +1,91 @@
+This is a list of the patches to external software included in this
+distribution, and a rough description of the changes. As they mature,
+and the libkate API and the Kate bitstream format stabilize, they
+will be contributed to the relevant projects.
+
+
+
+ * oggmerge (oggmerge.diff)
+
+This adds support for Kate, Theora, Speex and Skeleton, and adds various
+other little bits.
+
+
+
+ * MPlayer (mplayer-svn.diff)
+
+This adds support for multiple Kate streams multiplexed alongside any
+audio and video. Kate streams can be selected at runtime.
+There is no support for Kate advanced features such as regions, styles,
+and motions, only pure text is extracted and passed to the subtitle code.
+In band markup is ignored.
+It demuxes and uses Kate streams in both Ogg and Matroska containers.
+
+
+
+ * xine (xine-lib-1.1.9.1-with-kate.diff)
+
+This adds support for multiple Kate streams multiplexed alongside any
+audio and video. Kate streams can be selected at runtime.
+There is experimental support for almost everything Kate supports (as
+xine is my testbed).
+In band markup is parsed and tracked, but most of it is ignored.
+
+
+
+ * oggsplit (oggsplit.diff)
+
+This adds support for Kate bitstreams.
+
+
+
+ * liboggz (oggz_kate.diff)
+
+This adds support for Kate bitstreams.
+
+
+
+ * file(1) (magic.diff)
+
+This adds magic for Kate bitstreams, reporting bitstream version, character
+encoding, language, and category.
+
+
+
+ * ogginfo (vorbis-tools-1.2.0-with-kate.diff)
+
+This adds support for Kate bitstreams.
+
+
+
+ * ffmpeg2theora (ffmpeg2theora-svn-kate.diff)
+
+This allows creating multiplexed Kate streams from .srt files.
+
+
+
+ * icecast 2 (icecast-2.3.1-with-kate.diff)
+
+This adds support for Kate bitstreams.
+
+
+
+ * libshout (libshout-2.2.2-with-kate.diff)
+
+This adds support for Kate bitstreams.
+
+
+
+ * mkvtoolnix (mkvtoolnix-2.1.0-kate.diff)
+
+This allows Kate streams to be muxed in Matroska streams.
+
+
+
+ * VLC (vlc-with-kate.diff)
+
+This adds text only Kate decoding support (eg, no styles, regions, or
+motions support).
+It demuxes and uses Kate streams in both Ogg and Matroska containers.
+
+

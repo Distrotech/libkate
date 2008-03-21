@@ -1,0 +1,15 @@
+# This is the pkg-config file for liboggkate
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../../lib
+includedir=${pcfiledir}/../../include
+
+Name: Kate
+Description: liboggkate is an interface between libkate and libogg
+Version: 0.1.0
+URL: http://wiki.xiph.org/index.php/OggKate
+Requires: kate ogg >= 1.1.2
+Conflicts: 
+Libs: ${libdir}/liboggkate.a
+Libs.private: 
+Cflags: -I${includedir}

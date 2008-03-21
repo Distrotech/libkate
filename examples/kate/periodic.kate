@@ -1,0 +1,20 @@
+/* periodic motion */
+kate {
+  defs {
+    define region "r1" { percent position 10 10 size 80 80 }
+    define style "s1" { italics }
+  }
+
+  event {
+    0:0:01 --> 0:1:0
+    region "r1"
+    style "s1"
+    text "periodic motion"
+    motion {
+      periodic
+      semantics internal text alignment
+      curve { catmull_rom points { 1 1 -1 -1 1 1 } } for 2
+    }
+  }
+}
+

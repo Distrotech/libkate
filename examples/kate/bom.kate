@@ -1,0 +1,5 @@
+﻿/* this file has a bom at start */
+kate {
+  event 0:0:00 --> 0:0:01 "generated from a file with a bom"
+}
+

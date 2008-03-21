@@ -1,0 +1,259 @@
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x shout.h -urN libshout-2.2.2/configure.ac libshout-2.2.2-with-kate/configure.ac
+--- libshout-2.2.2/configure.ac	2006-06-19 21:36:05.000000000 +0100
++++ libshout-2.2.2-with-kate/configure.ac	2008-03-02 12:55:17.000000000 +0000
+@@ -150,6 +150,14 @@
+   AC_DEFINE([HAVE_SPEEX], 1, [Define if you want speex streams supported])
+ fi
+ 
++AC_CHECK_LIB(kate, kate_decode_init,[have_kate=yes],[have_kate=no],-logg)
++if test "x$have_kate" == "xyes"
++then
++  KATE_LIBS="-lkate -logg"
++  AC_DEFINE([HAVE_KATE],[1],[Define if you want kate streams supported])
++fi
++AM_CONDITIONAL([HAVE_KATE], [test -n "$KATE_LIBS"])
++
+ dnl pkgconfig/shout-config.
+ dnl If pkgconfig is found, use it and disable shout-config, otherwise do the
+ dnl opposite, unless the user overrides.
+@@ -204,6 +212,8 @@
+ AC_SUBST(PROFILE)
+ AC_SUBST(XIPH_CFLAGS)
+ AC_SUBST(XIPH_CPPFLAGS)
++AC_SUBST(HAVE_KATE)
++AC_SUBST(KATE_LIBS)
+ 
+ AC_OUTPUT([Makefile debian/Makefile include/Makefile include/shout/Makefile
+   include/shout/shout.h src/Makefile src/net/Makefile src/timing/Makefile
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x shout.h -urN libshout-2.2.2/src/Makefile.am libshout-2.2.2-with-kate/src/Makefile.am
+--- libshout-2.2.2/src/Makefile.am	2006-01-31 01:42:42.000000000 +0000
++++ libshout-2.2.2-with-kate/src/Makefile.am	2008-03-09 15:09:57.000000000 +0000
+@@ -20,13 +20,13 @@
+ lib_LTLIBRARIES = libshout.la
+ libshout_la_LDFLAGS = -version-info 5:0:2
+ 
+-EXTRA_DIST = theora.c speex.c
++EXTRA_DIST = theora.c speex.c kate.c
+ noinst_HEADERS = shout_ogg.h shout_private.h util.h
+-libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
++libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c mp3.c kate.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
+ AM_CFLAGS = @XIPH_CFLAGS@
+ 
+ libshout_la_LIBADD = net/libicenet.la timing/libicetiming.la avl/libiceavl.la\
+-		httpp/libicehttpp.la $(MAYBE_THREAD_LIB) $(THEORA_LIBS) $(VORBIS_LIBS)
++		httpp/libicehttpp.la $(MAYBE_THREAD_LIB) $(THEORA_LIBS) $(VORBIS_LIBS) $(KATE_LIBS)
+ 
+ INCLUDES = -I$(top_builddir)/include
+ 
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x shout.h -urN libshout-2.2.2/src/kate.c libshout-2.2.2-with-kate/src/kate.c
+--- libshout-2.2.2/src/kate.c	1970-01-01 01:00:00.000000000 +0100
++++ libshout-2.2.2-with-kate/src/kate.c	2008-03-09 15:31:07.000000000 +0000
+@@ -0,0 +1,186 @@
++/* -*- c-basic-offset: 8; -*- */
++/* kate.c: Ogg Kate data handlers for libshout
++ * $Id: kate.c 11416 2006-05-22 00:32:49Z brendan $
++ *
++ *  Copyright (C) 2004 the Icecast team <team@icecast.org>
++ *
++ *  This library is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU Library General Public
++ *  License as published by the Free Software Foundation; either
++ *  version 2 of the License, or (at your option) any later version.
++ *
++ *  This library is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  Library General Public License for more details.
++ *
++ *  You should have received a copy of the GNU Library General Public
++ *  License along with this library; if not, write to the Free
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#ifdef HAVE_CONFIG_H
++# include <config.h>
++#endif
++
++#ifdef HAVE_INTTYPES_H
++# include <inttypes.h>
++#endif
++
++#include <string.h>
++
++#ifdef HAVE_KATE
++#include <kate/kate.h>
++#endif
++
++#include "shout_private.h"
++#include "shout_ogg.h"
++
++/* -- local data structures -- */
++typedef struct {
++    int headers_done;
++#ifdef HAVE_KATE
++    kate_info ki;
++    kate_comment kc;
++#else
++    int granule_shift;
++    ogg_int32_t base_n;
++    ogg_int32_t base_d;
++    ogg_int32_t offset_n;
++    ogg_int32_t offset_d;
++#endif
++} kate_data_t;
++
++/* -- local prototypes -- */
++static int read_kate_page(ogg_codec_t *codec, ogg_page *page);
++static void free_kate_data(void *codec_data);
++
++/* -- kate functions -- */
++static ogg_int32_t read32le(unsigned char *buffer)
++{
++    ogg_int32_t v = 0;
++    v |= buffer[0];
++    v |= buffer[1]<<8;
++    v |= buffer[2]<<16;
++    v |= buffer[3]<<24;
++    return v;
++}
++
++int _shout_open_kate(ogg_codec_t *codec, ogg_page *page)
++{
++	ogg_packet packet;
++
++	kate_data_t *kate_data = calloc(1, sizeof(kate_data_t));
++	if (! kate_data)
++		return SHOUTERR_MALLOC;
++
++	ogg_stream_packetout(&codec->os, &packet);
++	
++#ifdef HAVE_KATE
++	kate_info_init(&kate_data->ki);
++	kate_comment_init(&kate_data->kc);
++
++	if (kate_decode_headerin(&kate_data->ki, &kate_data->kc, &packet) < 0) {
++	    kate_comment_clear(&kate_data->kc);
++	    kate_info_clear(&kate_data->ki);
++		free_kate_data(kate_data);
++
++		return SHOUTERR_UNSUPPORTED;
++	}
++#else
++    if (packet.bytes<9 || memcmp(packet.packet, "\x80kate\0\0\0\0", 9)) {
++		free_kate_data(kate_data);
++
++		return SHOUTERR_UNSUPPORTED;
++    }
++#endif
++
++	codec->codec_data = kate_data;
++	codec->read_page = read_kate_page;
++	codec->free_data = free_kate_data;
++	codec->headers = 1;
++
++	return SHOUTERR_SUCCESS;
++}
++
++static int read_kate_page(ogg_codec_t *codec, ogg_page *page)
++{
++	kate_data_t *kate_data = codec->codec_data;
++	ogg_packet packet;
++	ogg_int64_t granulepos;
++
++	granulepos = ogg_page_granulepos(page);
++
++	if (granulepos == 0)
++	{
++		while (ogg_stream_packetout(&codec->os, &packet) > 0) {
++#ifdef HAVE_KATE
++            int ret = kate_decode_headerin(&kate_data->ki, &kate_data->kc, &packet);
++            if (ret < 0)
++				return SHOUTERR_INSANE;
++            if (ret > 0)
++            {
++                kate_data->headers_done = 1;
++                break;
++            }
++#else
++            if (packet.bytes<9)
++				return SHOUTERR_INSANE;
++            if (memcmp(packet.packet+1, "kate\0\0\0\0", 8))
++				return SHOUTERR_INSANE;
++
++            if (packet.packet[0]==0x80) {
++                if (packet.bytes<32)
++				    return SHOUTERR_INSANE;
++                /* retrieve granule encoding information from the BOS packet */
++                kate_data->granule_shift = packet.packet[15];
++                kate_data->base_n = read32le(packet.packet+16);
++                kate_data->base_d = read32le(packet.packet+20);
++                kate_data->offset_n = read32le(packet.packet+24);
++                kate_data->offset_d = read32le(packet.packet+28);
++            }
++
++            if ((packet.packet[0]&0x80)==0)
++            {
++                kate_data->headers_done = 1;
++                break;
++            }
++#endif
++			codec->headers++;
++		}
++
++		return SHOUTERR_SUCCESS;
++	}
++
++    while (ogg_stream_packetout(&codec->os, &packet) > 0)
++    {
++        /* Kate is a packet per page, so I don't need to do the start frame stuff theora does - I think */
++    }
++	if (granulepos > 0 && kate_data->headers_done)
++    {
++#ifdef HAVE_KATE
++        double t = kate_granule_time(&kate_data->ki, granulepos);
++#else
++        ogg_int64_t g_base=granulepos>>kate_data->granule_shift;
++        ogg_int64_t g_offset=granulepos-(g_base<<kate_data->granule_shift);
++        double t_base = g_base*(double)kate_data->base_d/kate_data->base_n;
++        double t_offset = g_offset*(double)kate_data->offset_d/kate_data->offset_n;
++        double t = t_base+t_offset;
++#endif
++        codec->senttime = (uint64_t)(t * 1000000);
++	}
++
++	return SHOUTERR_SUCCESS;
++}
++
++static void free_kate_data(void *codec_data)
++{
++	kate_data_t *kate_data = (kate_data_t *)codec_data;
++
++#ifdef HAVE_KATE
++	kate_info_clear(&kate_data->ki);
++	kate_comment_clear(&kate_data->kc);
++#endif
++	free(kate_data);
++}
++
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x shout.h -urN libshout-2.2.2/src/ogg.c libshout-2.2.2-with-kate/src/ogg.c
+--- libshout-2.2.2/src/ogg.c	2006-01-31 01:42:42.000000000 +0000
++++ libshout-2.2.2-with-kate/src/ogg.c	2008-03-09 15:11:35.000000000 +0000
+@@ -54,6 +54,7 @@
+ typedef int (*codec_open_t)(ogg_codec_t *codec, ogg_page *page);
+ static codec_open_t codecs[] = {
+ 	_shout_open_vorbis,
++	_shout_open_kate,
+ #ifdef HAVE_THEORA
+ 	_shout_open_theora,
+ #endif
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x shout.h -urN libshout-2.2.2/src/shout_ogg.h libshout-2.2.2-with-kate/src/shout_ogg.h
+--- libshout-2.2.2/src/shout_ogg.h	2006-01-31 01:42:42.000000000 +0000
++++ libshout-2.2.2-with-kate/src/shout_ogg.h	2008-03-09 15:11:39.000000000 +0000
+@@ -45,6 +45,7 @@
+ 
+ /* codec hooks */
+ int _shout_open_vorbis(ogg_codec_t *codec, ogg_page *page);
++int _shout_open_kate(ogg_codec_t *codec, ogg_page *page);
+ #ifdef HAVE_THEORA
+ int _shout_open_theora(ogg_codec_t *codec, ogg_page *page);
+ #endif

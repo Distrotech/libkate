@@ -1,0 +1,372 @@
+/* A random selection of what can be done */
+
+kate {
+
+  defs {
+    /* the entire set of events can be offset */
+    timebase 00:00.50
+
+    /* as in cpp, but no parameters, simple text replacement */
+    define macro bgcol                     128 160 255 127
+    define macro lighttransgrey            128 128 128 96
+    define macro white_text                192 192 192 255
+
+    define motion "centerbox_motion" {
+      semantics region size
+      mapping frame
+      curve { none } for 60%
+      curve { linear 4 points { 0.7 0.7 0.2 0.5 0.5 0.2 0.7 0.7 } } for 30%
+      curve { none } for 10%
+    }
+
+    /* multiline macros - beware the spaces after the backslashes */
+    define macro centerbox_text_prologue   \
+      00:13.00 --> 00:15.00                \
+      motion "centerbox_motion"            \
+      region "centerbox"                   \
+      style "centerbox"    /* namespaces for macros, regions, styles, etc, are separate */
+
+    define motion "321fader_size" {
+      semantics text size
+      curve { static 1 points { 0.5 0.5 } } for 50%
+      curve { linear 2 points { 0.5 0.5 8 8 } } for 50%
+    }
+    define motion "321fader_alpha" {
+      semantics text color ba
+      curve { none } for 50%
+      curve { bspline 3 points { 255 255   255 74   255 0 } } for 50%
+    }
+
+    define macro start321fader         \
+      region "321"                     \
+      motion "321fader_size"           \
+      motion "321fader_alpha"
+
+    /* really detailed spiral motion */
+    define curve "spiral" {
+      linear 100 points {
+        0.500000 0.500000
+        0.500782 0.504938
+        0.503090 0.509511
+        0.506810 0.513365
+        0.511756 0.516180
+        0.517678 0.517678
+        0.524271 0.517634
+        0.531185 0.515890
+        0.538042 0.512361
+        0.544446 0.507040
+        0.550000 0.500000
+        0.554323 0.491396
+        0.557063 0.481459
+        0.557915 0.470491
+        0.556631 0.458855
+        0.553033 0.446967
+        0.547023 0.435279
+        0.538589 0.424264
+        0.527812 0.414405
+        0.514861 0.406170
+        0.500000 0.400000
+        0.483574 0.396293
+        0.466008 0.395384
+        0.447791 0.397534
+        0.429466 0.402918
+        0.411612 0.411612
+        0.394828 0.423588
+        0.379714 0.438711
+        0.366852 0.456738
+        0.356785 0.477317
+        0.350000 0.500000
+        0.346908 0.524247
+        0.347831 0.549443
+        0.352984 0.574908
+        0.362467 0.599923
+        0.376256 0.623744
+        0.394199 0.645623
+        0.416012 0.664836
+        0.441287 0.680701
+        0.469495 0.692599
+        0.500000 0.700000
+        0.532069 0.702476
+        0.564894 0.699722
+        0.597608 0.691566
+        0.629313 0.677984
+        0.659099 0.659099
+        0.686074 0.635191
+        0.709387 0.606688
+        0.728254 0.574164
+        0.741984 0.538326
+        0.750000 0.500000
+        0.751861 0.460109
+        0.747275 0.419656
+        0.736117 0.379693
+        0.718435 0.341298
+        0.694454 0.305546
+        0.664580 0.273475
+        0.629387 0.246063
+        0.589615 0.224194
+        0.546148 0.208632
+        0.500000 0.200000
+        0.452287 0.198755
+        0.404205 0.205172
+        0.356993 0.219333
+        0.311909 0.241115
+        0.270190 0.270190
+        0.233024 0.306031
+        0.201513 0.347913
+        0.176641 0.394934
+        0.159248 0.446030
+        0.150000 0.500000
+        0.149371 0.555534
+        0.157620 0.611246
+        0.174783 0.665707
+        0.200664 0.717481
+        0.234835 0.765165
+        0.276642 0.807426
+        0.325214 0.843038
+        0.379483 0.870912
+        0.438208 0.890137
+        0.500000 0.900000
+        0.563356 0.900014
+        0.626697 0.889933
+        0.688406 0.869768
+        0.746870 0.839787
+        0.800520 0.800520
+        0.847877 0.752748
+        0.887588 0.697486
+        0.918465 0.635967
+        0.939521 0.569613
+        0.950000 0.500000
+        0.949398 0.428822
+        0.937486 0.357852
+        0.914318 0.288894
+        0.880238 0.223741
+        0.835876 0.164124
+        0.782137 0.111672
+        0.720185 0.067862
+        0.651418 0.033982
+        0.577435 0.011094
+      }
+    }
+
+    /* default language for the stream */
+    language "x-foo"
+
+    /* category - nothing specific here */
+    category "none"
+
+    /* vorbis comments */
+    comment "foo=bar"
+    comment "baz=quux"
+
+    /* predefined styles to be referenced in data packets */
+    define style "katetv" { text color 128 160 192 192 hright vcenter }
+    define style "scrollbar_band" { background color $bgcol }
+    define style "centerbox" { text color $white_text }
+    define style "centerbox_bg" { background color $lighttransgrey }
+    define style "scrollbar_text" { text color 192 192 192 255 vcenter hcenter }
+    define style "321" { text color 255 255 255 255 vcenter hcenter }
+
+    define style "morph_src" { text color 128 192 240 255 vtop hcenter }
+    define style "morph_dst" { text color 0 0 0 255 vbottom hcenter }
+
+    /* predefined regions to be referenced in data packets */
+    define region "katetv"     { percent    position  -20   5    size  115   5    default style "katetv" }
+    define region "scrollbar"  { percent    position    0  85    size  100  10    default style "scrollbar_text" }
+    define region "centerbox"  { percent    position   15  15    size   70  70    default style "centerbox" }
+    define region "321"        { percent    position    0   0    size  100 100    default style "321" }
+
+    /* predefined curves to be referenced in data packets */
+    define curve "r2l scroller" { linear 2 points {  1.0 0.0   -1.0 0.0 } } # right to left scroller
+    define curve "l2r scroller" { linear 2 points { -1.0 0.0    1.0 0.0 } } # left to right scroller
+
+    define motion "r2l_scroll_motion" {  semantics external text alignment  curve "r2l scroller"  }
+  }
+
+  /* scrolling text with varying speed */
+  event {
+    //from 0:0.1 to 0:2.0
+    from 0:0.1 to 0:2.0
+    text "KateTV"
+    region "katetv"
+    motion { semantics text alignment curve { linear 2 points { -1 0 1 0 } } }
+    motion { semantics time mapping event duration curve { bspline 3 points { 0 0  0.907 0   1 0 } } }
+  }
+
+  /* zooming/alpha 3-2-1 sequence */
+  event { from 0:0.50 for 1.0 $start321fader text "3" }
+
+  event { from 0:1.50 for 1.0 $start321fader text "2" }
+
+  /* replace the logo once it's settled on the corner */
+  event { from 0:2.0 to 9999:0 text "KateTV" region "katetv" }
+
+  event { from 0:2.50 for 1.0 $start321fader text "1" }
+
+  /* GO whips around the screen on a spline */
+  event {
+    00:03.50 --> 00:5.50
+//    /* making the text a long series of dots draws the spline on the screen, good for creating paths */
+//    //text "............................................................."
+    text "GO"
+    motion {
+      semantics text path
+      mapping frame
+      //curve { catmull_rom 8 points {  1.1 0.7   1.0 0.7   0.3 0.3   0.4 0.66    0.66 0.5   0.4 0.2    0.0 0.6   -0.1 0.6 } }
+      curve { catmull_rom 6 points {  1.0 0.7   0.3 0.3   0.4 0.66    0.66 0.5   0.4 0.2    0.0 0.6   } }
+    }
+    motion {
+      /* slow down in the middle */
+      semantics time
+      mapping event duration
+      //curve { catmull_rom 7 points { 0 0  0.05 0.05   0.3 0.3   0.5 0.5   0.7 0.7   0.95 0.95   1 1 } }
+      curve { catmull_rom 5 points { 0 0   0.3 0.3   0.5 0.5   0.7 0.7   1 1 } }
+    }
+    motion {
+      /* go back through the path */
+      semantics text path section
+      curve { linear 2 points { 1.0 0.95 0.05 0.0 } }
+    }
+  }
+
+  /* random color animation */
+  event {
+    from 00:04.00 to 00:12.00
+    region { percent position 10 5 size 10 5 }
+    text "COLOR"
+    motion {
+      semantics text color rg
+      curve { bspline 8 points { 255 53 79 129 92 240 56 169 237 78 189 230 120 210 78 32 } }
+    }
+    motion {
+      semantics text color ba
+      curve { bspline 8 points { 90 73 255 12 76 200 78 192 60 70 20 50 255 255 80 127 } }
+    }
+  }
+
+  /* multiline text, and alignment animation */
+  event {
+    from 00:04.00 to 00:06.00
+    region "centerbox"
+    text "
+      A multiline text
+      a second line
+      and the third and last one
+    "
+    style "centerbox" { vcenter }
+    /* do some move-to-right and move-to-left at the end */
+    motion {
+      semantics text alignment
+      curve { none } for 60%
+      curve "l2r scroller" for 15%
+      curve "r2l scroller" for 15%
+      curve { none } for 10%
+    }
+  }
+
+  event {
+    from 00:04.00 to 00:06.00
+    directionality rtl_ttb
+    language "ar"
+    region "centerbox"
+    text "&#feb3;&#fefc;&#fee1;<br>"
+       + "&#feb3;&#fefc;&#fee1;<br>"
+       + "&#feb3;&#fefc;&#fee1;"
+    style "centerbox" { vcenter hright }
+    /* do some move-to-left and move-to-right at the end */
+    motion {
+      semantics text alignment
+      curve { none } for 60%
+      curve "r2l scroller" for 15%
+      curve "l2r scroller" for 15%
+      curve { none } for 10%
+    }
+  }
+
+  /* arbitrary motion of the text (on a spline) */
+  event {
+    00:05.00 --> 00:10.00
+    text "SPIRAL"
+    motion {
+      semantics text position
+      mapping frame
+      curve "spiral"
+    }
+  }
+
+  /* no text - just to set a style (so we have a colored background shared by all scrolling text) */
+  event {
+    from 00:06.00 to 00:40.00
+    region "scrollbar"
+    style "scrollbar_band"
+  }
+
+  event {
+    00:06.00 --> 00:10.00
+    region "scrollbar"
+    text "This is a scrolling text"
+    motion "r2l_scroll_motion"
+  }
+
+  /* non linear morphing between two styles */
+  event {
+    00:08.0 --> 00:12.0
+    text "style morph"
+    region { percent position 30 30 size 40 30 }
+    style "morph_src"
+    secondary style "morph_dst"
+    motion {
+      semantics style morph
+      curve { none } for 10%
+      curve { linear 4 points { 0 0    0.75 0    0.25 0    1 0 } } for 90%
+    }
+  }
+
+  /* non latin characters, but still likely to be found in a lot of fonts */
+  event {
+    00:09.00 --> 00:13.00
+    region "scrollbar"
+    text "non ASCII latin: &#d1;&#d3;&#1e8;&#f9;&#bf;&#c0;&#df;"
+    motion "r2l_scroll_motion"
+  }
+
+  /* Katakana, probably needs a non default font */
+  event {
+    id 123456789
+    00:12.00 --> 00:18.00
+    language "ja"
+    region "scrollbar"
+    text "Katakana (may need another font) &#30b4;&#30a6;&#30b8;&#30B9;&#31Fb;&#ff69;&#ff9a;"
+    motion "r2l_scroll_motion"
+  }
+
+  event {
+    00:13.00 --> 00:15.00
+    region "centerbox"
+    style "centerbox_bg"
+  }
+
+  /* various alignments */
+  event { $centerbox_text_prologue { vtop hleft } text "T/L" }
+  event { $centerbox_text_prologue { vtop hright } text "T/R" }
+  event { $centerbox_text_prologue { vbottom hleft } text "B/L" }
+  event { $centerbox_text_prologue { vbottom hright } text "B/R" }
+  event { $centerbox_text_prologue { vcenter hright } text "C/R" }
+  event { $centerbox_text_prologue { vcenter hleft } text "C/L" }
+  event { $centerbox_text_prologue { vtop hcenter } text "T/C" }
+  event { $centerbox_text_prologue { vbottom hcenter } text "B/C" }
+  event { $centerbox_text_prologue { vcenter hcenter } text "C/C" }
+
+  event {
+    00:20.00 --> 00:22.50
+    region "scrollbar"
+    text "Still there ? It's over actually"
+    //style "scrollbar_text"
+    motion {
+      semantics external text alignment
+      curve { none } for 80%
+      curve { linear 2 points { 0 0 -1 0 } } for 20%
+    }
+  }
+}
+
+

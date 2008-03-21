@@ -1,0 +1,74 @@
+/* Karaoke effects */
+kate {
+  defs {
+    timebase 0:2.0
+    define region "r1" { percent position 10 10 size 80 15 }
+    define region "r2" { percent position 10 30 size 80 15 }
+    define region "r3" { percent position 10 50 size 80 15 }
+    define style "karaoke1" { text color 100 200 100 200 }
+    define style "karaoke2" { text color 100 100 100 200 }
+  }
+
+  event {
+    // 10 seconds
+    0:0.0 --> 0:5.00
+    region "r1"
+    text "L'amour est enfant<br>de boh&#e8;me"
+    //    0 2   6   0  3   7     9  2   6
+    simple_timed_glyph_marker {
+      pause for 0:1.0
+      glyph 2 at 1.246029
+      glyph 6 at 1.773831
+      glyph 10 at 2.337319
+      glyph 13 at 3.178846
+      glyph 17 at 3.417869
+      glyph 19 at 3.913005
+      glyph 22 at 4.434370
+      glyph 26 at 4.756512
+    }
+  }
+
+  event {
+    // 10 seconds
+    0:5.0 --> 0:10.00
+    region "r2"
+    text "Il n'a jamais, jamais<br>connu de loi"
+    //    01   5  8   2   6   0     2  5  8   2
+    simple_timed_glyph_style_morph {
+      from style "karaoke1" to style "karaoke2"
+      pause for 0:1.0
+      glyph 1 at 1.297194
+      glyph 5 at 1.493468
+      glyph 8 at 1.896328
+      glyph 12 at 2.296618
+      glyph 16 at 2.485517
+      glyph 20 at 2.686412
+      glyph 22 at 2.889080
+      glyph 25 at 3.111066
+      glyph 28 at 3.544576
+      glyph 32 at 3.923537
+    }
+  }
+
+  /* simpler syntax - should be able to make templates */
+  event {
+    // 10 seconds
+    0:5.0 --> 0:10.00
+    region "r3"
+    simple_timed_glyph_style_morph {
+      from style "karaoke1" to style "karaoke2"
+      //pause for 0:1.0
+      "Il "      at 1.3
+      "n'a "     at 1.5
+      "ja"       at 1.9
+      "mais, "   at 2.3
+      "ja"       at 2.5
+      "mais<br>" at 2.7
+      "co"       at 2.9
+      "nnu "     at 3.1
+      "de "      at 3.5
+      "loi"      at 3.9
+    }
+  }
+}
+

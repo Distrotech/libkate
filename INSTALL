@@ -1,0 +1,48 @@
+
+Prerequisites:
+  libogg: available at http://www.xiph.org
+
+Optional dependencies:
+  liboggz or ogg-tools: to build example streams
+  flex and bison: to rebuild the parser
+
+Of course, if you want to make use of the patches to third party
+software found in the diffs directory, you will need the relevant
+software to which they apply as well as their dependencies.
+
+There is no configure machinery (yet).  Build with:
+
+$ make
+
+You may install it with one of:
+
+$ make install PREFIX=$HOME
+# make install
+
+Uninstall with one of:
+
+$ make uninstall PREFIX=$HOME
+# make uninstall
+
+
+If you do not have Flex or Bison, you will be able to build the tools,
+but not to modify them.
+
+
+To check that everything works correctly, you can optionally run:
+
+$ make check
+
+
+There are samples in the examples directory, see the README file there.
+To build those:
+
+$ make streams
+
+You will need a patched version of oggmerge or liboggz that supports Kate,
+the diff is in the diffs directory. You will also need a sample video to
+merge with, though it is also possible to create Kate-only streams.
+Built streams will be placed in the built-streams directory, one with a
+single Kate stream, and another one merged with a Theora video of your
+own chosing.
+

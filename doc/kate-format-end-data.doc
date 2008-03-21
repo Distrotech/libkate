@@ -1,0 +1,27 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_0x7f Format - data packet type 0x7f - end of stream
+
+\verbatim
+
+The last data packet in a Kate stream should be an end of stream
+data packet. When embedded in Ogg, the Ogg packet containing this
+packet must be marked as an end of stream (EOS) packet.
+
+This packet is exactly one byte long, and consists of its packet
+type, 0x7f.
+
+\endverbatim
+
+
+*/
+

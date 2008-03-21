@@ -1,0 +1,50 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\mainpage
+
+\section Introduction
+
+This is the documentation for libkate.
+
+libkate is an implementation of a codec for the Kate bitstream format.
+
+The Kate bitstream format is a timed text codec designed for embedding
+in an Ogg bitstream. It was originally designed for karaoke and text.
+The Kate bitstream format is documented \ref Format "here".
+
+libkate is thread safe, with the usual caveat that a single thread
+accesses a given kate stream at the same time (eg, two different
+threads may use libkate at the same time, provided they access two
+different streams).
+
+\htmlonly
+A commented
+<a href="high_8c-example.html">high level decoding example</a>.
+\endhtmlonly
+
+\htmlonly
+A commented
+<a href="decoding_8c-example.html">decoding example</a>.
+\endhtmlonly
+
+
+\htmlonly
+A commented
+<a href="encoding_8c-example.html">encoding example</a>.
+\endhtmlonly
+
+\example high.c
+\example decoding.c
+\example encoding.c
+
+*/
+

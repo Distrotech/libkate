@@ -1,0 +1,35 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_0x01 Format - data packet type 0x01 - keepalive
+
+\verbatim
+
+Keepalive packets may be inserted at any point in a Kate stream
+where a data packet may be inserted (eg, after all headers, and
+before the end packet).
+
+Keepalive packets are meant to help seeking code by placing packets
+at regular intervals so a seeking program can keep track of the
+granulepos without having to seek too much.
+
+It is not mandatory to use keepalive packets, but their use may
+improve seeking performance when a Kate stream with few events
+is multiplexed with high bandwidth streams.
+
+This packet is exactly one byte long, and consists of its packet
+type, 0x01.
+
+\endverbatim
+
+
+*/
+

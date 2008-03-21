@@ -1,0 +1,101 @@
+/* Unicode code points from various locations */
+kate {
+  defs {
+    timebase 0:0.5
+    language "en"
+
+    define region "r1l" { percent position 10 10 size 40 10 }
+    define region "r2l" { percent position 10 20 size 40 10 }
+    define region "r3l" { percent position 10 30 size 40 10 }
+    define region "r4l" { percent position 10 40 size 40 10 }
+    define region "r5l" { percent position 10 50 size 40 10 }
+    define region "r6l" { percent position 10 60 size 40 10 }
+    define region "r7l" { percent position 10 70 size 40 10 }
+    define region "r8l" { percent position 10 80 size 40 10 }
+
+    define region "r1r" { percent position 50 10 size 40 10 }
+    define region "r2r" { percent position 50 20 size 40 10 }
+    define region "r3r" { percent position 50 30 size 40 10 }
+    define region "r4r" { percent position 50 40 size 40 10 }
+    define region "r5r" { percent position 50 50 size 40 10 }
+    define region "r6r" { percent position 50 60 size 40 10 }
+    define region "r7r" { percent position 50 70 size 40 10 }
+    define region "r8r" { percent position 50 80 size 40 10 }
+
+    define macro timing 0:00 --> 1:00
+  }
+
+  event {
+    $timing region "r1l"
+    "English"
+  }
+  event {
+    $timing language "en" region "r1r"
+    "English words"
+  }
+
+  event {
+    $timing region "r2l"
+    "Spanish"
+  }
+  event {
+    $timing language "es" region "r2r"
+    "&#bf;ma&#f1;ana?"
+  }
+
+  event {
+    $timing region "r3l"
+    "Katakana"
+  }
+  event {
+    $timing language "ja" region "r3r"
+    "&#30b4;&#30a6;&#30b8;&#30B9;&#31Fb;&#ff69;&#ff9a;"
+  }
+
+  event {
+    $timing region "r4l"
+    "Arabic"
+  }
+  event {
+    $timing language "ar" directionality right_to_left region "r4r"
+    "&#feb3;&#fefc;&#fee1;"
+  }
+
+  event {
+    $timing region "r5l"
+    "Hangul (Korean ?)"
+  }
+  event {
+    $timing language "ko" region "r5r"
+    "&#1104;&#113b;&#117f;&#11f2;&#3138;&#3184;&#320f;&#ffae;"
+  }
+
+  event {
+    $timing region "r6l"
+    "Greek"
+  }
+  event {
+    $timing language "gr" region "r6r"
+    "&#0391;&#839;&#39a;&#038e;&#0398;&#1d27;&#1f05;&#1f44;"
+  }
+
+  event {
+    $timing region "r7l"
+    "Cyrillic"
+  }
+  event {
+    $timing language "ru" region "r7r"
+    "&#4e6;&#4d8;&#4e9;&#4e1;&#4fc;&#4f6;&#1d2b;"
+  }
+
+  event {
+    $timing region "r8l"
+    "Chinese ?"
+  }
+  event {
+    $timing region "r8r"
+    "&#2f83;&#2f63;&#2f8c;&#2f3c;"
+  }
+
+}
+

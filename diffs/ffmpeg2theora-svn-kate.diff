@@ -1,0 +1,1485 @@
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/ChangeLog ffmpeg2theora-svn-kate/ChangeLog
+--- ffmpeg2theora-svn/ChangeLog	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/ChangeLog	2008-03-05 22:12:06.000000000 +0000
+@@ -1,3 +1,7 @@
++???????????????
++    - add kate streams for subtitles (--subtitles, --subtitles-language,
++      subtitles-category, and --subtitles-encoding options)
++
+ 0.20 2007-11-31
+     - add postprocessing filters, denoise, deblock, dering
+     - new preset
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/INSTALL ffmpeg2theora-svn-kate/INSTALL
+--- ffmpeg2theora-svn/INSTALL	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/INSTALL	2008-03-18 08:13:39.000000000 +0000
+@@ -12,6 +12,9 @@
+ - ffmpeg-trunk <http://ffmpeg.sf.net> by running ./get_ffmpeg_svn.sh
+   (this script downloads current ffmpeg trunk, runs an appropriate
+   configure and builds ffmpeg)
++- for subtitles support, libkate <http://code.google.com/p/libkate/>,
++  or by running ./get_libkate.sh (this script downloads libkate, and
++  builds libkate)
+ 
+ if you did not install ffmpeg but want to staticly link it
+ (recomended by ffmpeg developers) update PKG_CONFIG_PATH to
+@@ -49,3 +52,19 @@
+  undefined symbol: av_read_frame
+ this is a known limitation of vhooks in ffmpeg.
+ 
++
++subtitles suppport
++------------------
++
++Subtitles for multiple languages can be encoded from one or more utf-8
++SubRip format files (.srt) if you have libkate installed. Subtitles will
++be merged into the output Ogg stream as multiplexed Kate streams.
++
++For example, to encode a video with both German and Italian subtitles:
++
++./ffmpeg2theora -o ouput.ogv --subtitles german.srt --subtitles-language de_DE \
++                             --subtitles italian.srt --subtitles-language it \
++                   input.avi
++
++See subtitles.txt for more information on how to add subtitles to your
++videos.
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/Makefile.am ffmpeg2theora-svn-kate/Makefile.am
+--- ffmpeg2theora-svn/Makefile.am	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/Makefile.am	2008-03-16 15:35:00.000000000 +0000
+@@ -7,7 +7,7 @@
+ bin_PROGRAMS = ffmpeg2theora
+ 
+ ffmpeg2theora_SOURCES = ffmpeg2theora.c  theorautils.c
+-ffmpeg2theora_LDFLAGS = -L$(prefix)/lib @XIPH_LIBS@ @FFMPEG_LIBS@
+-ffmpeg2theora_CFLAGS = @XIPH_CFLAGS@ @FFMPEG_CFLAGS@
++ffmpeg2theora_LDFLAGS = -L$(prefix)/lib @XIPH_LIBS@ @OGGKATE_LIBS@ @KATE_LIBS@ @FFMPEG_LIBS@
++ffmpeg2theora_CFLAGS = @XIPH_CFLAGS@ @OGGKATE_CFLAGS@ @KATE_CFLAGS@ @FFMPEG_CFLAGS@
+ 
+ man_MANS = ffmpeg2theora.1
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/README ffmpeg2theora-svn-kate/README
+--- ffmpeg2theora-svn/README	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/README	2008-03-07 21:02:27.000000000 +0000
+@@ -14,3 +14,6 @@
+ 
+  there is a export plugin for kino (http://kino.schirmacher.de/)
+  more info in kino_export/README
++
++ subtitles can be embedded in an ogg stream alongside a theora
++ video, see subtitles.txt for more info.
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/configure.ac ffmpeg2theora-svn-kate/configure.ac
+--- ffmpeg2theora-svn/configure.ac	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/configure.ac	2008-03-16 16:41:23.000000000 +0000
+@@ -30,14 +30,33 @@
+ AC_SUBST(XIPH_CFLAGS)
+ AC_SUBST(XIPH_LIBS)
+ 
++PKG_CONFIG_PATH=./libkate/pkg/pkgconfig:$PKG_CONFIG_PATH
++PKG_CHECK_MODULES(KATE,kate,,[AC_MSG_RESULT(no)])
++if test "$KATE_LIBS" != ""; then KATE_CFLAGS="-DHAVE_KATE $KATE_CFLAGS"; fi
++AC_SUBST(KATE_LIBS)
++AC_SUBST(KATE_CFLAGS)
++
++PKG_CONFIG_PATH=./libkate/pkg/pkgconfig:$PKG_CONFIG_PATH
++PKG_CHECK_MODULES(OGGKATE,oggkate,,[AC_MSG_RESULT(no)])
++if test "$OGGKATE_LIBS" != ""; then OGGKATE_CFLAGS="-DHAVE_OGGKATE $OGGKATE_CFLAGS"; fi
++AC_SUBST(OGGKATE_LIBS)
++AC_SUBST(OGGKATE_CFLAGS)
++
++if test "$OGGKATE_LIBS" == "" -o "$KATE_LIBS" == ""
++then
++  echo "    Could not find libkate. Subtitles support will be disabled."
++  echo "    You can also run ./get_libkate.sh (for more information see INSTALL)"
++  echo "    or update PKG_CONFIG_PATH to point to libkate's source folder"
++fi
++
+ PKG_CONFIG_PATH=./ffmpeg:$PKG_CONFIG_PATH
+ PKG_CHECK_MODULES(FFMPEG, libavformat libavcodec libavdevice libswscale libpostproc, HAVE_FFMPEG=yes, 
+         AC_MSG_ERROR([
+ 
+-could not find libavformat libavcodec libswscale libpostproc.
++could not find libavformat libavcodec libavdevice libswscale libpostproc.
+ install it 
+  sudo apt-get install libavformat-dev libavcodec-dev libavdevice-dev libswscale-dev libpostproc-dev
+-or update PKG_CONFIG_PATH to point to ffmpegs source folder
++or update PKG_CONFIG_PATH to point to ffmpeg's source folder
+ or run ./get_ffmpeg_svn.sh (for more information see INSTALL)
+ ])
+ )
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/ffmpeg2theora.1 ffmpeg2theora-svn-kate/ffmpeg2theora.1
+--- ffmpeg2theora-svn/ffmpeg2theora.1	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/ffmpeg2theora.1	2008-03-05 22:11:54.000000000 +0000
+@@ -148,6 +148,28 @@
+ Use A/V sync from input container. Since this does not work with
+ all input format you have to manualy enable it if you have
+ issues with A/V sync.
++.SS Subtitles options:
++.TP
++.B \-\-subtitles
++Encode subtitles from the given file to a multiplexed Kate stream.
++The input file should be in SubRip (.srt) format, encoded in utf-8,
++unless the --subtitles-encoding option is also given.
++.TP
++.B \-\-subtitles-encoding encoding
++Assumes the corresponding subtitles file is encoded in the given
++encoding (utf-8 and iso-8859-1 (aka latin1) are supported).
++.TP
++.B \-\-subtitles-language language
++Sets the language of the corresponding subtitles stream. This will
++be set in the corresponding Kate stream so a video player may make
++this available to the user for language selection.
++.TP
++.B \-\-subtitles-category category
++Sets the category of the corresponding subtitles stream. This will
++be set in the corresponding Kate stream so a video player may make
++this available to the user for selection. The default category is
++"subtitles". Suggested other categories may include "transcript",
++"commentary", "lyrics", etc.
+ .SS Metadata options:
+ .TP
+ .B \-\-artist
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/ffmpeg2theora.c ffmpeg2theora-svn-kate/ffmpeg2theora.c
+--- ffmpeg2theora-svn/ffmpeg2theora.c	2008-03-12 18:03:04.000000000 +0000
++++ ffmpeg2theora-svn-kate/ffmpeg2theora.c	2008-03-16 17:33:36.000000000 +0000
+@@ -25,6 +25,7 @@
+ #include <string.h>
+ #include <getopt.h>
+ #include <math.h>
++#include <errno.h>
+ 
+ #include "libavformat/avformat.h"
+ #include "libavdevice/avdevice.h"
+@@ -35,6 +36,10 @@
+ #include "vorbis/codec.h"
+ #include "vorbis/vorbisenc.h"
+ 
++#ifdef HAVE_KATE
++#include "kate/kate.h"
++#endif
++
+ #ifdef WIN32
+ #include "fcntl.h"
+ #endif
+@@ -58,6 +63,10 @@
+   ASPECT_FLAG,
+   INPUTFPS_FLAG,
+   AUDIOSTREAM_FLAG,
++  SUBTITLES_FLAG,
++  SUBTITLES_ENCODING_FLAG,
++  SUBTITLES_LANGUAGE_FLAG,
++  SUBTITLES_CATEGORY_FLAG,
+   VHOOK_FLAG,
+   FRONTEND_FLAG,
+   SPEEDLEVEL_FLAG,
+@@ -74,6 +83,12 @@
+   V2V_PRESET_PADMASTREAM,
+ } F2T_PRESETS;
+ 
++typedef enum {
++  ENC_UNSET,
++  ENC_UTF8,
++  ENC_ISO_8859_1,
++} F2T_ENCODING;
++
+ #define PAL_HALF_WIDTH 384
+ #define PAL_HALF_HEIGHT 288
+ #define NTSC_HALF_WIDTH 320
+@@ -87,6 +102,23 @@
+ 
+ static int sws_flags = SWS_BICUBIC;
+ 
++typedef struct ff2theora_subtitle{
++    char *text;
++    size_t len;
++    double t0;
++    double t1;
++} ff2theora_subtitle;
++
++typedef struct ff2theora_kate_stream{
++    const char *filename;
++    size_t num_subtitles;
++    ff2theora_subtitle *subtitles;
++    size_t subtitles_count; /* total subtitles output so far */
++    F2T_ENCODING subtitles_encoding;
++    char subtitles_language[16];
++    char subtitles_category[16];
++} ff2theora_kate_stream;
++
+ typedef struct ff2theora{
+     AVFormatContext *context;
+     int video_index;
+@@ -142,9 +174,13 @@
+     double pts_offset; /* between given input pts and calculated output pts */
+     int64_t frame_count; /* total video frames output so far */
+     int64_t sample_count; /* total audio samples output so far */
++
++    size_t n_kate_streams;
++    ff2theora_kate_stream *kate_streams;
+ }
+ *ff2theora;
+ 
++
+ // gamma lookup table code
+ 
+ // ffmpeg2theora --nosound -f dv -H 32000 -S 0 -v 8 -x 384 -y 288 -G 1.5 input.dv
+@@ -157,6 +193,206 @@
+ static unsigned char y_lut[256];
+ static unsigned char uv_lut[256];
+ 
++#define SUPPORTED_ENCODINGS "utf-8, utf8, iso-8859-1, latin1"
++
++static void report_unknown_subtitle_encoding(const char *name)
++{
++  fprintf(stderr, "Unknown character encoding: %s\n",name);
++  fprintf(stderr, "Valid character encodings are:\n");
++  fprintf(stderr, "  " SUPPORTED_ENCODINGS "\n");
++}
++
++static char *fgets2(char *s,size_t sz,FILE *f)
++{
++    char *ret = fgets(s, sz, f);
++    /* fixup DOS newline character */
++    char *ptr=strchr(s, '\r');
++    if (ptr) *ptr='\n';
++    return ret;
++}
++
++#ifndef __GNUC__
++/* Windows doesn't have strcasecmp but stricmp (at least, DOS had)
++   (or was that strcmpi ? Might have been Borland C) */
++static int strcasecmp(const char *s1,const char *s2)
++{
++  return stricmp(s1,s2);
++}
++#endif
++
++static double hmsms2s(int h,int m,int s,int ms)
++{
++    return h*3600+m*60+s+ms/1000.0;
++}
++
++/* very simple implementation when no iconv */
++static void convert_subtitle_to_utf8(F2T_ENCODING encoding,unsigned char *text)
++{
++  size_t nbytes;
++  unsigned char *ptr,*newtext;
++
++  if (!text || !*text) return;
++
++  switch (encoding) {
++    case ENC_UNSET:
++      /* we don't know what encoding this is, assume utf-8 and we'll yell if it ain't */
++      break;
++    case ENC_UTF8:
++      /* nothing to do, already in utf-8 */
++      break;
++    case ENC_ISO_8859_1:
++      /* simple, characters above 0x7f are broken in two,
++         and code points map to the iso-8859-1 8 bit codes */
++      nbytes=0;
++      for (ptr=text;*ptr;++ptr) {
++        nbytes++;
++        if (0x80&*ptr) nbytes++;
++      }
++      newtext=(unsigned char*)malloc(1+nbytes);
++      if (!newtext) {
++        fprintf(stderr, "Memory allocation failed - cannot convert text\n");
++        return;
++      }
++      nbytes=0;
++      for (ptr=text;*ptr;++ptr) {
++        if (0x80&*ptr) {
++          newtext[nbytes++]=0xc0|((*ptr)>>6);
++          newtext[nbytes++]=0x80|((*ptr)&0x3f);
++        }
++        else {
++          newtext[nbytes++]=*ptr;
++        }
++      }
++      newtext[nbytes++]=0;
++      memcpy(text,newtext,nbytes);
++      free(newtext);
++      break;
++    default:
++      fprintf(stderr, "ERROR: encoding %d not handled in conversion!\n", encoding);
++      break;
++  }
++}
++
++static int load_subtitles(ff2theora_kate_stream *this)
++{
++#ifdef HAVE_KATE
++    enum { need_id, need_timing, need_text };
++    int need = need_id;
++    int last_seen_id=0;
++    int ret;
++    int id;
++    static char text[4096];
++    int h0,m0,s0,ms0,h1,m1,s1,ms1;
++    double t0,t1;
++    static char str[4096];
++    int warned=0;
++
++    FILE *f = fopen(this->filename, "r");
++    if (!f) {
++        fprintf(stderr,"WARNING - Failed to open subtitles file %s (%s)\n", this->filename, strerror(errno));
++        return -1;
++    }
++
++    /* first, check for a BOM */
++    ret=fread(str,1,3,f);
++    if (ret<3 || memcmp(str,"\xef\xbb\xbf",3)) {
++      /* No BOM, rewind */
++      fseek(f,0,SEEK_SET);
++    }
++
++    fgets2(str,sizeof(str),f);
++    while (!feof(f)) {
++      switch (need) {
++        case need_id:
++          ret=sscanf(str,"%d\n",&id);
++          if (ret!=1) {
++            fprintf(stderr,"WARNING - Syntax error: %s\n",str);
++            fclose(f);
++            return -1;
++          }
++          if (id!=last_seen_id+1) {
++            fprintf(stderr,"WARNING - Error: non consecutive ids: %s\n",str);
++            fclose(f);
++            return -1;
++          }
++          last_seen_id=id;
++          need=need_timing;
++          strcpy(text,"");
++          break;
++        case need_timing:
++          ret=sscanf(str,"%d:%d:%d%*[.,]%d --> %d:%d:%d%*[.,]%d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1);
++          if (ret!=8) {
++            fprintf(stderr,"WARNING - Syntax error: %s\n",str);
++            fclose(f);
++            return -1;
++          }
++          else {
++            t0=hmsms2s(h0,m0,s0,ms0);
++            t1=hmsms2s(h1,m1,s1,ms1);
++          }
++          need=need_text;
++          break;
++        case need_text:
++          if (*str=='\n') {
++            convert_subtitle_to_utf8(this->subtitles_encoding,(unsigned char*)text);
++            size_t len = strlen(text);
++            this->subtitles = (ff2theora_subtitle*)realloc(this->subtitles, (this->num_subtitles+1)*sizeof(ff2theora_subtitle));
++            if (!this->subtitles) {
++              fprintf(stderr, "Out of memory\n");
++              fclose(f);
++              return -1;
++            }
++            ret=kate_text_validate(kate_utf8,text,len+1);
++            if (ret<0) {
++              if (!warned) {
++                fprintf(stderr,"WARNING: subtitle %s is not valid utf-8\n",text);
++                fprintf(stderr,"  further invalid subtitles will NOT be flagged\n");
++                warned=1;
++              }
++            }
++            else {
++              /* kill off trailing \n characters */
++              while (len>0) {
++                if (text[len-1]=='\n') text[--len]=0; else break;
++              }
++              this->subtitles[this->num_subtitles].text = (char*)malloc(len+1);
++              memcpy(this->subtitles[this->num_subtitles].text, text, len+1);
++              this->subtitles[this->num_subtitles].len = len;
++              this->subtitles[this->num_subtitles].t0 = t0;
++              this->subtitles[this->num_subtitles].t1 = t1;
++              this->num_subtitles++;
++            }
++            need=need_id;
++          }
++          else {
++            strcat(text,str);
++          }
++          break;
++      }
++      fgets2(str,sizeof(str),f);
++    }
++
++    fclose(f);
++
++    /* fprintf(stderr,"  %u subtitles loaded.\n", this->num_subtitles); */
++
++    return this->num_subtitles;
++#else
++    return 0;
++#endif
++}
++
++static void free_subtitles(ff2theora this)
++{
++    size_t i,n;
++    for (i=0; i<this->n_kate_streams; ++i) {
++        ff2theora_kate_stream *ks=this->kate_streams+i;
++        for (n=0; n<ks->num_subtitles; ++n) free(ks->subtitles[n].text);
++        free(ks->subtitles);
++    }
++    free(this->kate_streams);
++}
++
+ static void y_lut_init(unsigned char *lut, double c, double b, double g) {
+     int i;
+     double v;
+@@ -254,6 +490,72 @@
+ }
+ 
+ /**
++  * adds a new kate stream structure
++  */
++static void add_kate_stream(ff2theora this){
++    ff2theora_kate_stream *ks;
++    this->kate_streams=(ff2theora_kate_stream*)realloc(this->kate_streams,(this->n_kate_streams+1)*sizeof(ff2theora_kate_stream));
++    ks=&this->kate_streams[this->n_kate_streams++];
++    ks->filename = NULL;
++    ks->num_subtitles = 0;
++    ks->subtitles = 0;
++    ks->subtitles_count = 0; /* denotes not set yet */
++    ks->subtitles_encoding = ENC_UNSET;
++    strcpy(ks->subtitles_language, "");
++    strcpy(ks->subtitles_category, "");
++}
++
++/*
++ * sets the filename of the next subtitles file
++ */
++static void set_subtitles_file(ff2theora this,const char *filename){
++  size_t n;
++  for (n=0; n<this->n_kate_streams;++n) {
++    if (!this->kate_streams[n].filename) break;
++  }
++  if (n==this->n_kate_streams) add_kate_stream(this);
++  this->kate_streams[n].filename = filename;
++}
++
++/*
++ * sets the language of the next subtitles file
++ */
++static void set_subtitles_language(ff2theora this,const char *language){
++  size_t n;
++  for (n=0; n<this->n_kate_streams;++n) {
++    if (!this->kate_streams[n].subtitles_language[0]) break;
++  }
++  if (n==this->n_kate_streams) add_kate_stream(this);
++  strncpy(this->kate_streams[n].subtitles_language, language, 16);
++  this->kate_streams[n].subtitles_language[15] = 0;
++}
++
++/*
++ * sets the category of the next subtitles file
++ */
++static void set_subtitles_category(ff2theora this,const char *category){
++  size_t n;
++  for (n=0; n<this->n_kate_streams;++n) {
++    if (!this->kate_streams[n].subtitles_category[0]) break;
++  }
++  if (n==this->n_kate_streams) add_kate_stream(this);
++  strncpy(this->kate_streams[n].subtitles_category, category, 16);
++  this->kate_streams[n].subtitles_category[15] = 0;
++}
++
++/**
++  * sets the encoding of the next subtitles file
++  */
++static void set_subtitles_encoding(ff2theora this,F2T_ENCODING encoding){
++  size_t n;
++  for (n=0; n<this->n_kate_streams;++n) {
++    if (this->kate_streams[n].subtitles_encoding==ENC_UNSET) break;
++  }
++  if (n==this->n_kate_streams) add_kate_stream(this);
++  this->kate_streams[n].subtitles_encoding = encoding;
++}
++
++/**
+  * initialize ff2theora with default values
+  * @return ff2theora struct
+  */
+@@ -295,6 +597,9 @@
+         this->frame_leftBand=0;
+         this->frame_rightBand=0;
+ 
++        this->n_kate_streams=0;
++        this->kate_streams=NULL;
++
+         this->pix_fmt = PIX_FMT_YUV420P;
+     }
+     return this;
+@@ -703,10 +1008,48 @@
+         info.sample_rate = this->sample_rate;
+         info.vorbis_quality = this->audio_quality * 0.1;
+         info.vorbis_bitrate = this->audio_bitrate;
++        /* subtitles */
++#ifdef HAVE_KATE
++        for (i=0; i<this->n_kate_streams; ++i) {
++            ff2theora_kate_stream *ks = this->kate_streams+i;
++            kate_info *ki = &info.kate_streams[i].ki;
++            if (ks->num_subtitles > 0) {
++                kate_info_init(ki);
++                kate_info_set_language(ki, ks->subtitles_language);
++                kate_info_set_category(ki, ks->subtitles_category[0]?ks->subtitles_category:"subtitles");
++                if(this->force_input_fps) {
++                    ki->gps_numerator = 1000000 * (this->fps);    /* fps= numerator/denominator */
++                    ki->gps_denominator = 1000000;
++                }
++                else {
++                    if (this->framerate_new.num > 0) {
++                        // new framerate is interger only right now, 
++                        // so denominator is always 1
++                        ki->gps_numerator = this->framerate_new.num;
++                        ki->gps_denominator = this->framerate_new.den;
++                    } 
++                    else {
++                        ki->gps_numerator=vstream->r_frame_rate.num;
++                        ki->gps_denominator = vstream->r_frame_rate.den;
++                    }
++                }
++                ki->granule_shift = 32;
++            }
++        }
++#endif
+         oggmux_init (&info);
+         /*seek to start time*/
+         if(this->start_time) {
+           av_seek_frame( this->context, -1, (int64_t)AV_TIME_BASE*this->start_time, 1);
++          /* discard subtitles by their end time, so we still have those that start before the start time,
++             but end after it */
++          for (i=0; i<this->n_kate_streams; ++i) {
++              ff2theora_kate_stream *ks=this->kate_streams+i;
++              while (ks->subtitles_count < ks->num_subtitles && ks->subtitles[ks->subtitles_count].t1 <= this->start_time) {
++                  /* printf("skipping subtitle %u\n", ks->subtitles_count); */
++                  ks->subtitles_count++;
++              }
++          }
+         }
+         /*check for end time and calculate number of frames to encode*/
+         no_frames = fps*(this->end_time - this->start_time);
+@@ -915,12 +1258,44 @@
+                 }
+ 
+             }
++
++            /* if we have subtitles starting before then, add it */
++            if (info.with_kate) {
++                double avtime = info.audio_only ? info.audiotime :
++                    info.video_only ? info.videotime :
++                    info.audiotime < info.videotime ? info.audiotime : info.videotime;
++                for (i=0; i<this->n_kate_streams; ++i) {
++                    ff2theora_kate_stream *ks = this->kate_streams+i;
++                    if (ks->num_subtitles > 0) {
++                        ff2theora_subtitle *sub = ks->subtitles+ks->subtitles_count;
++                        /* we encode a bit in advance so we're sure to hit the time, the packet will
++                           be held till the right time. If we don't do that, we can insert late and
++                           oggz-validate moans */
++                        while (ks->subtitles_count < ks->num_subtitles && sub->t0-1.0 <= avtime+this->start_time) {
++                            int eos = (ks->subtitles_count == ks->num_subtitles-1);
++                            oggmux_add_kate_text(&info, i, sub->t0, sub->t1, sub->text, sub->len, eos);
++                            ks->subtitles_count++;
++                            ++sub;
++                        }
++                    }
++                }
++            }
++
+             /* flush out the file */
+             oggmux_flush (&info, e_o_s);
+             av_free_packet (&pkt);
+         }
+         while (ret >= 0);
+ 
++        for (i=0; i<this->n_kate_streams; ++i) {
++            ff2theora_kate_stream *ks = this->kate_streams+i;
++            if (ks->num_subtitles > 0 && ks->subtitles_count<ks->num_subtitles) {
++                double t = (info.videotime<info.audiotime?info.audiotime:info.videotime)+this->start_time;
++                oggmux_add_kate_end_packet(&info, i, t);
++                oggmux_flush (&info, e_o_s);
++            }
++        }
++
+         oggmux_close (&info);
+         if(ppContext)
+             pp_free_context(ppContext);
+@@ -932,6 +1307,7 @@
+ 
+ void ff2theora_close (ff2theora this){
+     /* clear out state */
++    free_subtitles(this);
+     av_free (this);
+ }
+ 
+@@ -1115,6 +1491,13 @@
+         "                          not work with all input format you have to manually\n"
+         "                          enable it if you have issues with A/V sync\n"
+         "\n"
++        "Subtitles options:\n"
++        "      --subtitles file                 use subtitles from the given file (SubRip (.srt) format)\n"
++        "      --subtitles-encoding encoding    set encoding of the subtitles file\n"
++        "             supported are " SUPPORTED_ENCODINGS "\n"
++        "      --subtitles-language language    set subtitles language (de, en_GB, etc)\n"
++        "      --subtitles-category category    set subtitles category (default \"subtitles\")\n"
++        "\n"
+         "Metadata options:\n"
+         "      --artist           Name of artist (director)\n"
+         "      --title            Title\n"
+@@ -1135,6 +1518,8 @@
+         "Examples:\n"
+         "  ffmpeg2theora videoclip.avi (will write output to videoclip.ogv)\n"
+         "\n"
++        "  ffmpeg2theora videoclip.avi subtitles.srt (same, with subtitles)\n"
++        "\n"
+         "  cat something.dv | ffmpeg2theora -f dv -o output.ogv -\n"
+         "\n"
+         "  Encode a series of images:\n"
+@@ -1207,6 +1592,10 @@
+       {"cropleft",required_argument,&flag,CROPLEFT_FLAG},
+       {"inputfps",required_argument,&flag,INPUTFPS_FLAG},
+       {"audiostream",required_argument,&flag,AUDIOSTREAM_FLAG},
++      {"subtitles",required_argument,&flag,SUBTITLES_FLAG},
++      {"subtitles-encoding",required_argument,&flag,SUBTITLES_ENCODING_FLAG},
++      {"subtitles-language",required_argument,&flag,SUBTITLES_LANGUAGE_FLAG},
++      {"subtitles-category",required_argument,&flag,SUBTITLES_CATEGORY_FLAG},
+       {"starttime",required_argument,NULL,'s'},
+       {"endtime",required_argument,NULL,'e'},
+       {"sync",0,&flag,SYNC_FLAG},
+@@ -1318,6 +1707,43 @@
+                         case NOSKELETON:
+                             info.with_skeleton=0;
+                             break;
++#ifdef HAVE_KATE
++                        case SUBTITLES_FLAG:
++                            set_subtitles_file(convert,optarg);
++                            flag = -1;
++                            info.with_kate=1;
++                            break;
++                        case SUBTITLES_ENCODING_FLAG:
++                            if (!strcmp(optarg,"utf-8")) set_subtitles_encoding(convert,ENC_UTF8);
++                            if (!strcmp(optarg,"utf8")) set_subtitles_encoding(convert,ENC_UTF8);
++                            else if (!strcmp(optarg,"iso-8859-1")) set_subtitles_encoding(convert,ENC_ISO_8859_1);
++                            else if (!strcmp(optarg,"latin1")) set_subtitles_encoding(convert,ENC_ISO_8859_1);
++                            else report_unknown_subtitle_encoding(optarg);
++                            flag = -1;
++                            break;
++                        case SUBTITLES_LANGUAGE_FLAG:
++                            if (strlen(optarg)>15) {
++                              fprintf(stderr, "WARNING - language is limited to 15 characters, and will be truncated\n");
++                            }
++                            set_subtitles_language(convert,optarg);
++                            flag = -1;
++                            break;
++                        case SUBTITLES_CATEGORY_FLAG:
++                            if (strlen(optarg)>15) {
++                              fprintf(stderr, "WARNING - category is limited to 15 characters, and will be truncated\n");
++                            }
++                            set_subtitles_category(convert,optarg);
++                            flag = -1;
++                            break;
++#else
++                        case SUBTITLES_FLAG:
++                        case SUBTITLES_ENCODING_FLAG:
++                        case SUBTITLES_LANGUAGE_FLAG:
++                        case SUBTITLES_CATEGORY_FLAG:
++                            fprintf(stderr, "WARNING - Kate support not compiled in, subtitles will not be output\n"
++                                            "        - install libkate and rebuild ffmpeg2theora for subtitle support\n");
++                            break;
++#endif
+                     }
+                 }
+ 
+@@ -1602,6 +2028,18 @@
+         }
+     }
+ 
++    oggmux_setup_kate_streams(&info, convert->n_kate_streams);
++
++    for (n=0; n<convert->n_kate_streams; ++n) {
++        ff2theora_kate_stream *ks=convert->kate_streams+n;
++        if (load_subtitles(ks)>=0) {
++          printf("Muxing Kate stream %d from %s as %s %s\n",
++              n,ks->filename,
++              ks->subtitles_language[0]?ks->subtitles_language:"<unknown language>",
++              ks->subtitles_category[0]?ks->subtitles_category:"subtitles");
++        }
++    }
++
+     if (av_open_input_file(&convert->context, inputfile_name, input_fmt, 0, formatParams) >= 0){
+         if (av_find_stream_info (convert->context) >= 0){
+ #ifdef WIN32
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/get_libkate.sh ffmpeg2theora-svn-kate/get_libkate.sh
+--- ffmpeg2theora-svn/get_libkate.sh	1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg2theora-svn-kate/get_libkate.sh	2008-03-17 20:28:56.000000000 +0000
+@@ -0,0 +1,30 @@
++#!/bin/sh
++
++version=0.1.0
++baseurl="http://libkate.googlecode.com/files/libkate-$version.tar.gz"
++
++which wget >& /dev/null
++if [ $? -eq 0 ]
++then
++  wget "$baseurl"
++else
++  which curl >& /dev/null
++  if [ $? -eq 0 ]
++  then
++    curl "$baseurl"
++  else
++    echo "Neither wget nor curl were found, cannot download libkate"
++    exit 1
++  fi
++fi
++
++if [ $? -ne 0 ]
++then
++  echo "Failed to download libkate"
++  exit 1
++fi
++
++tar xfz "libkate-$version.tar.gz"
++ln -fs "libkate-$version" libkate
++cd libkate && make
++
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/subtitles.txt ffmpeg2theora-svn-kate/subtitles.txt
+--- ffmpeg2theora-svn/subtitles.txt	1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg2theora-svn-kate/subtitles.txt	2008-03-17 20:28:22.000000000 +0000
+@@ -0,0 +1,131 @@
++Subtitles can be embedded in an Ogg stream alongside a Theora video.
++
++ * Overview
++ * Subtitles related options
++ * Converting non-utf-8 files to utf-8
++ * Examples
++
++
++
++ * Overview
++
++Subtitles are read from SubRip (.srt) format files and converted to
++Kate streams. Those SubRip files must be encoded in utf-8 (7 bit ASCII
++is a subset of utf-8 so are valid input as well). See below for more
++information on converting SubRip files with other encodings to utf-8.
++
++Subtitles support requires libkate, available from:
++http://code.google.com/p/libkate
++
++A subtitles input file is given with the --subtitles option.
++The language of subtitles in a file is given by the --subtitles-language
++option. See below for a list of subtitles related options. At the most
++simple, supplying a single input file:
++
++  ./ffmpeg2theora -o output.ogv --subtitles input.srt input.avi
++
++Any number of subtitles streams can be multiplexed, presumably with
++different languages and/or categories. See below for examples of this.
++
++
++
++ * Subtitles related options
++
++--subtitles <file>
++   Loads subtitles from a file, which must be an utf-8 encoded SubRip
++   (.srt) file
++
++--subtitles-language <language>
++  Sets the language of the relevant subtitles stream. Language must be
++  a language tag according to RFC 3066 (usually a two letter language
++  code, optionally followed by a dash (or underscore) and a region code.
++  Examples include en, it, ja, en_GB, de_DE, etc.
++  If unspecified, the default is to not set a language.
++
++--subtitles-category <category>
++  Sets the category of the relevant subtitles stream. Category must be
++  a free text string describing the type of the subtitles streams. This
++  is meant to be parsable automatically, so should be ASCII only, and
++  preferably among a list of predefined well known categories, such as
++  subtitles, commentary, transcript, lyrics.
++  If unspecified, the default is subtitles.
++
++--subtitles-encoding <encoding>
++  Sets the encoding of the relevant input file. Allowed encodings are
++  utf-8, utf8, iso-8859-1, and latin1. The first two are synonymous and
++  yield no conversion. The latter two are synonymous and convert from
++  iso-8859-1 to utf-8.
++  If the input file is in another encoding, a separate step is needed
++  to convert the input file to utf-8. See below for more information on
++  converting other encoding to utf-8.
++  If unspecified, the default is utf-8.
++
++
++
++ * Converting non-utf-8 files to utf-8
++
++If you have SubRip files in another format than utf-8, you can use the
++iconv or recode programs to convert them to utf-8 so ffmpeg2theora can
++read them.
++
++   * iconv
++      If you have a file called subtitles.srt which is not in utf-8,
++      you can convert it to utf-8 with the command:
++
++         iconv -t utf-8 -f ENCODING subtitles.srt > subtitles.utf8.srt
++
++      Substitute ENCODING with the actual encoding of the input file.
++      For instance, if your input file is in Shift-JIS encoding, replace
++      ENCODING with SHIFT-JIS. If your input file is in big endian UCS2
++      encoding, replace ENCODING with UCS-2BE.
++
++      This will create a new file called subtitles.utf8.srt, which will
++      be the equivalent of the input file, but in utf-8 format, so it
++      can be used as input to ffmpeg2theora.
++
++      To view a list of all the encodings iconv can convert to utf-8,
++      see the output of `iconv -l'.
++
++   * recode
++
++      If you have a file called subtitles.srt which is not in utf-8,
++      you can convert it to utf-8 with the command:
++
++         recode ENCODING..utf-8 < subtitles.srt > subtitles.utf8.srt
++
++      Substitute ENCODING with the actual encoding of the input file.
++      For instance, if your input file is in Shift-JIS encoding, replace
++      ENCODING with SHIFT-JIS. If your input file is in BIG5 encoding,
++      replace ENCODING with BIG5.
++
++      This will create a new file called subtitles.utf8.srt, which will
++      be the equivalent of the input file, but in utf-8 format, so it
++      can be used as input to ffmpeg2theora.
++
++      To view a list of all the encodings recode can convert to utf-8,
++      see the output of `recode -l'.
++
++
++ * Examples
++
++    Add a single English subtitles stream:
++
++      ./ffmpeg2theora --subtitles-language en --subtitles input.srt input.avi
++
++    Add German and Italian commentary:
++
++      ./ffmpeg2theora --subtitles comm.german.srt --subtitles-language de \
++                      --subtitles-category commentary \
++                      --subtitles comm.italian.srt --subtitles-language it \
++                      --subtitles-category commentary \
++                      input.avi
++
++    Add English subtitles and commentary:
++
++      ./ffmpeg2theora --subtitles subs.srt --subtitles-language en \
++                      --subtitles-category subtitles \
++                      --subtitles commentary.srt --subtitles-language en \
++                      --subtitles-category commentary \
++                      input.avi
++
++
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/theorautils.c ffmpeg2theora-svn-kate/theorautils.c
+--- ffmpeg2theora-svn/theorautils.c	2008-03-12 18:03:05.000000000 +0000
++++ ffmpeg2theora-svn-kate/theorautils.c	2008-03-16 17:33:53.000000000 +0000
+@@ -28,6 +28,9 @@
+ #include "theora/theora.h"
+ #include "vorbis/codec.h"
+ #include "vorbis/vorbisenc.h"
++#ifdef HAVE_OGGKATE
++#include "kate/oggkate.h"
++#endif
+ 
+ #include "theorautils.h"
+ 
+@@ -48,6 +51,7 @@
+     info->audiotime = 0;
+     info->audio_bytesout = 0;
+     info->video_bytesout = 0;
++    info->kate_bytesout = 0;
+ 
+     info->videopage_valid = 0;
+     info->audiopage_valid = 0;
+@@ -61,10 +65,58 @@
+ 
+     info->v_pkg=0;
+     info->a_pkg=0;
++    info->k_pkg=0;
+ #ifdef OGGMUX_DEBUG
+     info->a_page=0;
+     info->v_page=0;
++    info->k_page=0;
+ #endif
++
++    info->with_kate = 0;
++    info->n_kate_streams = 0;
++}
++
++void oggmux_setup_kate_streams(oggmux_info *info, int n_kate_streams)
++{
++    int n;
++
++    info->n_kate_streams = n_kate_streams;
++    if (n_kate_streams == 0) return;
++    info->kate_streams = (oggmux_kate_stream*)malloc(n_kate_streams*sizeof(oggmux_kate_stream));
++    for (n=0; n<n_kate_streams; ++n) {
++        oggmux_kate_stream *ks=info->kate_streams+n;
++        ks->katepage_valid = 0;
++        ks->katepage_buffer_length = 0;
++        ks->katepage = NULL;
++        ks->katetime = 0;
++    }
++}
++
++static void write16le(unsigned char *ptr,ogg_uint16_t v)
++{
++  ptr[0]=v&0xff;
++  ptr[1]=(v>>8)&0xff;
++}
++
++static void write32le(unsigned char *ptr,ogg_uint32_t v)
++{
++  ptr[0]=v&0xff;
++  ptr[1]=(v>>8)&0xff;
++  ptr[2]=(v>>16)&0xff;
++  ptr[3]=(v>>24)&0xff;
++}
++
++static void write64le(unsigned char *ptr,ogg_int64_t v)
++{
++  ogg_uint32_t hi=v>>32;
++  ptr[0]=v&0xff;
++  ptr[1]=(v>>8)&0xff;
++  ptr[2]=(v>>16)&0xff;
++  ptr[3]=(v>>24)&0xff;
++  ptr[4]=hi&0xff;
++  ptr[5]=(hi>>8)&0xff;
++  ptr[6]=(hi>>16)&0xff;
++  ptr[7]=(hi>>24)&0xff;
+ }
+ 
+ void add_fishead_packet (oggmux_info *info) {
+@@ -77,14 +129,14 @@
+ 
+     memset (op.packet, 0, 64);
+     memcpy (op.packet, FISHEAD_IDENTIFIER, 8); /* identifier */
+-    *((ogg_uint16_t*)(op.packet+8)) = SKELETON_VERSION_MAJOR; /* version major */
+-    *((ogg_uint16_t*)(op.packet+10)) = SKELETON_VERSION_MINOR; /* version minor */
+-    *((ogg_int64_t*)(op.packet+12)) = (ogg_int64_t)0; /* presentationtime numerator */
+-    *((ogg_int64_t*)(op.packet+20)) = (ogg_int64_t)1000; /* presentationtime denominator */
+-    *((ogg_int64_t*)(op.packet+28)) = (ogg_int64_t)0; /* basetime numerator */
+-    *((ogg_int64_t*)(op.packet+36)) = (ogg_int64_t)1000; /* basetime denominator */
++    write16le(op.packet+8, SKELETON_VERSION_MAJOR); /* version major */
++    write16le(op.packet+10, SKELETON_VERSION_MINOR); /* version minor */
++    write64le(op.packet+12, (ogg_int64_t)0); /* presentationtime numerator */
++    write64le(op.packet+20, (ogg_int64_t)1000); /* presentationtime denominator */
++    write64le(op.packet+28, (ogg_int64_t)0); /* basetime numerator */
++    write64le(op.packet+36, (ogg_int64_t)1000); /* basetime denominator */
+     /* both the numerator are zero hence handled by the memset */
+-    *((ogg_uint32_t*)(op.packet+44)) = 0; /* UTC time, set to zero for now */
++    write32le(op.packet+44, 0); /* UTC time, set to zero for now */
+ 
+     op.b_o_s = 1; /* its the first packet of the stream */
+     op.e_o_s = 0; /* its not the last packet of the stream */
+@@ -99,6 +151,7 @@
+  */
+ void add_fisbone_packet (oggmux_info *info) {
+     ogg_packet op;
++    int n;
+ 
+     if (!info->audio_only) {
+         memset (&op, 0, sizeof (op));
+@@ -108,14 +161,14 @@
+         memset (op.packet, 0, 82);
+         /* it will be the fisbone packet for the theora video */
+         memcpy (op.packet, FISBONE_IDENTIFIER, 8); /* identifier */
+-        *((ogg_uint32_t*)(op.packet+8)) = FISBONE_MESSAGE_HEADER_OFFSET; /* offset of the message header fields */
+-        *((ogg_uint32_t*)(op.packet+12)) = info->to.serialno; /* serialno of the theora stream */
+-        *((ogg_uint32_t*)(op.packet+16)) = 3; /* number of header packets */
++        write32le(op.packet+8, FISBONE_MESSAGE_HEADER_OFFSET); /* offset of the message header fields */
++        write32le(op.packet+12, info->to.serialno); /* serialno of the theora stream */
++        write32le(op.packet+16, 3); /* number of header packets */
+         /* granulerate, temporal resolution of the bitstream in samples/microsecond */
+-        *((ogg_int64_t*)(op.packet+20)) = info->ti.fps_numerator; /* granulrate numerator */
+-        *((ogg_int64_t*)(op.packet+28)) = info->ti.fps_denominator; /* granulrate denominator */
+-        *((ogg_int64_t*)(op.packet+36)) = 0; /* start granule */
+-        *((ogg_uint32_t*)(op.packet+44)) = 0; /* preroll, for theora its 0 */
++        write64le(op.packet+20, info->ti.fps_numerator); /* granulrate numerator */
++        write64le(op.packet+28, info->ti.fps_denominator); /* granulrate denominator */
++        write64le(op.packet+36, 0); /* start granule */
++        write32le(op.packet+44, 0); /* preroll, for theora its 0 */
+         *(op.packet+48) = theora_granule_shift (&info->ti); /* granule shift */
+         memcpy(op.packet+FISBONE_SIZE, "Content-Type: video/x-theora\r\n", 30); /* message header field, Content-Type */
+ 
+@@ -135,14 +188,14 @@
+         memset (op.packet, 0, 82);
+         /* it will be the fisbone packet for the vorbis audio */
+         memcpy (op.packet, FISBONE_IDENTIFIER, 8); /* identifier */
+-        *((ogg_uint32_t*)(op.packet+8)) = FISBONE_MESSAGE_HEADER_OFFSET; /* offset of the message header fields */
+-        *((ogg_uint32_t*)(op.packet+12)) = info->vo.serialno; /* serialno of the vorbis stream */
+-        *((ogg_uint32_t*)(op.packet+16)) = 3; /* number of header packet */
++        write32le(op.packet+8, FISBONE_MESSAGE_HEADER_OFFSET); /* offset of the message header fields */
++        write32le(op.packet+12, info->vo.serialno); /* serialno of the vorbis stream */
++        write32le(op.packet+16, 3); /* number of header packet */
+         /* granulerate, temporal resolution of the bitstream in Hz */
+-        *((ogg_int64_t*)(op.packet+20)) = info->sample_rate; /* granulerate numerator */
+-        *((ogg_int64_t*)(op.packet+28)) = (ogg_int64_t)1; /* granulerate denominator */
+-        *((ogg_int64_t*)(op.packet+36)) = 0; /* start granule */
+-        *((ogg_uint32_t*)(op.packet+44)) = 2; /* preroll, for vorbis its 2 */
++        write64le(op.packet+20, info->sample_rate); /* granulerate numerator */
++        write64le(op.packet+28, (ogg_int64_t)1); /* granulerate denominator */
++        write64le(op.packet+36, 0); /* start granule */
++        write32le(op.packet+44, 2); /* preroll, for vorbis its 2 */
+         *(op.packet+48) = 0; /* granule shift, always 0 for vorbis */
+         memcpy (op.packet+FISBONE_SIZE, "Content-Type: audio/x-vorbis\r\n", 30);
+         /* Important: Check the case of Content-Type for correctness */
+@@ -154,6 +207,37 @@
+         ogg_stream_packetin (&info->so, &op);
+         _ogg_free (op.packet);
+     }
++
++#ifdef HAVE_KATE
++    if (info->with_kate) {
++        for (n=0; n<info->n_kate_streams; ++n) {
++            oggmux_kate_stream *ks=info->kate_streams+n;
++	    memset (&op, 0, sizeof (op));
++	    op.packet = _ogg_calloc (86, sizeof(unsigned char));
++	    memset (op.packet, 0, 86);
++            /* it will be the fisbone packet for the kate stream */
++	    memcpy (op.packet, FISBONE_IDENTIFIER, 8); /* identifier */
++            write32le(op.packet+8, FISBONE_MESSAGE_HEADER_OFFSET); /* offset of the message header fields */
++	    write32le(op.packet+12, ks->ko.serialno); /* serialno of the vorbis stream */
++            write32le(op.packet+16, ks->ki.num_headers); /* number of header packet */
++	    /* granulerate, temporal resolution of the bitstream in Hz */
++	    write64le(op.packet+20, ks->ki.gps_numerator); /* granulerate numerator */
++            write64le(op.packet+28, ks->ki.gps_denominator); /* granulerate denominator */
++	    write64le(op.packet+36, 0); /* start granule */
++            write32le(op.packet+44, 0); /* preroll, for kate it's 0 */
++	    *(op.packet+48) = ks->ki.granule_shift; /* granule shift */
++            memcpy (op.packet+FISBONE_SIZE, "Content-Type: application/x-kate\r\n", 34);
++	    /* Important: Check the case of Content-Type for correctness */
++	
++	    op.b_o_s = 0;
++	    op.e_o_s = 0;
++	    op.bytes = 86;
++	
++            ogg_stream_packetin (&info->so, &op);
++	    _ogg_free (op.packet);
++        }
++    }
++#endif
+ }
+ 
+ void oggmux_init (oggmux_info *info){
+@@ -204,6 +288,23 @@
+     }
+     /* audio init done */
+ 
++    /* initialize kate if we have subtitles */
++    if (info->with_kate) {
++        int ret, n;
++#ifdef HAVE_KATE
++        for (n=0; n<info->n_kate_streams; ++n) {
++            oggmux_kate_stream *ks=info->kate_streams+n;
++            ogg_stream_init (&ks->ko, rand ());    /* oops, add one ot the above */
++            ret = kate_encode_init (&ks->k, &ks->ki);
++            if (ret<0) fprintf(stderr, "kate_encode_init: %d\n",ret);
++            ret = kate_comment_init(&ks->kc);
++            if (ret<0) fprintf(stderr, "kate_comment_init: %d\n",ret);
++            kate_comment_add_tag (&ks->kc, "ENCODER",PACKAGE_STRING);
++        }
++#endif
++    }
++    /* kate init done */
++
+     /* first packet should be skeleton fishead packet, if skeleton is used */
+ 
+     if (info->with_skeleton) {
+@@ -259,6 +360,34 @@
+         ogg_stream_packetin (&info->vo, &header_code);
+     }
+ 
++#ifdef HAVE_KATE
++    if (info->with_kate) {
++        int n;
++        for (n=0; n<info->n_kate_streams; ++n) {
++            oggmux_kate_stream *ks=info->kate_streams+n;
++            int ret;
++            while (1) {
++                ret=kate_ogg_encode_headers(&ks->k,&ks->kc,&op);
++                if (ret==0) {
++                  ogg_stream_packetin(&ks->ko,&op);
++                  ogg_packet_clear(&op);
++                }
++                if (ret<0) fprintf(stderr, "kate_encode_headers: %d\n",ret);
++                if (ret>0) break;
++            }
++
++            /* first header is on a separate page - libogg will do it automatically */
++            ret=ogg_stream_pageout (&ks->ko, &og);
++            if (ret!=1) {
++                fprintf (stderr, "Internal Ogg library error.\n");
++                exit (1);
++            }
++            fwrite (og.header, 1, og.header_len, info->outfile);
++            fwrite (og.body, 1, og.body_len, info->outfile);
++        }
++    }
++#endif
++
+     /* output the appropriate fisbone packets */
+     if (info->with_skeleton) {
+     add_fisbone_packet (info);
+@@ -307,6 +436,24 @@
+         fwrite (og.header, 1, og.header_len,info->outfile);
+         fwrite (og.body, 1, og.body_len, info->outfile);
+     }
++    if (info->with_kate) {
++        int n;
++        for (n=0; n<info->n_kate_streams; ++n) {
++            oggmux_kate_stream *ks=info->kate_streams+n;
++            while (1) {
++                int result = ogg_stream_flush (&ks->ko, &og);
++                if (result < 0){
++                    /* can't get here */
++                    fprintf (stderr, "Internal Ogg library error.\n");
++                    exit (1);
++                }
++                if (result == 0)
++                    break;
++                fwrite (og.header, 1, og.header_len,info->outfile);
++                fwrite (og.body, 1, og.body_len, info->outfile);
++            }
++        }
++    }
+ 
+     if (info->with_skeleton) {
+     int result;
+@@ -387,6 +534,66 @@
+     }
+ }
+ 
++/**    
++ * adds a subtitles text to the encoding sink
++ * if e_o_s is 1 the end of the logical bitstream will be marked.
++ * @param info oggmux_info
++ * @param idx which kate stream to output to
++ * @param t0 the show time of the text
++ * @param t1 the hide time of the text
++ * @param text the utf-8 text
++ * @param len the number of bytes in the text
++ * @param e_o_s 1 indicates end of stream
++ */
++void oggmux_add_kate_text (oggmux_info *info, int idx, double t0, double t1, const char *text, size_t len, int e_o_s){
++#ifdef HAVE_KATE
++    ogg_packet op;
++    oggmux_kate_stream *ks=info->kate_streams+idx;
++    int ret;
++    ret = kate_ogg_encode_text(&ks->k, t0, t1, text, len, &op);
++    if (ret>=0) {
++        ogg_stream_packetin (&ks->ko, &op);
++        info->k_pkg++;
++    }
++    else {
++        fprintf(stderr, "Failed to encode kate data packet (%f --> %f, [%s]): %d",
++            t0, t1, text, ret);
++    }
++    if(e_o_s) {
++        ret = kate_ogg_encode_finish(&ks->k, -1, &op);
++        if (ret>=0) {
++            ogg_stream_packetin (&ks->ko, &op);
++            info->k_pkg++;
++        }
++        else {
++            fprintf(stderr, "Failed to encode kate end packet: %d", ret);
++        }
++    }
++#endif
++}
++    
++/**    
++ * adds a kate end packet to the encoding sink
++ * @param info oggmux_info
++ * @param idx which kate stream to output to
++ * @param t the time of the end packet
++ */
++void oggmux_add_kate_end_packet (oggmux_info *info, int idx, double t){
++#ifdef HAVE_KATE
++    ogg_packet op;
++    oggmux_kate_stream *ks=info->kate_streams+idx;
++    int ret;
++    ret = kate_ogg_encode_finish(&ks->k, t, &op);
++    if (ret>=0) {
++        ogg_stream_packetin (&ks->ko, &op);
++        info->k_pkg++;
++    }
++    else {
++        fprintf(stderr, "Failed to encode kate end packet: %d", ret);
++    }
++#endif
++}
++    
+ static double get_remaining(oggmux_info *info, double timebase) {
+   double remaining = 0;
+   double to_encode, time_so_far;
+@@ -440,7 +647,7 @@
+     }
+ }
+ 
+-static int write_audio_page(oggmux_info *info)
++static void write_audio_page(oggmux_info *info)
+ {
+   int ret;
+ 
+@@ -465,7 +672,7 @@
+   print_stats(info, info->audiotime);
+ }
+ 
+-static int write_video_page(oggmux_info *info)
++static void write_video_page(oggmux_info *info)
+ {
+   int ret;
+ 
+@@ -491,10 +698,56 @@
+   print_stats(info, info->videotime);
+ }
+ 
++static void write_kate_page(oggmux_info *info, int idx)
++{
++  int ret;
++  oggmux_kate_stream *ks=info->kate_streams+idx;
++
++  ret = fwrite(ks->katepage, 1, ks->katepage_len, info->outfile);
++  if(ret < ks->katepage_len) {
++    fprintf(stderr,"error writing kate page\n");
++  }
++  else {
++    info->kate_bytesout += ret;
++  }
++  ks->katepage_valid = 0;
++  info->k_pkg -= ogg_page_packets((ogg_page *)&ks->katepage);
++#ifdef OGGMUX_DEBUG
++  ks->k_page++;
++  fprintf(stderr,"\nkate page %d (%d pkgs) | pkg remaining %d\n",ks->k_page,ogg_page_packets((ogg_page *)&info->katepage),info->k_pkg);
++#endif
++
++
++  /*
++  info->kkbps = rint (info->kate_bytesout * 8. / info->katetime * .001);
++  if(info->kkbps<0)
++    info->kkbps=0;
++  print_stats(info, info->katetime);
++  */
++}
++
++static int find_best_valid_kate_page(oggmux_info *info)
++{
++  int n;
++  double t=0.0;
++  int best=-1;
++  if (info->with_kate) for (n=0; n<info->n_kate_streams;++n) {
++    oggmux_kate_stream *ks=info->kate_streams+n;
++    if (ks->katepage_valid) {
++      if (best==-1 || ks->katetime<t) {
++        t=ks->katetime;
++        best=n;
++      }
++    }
++  }
++  return best;
++}
++
+ void oggmux_flush (oggmux_info *info, int e_o_s)
+ {
+-    int len;
++    int n,len;
+     ogg_page og;
++    int best;
+ 
+     /* flush out the ogg pages to info->outfile */
+     while(1) {
+@@ -554,10 +807,53 @@
+         }
+       }
+ 
++#ifdef HAVE_KATE
++      if (info->with_kate) for (n=0; n<info->n_kate_streams; ++n) {
++        oggmux_kate_stream *ks=info->kate_streams+n;
++        if (!ks->katepage_valid) {
++          int k_next=0;
++          /* always flush kate stream */
++          if (ogg_stream_flush(&ks->ko, &og) > 0) {
++            k_next = 1;
++          }
++          if (k_next) {
++            len = og.header_len + og.body_len;
++            if(ks->katepage_buffer_length < len) {
++              ks->katepage = realloc(ks->katepage, len);
++              ks->katepage_buffer_length = len;
++            }
++            ks->katepage_len = len;
++            memcpy(ks->katepage, og.header, og.header_len);
++            memcpy(ks->katepage+og.header_len , og.body, og.body_len);
++
++            ks->katepage_valid = 1;
++            if(ogg_page_granulepos(&og)>0) {
++              ks->katetime= kate_granule_time (&ks->ki,
++                    ogg_page_granulepos(&og));
++            }
++          }
++        }
++      }
++#endif
++
++#ifdef HAVE_KATE
++#define CHECK_KATE_OUTPUT(which) \
++        if (best>=0 && info->kate_streams[best].katetime/*-1.0*/<=info->which##time) { \
++          write_kate_page(info, best); \
++          continue; \
++        }
++#else
++#define CHECK_KATE_OUTPUT(which) ((void)0)
++#endif
++
++      best=find_best_valid_kate_page(info);
++
+       if(info->video_only && info->videopage_valid) {
++        CHECK_KATE_OUTPUT(video);
+         write_video_page(info);
+       }
+       else if(info->audio_only && info->audiopage_valid) {
++        CHECK_KATE_OUTPUT(audio);
+         write_audio_page(info);
+       }
+       /* We're using both. We can output only:
+@@ -566,10 +862,17 @@
+        */
+       else if(info->videopage_valid && info->audiopage_valid) {
+         /* Make sure they're in the right order. */
+-        if(info->videotime <= info->audiotime)
++        if(info->videotime <= info->audiotime) {
++          CHECK_KATE_OUTPUT(video);
+           write_video_page(info);
+-        else
++        }
++        else {
++          CHECK_KATE_OUTPUT(audio);
+           write_audio_page(info);
++        }
++      }
++      else if(e_o_s && best>=0) {
++          write_kate_page(info, best);
+       }
+       else if(e_o_s && info->videopage_valid) {
+           write_video_page(info);
+@@ -584,6 +887,8 @@
+ }
+ 
+ void oggmux_close (oggmux_info *info){
++    int n;
++
+     ogg_stream_clear (&info->vo);
+     vorbis_block_clear (&info->vb);
+     vorbis_dsp_clear (&info->vd);
+@@ -593,6 +898,15 @@
+     ogg_stream_clear (&info->to);
+     theora_clear (&info->td);
+ 
++#ifdef HAVE_KATE
++    for (n=0; n<info->n_kate_streams; ++n) {
++        ogg_stream_clear (&info->kate_streams[n].ko);
++        kate_comment_clear (&info->kate_streams[n].kc);
++        kate_info_clear (&info->kate_streams[n].ki);
++        kate_clear (&info->kate_streams[n].k);
++    }
++#endif
++
+     if (info->outfile && info->outfile != stdout)
+         fclose (info->outfile);
+ 
+@@ -600,4 +914,9 @@
+       free(info->videopage);
+     if(info->audiopage)
+       free(info->audiopage);
++
++    for (n=0; n<info->n_kate_streams; ++n) {
++        if(info->kate_streams[n].katepage)
++          free(info->kate_streams[n].katepage);
++    }
+ }
+diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x kino_export -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x ffmpeg -x libkate -x 'libkate-*' -x ffmpeg2theora -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x test.srt -x test.utf8.srt -x test -x '*~' -x '*.rej' -urN ffmpeg2theora-svn/theorautils.h ffmpeg2theora-svn-kate/theorautils.h
+--- ffmpeg2theora-svn/theorautils.h	2008-03-12 18:03:05.000000000 +0000
++++ ffmpeg2theora-svn-kate/theorautils.h	2008-03-16 16:55:18.000000000 +0000
+@@ -22,6 +22,9 @@
+ #include "theora/theora.h"
+ #include "vorbis/codec.h"
+ #include "vorbis/vorbisenc.h"
++#ifdef HAVE_KATE
++#include "kate/kate.h"
++#endif
+ #include "ogg/ogg.h"
+ 
+ // #define OGGMUX_DEBUG
+@@ -35,6 +38,23 @@
+ 
+ typedef struct
+ {
++#ifdef HAVE_KATE
++    kate_state k;
++    kate_info ki;
++    kate_comment kc;
++#endif
++    ogg_stream_state ko;    /* take physical pages, weld into a logical
++                             * stream of packets */
++    int katepage_valid;
++    unsigned char *katepage;
++    int katepage_len;
++    int katepage_buffer_length;
++    double katetime;
++}
++oggmux_kate_stream;
++
++typedef struct
++{
+     /* the file the mixed ogg stream is written to */
+     FILE *outfile;
+ 
+@@ -61,6 +81,8 @@
+     vorbis_dsp_state vd; /* central working state for the packet->PCM decoder */
+     vorbis_block vb;     /* local working space for packet->PCM decode */
+ 
++    int with_kate;
++
+     /* used for muxing */
+     ogg_stream_state to;    /* take physical pages, weld into a logical
+                              * stream of packets */
+@@ -87,21 +109,30 @@
+     int akbps;
+     ogg_int64_t audio_bytesout;
+     ogg_int64_t video_bytesout;
++    ogg_int64_t kate_bytesout;
+     time_t start_time;
+ 
+     //to do some manual page flusing
+     int v_pkg;
+     int a_pkg;
++    int k_pkg;
+ #ifdef OGGMUX_DEBUG
+     int a_page;
+     int v_page;
++    int k_page;
+ #endif
++
++    int n_kate_streams;
++    oggmux_kate_stream *kate_streams;
+ }
+ oggmux_info;
+ 
+ extern void init_info(oggmux_info *info);
++extern void oggmux_setup_kate_streams(oggmux_info *info, int n_kate_streams);
+ extern void oggmux_init (oggmux_info *info);
+ extern void oggmux_add_video (oggmux_info *info, yuv_buffer *yuv, int e_o_s);
+ extern void oggmux_add_audio (oggmux_info *info, int16_t * readbuffer, int bytesread, int samplesread,int e_o_s);
++extern void oggmux_add_kate_text (oggmux_info *info, int idx, double t0, double t1, const char *text, size_t len,int e_o_s);
++extern void oggmux_add_kate_end_packet (oggmux_info *info, int idx, double t);
+ extern void oggmux_flush (oggmux_info *info, int e_o_s);
+ extern void oggmux_close (oggmux_info *info);

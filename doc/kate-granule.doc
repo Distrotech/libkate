@@ -1,0 +1,50 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page granule Granule encoding
+
+Ogg leaves the encoding of granules up to a particular codec, only
+mandating that granules be non decreasing with time.
+
+The Kate bitstream format uses a linear mapping between time and
+granule, described here.
+
+A Kate granule position is composed of two different parts:
+ - a base granule, in the high bits
+ - a granule offset, in the low bits
+
+\verbatim
++----------------+----------------+
+| base           | offset         |
++----------------+----------------+
+\endverbatim
+
+The number of bits these parts occupy is variable, and each stream
+may choose how many bits to dedicate to each. The kate_info structure
+for a stream holds that information in the granule_shift field,
+so each part may be reconstructed from a granulepos.
+
+The kate_info structure for a stream also holds a rational fraction
+representing the time span of granule units.
+
+The granule rate is defined by the two fields:
+\code
+kate_info::gps_numerator
+kate_info::gps_denominator
+\endcode
+
+The number of bits reserved for the offset is defined by the field:
+\code
+kate_info::granule_shift
+\endcode
+
+*/
+

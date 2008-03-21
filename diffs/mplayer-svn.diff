@@ -1,0 +1,1574 @@
+diff -ru -x '*.o' mplayer-svn/DOCS/man/cs/mplayer.1 mplayer-svn-with-kate/DOCS/man/cs/mplayer.1
+--- mplayer-svn/DOCS/man/cs/mplayer.1	2008-03-14 13:26:39.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/cs/mplayer.1	2008-03-15 21:25:45.000000000 +0000
+@@ -171,7 +171,7 @@
+ MPlayer mÃ¡ displej na obrazovce (OSD) pro stavovÃ© informace, krÃ¡snÃ© velkÃ©
+ vyhlazenÃ© a stÃ­novanÃ© titulky a vizuÃ¡lnÃ­ odezvu na povely z\ klÃ¡vesnice.
+ PodporovÃ¡ny jsou EvropskÃ©/\:ISO8859\-1,2 (BulharskÃ©, AnglickÃ©, ÄŒeskÃ©, atd),
+-CyrilickÃ© a KorejskÃ© fonty spolu s 12 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, OGM,
++CyrilickÃ© a KorejskÃ© fonty spolu s 13 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS a nÃ¡Å¡ vlastnÃ­: MPsub) a
+ takÃ© DVD titulky (SPU proudy, VOBsub a Closed Captions).
+ .PP
+@@ -2068,6 +2068,12 @@
+ VytvoÅ™Ã­ soubor dumpsub.smi v aktuÃ¡lnÃ­m adresÃ¡Å™i.
+ .
+ .TP
++.B \-dumpoggkatesub (pouze MPlayer)
++PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
++Kate formÃ¡tu.
++VytvoÅ™Ã­ soubor dumpsub.ogg v aktuÃ¡lnÃ­m adresÃ¡Å™i.
++.
++.TP
+ .B \-dumpsrtsub (pouze MPlayer)
+ PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
+ SubViewer (SRT) formÃ¡tu.
+diff -ru -x '*.o' mplayer-svn/DOCS/man/de/mplayer.1 mplayer-svn-with-kate/DOCS/man/de/mplayer.1
+--- mplayer-svn/DOCS/man/de/mplayer.1	2008-03-14 13:26:39.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/de/mplayer.1	2008-03-15 21:25:46.000000000 +0000
+@@ -2173,6 +2173,12 @@
+ Erstellt eine Datei dumpsub.smi im aktuellen Verzeichnis.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer only)
++Konvertiert den (mit der \-sub-Option angegebenen) Untertitel in das
++zeitbasierende Kate-Untertitelformat.
++Erstellt eine Datei dumpsub.ogg im aktuellen Verzeichnis.
++.
++.TP
+ .B \-dumpsrtsub (nur bei MPlayer)
+ Konvertiert den (mit der \-sub\-Option angegebenen) Untertitel in das
+ zeitbasierende SubViewer-Untertitelformat (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/en/mplayer.1 mplayer-svn-with-kate/DOCS/man/en/mplayer.1
+--- mplayer-svn/DOCS/man/en/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/en/mplayer.1	2008-03-15 21:25:47.000000000 +0000
+@@ -166,9 +166,9 @@
+ MPlayer has an onscreen display (OSD) for status information, nice big
+ antialiased shaded subtitles and visual feedback for keyboard controls.
+ European/\:ISO8859-1,2 (Hungarian, English, Czech, etc), Cyrillic and Korean
+-fonts are supported along with 12 subtitle formats (MicroDVD, SubRip, OGM,
+-SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub) and
+-DVD subtitles (SPU streams, VOBsub and Closed Captions).
++fonts are supported along with 13 subtitle formats (MicroDVD, SubRip, Kate,
++OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub)
++and DVD subtitles (SPU streams, VOBsub and Closed Captions).
+ .PP
+ .B mencoder
+ (MPlayer's Movie Encoder) is a simple movie encoder, designed to encode
+@@ -2140,6 +2140,12 @@
+ Creates a dumpsub.smi file in the current directory.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer only)
++Convert the given subtitle (specified with the \-sub option) to the time-based
++Kate subtitle format.
++Creates a dumpsub.ogg file in the current directory.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer only)
+ Convert the given subtitle (specified with the \-sub option) to the time-based
+ SubViewer (SRT) subtitle format.
+diff -ru -x '*.o' mplayer-svn/DOCS/man/es/mplayer.1 mplayer-svn-with-kate/DOCS/man/es/mplayer.1
+--- mplayer-svn/DOCS/man/es/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/es/mplayer.1	2008-03-15 21:25:48.000000000 +0000
+@@ -183,8 +183,8 @@
+ subtítulos grandes y bonitos con suavizado de bordes y realimentación visual de
+ los controles con teclado.
+ Tipos de letra Europeo/\:ISO8859\-1,2 (Húngaro, Inglés, Checoslovaco, etc),
+-Cirílico y Koreano se soportan en 12 formatos de subtítulos (MicroDVD, SubRip,
+-OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
++Cirílico y Koreano se soportan en 13 formatos de subtítulos (MicroDVD, SubRip,
++Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
+ MPsub) así como subtítulos DVD (cadenas SPU, VOBsub y Closed Captions).
+ .PP
+ .B mencoder
+@@ -1901,6 +1901,12 @@
+ Crea un archivo dumpsub.smi en el directorio actual.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer solamente)
++Convierte el subtítulo dado (especificado con la opción \-sub) al formato
++de subtítulo basado en tiempo Kate.
++Crea un archivo dumpsub.ogg en el directorio actual.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer solamente)
+ Convierte el subtítulo dado (especificado con la opción \-sub) al formato
+ de subtítulo basado en tiempo SubViewer (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/fr/mplayer.1 mplayer-svn-with-kate/DOCS/man/fr/mplayer.1
+--- mplayer-svn/DOCS/man/fr/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/fr/mplayer.1	2008-03-15 21:25:50.000000000 +0000
+@@ -171,9 +171,9 @@
+ informations, de belles et grandes polices lissées et des effets
+ visuels pour confirmer les contrôles au clavier. Les polices
+ européennes/\:ISO8859\-1,2 (Hongroise, Anglaise, Tchèque, etc),
+-Cyrillique et Coréenne sont gérés ainsi que 11 formats de
+-sous-titres (MicroDVD, SubRip, OGM, SubViewer, Sami, VPlayer, RT,
+-SSA, AQTitle, JACOsub, PJS et le nôtre: MPsub) et les sous-titres
++Cyrillique et Coréenne sont gérés ainsi que 13 formats de
++sous-titres (MicroDVD, SubRip, Kate, OGM, SubViewer, Sami, VPlayer,
++RT, SSA, AQTitle, JACOsub, PJS et le nôtre: MPsub) et les sous-titres
+ DVD (SPU streams, VobSub et Closed Captions).
+ .PP
+ .B mencoder
+@@ -2246,6 +2246,12 @@
+ Crée un fichier dumpsub.smi dans le répertoire courant.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer uniquement)
++Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
++temps Kate.
++Crée un fichier dumpsub.ogg dans le répertoire courant.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer uniquement)
+ Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
+ temps SubViewer (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/hu/mplayer.1 mplayer-svn-with-kate/DOCS/man/hu/mplayer.1
+--- mplayer-svn/DOCS/man/hu/mplayer.1	2008-03-17 21:23:26.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/hu/mplayer.1	2008-03-17 21:24:02.000000000 +0000
+@@ -168,8 +168,8 @@
+ Az MPlayernek van onscreen display (OSD) funkciója is a státuszinformációk
+ és a szép, élsímított, árnyékolt feliratok megjelenítéséhez és a billentyûzetrõl
+ érkezõ jelek visszajelzéséhez. Európai/\:ISO8859\-1,2 (magyar, angol, cseh, stb.),
+-cirill és koreai betûtípusok mind támogatottak 12 felirat formátummal (MicroDVD,
+-SubRip, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
++cirill és koreai betûtípusok mind támogatottak 13 felirat formátummal (MicroDVD,
++SubRip, Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
+ sajátunk: MPsub) és DVD felirattal (SPU streams, VOBsub és Closed Captions)
+ egyetemben.
+ .PP
+@@ -2150,6 +2150,12 @@
+ Az aktuális könyvtárban hoz létre egy dumpsub.smi fájlt.
+ .
+ .TP
++.B \-dumpoggkatesub (csak MPlayer)
++A használt felirat (amit a \-sub opció ad meg) idõ alapú Kate formátumba
++konvertálása.
++Az aktuális könyvtárban hoz létre egy dumpsub.ogg fájlt.
++.
++.TP
+ .B \-dumpsrtsub (csak MPlayer)
+ A használt felirat (amit a \-sub opció ad meg) idõ alapú SubViewer formátumba
+ konvertálása.
+diff -ru -x '*.o' mplayer-svn/DOCS/man/it/mplayer.1 mplayer-svn-with-kate/DOCS/man/it/mplayer.1
+--- mplayer-svn/DOCS/man/it/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/it/mplayer.1	2008-03-15 21:25:52.000000000 +0000
+@@ -173,7 +173,7 @@
+ informazioni sullo stato, grandi e bei sottotitoli sfumati con antialias ed un
+ riscontro visuale dei comandi da tastiera.
+ Sono supportati font europei/\:ISO8859\-1,2 (Ungherese, Inglese, Ceco, etc),
+-Cirillici e Coreani insieme a 12 formati di sottotitoli (MicroDVD, SubRip,
++Cirillici e Coreani insieme a 13 formati di sottotitoli (MicroDVD, SubRip, Kate,
+ OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS ed il nostro:
+ MPsub) oltre ai sottotitoli dei DVD (flussi SPU, VOBsub e Closed Captions).
+ .PP
+@@ -2228,6 +2228,12 @@
+ Crea un file dumpsub.smi nella directory corrente.
+ .
+ .TP
++.B \-dumpoggkatesub (solo MPlayer)
++Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
++dei sottotitoli basato sul tempo Kate.
++Crea un file dumpsub.ogg nella directory corrente.
++.
++.TP
+ .B \-dumpsrtsub (solo MPlayer)
+ Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
+ dei sottotitoli basato sul tempo SubViever (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/pl/mplayer.1 mplayer-svn-with-kate/DOCS/man/pl/mplayer.1
+--- mplayer-svn/DOCS/man/pl/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/pl/mplayer.1	2008-03-15 21:25:53.000000000 +0000
+@@ -211,7 +211,7 @@
+ przy pomocy klawiatury i wy¶wietla ³adne, du¿e, antyaliasowane i cieniowane
+ napisy.
+ Obs³ugiwane s± czcionki europejskie/\:ISO 8859\-1,2 (polskie, czeskie, angielskie
+-itp.), koreañskie i cyrylica oraz 12 formatów napisów (MicroDVD, SubRip, OGM,
++itp.), koreañskie i cyrylica oraz 13 formatów napisów (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS i nasz w³asny: MPsub)
+ i napisów DVD (strumienie SPU, VOBSub i Closed Captions).
+ .PP
+@@ -1424,6 +1424,12 @@
+ Tworzy w bie¿±cym katalogu zbiór dumpsub.smi
+ .
+ .TP
++.B \-dumpoggkatesub (tylko MPlayer)
++Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
++Kate.
++Tworzy w bie¿±cym katalogu zbiór dumpsub.ogg
++.
++.TP
+ .B \-dumpsrtsub (tylko MPlayer)
+ Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
+ SubViewer (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/ru/mplayer.1 mplayer-svn-with-kate/DOCS/man/ru/mplayer.1
+--- mplayer-svn/DOCS/man/ru/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/ru/mplayer.1	2008-03-15 21:25:57.000000000 +0000
+@@ -168,7 +168,7 @@
+ MPlayer ÉÍÅÅÔ onscreen display (OSD) ÄÌÑ ÏÔÏÂÒÁÖÅÎÉÑ ÉÎÆÏÒÍÁÃÉÉ Ï ÓÏÓÔÏÑÎÉÉ ,
+ ÂÏÌØÛÉÈ ÓÇÌÁÖÅÎÎÙÈ ÓÕÂÔÉÔÒÏ× Ó ÔÅÎØÀ É ×ÉÚÕÁÌØÎÏÇÏ ÏÔËÌÉËÁ ÎÁ ËÌÁ×ÉÁÔÕÒÎÙÅ ËÏÍÁÎÄÙ.
+ å×ÒÏĞÅÊÓËÉÅ/\:ISO8859\-1,2 (÷ÅÎÇÅÒÓËÉÅ, áÎÇÌÉÊÓËÉÅ, şÅÛÓËÉÅ, É Ô.Ä.), ëÉÒÉÌÌÉŞÅÓËÉÅ É ëÏÒÅÊÓËÉÅ
+-ÛÒÉÆÔÙ ×ËÕĞÅ Ó 12 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, OGM,
++ÛÒÉÆÔÙ ×ËÕĞÅ Ó 13 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS É ÎÁÛ ÓÏÂÓÔ×ÅÎÎÙÊ: MPsub) É 
+ DVD ÓÕÂÔÉÔÒÙ (SPU streams, VOBsub É Closed Captions).
+ .PP
+@@ -2034,6 +2034,11 @@
+ óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.sm × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
+ .
+ .TP
++.B \-dumpoggkatesub (ÔÏÌØËÏ MPlayer)
++ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ Kate.
++óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.ogg × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
++.
++.TP
+ .B \-dumpsrtsub (ÔÏÌØËÏ MPlayer)
+ ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ
+ SubViewer (SRT).
+diff -ru -x '*.o' mplayer-svn/DOCS/man/zh/mplayer.1 mplayer-svn-with-kate/DOCS/man/zh/mplayer.1
+--- mplayer-svn/DOCS/man/zh/mplayer.1	2008-03-14 13:26:40.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/man/zh/mplayer.1	2008-03-15 21:26:03.000000000 +0000
+@@ -175,7 +175,7 @@
+ MPlayer å…·æœ‰ OSD(å±ä¸Šæ˜¾ç¤º) åŠŸèƒ½æ˜¾ç¤ºçŠ¶æ€ä¿¡æ¯, æœ‰
+ æŠ—é”¯é½¿å¸¦é˜´å½±çš„æ¼‚äº®å¤§å­—å¹•å’Œé”®ç›˜æ§åˆ¶çš„å¯è§†åé¦ˆã€‚
+ æ”¯æŒçš„å­—ä½“åŒ…æ‹¬æ¬§æ´²è¯­ç§/\:ISO8859\-1,2 (åŒˆç‰™åˆ©è¯­, è‹±è¯­, æ·å…‹è¯­ç­‰ç­‰), 
+-è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 12 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, OGM,
++è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 13 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, Kate OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS 
+ åŠæˆ‘ä»¬è‡ªå·±çš„: MPsub) å’Œ DVD å­—å¹• (SPU æµ, VOBsub åŠéšè—å¼ CC å­—å¹•)ã€‚
+ .PP
+@@ -1993,6 +1993,11 @@
+ åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.smi æ–‡ä»¶ã€‚
+ .
+ .TP
++.B \-dumpoggkatesub (ä»…ç”¨äº MPlayer)
++è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ Kate å­—å¹•æ ¼å¼ã€‚
++åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.ogg æ–‡ä»¶ã€‚
++.
++.TP
+ .B \-dumpsrtsub (ä»…ç”¨äº MPlayer)
+ è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ SubViewer (SRT) å­—å¹•æ ¼å¼ã€‚
+ åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.srt æ–‡ä»¶ã€‚
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/cs/usage.xml mplayer-svn-with-kate/DOCS/xml/cs/usage.xml
+--- mplayer-svn/DOCS/xml/cs/usage.xml	2008-03-14 13:26:41.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/cs/usage.xml	2008-03-15 21:32:50.000000000 +0000
+@@ -117,6 +117,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -141,6 +142,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/de/usage.xml mplayer-svn-with-kate/DOCS/xml/de/usage.xml
+--- mplayer-svn/DOCS/xml/de/usage.xml	2008-03-14 13:26:41.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/de/usage.xml	2008-03-15 21:32:59.000000000 +0000
+@@ -117,6 +117,7 @@
+       <listitem><para>CC (closed caption)</para></listitem>
+       <listitem><para>MicroDVD</para></listitem>
+       <listitem><para>SubRip</para></listitem>
++      <listitem><para>Kate</para></listitem>
+       <listitem><para>SubViewer</para></listitem>
+       <listitem><para>Sami</para></listitem>
+       <listitem><para>VPlayer</para></listitem>
+@@ -138,6 +139,7 @@
+       <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+       <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+       <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++      <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+     </itemizedlist>
+   </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/en/usage.xml mplayer-svn-with-kate/DOCS/xml/en/usage.xml
+--- mplayer-svn/DOCS/xml/en/usage.xml	2008-03-14 13:26:42.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/en/usage.xml	2008-03-15 21:33:02.000000000 +0000
+@@ -118,6 +118,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -142,6 +143,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/fr/usage.xml mplayer-svn-with-kate/DOCS/xml/fr/usage.xml
+--- mplayer-svn/DOCS/xml/fr/usage.xml	2008-03-14 13:26:42.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/fr/usage.xml	2008-03-15 21:33:22.000000000 +0000
+@@ -117,6 +117,7 @@
+ <listitem><para>CC (closed caption)</para></listitem>
+ <listitem><para>MicroDVD</para></listitem>
+ <listitem><para>SubRip</para></listitem>
++<listitem><para>Kate</para></listitem>
+ <listitem><para>SubViewer</para></listitem>
+ <listitem><para>Sami</para></listitem>
+ <listitem><para>VPlayer</para></listitem>
+@@ -139,6 +140,7 @@
+ <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+ <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+ <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++<listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/hu/usage.xml mplayer-svn-with-kate/DOCS/xml/hu/usage.xml
+--- mplayer-svn/DOCS/xml/hu/usage.xml	2008-03-14 13:26:42.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/hu/usage.xml	2008-03-15 21:33:24.000000000 +0000
+@@ -119,6 +119,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -143,6 +144,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/it/usage.xml mplayer-svn-with-kate/DOCS/xml/it/usage.xml
+--- mplayer-svn/DOCS/xml/it/usage.xml	2008-03-14 13:26:43.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/it/usage.xml	2008-03-15 21:33:26.000000000 +0000
+@@ -120,6 +120,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -144,6 +145,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/pl/usage.xml mplayer-svn-with-kate/DOCS/xml/pl/usage.xml
+--- mplayer-svn/DOCS/xml/pl/usage.xml	2008-03-14 13:26:43.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/pl/usage.xml	2008-03-15 21:33:28.000000000 +0000
+@@ -118,6 +118,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -142,6 +143,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+  
+diff -ru -x '*.o' mplayer-svn/DOCS/xml/ru/usage.xml mplayer-svn-with-kate/DOCS/xml/ru/usage.xml
+--- mplayer-svn/DOCS/xml/ru/usage.xml	2008-03-14 13:26:43.000000000 +0000
++++ mplayer-svn-with-kate/DOCS/xml/ru/usage.xml	2008-03-15 21:33:30.000000000 +0000
+@@ -121,6 +121,7 @@
+   <listitem><para>CC (closed caption[ÑĞºÑ€Ñ‹Ñ‚Ñ‹Ğµ Ñ‚Ğ¸Ñ‚Ñ€Ñ‹])</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -143,6 +144,7 @@
+  <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+  <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+  <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++ <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ru -x '*.o' mplayer-svn/cfg-mplayer.h mplayer-svn-with-kate/cfg-mplayer.h
+--- mplayer-svn/cfg-mplayer.h	2008-03-14 13:26:39.000000000 +0000
++++ mplayer-svn-with-kate/cfg-mplayer.h	2008-03-15 20:49:21.000000000 +0000
+@@ -299,6 +299,7 @@
+ 	{"dumpmicrodvdsub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 7, NULL},
+ 	{"dumpjacosub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 8, NULL},
+ 	{"dumpsami", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 9, NULL},
++	{"dumpoggkatesub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 10, NULL},
+ 
+ #ifdef HAVE_LIRC
+ 	{"lircconf", &lirc_configfile, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
+diff -ru -x '*.o' mplayer-svn/configure mplayer-svn-with-kate/configure
+--- mplayer-svn/configure	2008-03-17 21:23:27.000000000 +0000
++++ mplayer-svn-with-kate/configure	2008-03-17 21:24:03.000000000 +0000
+@@ -304,6 +304,7 @@
+   --disable-libvorbis       disable libvorbis support [autodetect]
+   --disable-speex           disable Speex support [autodetect]
+   --enable-theora           enable OggTheora libraries [autodetect]
++  --enable-kate             enable OggKate libraries [autodetect]
+   --enable-faad-external    enable external FAAD2 (AAC) [autodetect]
+   --disable-faad-internal   disable internal FAAD2 (AAC) [autodetect]
+   --enable-faad-fixed       enable fixed-point mode in internal FAAD2 [disabled]
+@@ -565,6 +566,7 @@
+ _libvorbis=auto
+ _speex=auto
+ _theora=auto
++_kate=auto
+ _mp3lib=yes
+ _liba52=yes
+ _libdca=auto
+@@ -913,6 +915,8 @@
+   --disable-tremor-external)	_tremor_external=no	;;
+   --enable-theora)	_theora=yes	;;
+   --disable-theora)	_theora=no	;;
++  --enable-kate)	_kate=yes	;;
++  --disable-kate)	_kate=no	;;
+   --enable-mp3lib)	_mp3lib=yes	;;
+   --disable-mp3lib)	_mp3lib=no	;;
+   --enable-liba52)	_liba52=yes	;;
+@@ -5991,6 +5995,57 @@
+ fi
+ echores "$_theora"
+ 
++echocheck "OggKate support"
++if test "$_kate" = auto ; then
++  _kate=no
++    cat > $TMPC << EOF
++#include <kate/kate.h>
++#include <string.h>
++int main(void) 
++{ 
++  ogg_packet op;
++  kate_comment kc;
++  kate_info ki;
++  kate_state k;
++  const kate_event *ev;
++  int r;
++  double t;
++
++  kate_info_init (&ki);
++  kate_comment_init (&kc);
++ 
++  return 0;
++
++  /* we don't want to execute this kind of nonsense; just for making sure
++   * that compilation works... */
++  memset(&op, 0, sizeof(op));
++  r = kate_decode_headerin (&ki, &kc, &op);
++  r = kate_decode_init (&k, &ki);
++  t = kate_granule_time (&ki, op.granulepos);
++  r = kate_decode_packetin (&k, &op);
++  r = kate_decode_eventout (&k, &ev);
++  kate_clear (&k);
++
++  return 0;
++}
++EOF
++  for _ld_kate in "`$_pkg_config --silence-errors --libs --cflags oggkate`" "-loggkate -lkate -logg"; do
++    cc_check $_ld_kate && _ld_extra="$_ld_extra $_ld_kate" \
++                         && _kate=yes && break
++  done
++fi
++if test "$_kate" = yes ; then
++  _def_kate='#define HAVE_OGGKATE 1'
++  _codecmodules="libkate $_codecmodules"
++  # when --enable-kate is forced, we'd better provide a probably sane
++  # $_ld_kate than nothing
++  test -z "$_ld_kate" && _ld_extra="$_ld_extra -loggkate -lkate -logg"
++else
++  _def_kate='#undef HAVE_OGGKATE'
++  _nocodecmodules="libkate $_nocodecmodules"
++fi
++echores "$_kate"
++
+ echocheck "internal mp3lib support"
+ if test "$_mp3lib" = yes ; then
+   _def_mp3lib='#define USE_MP3LIB 1'
+@@ -7790,6 +7845,7 @@
+ LIBMAD = $_mad
+ LIBVORBIS = $_vorbis
+ LIBTHEORA = $_theora
++LIBKATE = $_kate
+ FAAD_INTERNAL = $_faad_internal
+ FAAD_FIXED = $_faad_fixed
+ LIBSMBCLIENT = $_smbsupport
+@@ -8476,6 +8532,9 @@
+ /* enable OggTheora support */
+ $_def_theora
+ 
++/* enable OggKate support */
++$_def_kate
++
+ /* enable FAAD (AAC) support */
+ $_def_faad
+ $_def_faad_internal
+diff -ru -x '*.o' mplayer-svn/libmpdemux/demux_mkv.c mplayer-svn-with-kate/libmpdemux/demux_mkv.c
+--- mplayer-svn/libmpdemux/demux_mkv.c	2008-03-14 13:26:57.000000000 +0000
++++ mplayer-svn-with-kate/libmpdemux/demux_mkv.c	2008-03-16 19:09:02.000000000 +0000
+@@ -39,6 +39,10 @@
+ #include <zlib.h>
+ #endif
+ 
++#ifdef HAVE_OGGKATE
++#include <kate/kate.h>
++#endif
++
+ #include "libavutil/lzo.h"
+ #include "libavutil/intreadwrite.h"
+ #include "libavutil/avstring.h"
+@@ -128,7 +132,7 @@
+   mkv_content_encoding_t *encodings;
+   int num_encodings;
+ 
+-  /* For VobSubs and SSA/ASS */
++  /* For VobSubs and SSA/ASS and Kate */
+   sh_sub_t *sh_sub;
+ } mkv_track_t;
+ 
+@@ -454,6 +458,68 @@
+   return (things_found & 3) == 3;
+ }
+ 
++#ifdef HAVE_OGGKATE
++static int
++demux_mkv_parse_kate_headers (mkv_track_t *t)
++{
++  int n,nlaces,offset,ret;
++  const unsigned char **header_data;
++  const unsigned char *priv;
++  size_t *header_size;
++
++  if ((t->private_data == NULL) || (t->private_size == 0))
++    return 0;
++
++  priv = (const unsigned char*)t->private_data;
++  nlaces = priv[0];
++  header_data=(const unsigned char**)alloca((nlaces+1)*sizeof(const unsigned char*));
++  header_size=(size_t*)alloca((nlaces+1)*sizeof(size_t));
++
++  offset=1;
++  for (n=0;n<nlaces;++n) {
++    header_size[n]=0;
++    do {
++      header_size[n]+=priv[offset];
++    } while (priv[offset++]==255);
++  }
++  header_size[nlaces]=t->private_size-offset;
++  for (n=0;n<nlaces;++n) header_size[nlaces]-=header_size[n];
++  header_data[0]=priv+offset;
++  for (n=1;n<=nlaces;++n) {
++    header_data[n]=header_data[n-1]+header_size[n-1];
++  }
++
++  kate_info_init(&t->sh_sub->ki);
++  kate_comment_init(&t->sh_sub->kc);
++
++  for (n=0;n<nlaces+1;++n) {
++    kate_packet kp;
++    kate_packet_wrap(&kp,header_size[n],header_data[n]);
++    ret=kate_decode_headerin(&t->sh_sub->ki,&t->sh_sub->kc,&kp);
++    if (ret<0) {
++      mp_msg (MSGT_DEMUX, MSGL_WARN, "[mkv] kate_decode_headerin returned %d\n", ret);
++      kate_comment_clear(&t->sh_sub->kc);
++      kate_info_clear(&t->sh_sub->ki);
++      return 0;
++    }
++  }
++
++  ret=kate_decode_init(&t->sh_sub->k,&t->sh_sub->ki);
++  if (ret<0) {
++    mp_msg (MSGT_DEMUX, MSGL_WARN, "[mkv] kate_decode_init returned %d\n", ret);
++    kate_comment_clear(&t->sh_sub->kc);
++    kate_info_clear(&t->sh_sub->ki);
++    return 0;
++  }
++
++  if (t->language) free(t->language);
++  t->language = strdup(t->sh_sub->ki.language);
++  t->sh_sub->lang = strdup(t->language);
++
++  return 1;
++}
++#endif
++
+ 
+ static int
+ demux_mkv_decode (mkv_track_t *track, uint8_t *src, uint8_t **dest,
+@@ -913,6 +979,13 @@
+   free (track->private_data);
+   free (track->audio_buf);
+   free (track->audio_timestamp);
++#ifdef HAVE_OGGKATE
++  if (track->sh_sub) {
++    kate_clear(&track->sh_sub->k);
++    kate_comment_clear(&track->sh_sub->kc);
++    kate_info_clear(&track->sh_sub->ki);
++  }
++#endif
+   demux_mkv_free_encodings(track->encodings, track->num_encodings);
+   free(track);
+ }
+@@ -1016,7 +1089,9 @@
+             }
+           else if (!strcmp (track->codec_id, MKV_S_TEXTASCII))
+             track->subtitle_type = MATROSKA_SUBTYPE_TEXT;
+-          if (!strcmp (track->codec_id, MKV_S_TEXTUTF8))
++          else if (!strcmp (track->codec_id, MKV_S_KATE))
++            track->subtitle_type = MATROSKA_SUBTYPE_KATE;
++          else if (!strcmp (track->codec_id, MKV_S_TEXTUTF8))
+             {
+               track->subtitle_type = MATROSKA_SUBTYPE_TEXT;
+             }
+@@ -2203,6 +2278,8 @@
+         sh->type = 'v';
+       if (track->subtitle_type == MATROSKA_SUBTYPE_SSA)
+         sh->type = 'a';
++      else if (track->subtitle_type == MATROSKA_SUBTYPE_KATE)
++        sh->type = 'k';
+       size = track->private_size;
+       m = demux_mkv_decode (track,track->private_data,&buffer,&size,2);
+       if (buffer && m)
+@@ -2249,6 +2326,48 @@
+   return -1;
+ }
+ 
++#ifdef HAVE_OGGKATE
++/** \brief Parse the private data for Kate tracks.
++
++  This function tries to parse the private data for all Kate tracks.
++  The private data contains the Kate headers.
++  Things like the regions, styles, palettes, etc, are stored here.
++
++  \param demuxer The generic demuxer.
++*/
++static void
++demux_mkv_parse_kate_data (demuxer_t *demuxer)
++{
++  mkv_demuxer_t *mkv_d = (mkv_demuxer_t *) demuxer->priv;
++  mkv_track_t *track;
++  int i, m, size;
++  uint8_t *buffer;
++
++  for (i = 0; i < mkv_d->num_tracks; i++)
++    {
++      track = mkv_d->tracks[i];
++      if ((track->type != MATROSKA_TRACK_SUBTITLE) ||
++          (track->subtitle_type != MATROSKA_SUBTYPE_KATE))
++        continue;
++
++      size = track->private_size;
++      m = demux_mkv_decode (track,track->private_data,&buffer,&size,2);
++      if (buffer && m)
++        {
++          free (track->private_data);
++          track->private_data = buffer;
++          track->private_size = size;
++        }
++      if (!demux_mkv_parse_kate_headers (track))
++        {
++          free (track->private_data);
++          track->private_data = NULL;
++          track->private_size = 0;
++        }
++    }
++}
++#endif
++
+ static int
+ demux_mkv_open (demuxer_t *demuxer)
+ {
+@@ -2445,6 +2564,11 @@
+ 
+   demux_mkv_parse_vobsub_data (demuxer);
+ 
++
++#ifdef HAVE_OGGKATE
++  demux_mkv_parse_kate_data (demuxer);
++#endif
++
+   if (demuxer->chapters)
+     {
+       for (i=0; i < (int)demuxer->num_chapters; i++)
+@@ -2587,6 +2711,7 @@
+                  int64_t size, uint64_t block_duration, uint64_t timecode)
+ {
+   demux_packet_t *dp;
++  int ret;
+ 
+   if (block_duration == 0)
+     {
+@@ -2595,6 +2720,34 @@
+       return;
+     }
+ 
++#ifdef HAVE_OGGKATE
++  if (track->subtitle_type == MATROSKA_SUBTYPE_KATE) {
++    const kate_event *ev=NULL;
++    kate_packet kp;
++    kate_packet_wrap(&kp, size, block);
++    ret=kate_decode_packetin(&track->sh_sub->k,&kp);
++    if (ret<0) {
++      mp_msg (MSGT_DEMUX, MSGL_WARN, "kate_decode_packetin returned %d", ret);
++      return;
++    }
++    ret=kate_decode_eventout(&track->sh_sub->k, &ev);
++    if (ret<0) {
++      mp_msg (MSGT_DEMUX, MSGL_WARN, "kate_decode_eventout returned %d", ret);
++      return;
++    }
++    if (ev>0) {
++      /* we have an event */
++      sub_utf8 = 1;
++      dp = new_demux_packet(ev->len0);
++      memcpy(dp->buffer, ev->text, ev->len0);
++      dp->pts = timecode / 1000.0f;
++      dp->endpts = (timecode + block_duration) / 1000.0f;
++      ds_add_packet(demuxer->sub, dp);
++    }
++    return;
++  }
++#endif
++
+   sub_utf8 = 1;
+   dp = new_demux_packet(size);
+   memcpy(dp->buffer, block, size);
+diff -ru -x '*.o' mplayer-svn/libmpdemux/demux_ogg.c mplayer-svn-with-kate/libmpdemux/demux_ogg.c
+--- mplayer-svn/libmpdemux/demux_ogg.c	2008-03-14 13:26:57.000000000 +0000
++++ mplayer-svn-with-kate/libmpdemux/demux_ogg.c	2008-03-16 19:14:37.000000000 +0000
+@@ -32,6 +32,11 @@
+ extern int _ilog (unsigned int); /* defined in many places in theora/lib/ */
+ #endif
+ 
++#ifdef HAVE_OGGKATE
++#include <kate/kate.h>
++#include <kate/oggkate.h>
++#endif
++
+ #define BLOCK_SIZE 4096
+ 
+ /* Theora decoder context : we won't be able to interpret granule positions
+@@ -46,6 +51,18 @@
+ } theora_struct_t;
+ #endif
+ 
++/* Kate decoder context : we won't be able to interpret granule positions
++ * without using kate_granule_time with the kate_info of the stream.
++ */
++#ifdef HAVE_OGGKATE
++typedef struct kate_struct_st {
++    kate_state k;
++    kate_comment kc;
++    kate_info ki;
++    int ready;
++} kate_struct_t;
++#endif
++
+ //// OggDS headers
+ // Header for the new header format
+ typedef struct stream_header_video
+@@ -106,6 +123,7 @@
+   int vorbis;
+   int speex;
+   int theora;
++  int kate;
+   int flac;
+   int text;
+   int id;
+@@ -113,6 +131,10 @@
+   vorbis_info      vi;
+   int vi_initialized;
+ 
++#ifdef HAVE_OGGKATE
++  kate_struct_t ks;
++#endif
++
+   void *ogg_d;
+ } ogg_stream_t;
+ 
+@@ -157,7 +179,7 @@
+ static subtitle ogg_sub;
+ //FILE* subout;
+ 
+-void demux_ogg_add_sub (ogg_stream_t* os,ogg_packet* pack) {
++static void demux_ogg_add_sub (ogg_stream_t* os,ogg_packet* pack) {
+   int lcv;
+   char *packet = pack->packet;
+ 
+@@ -202,6 +224,124 @@
+   vo_osd_changed(OSDTYPE_SUBTITLE);
+ }
+ 
++#ifdef HAVE_OGGKATE
++static void demux_ogg_add_kate_packet (ogg_stream_t* os,ogg_packet* pack,int active) {
++  int ret;
++  const kate_event *ev = NULL;
++  double endpts;
++  const char *ptr, *start;
++  int nchars;
++  size_t len;
++
++  if (pack->bytes < 1)
++    return;
++
++  if (!os->ks.ready) {
++      /* eat packets, and init the state when we're through */
++      /* don't send the ID header though, it's already been parsed */
++      ret = pack->packetno==0 ? 0 : kate_ogg_decode_headerin(&os->ks.ki, &os->ks.kc, pack);
++      if (ret < 0) {
++	    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to decode header %lld (%d)\n",pack->packetno, ret);
++      }
++      else if (ret > 0) {
++        // we're through with the headers, data is next
++        ret = kate_info_remove_markup(&os->ks.ki, 1);
++        if (ret < 0) {
++	    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to set up markup removal (%d)\n",ret);
++            /* we continue anyway, we'll just get the markup, if any, but it should still work */
++        }
++        ret = kate_decode_init(&os->ks.k, &os->ks.ki);
++        if (ret < 0) {
++	    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to init for decoding (%d)\n",ret);
++            return;
++        }
++        os->ks.ready = 1;
++        // next time, we'll pass over that and get to the data
++      }
++      else {
++        // zero, we're still decoding headers
++      }
++      return;
++  }
++
++  ret = kate_ogg_decode_packetin(&os->ks.k, pack);
++  if (ret < 0) {
++    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to decode data packet (%d)\n",ret);
++    return;
++  }
++
++  /* positive means we're done */
++  if (ret > 0) return;
++
++  /* now that we've made sure we keep in sync, we only to the rest if we're active */
++  if (!active) return;
++
++  ret = kate_decode_eventout(&os->ks.k, &ev);
++  if (ret < 0) {
++    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to get an event (%d)\n",ret);
++    return;
++  }
++
++  if (ret > 0) {
++      // no event, normal occurence
++      return;
++  }
++
++  // Find data start
++  endpts = ev->end_time;
++  sub_clear_text(&ogg_sub, MP_NOPTS_VALUE);
++
++  // tokenize on newlines
++  ptr = start = ev->text;
++  len = ev->len0;
++  nchars = 0;
++
++  for (;;) {
++    int ret = kate_text_get_character(os->ks.ki.text_encoding, &ptr, &len);
++    if (ret < 0) {
++      mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate stream failed to get a character from the text (%d)\n",ret);
++      break;
++    }
++    else if (ret == 0) {
++      /* we reached the end of string marker */
++      break;
++    }
++    else {
++      /* ret now contains the character */
++      if (ret == '\n') {
++        if (nchars>0) {
++          sub_add_text(&ogg_sub, start, ptr-start, endpts);
++          nchars=0;
++          start=ptr;
++        }
++      }
++      else {
++        ++nchars;
++      }
++    }
++
++    /* next */
++  }
++
++  if (nchars>0) {
++    sub_add_text(&ogg_sub, start, ptr-start, endpts);
++  }
++
++  switch (os->ks.ki.text_encoding) {
++    case kate_utf8: sub_utf8 |= 1; break;
++    default: mp_msg(MSGT_DEMUX,MSGL_WARN,"Kate stream has text with non utf8 encoding\n"); break;
++  }
++
++  mp_msg(MSGT_DEMUX,MSGL_DBG2,"Kate sub lines: %d  first: '%s'\n",
++      ogg_sub.lines, ogg_sub.text[0]);
++#ifdef USE_ICONV
++//  subcp_recode(&ogg_sub);
++#endif
++  vo_sub = &ogg_sub;
++  vo_osd_changed(OSDTYPE_SUBTITLE);
++}
++#endif
++
+ 
+ // get the logical stream of the current page
+ // fill os if non NULL and return the stream id
+@@ -212,8 +352,9 @@
+   s_no = ogg_page_serialno(page);
+ 
+   for(id= 0; id < ogg_d->num_sub ; id++) {
+-    if(s_no == ogg_d->subs[id].stream.serialno)
++    if(s_no == ogg_d->subs[id].stream.serialno) {
+       break;
++    }
+   }
+ 
+   if(id == ogg_d->num_sub) {
+@@ -293,6 +434,10 @@
+ 	*pts = (double)os->lastpos / (double)os->samplerate;
+      }
+ #endif /* HAVE_OGGTHEORA */
++# ifdef HAVE_OGGKATE
++  } else if (os->kate) {
++     /* we won't get there, packets have been passed to the sub code, and discarded */
++#endif /* HAVE_OGGKATE */
+   } else if (os->flac) {
+      /* we pass complete packets to flac, mustn't strip the header! */
+      if (os->flac == 2 && pack->packet[0] != 0xff)
+@@ -449,6 +594,13 @@
+       demux_ogg_add_sub(os,pack);
+     return 0;
+   }
++#ifdef HAVE_OGGKATE
++  if (os->kate) { // don't want to add subtitles to the demuxer for now
++    int active = (id == demux_ogg_sub_id(d, d->sub->id));
++    demux_ogg_add_kate_packet(os,pack,active);
++    return 0;
++  }
++#endif
+   if (os->speex) {
+     // discard first two packets, they contain the header and comment
+     if (os->hdr_packets < 2) {
+@@ -895,6 +1047,58 @@
+ 	theora_comment_clear(&cc);
+ 	theora_info_clear(&inf);
+ #   endif /* HAVE_OGGTHEORA */
++#   ifdef HAVE_OGGKATE
++    } else if (pack.bytes >= 9 && !strncmp (&pack.packet[1], "kate\0\0\0\0", 8)) {
++	int errorCode = 0;
++	kate_info ki;
++	kate_comment kc;
++
++	kate_info_init (&ki);
++	kate_comment_init (&kc);
++
++	errorCode = kate_ogg_decode_headerin (&ki, &kc, &pack);
++	if (errorCode<0)
++        {
++            kate_comment_clear(&kc);
++            kate_info_clear(&ki);
++	    mp_msg(MSGT_DEMUX,MSGL_ERR,"Kate header %lld parsing failed: %i \n",
++		   pack.packetno, errorCode);
++        }
++	else
++	{
++          mp_msg(MSGT_DEMUX, MSGL_INFO, "[Ogg] stream %d: Kate %d.%d (subtitles), language \"%s\", -sid %d\n",
++              ogg_d->num_sub,
++              ki.bitstream_version_major, ki.bitstream_version_minor,
++              ki.language ? ki.language : "<unset>",
++              ogg_d->n_text);
++	  ogg_d->subs[ogg_d->num_sub].samplerate = 1; /* no linear mapping (due to backlink) */
++	  ogg_d->subs[ogg_d->num_sub].kate = 1;
++	  ogg_d->subs[ogg_d->num_sub].ks.ready = 0;
++          ogg_d->subs[ogg_d->num_sub].id = ogg_d->n_text;
++          if (demuxer->sub->id == ogg_d->n_text)
++            text_id = ogg_d->num_sub;
++          new_sh_sub(demuxer, ogg_d->n_text);
++          ogg_d->n_text++;
++          ogg_d->text_ids = (int *)realloc(ogg_d->text_ids, sizeof(int) * ogg_d->n_text);
++          ogg_d->text_ids[ogg_d->n_text - 1] = ogg_d->num_sub;
++          ogg_d->text_langs = (char **)realloc(ogg_d->text_langs, sizeof(char *) * ogg_d->n_text);
++          ogg_d->text_langs[ogg_d->n_text - 1] = NULL;
++	  if (ki.language)
++            ogg_d->text_langs[ogg_d->n_text - 1] = strdup(ki.language);
++
++          // check for -slang if subs are uninitialized yet
++          if (ki.language && demuxer->sub->id < 0 && demux_ogg_check_lang(ki.language, dvdsub_lang))
++          {
++	    demuxer->sub->id = ogg_d->n_text-1;
++	    dvdsub_id = ogg_d->n_text-1;
++            mp_msg(MSGT_DEMUX, MSGL_V, "Ogg demuxer: Displaying subtitle stream id %d which matched -slang %s\n", ogg_d->n_text-1, ki.language);
++          }
++
++          // setup the kate structure with this stream
++          memcpy(&ogg_d->subs[ogg_d->num_sub].ks.ki, &ki, sizeof(kate_info));
++          memcpy(&ogg_d->subs[ogg_d->num_sub].ks.kc, &kc, sizeof(kate_comment));
++	}
++#   endif /* HAVE_OGGKATE */
+     } else if (pack.bytes >= 4 && !strncmp (&pack.packet[0], "fLaC", 4)) {
+ 	sh_a = new_sh_audio_aid(demuxer,ogg_d->num_sub, n_audio);
+ 	sh_a->format =  mmioFOURCC('f', 'L', 'a', 'C');
+@@ -1209,12 +1413,13 @@
+       ds = d->audio;
+     else if(id == d->video->id)
+       ds = d->video;
+-    else if (ogg_d->subs[id].text)
++    else if (ogg_d->subs[id].text || ogg_d->subs[id].kate)
+       ds = d->sub;
+ 
+     if(ds) {
+-      if(!demux_ogg_add_packet(ds,&ogg_d->subs[id],id,&pack))
++      if(!demux_ogg_add_packet(ds,&ogg_d->subs[id],id,&pack)) {
+ 	continue; /// Unuseful packet, get another
++      }
+       d->filepos = ogg_d->pos;
+       return 1;
+     }
+diff -ru -x '*.o' mplayer-svn/libmpdemux/ebml.h mplayer-svn-with-kate/libmpdemux/ebml.h
+--- mplayer-svn/libmpdemux/ebml.h	2008-03-14 13:26:57.000000000 +0000
++++ mplayer-svn-with-kate/libmpdemux/ebml.h	2008-03-15 20:49:21.000000000 +0000
+@@ -162,6 +162,7 @@
+ #define MATROSKA_SUBTYPE_TEXT      1
+ #define MATROSKA_SUBTYPE_SSA       2
+ #define MATROSKA_SUBTYPE_VOBSUB    3
++#define MATROSKA_SUBTYPE_KATE      4
+ 
+ #ifndef UINT64_MAX
+ #define UINT64_MAX 18446744073709551615ULL
+diff -ru -x '*.o' mplayer-svn/libmpdemux/matroska.h mplayer-svn-with-kate/libmpdemux/matroska.h
+--- mplayer-svn/libmpdemux/matroska.h	2008-03-14 13:26:57.000000000 +0000
++++ mplayer-svn-with-kate/libmpdemux/matroska.h	2008-03-15 20:49:21.000000000 +0000
+@@ -60,6 +60,7 @@
+ #define MKV_S_TEXTSSA    "S_TEXT/SSA"
+ #define MKV_S_TEXTASS    "S_TEXT/ASS"
+ #define MKV_S_VOBSUB     "S_VOBSUB"
++#define MKV_S_KATE       "S_KATE"
+ #define MKV_S_SSA        "S_SSA" // Deprecated
+ #define MKV_S_ASS        "S_ASS" // Deprecated
+ 
+diff -ru -x '*.o' mplayer-svn/libmpdemux/stheader.h mplayer-svn-with-kate/libmpdemux/stheader.h
+--- mplayer-svn/libmpdemux/stheader.h	2008-03-14 13:26:57.000000000 +0000
++++ mplayer-svn-with-kate/libmpdemux/stheader.h	2008-03-15 21:05:22.000000000 +0000
+@@ -5,6 +5,10 @@
+ #include "aviheader.h"
+ #include "ms_hdr.h"
+ 
++#ifdef HAVE_OGGKATE
++#include <kate/kate.h>
++#endif
++
+ // Stream headers:
+ 
+ typedef struct {
+@@ -95,7 +99,7 @@
+ 
+ typedef struct {
+   int sid;
+-  char type;                    // t = text, v = VobSub, a = SSA/ASS
++  char type;                    // t = text, v = VobSub, a = SSA/ASS, k = kate
+   int has_palette;              // If we have a valid palette
+   unsigned int palette[16];     // for VobSubs
+   int width, height;            // for VobSubs
+@@ -107,6 +111,11 @@
+ #ifdef USE_ASS
+   ass_track_t* ass_track;  // for SSA/ASS streams (type == 'a')
+ #endif
++#ifdef HAVE_OGGKATE
++  kate_info ki;
++  kate_comment kc;
++  kate_state k;
++#endif
+   char* lang; // track language
+ } sh_sub_t;
+ 
+diff -ru -x '*.o' mplayer-svn/mpcommon.c mplayer-svn-with-kate/mpcommon.c
+--- mplayer-svn/mpcommon.c	2008-03-14 13:27:00.000000000 +0000
++++ mplayer-svn-with-kate/mpcommon.c	2008-03-15 23:12:42.000000000 +0000
+@@ -100,6 +100,27 @@
+ 
+         if (spudec_changed(vo_spudec))
+             vo_osd_changed(OSDTYPE_SPU);
++    } else if (dvdsub_id >= 0 && type == 'k') {
++	double curpts = sh_video->pts + sub_delay;
++	double endpts;
++	vo_sub = &subs;
++	while (d_dvdsub->first) {
++	    double pts = ds_get_next_pts(d_dvdsub);
++	    if (pts > curpts)
++		break;
++	    endpts = d_dvdsub->first->endpts;
++	    len = ds_get_packet_sub(d_dvdsub, &packet);
++	    if (pts != MP_NOPTS_VALUE) {
++                /* kate supports overlapping subtitles, but we don't support this here,
++                   so clear subtitles when we add another one, in case */
++	        /*if (endpts == MP_NOPTS_VALUE)*/
++	        sub_clear_text(&subs, MP_NOPTS_VALUE);
++	        sub_add_text(&subs, packet, len, endpts);
++	        vo_osd_changed(OSDTYPE_SUBTITLE);
++	    }
++	}
++	if (sub_clear_text(&subs, curpts))
++	    vo_osd_changed(OSDTYPE_SUBTITLE);
+     } else if (dvdsub_id >= 0 && (type == 't' || type == 'm' || type == 'a')) {
+         double curpts = sh_video->pts + sub_delay;
+         double endpts;
+diff -ru -x '*.o' mplayer-svn/mplayer.c mplayer-svn-with-kate/mplayer.c
+--- mplayer-svn/mplayer.c	2008-03-14 13:27:00.000000000 +0000
++++ mplayer-svn-with-kate/mplayer.c	2008-03-15 20:49:21.000000000 +0000
+@@ -3475,6 +3475,9 @@
+         case 7: dump_microdvd(subdata, mpctx->sh_video->fps); break;
+         case 8: dump_jacosub(subdata, mpctx->sh_video->fps); break;
+         case 9: dump_sami(subdata, mpctx->sh_video->fps); break;
++#ifdef HAVE_OGGKATE
++        case 10: dump_oggkate(subdata, mpctx->sh_video->fps); break;
++#endif
+     }
+ }
+ 
+diff -ru -x '*.o' mplayer-svn/subreader.c mplayer-svn-with-kate/subreader.c
+--- mplayer-svn/subreader.c	2008-03-14 13:27:01.000000000 +0000
++++ mplayer-svn-with-kate/subreader.c	2008-03-16 17:39:40.000000000 +0000
+@@ -24,6 +24,12 @@
+ #include <enca.h>
+ #endif
+ 
++#ifdef HAVE_OGGKATE
++#include <ogg/ogg.h>
++#include <kate/kate.h>
++#include <kate/oggkate.h>
++#endif
++
+ #define ERR ((void *) -1)
+ 
+ #ifdef USE_ICONV
+@@ -236,13 +242,13 @@
+ }
+ 
+ 
+-static char *sub_readtext(char *source, char **dest) {
++static const char *sub_readtext2(const char *source, char **dest, int pipe_is_eol) {
+     int len=0;
+-    char *p=source;
++    const char *p=source;
+     
+ //    printf("src=%p  dest=%p  \n",source,dest);
+ 
+-    while ( !eol(*p) && *p!= '|' ) {
++    while ( !eol(*p) && (!pipe_is_eol || *p!= '|') ) {
+ 	p++,len++;
+     }
+     
+@@ -252,16 +258,20 @@
+     strncpy(*dest, source, len);
+     (*dest)[len]=0;
+     
+-    while (*p=='\r' || *p=='\n' || *p=='|') p++;
++    while (*p=='\r' || *p=='\n' || (*p=='|' && pipe_is_eol)) p++;
+     
+     if (*p) return p;  // not-last text field
+     else return NULL;  // last text field
+ }
+ 
++static const char *sub_readtext(const char *source, char **dest) {
++  return sub_readtext2(source, dest, 1);
++}
++
+ static subtitle *sub_read_line_microdvd(stream_t *st,subtitle *current) {
+     char line[LINE_LEN+1];
+     char line2[LINE_LEN+1];
+-    char *p, *next;
++    const char *p, *next;
+     int i;
+ 
+     do {
+@@ -289,7 +299,7 @@
+ static subtitle *sub_read_line_mpl2(stream_t *st,subtitle *current) {
+     char line[LINE_LEN+1];
+     char line2[LINE_LEN+1];
+-    char *p, *next;
++    const char *p, *next;
+     int i;
+ 
+     do {
+@@ -312,6 +322,118 @@
+     return current;
+ }
+ 
++static subtitle *sub_read_line_oggkate(stream_t *st,subtitle *current) {
++    int ret;
++    char *buffer;
++    size_t bytes;
++    const char *next;
++    int i;
++
++    enum { uninitialized, header_info, data };
++
++    static int ogg_init=0;
++    static int init=uninitialized;
++    static ogg_sync_state sync;
++    static ogg_stream_state os;
++    static ogg_page og;
++    static ogg_packet op;
++    static kate_state k;
++    static kate_info ki;
++    static kate_comment kc;
++
++    if (!ogg_init) {
++      ogg_init=1;
++      ogg_sync_init(&sync);
++    }
++
++    while (1) {
++      /* first, get a packet if we can */
++      ret=ogg_stream_packetout(&os,&op);
++      if (ret>0) {
++        /* we have a packet */
++        if (init<data) {
++          ret=kate_ogg_decode_headerin(&ki,&kc,&op);
++          if (ret>=0) {
++            if (ret>0) {
++              kate_info_remove_markup(&ki,1);
++              kate_decode_init(&k,&ki);
++              init=data;
++            }
++          }
++          else {
++            if (init!=uninitialized) {
++              kate_info_clear(&ki);
++              kate_comment_clear(&kc);
++            }
++            init=uninitialized;
++          }
++        }
++        else {
++          ret=kate_ogg_decode_packetin(&k,&op);
++          if (ret==0) {
++            const kate_event *ev=NULL;
++            ret=kate_decode_eventout(&k,&ev);
++            if (!ret) {
++              current->start=(int64_t)(ev->start_time)*100;
++              current->end=(int64_t)(ev->start_time+ev->duration)*100;
++#if 0
++              char *line=malloc(ev->len0);
++              memcpy(line,ev->text,ev->len0);
++              current->text[0]=line;
++              current->lines=1;
++#else
++    next=ev->text, i=0;
++    while ((next =sub_readtext2 (next, &(current->text[i]), 0))) {
++        if (current->text[i]==ERR) {return ERR;}
++	i++;
++	if (i>=SUB_MAX_TEXT) { mp_msg(MSGT_SUBREADER,MSGL_WARN,"Too many lines in a subtitle\n");current->lines=i;return current;}
++    }
++    current->lines= ++i;
++#endif
++              break;
++            }
++          }
++        }
++        continue;
++      }
++      /* no packets to be had, read more */
++      ret=ogg_sync_pageout(&sync,&og);
++      if (ret>0) {
++        if (ogg_page_bos(&og)) {
++          if (init==uninitialized) {
++            ogg_stream_init(&os,ogg_page_serialno(&og));
++            kate_info_init(&ki);
++            kate_comment_init(&kc);
++            init=header_info;
++          }
++        }
++        ret=ogg_stream_pagein(&os,&og);
++        if (ret<0) {
++          continue;
++        }
++        continue;
++      }
++      else if (ret<0) {
++        continue;
++      }
++      /* read more data */
++      buffer=ogg_sync_buffer(&sync,4096);
++      if (!buffer) break;
++      bytes=stream_read(st,buffer,4096);
++      if (bytes==0) {
++        ogg_stream_clear(&os);
++        ogg_sync_clear(&sync);
++        ogg_init=0;
++        /* end of file */
++        return NULL;
++      }
++      ogg_sync_wrote(&sync,bytes);
++      continue;
++    }
++
++    return current;
++}
++
+ static subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
+     char line[LINE_LEN+1];
+     int a1,a2,a3,a4,b1,b2,b3,b4;
+@@ -430,7 +552,8 @@
+ static subtitle *sub_read_line_vplayer(stream_t *st,subtitle *current) {
+ 	char line[LINE_LEN+1];
+ 	int a1,a2,a3;
+-	char *p=NULL, *next,separator;
++	const char *p=NULL, *next;
++        char separator;
+ 	int i,len,plen;
+ 
+ 	while (!current->text[0]) {
+@@ -479,7 +602,7 @@
+ 	// WARNING: full XML parses can be required for proper parsing 
+     char line[LINE_LEN+1];
+     int a1,a2,a3,a4,b1,b2,b3,b4;
+-    char *p=NULL,*next=NULL;
++    const char *p=NULL,*next=NULL;
+     int i,len,plen;
+     
+     while (!current->text[0]) {
+@@ -709,7 +832,7 @@
+ 
+ static subtitle *sub_read_line_aqt(stream_t *st,subtitle *current) {
+     char line[LINE_LEN+1];
+-    char *next;
++    const char *next;
+     int i;
+ 
+     while (1) {
+@@ -767,7 +890,7 @@
+ static subtitle *sub_read_line_subrip09(stream_t *st,subtitle *current) {
+     char line[LINE_LEN+1];
+     int a1,a2,a3;
+-    char * next=NULL;
++    const char * next=NULL;
+     int i,len;
+    
+     while (1) {
+@@ -1060,6 +1183,17 @@
+ 		{*uses_time=0; return SUB_AQTITLE;}
+ 	if (sscanf (line, "[%d:%d:%d]", &i, &i, &i)==3)
+ 		{*uses_time=1;return SUB_SUBRIP09;}
++        /* We test for the OggS capture pattern, as the Kate track might be
++           well away from the start of the stream (eg, if it is multiplexed
++           with video and/or skeleton) so other bits above (like that bloody
++           RT hair trigger) would go off wrongly. Ideally, the bit of code
++           below would be better, since that's the Kate signature. */
++	if (!memcmp(line, "OggS", 4))
++		{*uses_time=1;return SUB_OGGKATE;}
++        /*
++        if ((ptr=strstr(line,"\200kate")) && !memcmp(ptr,"\200kate\0\0\0\0",9))
++		{*uses_time=1;return SUB_OGGKATE;}
++                */
+     }
+ 
+     return SUB_INVALID;  // too many bad lines
+@@ -1351,7 +1485,8 @@
+ 	    { sub_read_line_subviewer2, NULL, "subviewer 2.0" },
+ 	    { sub_read_line_subrip09, NULL, "subrip 0.9" },
+ 	    { sub_read_line_jacosub, NULL, "jacosub" },
+-	    { sub_read_line_mpl2, NULL, "mpl2" }
++	    { sub_read_line_mpl2, NULL, "mpl2" },
++	    { sub_read_line_oggkate, NULL, "Kate" }
+     };
+     struct subreader *srp;
+     
+@@ -1381,6 +1516,11 @@
+ 			    break;
+ 			}
+ 	    }
++
++            /* Kate is always utf-8 */
++            if (sub_format == SUB_OGGKATE)
++                sub_utf8 = 1;
++
+ 	    if (k<0) subcp_open(fd);
+     }
+ #endif
+@@ -1488,9 +1628,13 @@
+     }
+ 
+     // we do overlap if the user forced it (suboverlap_enable == 2) or
+-    // the user didn't forced no-overlapsub and the format is Jacosub or Ssa.
++    // the user didn't forced no-overlapsub and the format is Jacosub, Ssa, or Kate.
+     // this is because usually overlapping subtitles are found in these formats,
+     // while in others they are probably result of bad timing
++
++    /* TODO: Kate also supports overlapping subtitles, but enabling this code makes ALL
++       subtitles overlap even when the timings do not overlap, and I don't understand
++       what this code does, so I'll leave it as is for now */
+ if ((suboverlap_enabled == 2) ||
+     ((suboverlap_enabled) && ((sub_format == SUB_JACOSUB) || (sub_format == SUB_SSA)))) {
+     adjust_subs_time(first, 6.0, fps, 0, sub_num, uses_time);/*~6 secs AST*/
+@@ -2003,6 +2147,129 @@
+     mp_msg(MSGT_SUBREADER,MSGL_INFO,"Read %i subtitles, %i errors.\n", subd->sub_num, subd->sub_errs);
+ }
+ 
++#ifdef HAVE_OGGKATE
++
++static void flush_page(FILE *f,ogg_stream_state *os)
++{
++  ogg_page og;
++  while (1) {
++    int ret=ogg_stream_flush(os,&og);
++    if (ret==0) break;
++    fwrite(og.header,1,og.header_len,f);
++    fwrite(og.body,1,og.body_len,f);
++  }
++}
++
++static void write_kate_headers(FILE *f,kate_state *k,ogg_stream_state *os,ogg_packet *op)
++{
++  kate_comment kc;
++  kate_comment_init(&kc);
++  while (1) {
++    int ret=kate_ogg_encode_headers(k,&kc,op);
++    if (ret>0) {
++      break;
++    }
++    else if (ret<0) {
++      /* error */
++      perror("write_kate_headers: kate_encode_error");
++      break;
++    }
++    else if (ret==0) {
++      ogg_stream_packetin(os,op);
++    }
++  }
++  flush_page(f,os);
++  kate_comment_clear(&kc);
++}
++
++static void add_to_text(char **text,int *text_size,const char *new_text)
++{
++  size_t current_len=*text?strlen(*text):0;
++  size_t new_text_len=strlen(new_text);
++  size_t needed=current_len+new_text_len+2;
++  if (needed>*text_size) {
++    size_t new_size=needed+256;
++    *text=(char*)realloc(*text,new_size);
++    if (current_len==0) **text=0;
++    *text_size=new_size;
++  }
++  if (*text) strcat(*text,new_text);
++}
++
++void dump_oggkate(sub_data* subd, float fps){
++    int i,j;
++    FILE * fd;
++    subtitle * onesub;
++    unsigned long temp;
++    subtitle *subs = subd->subtitles;
++    char *text=NULL;
++    size_t allocated=0;
++
++    kate_state k;
++    kate_info ki;
++    ogg_packet op;
++    ogg_stream_state os;
++    double t0,t1;
++
++    if (!subd->sub_uses_time && sub_fps == 0)
++	sub_fps = fps;
++    fd=fopen("dumpsub.ogg","w");
++    if(!fd)
++    { 
++	perror("dump_oggkate: fopen");
++	return;
++    }
++
++    kate_info_init(&ki);
++    ki.gps_numerator = 1000;
++    ki.gps_denominator = 1;
++    ki.granule_shift = 32;
++    kate_encode_init(&k,&ki);
++    ogg_stream_init(&os,rand());
++
++    write_kate_headers(fd,&k,&os,&op);
++
++    for(i=0; i < subd->sub_num; i++)
++    {
++        onesub=subs+i;    //=&subs[i];
++
++	temp=onesub->start;
++	if (!subd->sub_uses_time)
++	    temp = temp * 100 / sub_fps;
++	temp -= sub_delay * 100;
++        t0=temp/100.0;
++
++	temp=onesub->end;
++	if (!subd->sub_uses_time)
++	    temp = temp * 100 / sub_fps;
++	temp -= sub_delay * 100;
++        t1=temp/100.0;
++	
++	for(j=0;j<onesub->lines;j++) {
++          if (j) add_to_text(&text,&allocated,"\n");
++          add_to_text(&text,&allocated,onesub->text[j]);
++        }
++
++        kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
++        ogg_stream_packetin(&os,&op);
++
++        flush_page(fd,&os);
++        if (text) *text=0;
++    }
++
++    kate_ogg_encode_finish(&k,-1,&op);
++    ogg_stream_packetin(&os,&op);
++    flush_page(fd,&os);
++    ogg_stream_clear(&os);
++    kate_clear(&k);
++
++    free(text);
++
++    fclose(fd);
++    mp_msg(MSGT_SUBREADER,MSGL_INFO,"SUB: Kate format subtitles dumped in \'dumpsub.ogg\'.\n");
++}
++#endif
++
+ void dump_srt(sub_data* subd, float fps){
+     int i,j;
+     int h,m,s,ms;
+diff -ru -x '*.o' mplayer-svn/subreader.h mplayer-svn-with-kate/subreader.h
+--- mplayer-svn/subreader.h	2008-03-14 13:27:01.000000000 +0000
++++ mplayer-svn-with-kate/subreader.h	2008-03-15 20:49:22.000000000 +0000
+@@ -23,6 +23,7 @@
+ #define SUB_SUBRIP09 11
+ #define SUB_JACOSUB  12
+ #define SUB_MPL2     13
++#define SUB_OGGKATE  14
+ 
+ // One of the SUB_* constant above
+ extern int sub_format;
+@@ -78,6 +79,9 @@
+ char ** sub_filenames(const char *path, char *fname);
+ void list_sub_file(sub_data* subd);
+ void dump_srt(sub_data* subd, float fps);
++#ifdef HAVE_OGGKATE
++void dump_oggkate(sub_data* subd, float fps);
++#endif
+ void dump_mpsub(sub_data* subd, float fps);
+ void dump_microdvd(sub_data* subd, float fps);
+ void dump_jacosub(sub_data* subd, float fps);
