@@ -1,7 +1,7 @@
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/configure.ac vlc-0.8.6e/configure.ac
---- /tmp/vlc-0.8.6e/configure.ac	2008-02-24 19:01:55.000000000 +0000
-+++ vlc-0.8.6e/configure.ac	2008-03-16 19:37:03.000000000 +0000
-@@ -3429,6 +3429,28 @@
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/configure.ac vlc/configure.ac
+--- vlc-original/configure.ac	2008-03-21 13:55:57.000000000 +0000
++++ vlc/configure.ac	2008-03-22 20:47:34.000000000 +0000
+@@ -3881,6 +3881,32 @@
    VLC_ADD_PLUGINS([cmml])
  fi
  
@@ -9,50 +9,54 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +dnl  kate decoder plugin
 +dnl
 +AC_ARG_ENABLE(kate,
-+[  --enable-kate         kate codec (default disabled)])
-+if test "${enable_kate}" = "yes"
-+then
-+  AC_CHECK_HEADERS(kate/kate.h kate/oggkate.h, [
-+    AC_CHECK_LIB(oggkate, kate_ogg_decode_headerin, [
-+      if test "${SYS}" = "mingw32"; then
-+        VLC_ADD_PLUGINS([kate])
-+      else
-+        VLC_ADD_BUILTINS([kate])
-+      fi
-+      kate_libs="-loggkate -lkate -logg"
-+      VLC_ADD_LDFLAGS([kate],[${kate_libs}]) ],[
-+      AC_MSG_ERROR([libkate doesn't appear to be installed on your system.
-+You also need to check that you have a libogg posterior to the 1.0 release.])],
-+      [-lkate -logg])
++[  --enable-kate           kate codec (default disabled)])
++if test "${enable_kate}" = "yes"; then
++  PKG_CHECK_MODULES(KATE,[kate >= 0.1.0], [
++      VLC_ADD_PLUGINS([kate])
++      VLC_ADD_CFLAGS([kate],[$KATE_CFLAGS])
++      VLC_ADD_LIBS([kate],[$KATE_LIBS]) ],[
++        AC_CHECK_HEADERS(kate/kate.h, [
++          AC_CHECK_LIB(kate, kate_decode_init, [
++            if test "${SYS}" = "mingw32"; then
++              VLC_ADD_PLUGINS([kate])
++            else
++              VLC_ADD_BUILTINS([kate])
++            fi
++            kate_libs="-lkate -logg"
++            VLC_ADD_LDFLAGS([kate],[${kate_libs}]) ],[
++            AC_MSG_ERROR([libkate doesn't appear to be installed on your system.
++            You also need to check that you have a libogg posterior to the 1.0 release.])],
++            [-lkate -logg])
++        ])
 +  ])
 +fi
 +
  
  dnl
  dnl  Video plugins
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/LIST vlc-0.8.6e/modules/LIST
---- /tmp/vlc-0.8.6e/modules/LIST	2007-11-21 22:23:30.000000000 +0000
-+++ vlc-0.8.6e/modules/LIST	2008-03-15 18:38:11.000000000 +0000
-@@ -129,6 +129,7 @@
-  * ipv4: IPv4 network abstraction layer
-  * ipv6: IPv6 network abstraction layer
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/LIST vlc/modules/LIST
+--- vlc-original/modules/LIST	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/LIST	2008-03-21 23:13:51.000000000 +0000
+@@ -156,6 +156,7 @@
+  * inhibit: preventing the computer from suspending
+  * invert: inverse video filter.
   * jack: jack server audio output
 + * kate: kate text bitstream decoder
   * libmpeg2: Mpeg2 video decoder using libmpeg2
   * linear_resampler: linear audio resampler
   * lirc: Linux infrared control module
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/codec/Modules.am vlc-0.8.6e/modules/codec/Modules.am
---- /tmp/vlc-0.8.6e/modules/codec/Modules.am	2007-11-21 22:23:29.000000000 +0000
-+++ vlc-0.8.6e/modules/codec/Modules.am	2008-03-15 18:38:11.000000000 +0000
-@@ -29,3 +29,4 @@
- SOURCES_fake = fake.c
- SOURCES_realaudio = realaudio.c
- SOURCES_sdl_image = sdl_image.c
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
+--- vlc-original/modules/codec/Modules.am	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/codec/Modules.am	2008-03-21 23:14:15.000000000 +0000
+@@ -33,3 +33,4 @@
+ SOURCES_cdg = cdg.c
+ SOURCES_fluidsynth = fluidsynth.c
+ SOURCES_cc = cc.c cc.h
 +SOURCES_kate = kate.c
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/codec/kate.c vlc-0.8.6e/modules/codec/kate.c
---- /tmp/vlc-0.8.6e/modules/codec/kate.c	1970-01-01 01:00:00.000000000 +0100
-+++ vlc-0.8.6e/modules/codec/kate.c	2008-03-16 21:20:16.000000000 +0000
-@@ -0,0 +1,588 @@
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
+--- vlc-original/modules/codec/kate.c	1970-01-01 01:00:00.000000000 +0100
++++ vlc/modules/codec/kate.c	2008-03-22 20:40:15.000000000 +0000
+@@ -0,0 +1,580 @@
 +/*****************************************************************************
 + * kate.c : a decoder for the kate bitstream format
 + *****************************************************************************
@@ -79,13 +83,15 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +/*****************************************************************************
 + * Preamble
 + *****************************************************************************/
++#ifdef HAVE_CONFIG_H
++# include "config.h"
++#endif
++
 +#include <vlc/vlc.h>
-+#include <vlc/vout.h>
-+#include <vlc/input.h>
-+#include <vlc/decoder.h>
++#include <vlc_input.h>
++#include <vlc_codec.h>
 +
 +#include <kate/kate.h>
-+#include <kate/oggkate.h>
 +
 +#include "vlc_osd.h"
 +
@@ -111,7 +117,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    /*
 +     * Kate properties
 +     */
-+    vlc_bool_t     ready;
++    vlc_bool_t     b_ready;
 +    kate_info      ki;
 +    kate_comment   kc;
 +    kate_state     k;
@@ -125,7 +131,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +     * Options
 +     */
 +#ifdef ENABLE_FORMATTING
-+    vlc_bool_t   formatted;
++    vlc_bool_t   b_formatted;
 +#endif
 +};
 +
@@ -140,9 +146,9 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +
 +static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block );
 +static int ProcessHeaders( decoder_t *p_dec );
-+static subpicture_t *ProcessPacket( decoder_t *p_dec, ogg_packet *p_oggpacket,
++static subpicture_t *ProcessPacket( decoder_t *p_dec, kate_packet *p_kp,
 +                            block_t **pp_block );
-+static subpicture_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket,
++static subpicture_t *DecodePacket( decoder_t *p_dec, kate_packet *p_kp,
 +                            block_t *p_block );
 +static void ParseKateComments( decoder_t * );
 +
@@ -153,9 +159,11 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 + * Module descriptor.
 + *****************************************************************************/
 +
++#ifdef ENABLE_FORMATTING
 +#define FORMAT_TEXT N_("Formatted Subtitles")
 +#define FORMAT_LONGTEXT N_("Kate streams allow for text formatting. " \
 + "VLC partly implements this, but you can choose to disable all formatting.")
++#endif
 +
 +
 +vlc_module_begin();
@@ -215,7 +223,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +#ifdef ENABLE_PACKETIZER
 +    p_sys->b_packetizer = VLC_FALSE;
 +#endif
-+    p_sys->ready = VLC_FALSE;
++    p_sys->b_ready = VLC_FALSE;
 +    p_sys->i_pts = 0;
 +
 +    kate_comment_init( &p_sys->kc );
@@ -226,7 +234,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +
 +    /* retrieve options */
 +#ifdef ENABLE_FORMATTING
-+    p_sys->formatted = var_CreateGetBool( p_dec, "kate-formatted" );
++    p_sys->b_formatted = var_CreateGetBool( p_dec, "kate-formatted" );
 +#endif
 +
 +    return VLC_SUCCESS;
@@ -252,25 +260,20 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +/****************************************************************************
 + * DecodeBlock: the whole thing
 + ****************************************************************************
-+ * This function must be fed with ogg packets.
++ * This function must be fed with kate packets.
 + ****************************************************************************/
 +static subpicture_t *DecodeBlock( decoder_t *p_dec, block_t **pp_block )
 +{
 +    decoder_sys_t *p_sys = p_dec->p_sys;
 +    block_t *p_block;
-+    ogg_packet oggpacket;
++    kate_packet kp;
 +
 +    if( !pp_block || !*pp_block ) return NULL;
 +
 +    p_block = *pp_block;
 +
-+    /* Block to Ogg packet */
-+    oggpacket.packet = p_block->p_buffer;
-+    oggpacket.bytes = p_block->i_buffer;
-+    oggpacket.granulepos = p_block->i_dts;
-+    oggpacket.b_o_s = 0;
-+    oggpacket.e_o_s = 0;
-+    oggpacket.packetno = 0;
++    /* Block to Kate packet */
++    kate_packet_wrap(&kp, p_block->i_buffer, p_block->p_buffer);
 +
 +    if( p_sys->i_headers == 0 && p_dec->fmt_in.i_extra )
 +    {
@@ -278,20 +281,19 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +        p_sys->i_num_headers = ((unsigned char*)p_dec->fmt_in.p_extra)[0];
 +        p_sys->i_headers = p_sys->i_num_headers;
 +    }
-+    else if( oggpacket.bytes && (p_sys->i_headers==0 || p_sys->i_headers < p_sys->ki.num_headers ))
++    else if( kp.nbytes && (p_sys->i_headers==0 || p_sys->i_headers < p_sys->ki.num_headers ))
 +    {
 +        /* Backup headers as extra data */
 +        uint8_t *p_extra;
 +
 +        p_dec->fmt_in.p_extra =
-+            realloc( p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra +
-+                     oggpacket.bytes + 2 );
-+        p_extra = p_dec->fmt_in.p_extra + p_dec->fmt_in.i_extra;
-+        *(p_extra++) = oggpacket.bytes >> 8;
-+        *(p_extra++) = oggpacket.bytes & 0xFF;
++            realloc( p_dec->fmt_in.p_extra, p_dec->fmt_in.i_extra + kp.nbytes + 2 );
++        p_extra = (void*)(((unsigned char*)p_dec->fmt_in.p_extra) + p_dec->fmt_in.i_extra);
++        *(p_extra++) = kp.nbytes >> 8;
++        *(p_extra++) = kp.nbytes & 0xFF;
 +
-+        memcpy( p_extra, oggpacket.packet, oggpacket.bytes );
-+        p_dec->fmt_in.i_extra += oggpacket.bytes + 2;
++        memcpy( p_extra, kp.data, kp.nbytes );
++        p_dec->fmt_in.i_extra += kp.nbytes + 2;
 +
 +        block_Release( *pp_block );
 +        p_sys->i_num_headers = ((unsigned char*)p_dec->fmt_in.p_extra)[0];
@@ -311,7 +313,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +        else p_sys->i_headers++;
 +    }
 +
-+    return ProcessPacket( p_dec, &oggpacket, pp_block );
++    return ProcessPacket( p_dec, &kp, pp_block );
 +}
 +
 +/*****************************************************************************
@@ -320,7 +322,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +static int ProcessHeaders( decoder_t *p_dec )
 +{
 +    decoder_sys_t *p_sys = p_dec->p_sys;
-+    ogg_packet oggpacket;
++    kate_packet kp;
 +    uint8_t *p_extra;
 +    int i_extra;
 +    int headeridx;
@@ -328,10 +330,6 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +
 +    if( !p_dec->fmt_in.i_extra ) return VLC_EGENERIC;
 +
-+    oggpacket.granulepos = -1;
-+    oggpacket.b_o_s = 1; /* yes this actually is a b_o_s packet :) */
-+    oggpacket.e_o_s = 0;
-+    oggpacket.packetno = 0;
 +    p_extra = p_dec->fmt_in.p_extra;
 +    i_extra = p_dec->fmt_in.i_extra;
 +
@@ -340,18 +338,18 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    --i_extra;
 +
 +    /* Take care of the initial Kate header */
-+    oggpacket.bytes = *(p_extra++) << 8;
-+    oggpacket.bytes |= (*(p_extra++) & 0xFF);
-+    oggpacket.packet = p_extra;
-+    p_extra += oggpacket.bytes;
-+    i_extra -= (oggpacket.bytes + 2);
++    kp.nbytes = *(p_extra++) << 8;
++    kp.nbytes |= (*(p_extra++) & 0xFF);
++    kp.data = p_extra;
++    p_extra += kp.nbytes;
++    i_extra -= (kp.nbytes + 2);
 +    if( i_extra < 0 )
 +    {
 +        msg_Err( p_dec, "header data corrupted");
 +        return VLC_EGENERIC;
 +    }
 +
-+    ret = kate_ogg_decode_headerin( &p_sys->ki, &p_sys->kc, &oggpacket );
++    ret = kate_decode_headerin( &p_sys->ki, &p_sys->kc, &kp );
 +    if( ret < 0 )
 +    {
 +        msg_Err( p_dec, "this bitstream does not contain Kate data (%d)", ret );
@@ -367,22 +365,20 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    kate_info_remove_markup( &p_sys->ki, 1 );
 +
 +    /* parse all remaining header packets */
-+    oggpacket.b_o_s = 0;
 +    for (headeridx=1; headeridx<p_sys->ki.num_headers; ++headeridx)
 +    {
-+        oggpacket.packetno = headeridx;
-+        oggpacket.bytes = *(p_extra++) << 8;
-+        oggpacket.bytes |= (*(p_extra++) & 0xFF);
-+        oggpacket.packet = p_extra;
-+        p_extra += oggpacket.bytes;
-+        i_extra -= (oggpacket.bytes + 2);
++        kp.nbytes = *(p_extra++) << 8;
++        kp.nbytes |= (*(p_extra++) & 0xFF);
++        kp.data = p_extra;
++        p_extra += kp.nbytes;
++        i_extra -= (kp.nbytes + 2);
 +        if( i_extra < 0 )
 +        {
 +            msg_Err( p_dec, "header %d data corrupted", headeridx);
 +            return VLC_EGENERIC;
 +        }
 +
-+        ret = kate_ogg_decode_headerin( &p_sys->ki, &p_sys->kc, &oggpacket );
++        ret = kate_decode_headerin( &p_sys->ki, &p_sys->kc, &kp );
 +        if( ret < 0 )
 +        {
 +            msg_Err( p_dec, "Kate header %d is corrupted: %d", headeridx, ret);
@@ -408,7 +404,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +            msg_Err( p_dec, "Kate failed to initialize for decoding: %d", ret );
 +            return VLC_EGENERIC;
 +        }
-+        p_sys->ready = VLC_TRUE;
++        p_sys->b_ready = VLC_TRUE;
 +    }
 +#ifdef ENABLE_PACKETIZER
 +    else
@@ -427,7 +423,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +/*****************************************************************************
 + * ProcessPacket: processes a kate packet.
 + *****************************************************************************/
-+static subpicture_t *ProcessPacket( decoder_t *p_dec, ogg_packet *p_oggpacket,
++static subpicture_t *ProcessPacket( decoder_t *p_dec, kate_packet *p_kp,
 +                            block_t **pp_block )
 +{
 +    decoder_sys_t *p_sys = p_dec->p_sys;
@@ -459,7 +455,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +#endif
 +    {
 +        if( p_sys->i_headers >= p_sys->i_num_headers )
-+            p_buf = DecodePacket( p_dec, p_oggpacket, p_block );
++            p_buf = DecodePacket( p_dec, p_kp, p_block );
 +        else
 +            p_buf = NULL;
 +
@@ -472,7 +468,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +/*****************************************************************************
 + * DecodePacket: decodes a Kate packet.
 + *****************************************************************************/
-+static subpicture_t *DecodePacket( decoder_t *p_dec, ogg_packet *p_oggpacket, block_t *p_block )
++static subpicture_t *DecodePacket( decoder_t *p_dec, kate_packet *p_kp, block_t *p_block )
 +{
 +    decoder_sys_t *p_sys = p_dec->p_sys;
 +    const kate_event *ev=NULL;
@@ -482,7 +478,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    kate_tracker kin;
 +    vlc_bool_t tracker_valid = VLC_FALSE;
 +
-+    ret = kate_ogg_decode_packetin( &p_sys->k, p_oggpacket );
++    ret = kate_decode_packetin( &p_sys->k, p_kp );
 +    if( ret < 0 )
 +    {
 +        msg_Err( p_dec, "Kate failed to decode packet: %d", ret );
@@ -521,7 +517,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    fmt.i_x_offset = fmt.i_y_offset = 0;
 +
 +#ifdef ENABLE_FORMATTING
-+    if (p_sys->formatted)
++    if (p_sys->b_formatted)
 +    {
 +        ret = kate_tracker_init( &kin, &p_sys->ki, ev);
 +        if( ret < 0)
@@ -584,7 +580,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    else
 +    {
 +        /* Normal text subs, easy markup */
-+        p_spu->i_flags = SUBPICTURE_ALIGN_BOTTOM;
++        p_spu->p_region->i_align = SUBPICTURE_ALIGN_BOTTOM;
 +        p_spu->i_x = 0;
 +        p_spu->i_y = 10;
 +    }
@@ -633,7 +629,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    decoder_t *p_dec = (decoder_t *)p_this;
 +    decoder_sys_t *p_sys = p_dec->p_sys;
 +
-+    if (p_sys->ready)
++    if (p_sys->b_ready)
 +        kate_clear( &p_sys->k );
 +    kate_info_clear( &p_sys->ki );
 +    kate_comment_clear( &p_sys->kc );
@@ -641,10 +637,34 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
 +    free( p_sys );
 +}
 +
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/demux/mkv.cpp vlc-0.8.6e/modules/demux/mkv.cpp
---- /tmp/vlc-0.8.6e/modules/demux/mkv.cpp	2008-02-24 19:01:53.000000000 +0000
-+++ vlc-0.8.6e/modules/demux/mkv.cpp	2008-03-16 21:13:38.000000000 +0000
-@@ -2424,6 +2424,55 @@
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/speex.c vlc/modules/codec/speex.c
+--- vlc-original/modules/codec/speex.c	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/codec/speex.c	2008-03-21 23:40:58.000000000 +0000
+@@ -637,7 +637,7 @@
+       were encountered.
+     */
+     i_decode_ret = speex_decode_int( p_sys->p_state, &p_sys->bits, 
+-            (spx_int16_t*)p_aout_buffer->p_buffer );
++            (int16_t*)p_aout_buffer->p_buffer );
+     if ( i_decode_ret < 0 )
+     {
+         msg_Err( p_dec, "Decoding failed. Perhaps we have a bad stream?" );
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/control/rc.c vlc/modules/control/rc.c
+--- vlc-original/modules/control/rc.c	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/control/rc.c	2008-03-21 23:37:29.000000000 +0000
+@@ -1425,7 +1425,7 @@
+             msg_rc( "Trying to add %s to playlist.", newval.psz_string );
+             if( playlist_AddInput( p_playlist, p_item,
+                      PLAYLIST_GO|PLAYLIST_APPEND, PLAYLIST_END, VLC_TRUE,
+-                     VLC_FALSE ) != VLC_SUCCESS );
++                     VLC_FALSE ) != VLC_SUCCESS )
+             {
+                 return VLC_EGENERIC;
+             }
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
+--- vlc-original/modules/demux/mkv.cpp	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/demux/mkv.cpp	2008-03-21 23:13:51.000000000 +0000
+@@ -2546,6 +2546,55 @@
              }
              tracks[i_track]->fmt.audio.i_blockalign = ( tracks[i_track]->fmt.audio.i_bitspersample + 7 ) / 8 * tracks[i_track]->fmt.audio.i_channels;
          }
@@ -700,22 +720,22 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
          else if( !strcmp( tracks[i_track]->psz_codec, "S_TEXT/UTF8" ) )
          {
              tracks[i_track]->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/demux/ogg.c vlc-0.8.6e/modules/demux/ogg.c
---- /tmp/vlc-0.8.6e/modules/demux/ogg.c	2008-02-24 19:01:53.000000000 +0000
-+++ vlc-0.8.6e/modules/demux/ogg.c	2008-03-16 20:15:52.000000000 +0000
-@@ -79,7 +79,10 @@
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/ogg.c vlc/modules/demux/ogg.c
+--- vlc-original/modules/demux/ogg.c	2008-03-17 13:44:23.000000000 +0000
++++ vlc/modules/demux/ogg.c	2008-03-21 23:30:01.000000000 +0000
+@@ -85,7 +85,10 @@
  
      /* Misc */
      int b_reinit;
 -    int i_theora_keyframe_granule_shift;
 +    int i_granule_shift;
 +
-+    /* base rate can be different than offset rate for kate streams */
++    /* kate streams have the number of headers in the ID header */
 +    int i_kate_num_headers;
  
      /* for Annodex logical bitstreams */
      int secondary_header_packets;
-@@ -169,6 +172,7 @@
+@@ -175,6 +178,7 @@
  static void Ogg_ReadTheoraHeader( logical_stream_t *, ogg_packet * );
  static void Ogg_ReadVorbisHeader( logical_stream_t *, ogg_packet * );
  static void Ogg_ReadSpeexHeader( logical_stream_t *, ogg_packet * );
@@ -723,7 +743,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
  static void Ogg_ReadFlacHeader( demux_t *, logical_stream_t *, ogg_packet * );
  static void Ogg_ReadAnnodexHeader( vlc_object_t *, logical_stream_t *, ogg_packet * );
  
-@@ -431,21 +435,21 @@
+@@ -443,21 +447,21 @@
      /* Convert the granulepos into a pcr */
      if( p_oggpacket->granulepos >= 0 )
      {
@@ -753,7 +773,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
  
          p_stream->i_interpolated_pcr = p_stream->i_pcr;
      }
-@@ -508,6 +512,7 @@
+@@ -520,6 +524,7 @@
      {
          uint8_t *p_extra;
          vlc_bool_t b_store_size = VLC_TRUE;
@@ -761,7 +781,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
  
          p_stream->i_packets_backup++;
          switch( p_stream->fmt.i_codec )
-@@ -536,6 +541,12 @@
+@@ -548,6 +553,12 @@
              b_store_size = VLC_FALSE;
              break;
  
@@ -774,7 +794,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
          default:
              p_stream->b_force_backup = 0;
              break;
-@@ -544,15 +555,21 @@
+@@ -556,15 +567,21 @@
          /* Backup the ogg packet (likely an header packet) */
          p_stream->p_headers =
              realloc( p_stream->p_headers, p_stream->i_headers +
@@ -798,7 +818,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
  
          if( !p_stream->b_force_backup )
          {
-@@ -661,7 +678,8 @@
+@@ -673,7 +690,8 @@
          p_stream->fmt.i_codec != VLC_FOURCC( 'f','l','a','c' ) &&
          p_stream->fmt.i_codec != VLC_FOURCC( 't','a','r','k' ) &&
          p_stream->fmt.i_codec != VLC_FOURCC( 't','h','e','o' ) &&
@@ -808,7 +828,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
      {
          /* We remove the header from the packet */
          i_header_len = (*p_oggpacket->packet & PACKET_LEN_BITS01) >> 6;
-@@ -865,6 +883,13 @@
+@@ -877,6 +895,13 @@
                      Ogg_ReadAnnodexHeader( VLC_OBJECT(p_demux), p_stream,
                                             &oggpacket );
                  }
@@ -822,7 +842,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
                  else if( oggpacket.bytes >= 142 &&
                           !memcmp( &oggpacket.packet[1],
                                     "Direct Show Samples embedded in Ogg", 35 ))
-@@ -1145,6 +1170,7 @@
+@@ -1157,6 +1182,7 @@
  #define p_stream p_ogg->pp_stream[i_stream]
          p_stream->p_es = es_out_Add( p_demux->out, &p_stream->fmt );
  
@@ -830,7 +850,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
          if( p_stream->fmt.i_codec == VLC_FOURCC('c','m','m','l') )
          {
              /* Set the CMML stream active */
-@@ -1238,11 +1264,11 @@
+@@ -1249,11 +1275,11 @@
      i_keyframe_frequency_force = 1 << bs_read( &bitstream, 5 );
  
      /* granule_shift = i_log( frequency_force -1 ) */
@@ -844,7 +864,7 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
          i_keyframe_frequency_force >>= 1;
      }
  
-@@ -1329,6 +1355,59 @@
+@@ -1340,6 +1366,59 @@
      }
  }
  
@@ -904,122 +924,3 @@ diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makef
  static void Ogg_ReadAnnodexHeader( vlc_object_t *p_this,
                                     logical_stream_t *p_stream,
                                     ogg_packet *p_oggpacket )
-diff -x '*.o' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x version.c -x config.h.in -x Makefile.am -urN /tmp/vlc-0.8.6e/modules/mux/ogg.c vlc-0.8.6e/modules/mux/ogg.c
---- /tmp/vlc-0.8.6e/modules/mux/ogg.c	2007-11-21 22:23:28.000000000 +0000
-+++ vlc-0.8.6e/modules/mux/ogg.c	2008-03-15 18:38:11.000000000 +0000
-@@ -455,6 +455,10 @@
-     case SPU_ES:
-         switch( p_stream->i_fourcc )
-         {
-+        case VLC_FOURCC( 'k', 'a', 't', 'e' ):
-+            msg_Dbg( p_mux, "kate stream" );
-+            break;
-+
-         case VLC_FOURCC( 's', 'u','b', 't' ):
-             p_stream->p_oggds_header = malloc( sizeof(oggds_header_t) );
-             memset( p_stream->p_oggds_header, 0, sizeof(oggds_header_t) );
-@@ -606,12 +610,20 @@
- 
-         if( p_stream->i_fourcc == VLC_FOURCC( 'v', 'o', 'r', 'b' ) ||
-             p_stream->i_fourcc == VLC_FOURCC( 's', 'p', 'x', ' ' ) ||
--            p_stream->i_fourcc == VLC_FOURCC( 't', 'h', 'e', 'o' ) )
-+            p_stream->i_fourcc == VLC_FOURCC( 't', 'h', 'e', 'o' ) ||
-+            p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-         {
--            /* First packet in order: vorbis/speex/theora info */
-+            /* First packet in order: vorbis/speex/theora/kate info */
-             p_extra = p_input->p_fmt->p_extra;
-             i_extra = p_input->p_fmt->i_extra;
- 
-+            if( p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-+            {
-+                /* number of headers stored in first byte for kate streams */
-+                ++p_extra;
-+                --i_extra;
-+            }
-+
-             op.bytes = *(p_extra++) << 8;
-             op.bytes |= (*(p_extra++) & 0xFF);
-             op.packet = p_extra;
-@@ -644,6 +656,7 @@
-                     i_keyframe_frequency_force >>= 1;
-                 }
-             }
-+            // TODO: does kate need something for gshift ?
-         }
-         else if( p_stream->i_fourcc == VLC_FOURCC( 'f', 'l', 'a', 'c' ) )
-         {
-@@ -681,16 +694,23 @@
- 
-         if( p_stream->i_fourcc == VLC_FOURCC( 'v', 'o', 'r', 'b' ) ||
-             p_stream->i_fourcc == VLC_FOURCC( 's', 'p', 'x', ' ' ) ||
--            p_stream->i_fourcc == VLC_FOURCC( 't', 'h', 'e', 'o' ) )
-+            p_stream->i_fourcc == VLC_FOURCC( 't', 'h', 'e', 'o' ) ||
-+            p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-         {
-+            p_extra = p_input->p_fmt->p_extra;
-+            i_extra = p_input->p_fmt->i_extra;
-+
-             /* Special case, headers are already there in the incoming stream.
-              * We need to gather them an mark them as headers. */
-             int j = 2;
- 
-             if( p_stream->i_fourcc == VLC_FOURCC( 's', 'p', 'x', ' ' ) ) j = 1;
--
--            p_extra = p_input->p_fmt->p_extra;
--            i_extra = p_input->p_fmt->i_extra;
-+            if( p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-+            {
-+                j = ((unsigned char*)p_extra)[0];
-+                ++p_extra;
-+                --i_extra;
-+            }
- 
-             /* Skip 1 header */
-             op.bytes = *(p_extra++) << 8;
-@@ -777,6 +797,7 @@
-     return p_hdr;
- }
- 
-+// TODO: what to do there ?
- static block_t *OggCreateFooter( sout_mux_t *p_mux, mtime_t i_dts )
- {
-     sout_mux_sys_t *p_sys = p_mux->p_sys;
-@@ -935,6 +956,7 @@
-         p_data = block_Realloc( p_data, 1, p_data->i_buffer );
-         p_data->p_buffer[0] = PACKET_IS_SYNCPOINT;      // FIXME
-     }
-+    // TODO: need to do something here ?
- 
-     op.packet   = p_data->p_buffer;
-     op.bytes    = p_data->i_buffer;
-@@ -976,17 +998,26 @@
-     }
-     else if( p_stream->i_cat == SPU_ES )
-     {
--        /* granulepos is in milisec */
--        op.granulepos = ( p_data->i_dts - p_sys->i_start_dts ) / 1000;
-+        if( p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-+        {
-+          // TODO: gpos calc
-+        }
-+        else
-+        {
-+            /* granulepos is in milisec */
-+            op.granulepos = ( p_data->i_dts - p_sys->i_start_dts ) / 1000;
-+        }
-     }
- 
-     ogg_stream_packetin( &p_stream->os, &op );
- 
-     if( p_stream->i_cat == SPU_ES ||
--        p_stream->i_fourcc == VLC_FOURCC( 's', 'p', 'x', ' ' ) )
-+        p_stream->i_fourcc == VLC_FOURCC( 's', 'p', 'x', ' ' ) ||
-+        p_stream->i_fourcc == VLC_FOURCC( 'k', 'a', 't', 'e' ) )
-     {
-         /* Subtitles or Speex packets are quite small so they 
-          * need to be flushed to be sent on time */
-+        /* Kate streams are also 1 page per packet */
-         p_og = OggStreamFlush( p_mux, &p_stream->os, p_data->i_dts );
-     }
-     else
