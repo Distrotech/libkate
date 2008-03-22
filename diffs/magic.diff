@@ -1,6 +1,6 @@
 --- /usr/share/file/magic	2005-10-27 20:37:29.000000000 +0100
-+++ magic	2008-02-27 21:22:12.000000000 +0000
-@@ -11616,6 +11616,16 @@
++++ magic	2008-03-22 21:47:28.000000000 +0000
+@@ -11616,6 +11616,20 @@
  >>28		string		fLaC		\b, FLAC audio
  # non-Vorbis content: Theora
  >>28		string		\x80theora	\b, Theora video
@@ -14,6 +14,10 @@
 +>>>60		string		\0		no language set,
 +>>>76		string		>\0		category %s
 +>>>76		string		\0		no category set
++# non-Vorbis content: Skeleton
++>>28		string		fishead\0	\b, Skeleton
++>>>36		short		x		v%hu
++>>>40		short		x		\b.%hu
  # non-Vorbis content: Speex
  >>28		string		Speex\ \ \ 	\b, Speex audio
  # non-Vorbis content: OGM
