@@ -64,8 +64,8 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  debug:
 diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x config.h -x 'config.h.in~' -x libtool -x conf -x log -x stamp-h1 -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x config.h.in -urN icecast-svn/src/format_kate.c icecast-svn-with-kate/src/format_kate.c
 --- icecast-svn/src/format_kate.c	1970-01-01 01:00:00.000000000 +0100
-+++ icecast-svn-with-kate/src/format_kate.c	2008-03-18 22:36:08.000000000 +0000
-@@ -0,0 +1,224 @@
++++ icecast-svn-with-kate/src/format_kate.c	2008-03-23 15:09:12.000000000 +0000
+@@ -0,0 +1,232 @@
 +/* Icecast
 + *
 + * This program is distributed under the GNU General Public License, version 2.
@@ -111,6 +111,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +    kate_info       ki;
 +    kate_comment    kc;
 +#endif
++    int             num_headers;
 +    int             granule_shift;
 +    ogg_int64_t     last_iframe;
 +    ogg_int64_t     prev_granulepos;
@@ -169,6 +170,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +                return NULL;
 +            }
 +            header_page = 1;
++            kate->num_headers = kate->ki.num_headers;
 +            codec->headers++;
 +            if (ret > 0)
 +            {
@@ -188,15 +190,21 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +            }
 +            continue;
 +#else
-+            header_page = (packet.bytes>0 && packet.packet[0]&0x80);
++            header_page = (packet.bytes>0 && (packet.packet[0]&0x80));
 +            if (!header_page)
 +                break;
 +            codec->headers++;
++            if (packet.packet[0]==0x80)
++            {
++                if (packet.bytes<64) return NULL;
++                /* we peek for the number of headers to expect */
++                kate->num_headers = packet.packet[11];
++            }
 +            continue;
 +#endif
 +        }
 +
-+        if (codec->headers < kate->ki.num_headers)
++        if (codec->headers < kate->num_headers)
 +        {
 +            ogg_info->error = 1;
 +            ERROR0 ("Not enough header packets");
@@ -269,7 +277,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +    }
 +#else
 +    /* we don't have libkate, so we examine the packet magic by hand */
-+    if (packet.bytes<9) || memcmp(packet.packet, "\x80kate\0\0\0\0", 9)
++    if ((packet.bytes<9) || memcmp(packet.packet, "\x80kate\0\0\0\0", 9))
 +    {
 +        ogg_stream_clear (&codec->os);
 +        free (kate_codec);

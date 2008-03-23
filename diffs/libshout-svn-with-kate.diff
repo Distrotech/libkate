@@ -38,24 +38,13 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
    include/shout/shout.h src/Makefile src/net/Makefile src/timing/Makefile
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/Makefile.am libshout-svn-with-kate/src/Makefile.am
 --- libshout-svn/src/Makefile.am	2008-03-10 17:23:46.000000000 +0000
-+++ libshout-svn-with-kate/src/Makefile.am	2008-03-18 21:20:28.000000000 +0000
-@@ -15,6 +15,10 @@
-   MAYBE_SPEEX = speex.c
- endif
- 
-+if HAVE_KATE
-+  MAYBE_KATE = kate.c
-+endif
-+
- SUBDIRS = avl net timing httpp $(MAYBE_THREAD)
- 
- lib_LTLIBRARIES = libshout.la
-@@ -22,11 +26,11 @@
++++ libshout-svn-with-kate/src/Makefile.am	2008-03-23 14:36:07.000000000 +0000
+@@ -22,11 +22,11 @@
  
  EXTRA_DIST = theora.c speex.c
  noinst_HEADERS = shout_ogg.h shout_private.h util.h
 -libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
-+libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX) $(MAYBE_KATE)
++libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c kate.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
  AM_CFLAGS = @XIPH_CFLAGS@
  
  libshout_la_LIBADD = net/libicenet.la timing/libicetiming.la avl/libiceavl.la\
@@ -66,8 +55,8 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/kate.c libshout-svn-with-kate/src/kate.c
 --- libshout-svn/src/kate.c	1970-01-01 01:00:00.000000000 +0100
-+++ libshout-svn-with-kate/src/kate.c	2008-03-18 22:13:20.000000000 +0000
-@@ -0,0 +1,180 @@
++++ libshout-svn-with-kate/src/kate.c	2008-03-23 15:09:51.000000000 +0000
+@@ -0,0 +1,183 @@
 +/* -*- c-basic-offset: 8; -*- */
 +/* kate.c: Ogg Kate data handlers for libshout
 + * $Id: kate.c 11416 2006-05-22 00:32:49Z brendan $
@@ -113,6 +102,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +    kate_info ki;
 +    kate_comment kc;
 +#else
++    int num_headers;
 +    int granule_shift;
 +    ogg_int32_t num;
 +    ogg_int32_t den;
@@ -155,12 +145,14 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +
 +		return SHOUTERR_UNSUPPORTED;
 +	}
++    kate_data->num_headers = kate_data->ki.num_headers;
 +#else
 +    if (packet.bytes<9 || memcmp(packet.packet, "\x80kate\0\0\0\0", 9)) {
 +		free_kate_data(kate_data);
 +
 +		return SHOUTERR_UNSUPPORTED;
 +    }
++    kate_data->num_headers = packet.packet[11];
 +#endif
 +
 +	codec->codec_data = kate_data;
@@ -205,12 +197,12 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +                kate_data->num = read32le(packet.packet+24);
 +                kate_data->den = read32le(packet.packet+28);
 +            }
-+
-+            if ((packet.packet[0]&0x80)==0)
++            if (packet.packetno == kate_data->num_headers-1)
 +            {
 +                kate_data->headers_done = 1;
 +                break;
 +            }
++
 +#endif
 +			codec->headers++;
 +		}
@@ -282,7 +274,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  #endif
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout.c libshout-svn-with-kate/src/shout.c
 --- libshout-svn/src/shout.c	2008-03-10 17:23:46.000000000 +0000
-+++ libshout-svn-with-kate/src/shout.c	2008-03-18 22:17:49.000000000 +0000
++++ libshout-svn-with-kate/src/shout.c	2008-03-23 15:11:01.000000000 +0000
 @@ -1200,7 +1200,7 @@
  	char *header = NULL;
  	int hlen = 0;
