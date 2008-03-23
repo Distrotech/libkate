@@ -48,7 +48,7 @@ CFLAGS_SHARED=$(CFLAGS) -fPIC
 CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
 LDFLAGS+=-L$(LIBDIR)
 
-VERSION=0.1.0
+VERSION=0.1.1
 SONAME_MAJOR=0
 
 MODULES=kate kate_info kate_comment kate_granule kate_event \
@@ -218,7 +218,7 @@ dist:
 	cp -R tools/kpng.[ch] $(distname)/tools
 	cp README INSTALL COPYING AUTHORS ChangeLog Makefile $(distname)
 	cp -R pkg $(distname)
-	tar cvfz $(distname).tar.gz --owner=0 --group=0 $(distname)
+	tar cvfz $(distname).tar.gz --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore $(distname)
 	rm -fr $(distname)
 
 ogg_merger:=$(shell which oggzmerge 2> /dev/null | sed -e 's,oggzmerge$$,oggzmerge,')
