@@ -65,7 +65,7 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kds) return KATE_E_INIT;
 
-  *ev=NULL;
+  if (ev) *ev=NULL;
   if (k->kds->ki.probe>=0) {
     /* still probing headers */
     if (k->kds->ki.probe==0 && !kate_decode_is_idheader(op))
