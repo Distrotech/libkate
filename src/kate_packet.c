@@ -25,13 +25,16 @@
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_packet_wrap(kate_packet *kp,size_t nbytes,void *data)
+int kate_packet_wrap(kate_packet *kp,size_t nbytes,const void *data)
 {
   if (!kp) return KATE_E_INVALID_PARAMETER;
   if (!data && nbytes>0) return KATE_E_INVALID_PARAMETER;
 
   kp->nbytes=nbytes;
-  kp->data=data;
+  kp->data=(void*)data;
+  /* kp->data is not const as it may be freed; however, here, data will
+     always be const as it may be a const buffer given by the user, in
+     which case it won't be freed */
 
   return 0;
 }
@@ -47,7 +50,7 @@ int kate_packet_wrap(kate_packet *kp,size_t nbytes,void *data)
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_packet_init(kate_packet *kp,size_t nbytes,void *data)
+int kate_packet_init(kate_packet *kp,size_t nbytes,const void *data)
 {
   void *dup_data;
 

@@ -557,8 +557,8 @@ extern int kate_high_decode_packetin(kate_state *k,kate_packet *kp,kate_const ka
 extern int kate_high_decode_clear(kate_state *k);
 
 /** \defgroup packet kate_packet */
-extern int kate_packet_wrap(kate_packet *kp,size_t nbytes,void *data);
-extern int kate_packet_init(kate_packet *kp,size_t nbytes,void *data);
+extern int kate_packet_wrap(kate_packet *kp,size_t nbytes,const void *data);
+extern int kate_packet_init(kate_packet *kp,size_t nbytes,const void *data);
 extern int kate_packet_clear(kate_packet *kp);
 
 #ifdef __cplusplus
