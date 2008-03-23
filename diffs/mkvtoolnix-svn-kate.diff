@@ -696,8 +696,8 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
  /** \brief Outputs usage information
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/output/p_kate.cpp mkvtoolnix-svn/src/output/p_kate.cpp
 --- ../svn/mkvtoolnix/src/output/p_kate.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ mkvtoolnix-svn/src/output/p_kate.cpp	2008-03-17 21:45:09.000000000 +0000
-@@ -0,0 +1,151 @@
++++ mkvtoolnix-svn/src/output/p_kate.cpp	2008-03-22 21:06:56.000000000 +0000
+@@ -0,0 +1,150 @@
 +/*
 +   mkvmerge -- utility for splicing together matroska files
 +   from component media subtypes
@@ -747,7 +747,6 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +                                global_data->get_size(), false));
 +  vector<memory_cptr> blocks = unlace_memory_xiph(temp);
 +  kate_parse_identification_header(blocks[0]->get(), blocks[0]->get_size(), kate_id);
-+  printf("blocks size %d, kate_id.nheaders %d\n", blocks.size(), kate_id.nheaders);
 +  if (blocks.size() != kate_id.nheaders)
 +    throw false;
 +
