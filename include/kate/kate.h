@@ -32,7 +32,7 @@ typedef float kate_float;
 /** @{ */
 #define KATE_VERSION_MAJOR 0             /**< major version number of the libkate API */
 #define KATE_VERSION_MINOR 1             /**< minor version number of the libkate API */
-#define KATE_VERSION_PATCH 0             /**< patch version number of the libkate API */
+#define KATE_VERSION_PATCH 1             /**< patch version number of the libkate API */
 /** @} */
 
 /** \name Bitstream version */
