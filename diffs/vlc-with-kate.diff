@@ -1,4 +1,4 @@
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/configure.ac vlc/configure.ac
+diff -urN vlc-original/configure.ac vlc/configure.ac
 --- vlc-original/configure.ac	2008-03-21 13:55:57.000000000 +0000
 +++ vlc/configure.ac	2008-03-22 20:47:34.000000000 +0000
 @@ -3881,6 +3881,32 @@
@@ -34,7 +34,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x auto
  
  dnl
  dnl  Video plugins
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/LIST vlc/modules/LIST
+diff -urN vlc-original/modules/LIST vlc/modules/LIST
 --- vlc-original/modules/LIST	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/LIST	2008-03-21 23:13:51.000000000 +0000
 @@ -156,6 +156,7 @@
@@ -45,7 +45,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x auto
   * libmpeg2: Mpeg2 video decoder using libmpeg2
   * linear_resampler: linear audio resampler
   * lirc: Linux infrared control module
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
+diff -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
 --- vlc-original/modules/codec/Modules.am	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/codec/Modules.am	2008-03-21 23:14:15.000000000 +0000
 @@ -33,3 +33,4 @@
@@ -53,7 +53,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x auto
  SOURCES_fluidsynth = fluidsynth.c
  SOURCES_cc = cc.c cc.h
 +SOURCES_kate = kate.c
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
+diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 --- vlc-original/modules/codec/kate.c	1970-01-01 01:00:00.000000000 +0100
 +++ vlc/modules/codec/kate.c	2008-03-22 20:40:15.000000000 +0000
 @@ -0,0 +1,580 @@
@@ -637,31 +637,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x auto
 +    free( p_sys );
 +}
 +
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/speex.c vlc/modules/codec/speex.c
---- vlc-original/modules/codec/speex.c	2008-03-17 13:44:23.000000000 +0000
-+++ vlc/modules/codec/speex.c	2008-03-21 23:40:58.000000000 +0000
-@@ -637,7 +637,7 @@
-       were encountered.
-     */
-     i_decode_ret = speex_decode_int( p_sys->p_state, &p_sys->bits, 
--            (spx_int16_t*)p_aout_buffer->p_buffer );
-+            (int16_t*)p_aout_buffer->p_buffer );
-     if ( i_decode_ret < 0 )
-     {
-         msg_Err( p_dec, "Decoding failed. Perhaps we have a bad stream?" );
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/control/rc.c vlc/modules/control/rc.c
---- vlc-original/modules/control/rc.c	2008-03-17 13:44:23.000000000 +0000
-+++ vlc/modules/control/rc.c	2008-03-21 23:37:29.000000000 +0000
-@@ -1425,7 +1425,7 @@
-             msg_rc( "Trying to add %s to playlist.", newval.psz_string );
-             if( playlist_AddInput( p_playlist, p_item,
-                      PLAYLIST_GO|PLAYLIST_APPEND, PLAYLIST_END, VLC_TRUE,
--                     VLC_FALSE ) != VLC_SUCCESS );
-+                     VLC_FALSE ) != VLC_SUCCESS )
-             {
-                 return VLC_EGENERIC;
-             }
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
+diff -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
 --- vlc-original/modules/demux/mkv.cpp	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/demux/mkv.cpp	2008-03-21 23:13:51.000000000 +0000
 @@ -2546,6 +2546,55 @@
@@ -720,7 +696,7 @@ diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x auto
          else if( !strcmp( tracks[i_track]->psz_codec, "S_TEXT/UTF8" ) )
          {
              tracks[i_track]->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
-diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/ogg.c vlc/modules/demux/ogg.c
+diff -urN vlc-original/modules/demux/ogg.c vlc/modules/demux/ogg.c
 --- vlc-original/modules/demux/ogg.c	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/demux/ogg.c	2008-03-21 23:30:01.000000000 +0000
 @@ -85,7 +85,10 @@
