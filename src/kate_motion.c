@@ -170,6 +170,7 @@ static int kate_curve_get_point(const kate_curve *kc,kate_float t,kate_float *x,
   \param x a pointer to the first coordinate of the computed point (may be NULL)
   \param y a pointer to the second coordinate of the computed point (may be NULL)
   \returns 0 success
+  \returns 1 no point at this time in the motion
   \returns KATE_E_* error
   */
 int kate_motion_get_point(const kate_motion *km,kate_float duration,kate_float t,kate_float *x,kate_float *y)
