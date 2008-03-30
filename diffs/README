@@ -89,3 +89,9 @@ motions support).
 It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 
+
+ * GStreamer (gst-plugins-bad-with-kate.diff)
+
+This adds text only Kate decoding support (eg, no styles, regions, or
+motions support).
+
