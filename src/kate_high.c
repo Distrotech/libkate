@@ -30,9 +30,9 @@ int kate_high_decode_init(kate_state *k)
 
   if (!k) return KATE_E_INVALID_PARAMETER;
 
+  k->kes=NULL;
   k->kds=kate_decode_state_create();
   if (!k->kds) return KATE_E_OUT_OF_MEMORY;
-  k->kes=NULL;
 
   ret=kate_info_init(&k->kds->ki);
   if (ret<0) {
@@ -79,10 +79,13 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
   }
   else {
     /* in data */
+    int eos=0;
     ret=kate_decode_packetin(k,op);
     if (ret<0) return ret;
+    if (ret>0) eos=1;
     ret=kate_decode_eventout(k,ev);
-    return ret;
+    if (ret<0) return ret;
+    return eos;
   }
 }
 
