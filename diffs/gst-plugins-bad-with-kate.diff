@@ -211,8 +211,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-03-26 19:55:28.536647000 +0000
-+++ gst-plugins-bad-0.10.6/ext/kate/gstkatedec.c	2008-03-30 18:24:25.000000000 +0100
-@@ -0,0 +1,464 @@
++++ gst-plugins-bad-0.10.6/ext/kate/gstkatedec.c	2008-03-30 20:22:38.000000000 +0100
+@@ -0,0 +1,475 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -266,12 +266,24 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * <para>
 + * This element decodes Kate streams
 + * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
-+ * for text based data, such as subtitles.
++ * for text based data, such as subtitles. Any number of kate streams can be
++ * embedded in an Ogg stream.
++ * </para>
++ * <para>
++ * libkate (see above url) is needed to build this plugin.
 + * </para>
 + * <title>Example pipeline</title>
 + * <para>
++ * This explicitely decodes a Kate stream:
 + * <programlisting>
 + * gst-launch filesrc location=test.ogg ! oggdemux ! katedec ! fakesink silent=TRUE
++ * </programlisting>
++ * </para>
++ * <para>
++ * This will automatically detect and use any Kate streams multiplexed
++ * in an Ogg stream:
++ * <programlisting>
++ * gst-launch playbin uri=file:///tmp/test.ogg
 + * </programlisting>
 + * </para>
 + * </refsect2>
@@ -480,7 +492,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        if (tags) {
 +          gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE, kd->k.ki->language, NULL);
 +          gst_element_found_tags_for_pad(GST_ELEMENT_CAST(kd), kd->srcpad, tags);
-+          gst_tag_list_free(tags);
 +        }
 +      }
 +      break;
