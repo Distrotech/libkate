@@ -31,7 +31,7 @@ int kate_info_init(kate_info *ki)
 
   ki->num_headers=0;
 
-  /* default to a sensible skeleton compatible granule encoding */
+  /* default to a sensible granule encoding */
   ki->granule_shift=32;
   ki->gps_numerator=1000;
   ki->gps_denominator=1;
