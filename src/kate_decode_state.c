@@ -21,6 +21,8 @@ kate_decode_state *kate_decode_state_create()
 
   kds=(kate_decode_state*)kate_malloc(sizeof(kate_decode_state));
   if (!kds) return NULL;
+  kds->ki=NULL;
+  kds->kc=NULL;
   kds->event=NULL;
 
   return kds;
@@ -49,6 +51,10 @@ int kate_decode_state_destroy(kate_decode_state *kds)
   if (!kds) return KATE_E_INVALID_PARAMETER;
 
   kate_event_release(kds->event);
+
+  if (kds->ki) kate_info_clear(kds->ki);
+  if (kds->kc) kate_comment_clear(kds->kc);
+
   kate_free(kds);
 
   return 0;

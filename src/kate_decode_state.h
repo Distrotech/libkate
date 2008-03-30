@@ -14,8 +14,8 @@
 #include "kate_internal.h"
 
 typedef struct kate_decode_state {
-  kate_info ki;
-  kate_comment kc;
+  kate_info *ki;
+  kate_comment *kc;
   kate_event *event;
 } kate_decode_state;
 

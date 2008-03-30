@@ -28,6 +28,8 @@
 int kate_high_decode_init(kate_state *k)
 {
   int ret;
+  kate_info *ki;
+  kate_comment *kc;
 
   if (!k) return KATE_E_INVALID_PARAMETER;
 
@@ -35,18 +37,40 @@ int kate_high_decode_init(kate_state *k)
   k->kds=kate_decode_state_create();
   if (!k->kds) return KATE_E_OUT_OF_MEMORY;
 
-  ret=kate_info_init(&k->kds->ki);
+  ki=(kate_info*)kate_malloc(sizeof(kate_info));
+  if (!ki) {
+    kate_decode_state_destroy(k->kds);
+    return KATE_E_OUT_OF_MEMORY;
+  }
+  kc=(kate_comment*)kate_malloc(sizeof(kate_comment));
+  if (!kc) {
+    kate_free(ki);
+    kate_decode_state_destroy(k->kds);
+    return KATE_E_OUT_OF_MEMORY;
+  }
+
+  ret=kate_info_init(ki);
   if (ret<0) {
+    kate_free(ki);
+    kate_free(kc);
     kate_decode_state_destroy(k->kds);
     return ret;
   }
-  k->ki=&k->kds->ki;
-  ret=kate_comment_init(&k->kds->kc);
+
+  ret=kate_comment_init(kc);
   if (ret<0) {
-    kate_info_clear(&k->kds->ki);
+    kate_free(ki);
+    kate_free(kc);
+    kate_info_clear(ki);
     kate_decode_state_destroy(k->kds);
     return ret;
   }
+
+  k->kds->ki=ki;
+  k->kds->kc=kc;
+
+  k->ki=k->kds->ki;
+
   return 0;
 }
 
@@ -65,15 +89,17 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
 
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kds) return KATE_E_INIT;
+  if (!k->kds->ki) return KATE_E_INIT;
+  if (!k->kds->kc) return KATE_E_INIT;
 
   if (ev) *ev=NULL;
-  if (k->kds->ki.probe>=0) {
+  if (k->kds->ki->probe>=0) {
     /* still probing headers */
-    if (k->kds->ki.probe==0 && !kate_decode_is_idheader(op))
+    if (k->kds->ki->probe==0 && !kate_decode_is_idheader(op))
       return 0;
-    ret=kate_decode_headerin(&k->kds->ki,&k->kds->kc,op);
+    ret=kate_decode_headerin(k->kds->ki,k->kds->kc,op);
     if (ret>0) {
-      k->kds->ki.probe=-1;
+      k->kds->ki->probe=-1;
       ret=0;
     }
     return ret;
@@ -99,12 +125,20 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
   */
 int kate_high_decode_clear(kate_state *k)
 {
+  kate_info *ki;
+  kate_comment *kc;
+
   if (!k) return KATE_E_INVALID_PARAMETER;
   if (!k->kds) return KATE_E_INIT;
 
-  kate_comment_clear(&k->kds->kc);
+  /* kate_clear will clear kds, so save what we need first */
+  ki=k->kds->ki;
+  kc=k->kds->kc;
+
   kate_clear(k);
-  kate_info_clear(&k->kds->ki);
+
+  kate_free(kc);
+  kate_free(ki);
 
   return 0;
 }
