@@ -102,9 +102,9 @@ int kate_high_decode_clear(kate_state *k)
   if (!k) return KATE_E_INVALID_PARAMETER;
   if (!k->kds) return KATE_E_INIT;
 
-  kate_info_clear(&k->kds->ki);
   kate_comment_clear(&k->kds->kc);
   kate_clear(k);
+  kate_info_clear(&k->kds->ki);
 
   return 0;
 }
