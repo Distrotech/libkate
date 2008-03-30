@@ -96,8 +96,123 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  %changelog
 --- /dev/null	2008-03-26 19:55:28.536647000 +0000
-+++ gst-plugins-bad-0.10.6/ext/kate/gstkate.c	2008-03-30 16:59:41.000000000 +0100
-@@ -0,0 +1,527 @@
++++ gst-plugins-bad-0.10.6/ext/kate/gstkate.c	2008-03-30 18:22:17.000000000 +0100
+@@ -0,0 +1,112 @@
++/*
++ * GStreamer
++ * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
++ * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
++ * Copyright 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ * 
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
++ * which case the following provisions apply instead of the ones
++ * mentioned above:
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif
++
++#include <string.h>
++
++#include <gst/gst.h>
++
++#include "gstkatedec.h"
++
++#define KATE_MIME_TYPE "application/x-kate"
++
++GST_DEBUG_CATEGORY (gst_katedec_debug);
++
++
++static GstStaticCaps kate_caps = GST_STATIC_CAPS (KATE_MIME_TYPE);
++
++#define KATE_CAPS (gst_static_caps_get(&kate_caps))
++static void
++gst_kate_type_find (GstTypeFind * tf, gpointer private)
++{
++  guint8 *data = gst_type_find_peek (tf, 0, 9);
++
++  if (data) {
++    if (memcmp (data, "\200kate\0\0\0\0", 9) != 0)
++      return;
++
++    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, KATE_CAPS);
++  }
++}
++
++/* entry point to initialize the plug-in
++ * initialize the plug-in itself
++ * register the element factories and pad templates
++ * register the features
++ */
++static gboolean
++plugin_init (GstPlugin * plugin)
++{
++  GstCaps *caps;
++
++  GST_DEBUG_CATEGORY_INIT (gst_katedec_debug, "katedec",
++      0, "Kate decoder");
++
++  caps = gst_caps_new_simple (KATE_MIME_TYPE, NULL);
++  if (!gst_type_find_register (plugin, KATE_MIME_TYPE, GST_RANK_PRIMARY,
++          gst_kate_type_find, NULL, caps, NULL, NULL)) {
++    GST_WARNING ("kate: failed to register typefind");
++    gst_caps_unref (caps);
++    return FALSE;
++  }
++  gst_caps_unref (caps);
++
++  if (!gst_element_register (plugin, "katedec",
++      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
++    return FALSE;
++
++  return TRUE;
++}
++
++/* this is the structure that gstreamer looks for to register plugins
++ */
++GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
++    GST_VERSION_MINOR,
++    "kate",
++    "Kate plugin",
++    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+--- /dev/null	2008-03-26 19:55:28.536647000 +0000
++++ gst-plugins-bad-0.10.6/ext/kate/gstkatedec.c	2008-03-30 18:24:25.000000000 +0100
+@@ -0,0 +1,464 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -163,19 +278,19 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + */
 +
 +#ifdef HAVE_CONFIG_H
-+#  include <config.h>
++#include "config.h"
 +#endif
 +
 +#include <string.h>
 +
 +#include <gst/gst.h>
 +
-+#include "gstkate.h"
++#include "gstkatedec.h"
 +
 +#define KATE_MIME_TYPE "application/x-kate"
 +
-+GST_DEBUG_CATEGORY_STATIC (gst_kate_debug);
-+#define GST_CAT_DEFAULT gst_kate_debug
++GST_DEBUG_CATEGORY_EXTERN (gst_katedec_debug);
++#define GST_CAT_DEFAULT gst_katedec_debug
 +
 +/* Filter signals and args */
 +enum
@@ -187,7 +302,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +enum
 +{
 +  ARG_0,
-+  ARG_SILENT
++  ARG_SILENT,
++  ARG_REMOVE_MARKUP
 +};
 +
 +static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -202,23 +318,22 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GST_STATIC_CAPS ("text/plain; text/x-pango-markup")
 +    );
 +
-+GST_BOILERPLATE (GstKate, gst_kate, GstElement,
++GST_BOILERPLATE (GstKateDec, gst_kate_dec, GstElement,
 +    GST_TYPE_ELEMENT);
 +
-+static void gst_kate_set_property (GObject * object, guint prop_id,
++static void gst_kate_dec_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec);
-+static void gst_kate_get_property (GObject * object, guint prop_id,
++static void gst_kate_dec_get_property (GObject * object, guint prop_id,
 +    GValue * value, GParamSpec * pspec);
 +
-+static gboolean gst_kate_set_caps (GstPad * pad, GstCaps * caps);
-+static GstFlowReturn gst_kate_chain (GstPad * pad, GstBuffer * buf);
-+static GstStateChangeReturn gst_kate_change_state (GstElement * element,
++static GstFlowReturn gst_kate_dec_chain (GstPad * pad, GstBuffer * buf);
++static GstStateChangeReturn gst_kate_dec_change_state (GstElement * element,
 +    GstStateChange transition);
-+static const GstQueryType * gst_kate_query_type(GstPad * pad);
-+static gboolean gst_kate_query(GstPad * pad, GstQuery * query);
++static const GstQueryType * gst_kate_dec_query_type(GstPad * pad);
++static gboolean gst_kate_dec_query(GstPad * pad, GstQuery * query);
 +
 +static void
-+gst_kate_base_init (gpointer gclass)
++gst_kate_dec_base_init (gpointer gclass)
 +{
 +  static GstElementDetails element_details = {
 +    "Kate bitstream decoder",
@@ -237,7 +352,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* initialize the plugin's class */
 +static void
-+gst_kate_class_init (GstKateClass * klass)
++gst_kate_dec_class_init (GstKateDecClass * klass)
 +{
 +  GObjectClass *gobject_class;
 +  GstElementClass *gstelement_class;
@@ -245,14 +360,18 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gobject_class = (GObjectClass *) klass;
 +  gstelement_class = (GstElementClass *) klass;
 +
-+  gobject_class->set_property = gst_kate_set_property;
-+  gobject_class->get_property = gst_kate_get_property;
++  gobject_class->set_property = gst_kate_dec_set_property;
++  gobject_class->get_property = gst_kate_dec_get_property;
 +
 +  g_object_class_install_property (gobject_class, ARG_SILENT,
 +      g_param_spec_boolean ("silent", "Silent", "Produce verbose output ?",
 +          FALSE, G_PARAM_READWRITE));
 +
-+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_change_state);
++  g_object_class_install_property (gobject_class, ARG_REMOVE_MARKUP,
++      g_param_spec_boolean ("remove-markup", "Remove markup", "Remove markup from decoded text ?",
++          FALSE, G_PARAM_READWRITE));
++
++  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
 +}
 +
 +/* initialize the new element
@@ -261,10 +380,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * initialize structure
 + */
 +static void
-+gst_kate_init (GstKate * dec,
-+    GstKateClass * gclass)
++gst_kate_dec_init (GstKateDec * dec,
++    GstKateDecClass * gclass)
 +{
-+  GST_DEBUG_OBJECT(dec, "gst_kate_init");
++  GST_DEBUG_OBJECT(dec, "gst_kate_dec_init");
 +
 +  dec->sinkpad = gst_pad_new_from_static_template ( &sink_factory, "sink");
 +  gst_pad_use_fixed_caps(dec->sinkpad);
@@ -273,21 +392,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
 +  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-+  gst_pad_set_chain_function (dec->sinkpad, GST_DEBUG_FUNCPTR(gst_kate_chain));
++  gst_pad_set_chain_function (dec->sinkpad, GST_DEBUG_FUNCPTR(gst_kate_dec_chain));
 +
 +  dec->silent = FALSE;
++  dec->remove_markup = FALSE;
 +  dec->initialized = FALSE;
 +}
 +
 +static void
-+gst_kate_set_property (GObject * object, guint prop_id,
++gst_kate_dec_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec)
 +{
-+  GstKate *filter = GST_KATE (object);
++  GstKateDec *filter = GST_KATE_DEC (object);
 +
 +  switch (prop_id) {
 +    case ARG_SILENT:
 +      filter->silent = g_value_get_boolean (value);
++      break;
++    case ARG_REMOVE_MARKUP:
++      filter->remove_markup = g_value_get_boolean (value);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -296,14 +419,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_get_property (GObject * object, guint prop_id,
++gst_kate_dec_get_property (GObject * object, guint prop_id,
 +    GValue * value, GParamSpec * pspec)
 +{
-+  GstKate *filter = GST_KATE (object);
++  GstKateDec *filter = GST_KATE_DEC (object);
 +
 +  switch (prop_id) {
 +    case ARG_SILENT:
 +      g_value_set_boolean (value, filter->silent);
++      break;
++    case ARG_REMOVE_MARKUP:
++      g_value_set_boolean (value, filter->remove_markup);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -313,49 +439,20 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* GstElement vmethod implementations */
 +
-+/* this function handles the link with other elements */
-+static gboolean
-+gst_kate_set_caps (GstPad * pad, GstCaps * caps)
-+{
-+  GstKate *kd = GST_KATE (gst_pad_get_parent (pad));
-+  GstStructure *structure = gst_caps_get_structure(caps, 0);
-+  const gchar *mime;
-+
-+  mime = gst_structure_get_name(structure);
-+  if (!mime) {
-+    GST_WARNING_OBJECT(kd, "No mime type provided, expected " KATE_MIME_TYPE, mime);
-+    gst_object_unref(kd);
-+    return FALSE;
-+  }
-+  if (strcmp(mime, KATE_MIME_TYPE)) {
-+    GST_WARNING_OBJECT(kd, "Wrong mime type %s provided, expected " KATE_MIME_TYPE, mime);
-+    gst_object_unref(kd);
-+    return FALSE;
-+  }
-+
-+  GST_DEBUG_OBJECT(kd, "caps negotiation done");
-+
-+  gst_object_unref(kd);
-+  return TRUE;
-+}
-+
 +/* chain function
 + * this function does the actual processing
 + */
 +
 +static GstFlowReturn
-+gst_kate_chain (GstPad * pad, GstBuffer * buf)
++gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
 +{
-+  GstKate *kd = GST_KATE (gst_pad_get_parent (pad));
-+  GstKate *filter;
++  GstKateDec *kd = GST_KATE_DEC (gst_pad_get_parent (pad));
 +  kate_packet kp;
 +  const kate_event *ev = NULL;
 +  int ret;
-+  GstFlowReturn rflow;
++  GstFlowReturn rflow = GST_FLOW_OK;
 +
-+  filter = GST_KATE (GST_OBJECT_PARENT (pad));
-+
-+  GST_DEBUG_OBJECT(kd, "gst_kate_chain: got packet, %u bytes, type %02x",
++  GST_DEBUG_OBJECT(kd, "got packet, %u bytes, type %02x",
 +      GST_BUFFER_SIZE(buf), GST_BUFFER_SIZE(buf)==0 ? -1 : GST_BUFFER_DATA(buf)[0]);
 +  kate_packet_wrap(&kp, GST_BUFFER_SIZE(buf), GST_BUFFER_DATA(buf));
 +  ret = kate_high_decode_packetin(&kd->k, &kp, &ev);
@@ -375,14 +472,19 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GstCaps *caps;
 +    case 0x80: // ID header
 +      GST_INFO_OBJECT(kd, "Parsed ID header: language %s, category %s", kd->k.ki->language, kd->k.ki->category);
-+      caps = gst_caps_new_simple("text/plain", NULL);
++      caps = gst_caps_new_simple(kd->remove_markup ? "text/plain" : "text/x-pango-markup", NULL);
 +      gst_pad_set_caps(kd->srcpad, caps);
 +      gst_caps_unref(caps);
 +      if (kd->k.ki->language) {
 +        GstTagList *tags = gst_tag_list_new();
-+        gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE, kd->k.ki->language, NULL);
-+        gst_element_found_tags_for_pad(GST_ELEMENT_CAST(kd), kd->srcpad, tags);
++        if (tags) {
++          gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE, kd->k.ki->language, NULL);
++          gst_element_found_tags_for_pad(GST_ELEMENT_CAST(kd), kd->srcpad, tags);
++          gst_tag_list_free(tags);
++        }
 +      }
++      break;
++    default:
 +      break;
 +  }
 +
@@ -391,10 +493,18 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GstBuffer *buffer;
 +    size_t len;
 +
-+    /* no pango markup yet, escape text */
-+    escaped = g_markup_printf_escaped("%s", ev->text);
-+    len = strlen(escaped);
++    if (kd->remove_markup) {
++      size_t len0 = ev->len0;
++      escaped = g_strdup(ev->text);
++      kate_text_remove_markup(ev->text_encoding, escaped, &len0);
++    }
++    else {
++      /* no pango markup yet, escape text */
++      /* TODO: actually do the pango thing */
++      escaped = g_markup_printf_escaped("%s", ev->text);
++    }
 +
++    len = strlen(escaped);
 +    GST_DEBUG_OBJECT(kd, "kate event: %s, escaped %s", ev->text, escaped);
 +    buffer = gst_buffer_new_and_alloc(len+1);
 +    if (buffer) {
@@ -409,23 +519,23 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        GST_DEBUG_OBJECT (kd, "source pad not linked, ignored");
 +      }
 +      else if (rflow != GST_FLOW_OK) {
-+          GST_WARNING_OBJECT (kd, "failed to push buffer: %s", gst_flow_get_name(rflow));
++        GST_WARNING_OBJECT (kd, "failed to push buffer: %s", gst_flow_get_name(rflow));
 +      }
-+      gst_object_unref(kd);
-+      return rflow;
 +    }
 +    else {
-+        GST_WARNING_OBJECT (kd, "failed to create buffer");
++      GST_WARNING_OBJECT (kd, "failed to create buffer");
++      rflow = GST_FLOW_ERROR;
 +    }
++    g_free(escaped);
 +  }
 +  gst_object_unref(kd);
-+  return GST_FLOW_OK;
++  return rflow;
 +}
 +
 +static GstStateChangeReturn
-+gst_kate_change_state (GstElement * element, GstStateChange transition)
++gst_kate_dec_change_state (GstElement * element, GstStateChange transition)
 +{
-+  GstKate *kd = GST_KATE (element);
++  GstKateDec *kd = GST_KATE_DEC (element);
 +  GstStateChangeReturn res;
 +  int ret;
 +
@@ -468,7 +578,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static GstClockTime
-+gst_kate_granule_time(kate_state *k, gint64 granulepos)
++gst_kate_dec_granule_time(kate_state *k, gint64 granulepos)
 +{
 +  float t;
 +
@@ -480,9 +590,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static gboolean
-+gst_kate_convert(GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
++gst_kate_dec_convert(GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
 +{
-+  GstKate *kd;
++  GstKateDec *kd;
 +  gboolean res = FALSE;
 +
 +  if (src_fmt == *dest_fmt) {
@@ -490,7 +600,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    return TRUE;
 +  }
 +
-+  kd = GST_KATE (gst_pad_get_parent (pad));
++  kd = GST_KATE_DEC (gst_pad_get_parent (pad));
 +
 +  if (!kd->initialized) {
 +    GST_WARNING_OBJECT(kd, "not initialized yet");
@@ -508,7 +618,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case GST_FORMAT_DEFAULT:
 +      switch (*dest_fmt) {
 +        case GST_FORMAT_TIME:
-+          *dest_val = gst_kate_granule_time(&kd->k, src_val);
++          *dest_val = gst_kate_dec_granule_time(&kd->k, src_val);
 +          res = TRUE;
 +          break;
 +        default:
@@ -537,7 +647,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static const GstQueryType *
-+gst_kate_query_type (GstPad * pad)
++gst_kate_dec_query_type (GstPad * pad)
 +{
 +  static const GstQueryType types[] = {
 +    GST_QUERY_CONVERT,
@@ -547,25 +657,19 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return types;
 +}
 +
-+static gboolean gst_kate_query(GstPad * pad, GstQuery * query)
++static gboolean gst_kate_dec_query(GstPad * pad, GstQuery * query)
 +{
-+  GstKate *kd;
-+
 +  switch (GST_QUERY_TYPE(query)) {
 +    case GST_QUERY_CONVERT:
 +      {
 +        GstFormat src_fmt, dest_fmt;
 +        gint64 src_val, dest_val;
 +
-+        kd = GST_KATE (gst_pad_get_parent (pad));
 +        gst_query_parse_convert(query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-+        if (!gst_kate_convert(pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
-+          GST_WARNING_OBJECT(kd, "failed to convert");
-+          gst_object_unref(kd);
-+          return FALSE;
++        if (!gst_kate_dec_convert(pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
++          return gst_pad_query_default(pad, query);
 +        }
 +        gst_query_set_convert(query, src_fmt, src_val, dest_fmt, dest_val);
-+        gst_object_unref(kd);
 +        return TRUE;
 +      }
 +    default:
@@ -573,65 +677,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +}
 +
-+static GstStaticCaps kate_caps = GST_STATIC_CAPS (KATE_MIME_TYPE);
-+
-+#define KATE_CAPS (gst_static_caps_get(&kate_caps))
-+static void
-+gst_kate_type_find (GstTypeFind * tf, gpointer private)
-+{
-+  guint8 *data = gst_type_find_peek (tf, 0, 9);
-+
-+  if (data) {
-+    if (memcmp (data, "\200kate\0\0\0\0", 9) != 0)
-+      return;
-+
-+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, KATE_CAPS);
-+  }
-+}
-+
-+/* entry point to initialize the plug-in
-+ * initialize the plug-in itself
-+ * register the element factories and pad templates
-+ * register the features
-+ */
-+static gboolean
-+plugin_init (GstPlugin * plugin)
-+{
-+  GstCaps *caps;
-+
-+  GST_DEBUG_CATEGORY_INIT (gst_kate_debug, "katedec",
-+      0, "Kate decoder");
-+
-+  caps = gst_caps_new_simple (KATE_MIME_TYPE, NULL);
-+  if (!gst_type_find_register (plugin, KATE_MIME_TYPE, GST_RANK_PRIMARY,
-+          gst_kate_type_find, NULL, caps, NULL, NULL)) {
-+    GST_WARNING ("kate: failed to register typefind");
-+    gst_caps_unref (caps);
-+    return FALSE;
-+  }
-+  gst_caps_unref (caps);
-+
-+  if (!gst_element_register (plugin, "katedec",
-+      GST_RANK_PRIMARY, GST_TYPE_KATE))
-+    return FALSE;
-+
-+  return TRUE;
-+}
-+
-+/* this is the structure that gstreamer looks for to register plugins
-+ */
-+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-+    GST_VERSION_MINOR,
-+    "kate",
-+    "Kate plugin",
-+    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-03-26 19:55:28.536647000 +0000
-+++ gst-plugins-bad-0.10.6/ext/kate/gstkate.h	2008-03-30 10:06:21.000000000 +0100
-@@ -0,0 +1,89 @@
++++ gst-plugins-bad-0.10.6/ext/kate/gstkatedec.h	2008-03-30 18:21:39.000000000 +0100
+@@ -0,0 +1,91 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
 + * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
++ * Copyright 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
 + * 
 + * Permission is hereby granted, free of charge, to any person obtaining a
 + * copy of this software and associated documentation files (the "Software"),
@@ -672,8 +725,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * Boston, MA 02111-1307, USA.
 + */
 +
-+#ifndef __GST_KATE_H__
-+#define __GST_KATE_H__
++#ifndef __GST_KATE_DEC_H__
++#define __GST_KATE_DEC_H__
 +
 +#include <gst/gst.h>
 +#include <kate/kate.h>
@@ -681,21 +734,21 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_BEGIN_DECLS
 +
 +/* #defines don't like whitespacey bits */
-+#define GST_TYPE_KATE \
-+  (gst_kate_get_type())
-+#define GST_KATE(obj) \
-+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_KATE,GstKate))
-+#define GST_KATE_CLASS(klass) \
-+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_KATE,GstKateClass))
-+#define GST_IS_KATE(obj) \
-+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_KATE))
-+#define GST_IS_KATE_CLASS(klass) \
-+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_KATE))
++#define GST_TYPE_KATE_DEC \
++  (gst_kate_dec_get_type())
++#define GST_KATE_DEC(obj) \
++  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_KATE_DEC,GstKateDec))
++#define GST_KATE_DEC_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_KATE,GstKateDecClass))
++#define GST_IS_KATE_DEC(obj) \
++  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_KATE_DEC))
++#define GST_IS_KATE_DEC_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_KATE_DEC))
 +
-+typedef struct _GstKate      GstKate;
-+typedef struct _GstKateClass GstKateClass;
++typedef struct _GstKateDec      GstKateDec;
++typedef struct _GstKateDecClass GstKateDecClass;
 +
-+struct _GstKate
++struct _GstKateDec
 +{
 +  GstElement element;
 +
@@ -704,28 +757,29 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  kate_state k;
 +
 +  gboolean silent;
++  gboolean remove_markup;
 +  gboolean initialized;
 +};
 +
-+struct _GstKateClass 
++struct _GstKateDecClass 
 +{
 +  GstElementClass parent_class;
 +};
 +
-+GType gst_kate_get_type (void);
++GType gst_kate_dec_get_type (void);
 +
 +G_END_DECLS
 +
-+#endif /* __GST_KATE_H__ */
++#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-03-26 19:55:28.536647000 +0000
-+++ gst-plugins-bad-0.10.6/ext/kate/Makefile.am	2008-03-29 17:46:44.000000000 +0000
++++ gst-plugins-bad-0.10.6/ext/kate/Makefile.am	2008-03-30 18:03:22.000000000 +0100
 @@ -0,0 +1,15 @@
 +# plugindir is set in configure
 +
 +plugin_LTLIBRARIES = libgstkate.la
 +
 +# sources used to compile this plug-in
-+libgstkate_la_SOURCES = gstkate.c
++libgstkate_la_SOURCES = gstkate.c gstkatedec.c
 +
 +# flags used to compile this plugin
 +# add other _CFLAGS and _LIBS as needed
@@ -734,4 +788,4 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 +
 +# headers we need but don't want installed
-+noinst_HEADERS = gstkate.h
++noinst_HEADERS = gstkatedec.h
