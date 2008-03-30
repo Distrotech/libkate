@@ -27,7 +27,7 @@ CFLAGS=-std=c99 -Iinclude -Isrc
 
 ifeq ($(DEBUG),1)
 CFLAGS+=-g -O0
-STRIPFLAGS=-X
+STRIP=/bin/true
 else
 CFLAGS+=-O2
 LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
