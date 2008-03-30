@@ -812,9 +812,9 @@ int kate_decode_init(kate_state *k,kate_info *ki)
   if (!k || !ki) return KATE_E_INVALID_PARAMETER;
 
   k->ki=ki;
+  k->kes=NULL;
   k->kds=kate_decode_state_create();
   if (!k->kds) return KATE_E_OUT_OF_MEMORY;
-  k->kes=NULL;
 
   return 0;
 }

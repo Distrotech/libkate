@@ -33,10 +33,10 @@ int kate_encode_init(kate_state *k,kate_info *ki)
   if (!k || !ki) return KATE_E_INVALID_PARAMETER;
 
   k->ki=ki;
+  k->kds=NULL;
   k->ki->num_headers=NUM_HEADERS;
   k->kes=kate_encode_state_create();
   if (!k->kes) return KATE_E_OUT_OF_MEMORY;
-  k->kds=NULL;
 
   return 0;
 }
