@@ -164,6 +164,18 @@ static void write_text(FILE *f,const char *text,size_t len0)
   }
 }
 
+static void write_color(FILE *f,const char *name,const kate_color *kc,size_t indent)
+{
+  char *sindent=(char*)kate_malloc(1+indent);
+  size_t n;
+  for (n=0;n<indent;++n) sindent[n]=' ';
+  sindent[indent]=0;
+
+  fprintf(f,"%s%s %d %d %d %d\n",sindent,name,kc->r,kc->g,kc->b,kc->a);
+
+  kate_free(sindent);
+}
+
 static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
 {
   char *sindent=(char*)kate_malloc(1+indent);
@@ -177,16 +189,12 @@ static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
     kate_color tc=ks->text_color,bc=ks->background_color,dc=ks->draw_color;
     fprintf(
       f,
-      "%s%s %s\n"
-      "%stext color %d %d %d %d\n"
-      "%sbackground color %d %d %d %d\n"
-      "%sdraw color %d %d %d %d\n",
-      sindent,
-      halign,valign,
-      sindent,tc.r,tc.g,tc.b,tc.a,
-      sindent,bc.r,bc.g,bc.b,bc.a,
-      sindent,dc.r,dc.g,dc.b,dc.a
+      "%s%s %s\n",
+      sindent,halign,valign
     );
+    write_color(f,"text color",&tc,indent);
+    write_color(f,"background color",&bc,indent);
+    write_color(f,"draw color",&dc,indent);
     if (ks->font_width>=0 || ks->font_height>=0) {
       if (ks->font_width==ks->font_height) {
         fprintf(f,"%sfont size %f%s\n",sindent,ks->font_height,metric2suffix(ks->font_metric));
