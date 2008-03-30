@@ -129,6 +129,74 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +
 +/* big endian system */
 +#undef WORDS_BIGENDIAN
+diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/doc/mkvextract.1 mkvtoolnix-svn/doc/mkvextract.1
+--- ../svn/mkvtoolnix/doc/mkvextract.1	2008-03-17 18:34:56.000000000 +0000
++++ mkvtoolnix-svn/doc/mkvextract.1	2008-03-26 22:30:39.000000000 +0000
+@@ -191,6 +191,9 @@
+ .TP
+ S_TEXT/SSA, S_TEXT/ASS
+ SSA and ASS text subtitles will be written as SSA/ASS files respectively.
++.TP
++S_KATE
++Kate streams will be written within an Ogg container.
+ .LP
+ \fBTags\fR are converted to a XML format. This format is the same that
+ \fBmkvmerge\fR supports for reading tags.
+diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/doc/mkvmerge.1 mkvtoolnix-svn/doc/mkvmerge.1
+--- ../svn/mkvtoolnix/doc/mkvmerge.1	2008-03-17 18:34:56.000000000 +0000
++++ mkvtoolnix-svn/doc/mkvmerge.1	2008-03-26 22:28:42.000000000 +0000
+@@ -486,7 +486,7 @@
+ Sets the charset for the conversion to UTF-8 for UTF-8 subtitles for the given
+ track ID. If not specified the charset will be derived from the current locale
+ settings. Note that a charset is not needed for subtitles read from Matroska
+-files as these are always stored in UTF-8.
++files or from Kate streams, as these are always stored in UTF-8.
+ .br
+ This option can be used multiple times for an input file applying to several
+ tracks by selecting different track IDs each time.
+@@ -741,9 +741,9 @@
+ .SH SUBTITLES
+ .LP
+ There are several text subtitle formats that can be embedded into Matroska.
+-At the moment \fBmkvmerge\fR supports only text subtitle formats.
+-These subtitles must be recoded to UTF-8 so that they can be displayed
+-correctly by a player.
++At the moment \fBmkvmerge\fR supports only text and Kate subtitle formats.
++Text subtitles must be recoded to UTF-8 so that they can be displayed
++correctly by a player. Kate subtitles are already in UTF-8 format.
+ .LP
+ \fBmkvmerge\fR does this conversion automatically based on the system's current
+ locale. If the subtitle charset is not the same as
+@@ -758,6 +758,9 @@
+ .TP
+ *
+ Substation Alpha (SSA) / Advanced Substation Alpha scripts (ASS)
++.TP
++*
++Kate streams in Ogg
+ 
+ 
+ .SH FILE LINKING
+@@ -1230,7 +1233,7 @@
+ .TP
+ *
+ OGG as the source for video, audio (Vorbis, raw PCM, MP3 and AC3 audio) and
+-text streams (subtitles).
++Kate and text streams (subtitles).
+ .TP
+ *
+ WAV as the audio source
+@@ -1265,8 +1268,8 @@
+ or removing packets at the beginning.
+ .TP
+ *
+-Text subtitles can be read from SRT (SubRipper / subrip) files or
+-taken from other OGM files.
++Subtitles can be read as text from SRT (SubRipper / subrip) files,
++taken from other OGM files, or from Kate streams in Ogg files.
+ .TP
+ *
+ SSA/ASS subtitles from SSA/ASS files
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/common/kate_common.cpp mkvtoolnix-svn/src/common/kate_common.cpp
 --- ../svn/mkvtoolnix/src/common/kate_common.cpp	1970-01-01 01:00:00.000000000 +0100
 +++ mkvtoolnix-svn/src/common/kate_common.cpp	2008-03-17 20:13:01.000000000 +0000
