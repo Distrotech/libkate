@@ -1018,6 +1018,7 @@ static int kate_decode_end_packet(kate_state *k,oggpack_buffer *opb)
   \param k the kate_state to decode to
   \param op the packet to decode
   \returns 0 success
+  \returns 1 success, and we're at end of stream
   \returns KATE_E_* error
   */
 int kate_decode_packetin(kate_state *k,kate_packet *op)

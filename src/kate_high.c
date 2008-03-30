@@ -22,6 +22,7 @@
   Initializes a kate_state for high level decoding.
   \param k the kate_state structure to initialize
   \returns 0 success
+  \returns 1 success, and we're at end of stream
   \returns KATE_E_* error
   */
 int kate_high_decode_init(kate_state *k)
