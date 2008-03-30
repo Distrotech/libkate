@@ -133,10 +133,15 @@ int kate_decode_is_idheader(const kate_packet *op)
 
 static int kate_check_eop(oggpack_buffer *opb)
 {
+  int bits;
+
   if (!opb) return KATE_E_INVALID_PARAMETER;
 
   /* ensure any remaining bits in the current byte are zero (reading 0 bytes yields zero) */
-  if (oggpack_read(opb,7&(8-(oggpack_bits(opb)&7)))) return KATE_E_BAD_PACKET;
+  bits=7&(8-(oggpack_bits(opb)&7));
+  if (bits>0) {
+    if (oggpack_read(opb,bits)) return KATE_E_BAD_PACKET;
+  }
   if (oggpack_look1(opb)>=0) return KATE_E_BAD_PACKET; /* no more data expected */
 
   return 0;
