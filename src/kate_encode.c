@@ -463,11 +463,11 @@ static int kate_encode_motions(kate_state *k,kate_packet *op)
   return kate_finalize_packet_buffer(opb,op,k);
 }
 
-static int kate_encode_palette(const kate_info *ki,const kate_palette *kp,oggpack_buffer *opb)
+static int kate_encode_palette(const kate_palette *kp,oggpack_buffer *opb)
 {
   size_t n;
 
-  if (!ki || !kp || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kp || !opb) return KATE_E_INVALID_PARAMETER;
   if (kp->ncolors<=0 || kp->ncolors>256) return KATE_E_LIMIT;
 
   oggpack_write(opb,kp->ncolors-1,8);
@@ -501,7 +501,7 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
   kate_write32v(opb,ki->npalettes);
 
   for(n=0;n<ki->npalettes;++n) {
-    ret=kate_encode_palette(ki,ki->palettes[n],opb);
+    ret=kate_encode_palette(ki->palettes[n],opb);
     if (ret<0) return ret;
   }
 
@@ -510,12 +510,12 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
   return kate_finalize_packet_buffer(opb,op,k);
 }
 
-static int kate_encode_bitmap(const kate_info *ki,const kate_bitmap *kb,oggpack_buffer *opb)
+static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
 {
   size_t w,h,n;
   unsigned int maxpixel;
 
-  if (!ki || !kb || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kb || !opb) return KATE_E_INVALID_PARAMETER;
   if (kb->bpp>8) return KATE_E_LIMIT;
 
   kate_write32v(opb,kb->width);
@@ -557,7 +557,7 @@ static int kate_encode_bitmaps(kate_state *k,kate_packet *op)
   kate_write32v(opb,ki->nbitmaps);
 
   for(n=0;n<ki->nbitmaps;++n) {
-    ret=kate_encode_bitmap(ki,ki->bitmaps[n],opb);
+    ret=kate_encode_bitmap(ki->bitmaps[n],opb);
     if (ret<0) return ret;
   }
 
@@ -637,7 +637,7 @@ static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
   return 0;
 }
 
-#define WRITE_OVERRIDE(var,def,write) \
+#define WRITE_OVERRIDE(opb,var,def,write) \
   do \
     if (kes->overrides.var!=(def)) { \
       oggpack_write(opb,1,1); \
@@ -666,23 +666,41 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
    || kes->overrides.font_mapping_index>=0
   ) {
     oggpack_write(opb,1,1);
-    WRITE_OVERRIDE(text_encoding,k->ki->text_encoding,oggpack_write(opb,kes->overrides.text_encoding,8));
-    WRITE_OVERRIDE(text_directionality,k->ki->text_directionality,oggpack_write(opb,kes->overrides.text_directionality,8));
-    WRITE_OVERRIDE(language,NULL,
+    WRITE_OVERRIDE(opb,text_encoding,k->ki->text_encoding,oggpack_write(opb,kes->overrides.text_encoding,8));
+    WRITE_OVERRIDE(opb,text_directionality,k->ki->text_directionality,oggpack_write(opb,kes->overrides.text_directionality,8));
+    WRITE_OVERRIDE(opb,language,NULL,
       do {
         size_t len=strlen(kes->overrides.language);
         kate_write32v(opb,len);
         kate_writebuf(opb,kes->overrides.language,len);
       } while(0));
-    WRITE_OVERRIDE(region_index,-1,kate_write32v(opb,kes->overrides.region_index));
-    WRITE_OVERRIDE(region,NULL,kate_encode_region(kes->overrides.region,opb));
-    WRITE_OVERRIDE(style_index,-1,kate_write32v(opb,kes->overrides.style_index));
-    WRITE_OVERRIDE(style,NULL,kate_encode_style(kes->overrides.style,opb));
-    WRITE_OVERRIDE(secondary_style_index,-1,kate_write32v(opb,kes->overrides.secondary_style_index));
-    WRITE_OVERRIDE(secondary_style,NULL,kate_encode_style(kes->overrides.secondary_style,opb));
-    WRITE_OVERRIDE(font_mapping_index,-1,kate_write32v(opb,kes->overrides.font_mapping_index));
+    WRITE_OVERRIDE(opb,region_index,-1,kate_write32v(opb,kes->overrides.region_index));
+    WRITE_OVERRIDE(opb,region,NULL,kate_encode_region(kes->overrides.region,opb));
+    WRITE_OVERRIDE(opb,style_index,-1,kate_write32v(opb,kes->overrides.style_index));
+    WRITE_OVERRIDE(opb,style,NULL,kate_encode_style(kes->overrides.style,opb));
+    WRITE_OVERRIDE(opb,secondary_style_index,-1,kate_write32v(opb,kes->overrides.secondary_style_index));
+    WRITE_OVERRIDE(opb,secondary_style,NULL,kate_encode_style(kes->overrides.secondary_style,opb));
+    WRITE_OVERRIDE(opb,font_mapping_index,-1,kate_write32v(opb,kes->overrides.font_mapping_index));
   }
   else oggpack_write(opb,0,1);
+
+  {
+    /* bitstream 0.2: add palette and bitmap */
+    oggpack_buffer warp;
+    kate_open_warp(&warp);
+    if (kes->overrides.palette_index>=0
+     || kes->overrides.palette
+     || kes->overrides.bitmap_index>=0
+     || kes->overrides.bitmap) {
+      oggpack_write(&warp,1,1);
+      WRITE_OVERRIDE(&warp,palette_index,-1,kate_write32v(&warp,kes->overrides.palette_index));
+      WRITE_OVERRIDE(&warp,palette,NULL,kate_encode_palette(kes->overrides.palette,&warp));
+      WRITE_OVERRIDE(&warp,bitmap_index,-1,kate_write32v(&warp,kes->overrides.bitmap_index));
+      WRITE_OVERRIDE(&warp,bitmap,NULL,kate_encode_bitmap(kes->overrides.bitmap,&warp));
+    }
+    else oggpack_write(&warp,0,1);
+    kate_close_warp(&warp,opb);
+  }
 
   kate_warp(opb);
 
@@ -954,7 +972,7 @@ int kate_encode_set_region_index(kate_state *k,size_t region)
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_set_region(kate_state *k,kate_region *kr)
+int kate_encode_set_region(kate_state *k,const kate_region *kr)
 {
   if (!k || !kr) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
@@ -991,7 +1009,7 @@ int kate_encode_set_style_index(kate_state *k,size_t style)
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_set_style(kate_state *k,kate_style *ks)
+int kate_encode_set_style(kate_state *k,const kate_style *ks)
 {
   if (!k || !ks) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
@@ -1028,13 +1046,87 @@ int kate_encode_set_secondary_style_index(kate_state *k,size_t style)
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_set_secondary_style(kate_state *k,kate_style *ks)
+int kate_encode_set_secondary_style(kate_state *k,const kate_style *ks)
 {
   if (!k || !ks) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (!k->ki) return KATE_E_INIT;
   if (k->kes->overrides.secondary_style_index>=0) return KATE_E_INIT;
   k->kes->overrides.secondary_style=ks;
+  return 0;
+}
+
+/**
+  \ingroup encoding
+  Sets the palette the event should use for its bitmap, by its index in the predefined palette list.
+  \param k the kate_state to encode to
+  \param palette the index of the predefined palette to use
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_set_palette_index(kate_state *k,size_t palette)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (!k->ki) return KATE_E_INIT;
+  if (palette>=k->ki->npalettes) return KATE_E_INVALID_PARAMETER;
+  if (k->kes->overrides.palette) return KATE_E_INIT;
+  k->kes->overrides.palette_index=palette;
+  return 0;
+}
+
+/**
+  \ingroup encoding
+  Adds a palette to the currently encoded event.
+  \param k the kate_state to set the palette for
+  \param kp the palette to set
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_set_palette(kate_state *k,const kate_palette *kp)
+{
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (!k->ki) return KATE_E_INIT;
+  if (k->kes->overrides.palette_index>=0) return KATE_E_INIT;
+  k->kes->overrides.palette=kp;
+  return 0;
+}
+
+/**
+  \ingroup encoding
+  Sets the bitmap the event should use, by its index in the predefined bitmap list.
+  \param k the kate_state to encode to
+  \param bitmap the index of the predefined bitmap to use
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_set_bitmap_index(kate_state *k,size_t bitmap)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (!k->ki) return KATE_E_INIT;
+  if (bitmap>=k->ki->nbitmaps) return KATE_E_INVALID_PARAMETER;
+  if (k->kes->overrides.bitmap) return KATE_E_INIT;
+  k->kes->overrides.bitmap_index=bitmap;
+  return 0;
+}
+
+/**
+  \ingroup encoding
+  Adds a bitmap to the currently encoded event.
+  \param k the kate_state to set the bitmap for
+  \param kb the bitmap to set
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_set_bitmap(kate_state *k,const kate_bitmap *kb)
+{
+  if (!k || !kb) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (!k->ki) return KATE_E_INIT;
+  if (k->kes->overrides.bitmap_index>=0) return KATE_E_INIT;
+  k->kes->overrides.bitmap=kb;
   return 0;
 }
 

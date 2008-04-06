@@ -36,6 +36,8 @@ static int kate_event_init(kate_event *ev,const kate_info *ki)
   ev->style=NULL;
   ev->secondary_style=NULL;
   ev->font_mapping=NULL;
+  ev->palette=NULL;
+  ev->bitmap=NULL;
 
   /* internal */
   ev->ki=ki;
@@ -83,6 +85,14 @@ int kate_event_destroy(kate_event *ev)
   }
   if (ev->font_mapping && kate_find_font_mapping(ev->ki,ev->font_mapping)<0) {
     kate_free(ev->font_mapping);
+  }
+  if (ev->palette && kate_find_palette(ev->ki,ev->palette)<0) {
+    kate_free(ev->palette->colors);
+    kate_free(ev->palette);
+  }
+  if (ev->bitmap && kate_find_bitmap(ev->ki,ev->bitmap)<0) {
+    kate_free(ev->bitmap->pixels);
+    kate_free(ev->bitmap);
   }
 
   kate_free(ev);

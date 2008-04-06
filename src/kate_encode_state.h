@@ -43,12 +43,17 @@ typedef struct kate_encode_state {
     kate_text_encoding text_encoding;
     kate_text_directionality text_directionality;
     int region_index;
-    kate_region *region;
+    const kate_region *region;
     int style_index;
-    kate_style *style;
+    const kate_style *style;
     int secondary_style_index;
-    kate_style *secondary_style;
+    const kate_style *secondary_style;
     int font_mapping_index;
+
+    const kate_palette *palette;
+    int palette_index;
+    const kate_bitmap *bitmap;
+    int bitmap_index;
   } overrides;
 } kate_encode_state;
 

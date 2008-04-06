@@ -23,6 +23,8 @@ kate {
   }
   event { 00:0.1 --> 1:0:0 region 0 font mapping "images" text "a" }
   event { 00:0.1 --> 1:0:0 region 1 font mapping "images" text "b" }
-  event { 00:0.1 --> 1:0:0 region 2 font mapping "images" text "c" }
-  event { 00:0.1 --> 1:0:0 region 3 font mapping "images" text "d" }
+
+  // non-text images
+  event { 00:0.1 --> 1:0:0 region 2 palette 2 bitmap 2 }
+  event { 00:0.1 --> 1:0:0 region 3 palette 3 bitmap 3 }
 }

@@ -962,6 +962,35 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
     );
   }
 
+  if (((k->ki->bitstream_version_major<<8)|k->ki->bitstream_version_minor)>=0x0002) {
+    /* 0.2 adds a warp for palette and bitmap */
+    kate_read32v(opb); /* the size of the warp */
+    if (oggpack_read(opb,1)) {
+      READ_OVERRIDE(
+        size_t idx=kate_read32v(opb);
+        if (idx>=k->ki->npalettes) goto error_bad_packet;
+        ev->palette=k->ki->palettes[idx];
+      );
+      READ_OVERRIDE(
+        ev->palette=KMG_MALLOC(sizeof(kate_palette));
+        if (!ev->palette) goto error_out_of_memory;
+        ret=kate_decode_palette(k->ki,ev->palette,opb);
+        if (ret<0) goto error;
+      );
+      READ_OVERRIDE(
+        size_t idx=kate_read32v(opb);
+        if (idx>=k->ki->nbitmaps) goto error_bad_packet;
+        ev->bitmap=k->ki->bitmaps[idx];
+      );
+      READ_OVERRIDE(
+        ev->bitmap=KMG_MALLOC(sizeof(kate_bitmap));
+        if (!ev->bitmap) goto error_out_of_memory;
+        ret=kate_decode_bitmap(k->ki,ev->bitmap,opb);
+        if (ret<0) goto error;
+      );
+    }
+  }
+
   kate_warp(opb);
 
   /* if no style, use the region (if any) default style */

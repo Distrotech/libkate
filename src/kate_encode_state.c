@@ -26,6 +26,11 @@ kate_encode_state *kate_encode_state_create(void)
     kes->granulepos=0;
     kes->packetno=-1;
 
+    kes->nmotions=0;
+    kes->motions=NULL;
+    kes->destroy_motions=NULL;
+    kes->motion_indices=NULL;
+
     kes->furthest_granule=0;
 
     kes->eos=0;
@@ -34,12 +39,10 @@ kate_encode_state *kate_encode_state_create(void)
     kes->timings=NULL;
 
     kes->overrides.language=NULL;
-    kes->nmotions=0;
-    kes->motions=NULL;
-    kes->destroy_motions=NULL;
-    kes->motion_indices=NULL;
     kes->overrides.region=NULL;
     kes->overrides.style=NULL;
+    kes->overrides.palette=NULL;
+    kes->overrides.bitmap=NULL;
     kes->overrides.secondary_style=NULL;
   }
   return kes;
@@ -69,22 +72,21 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
   }
   kes->overrides.text_encoding=ki->text_encoding;
   kes->overrides.text_directionality=ki->text_directionality;
+
   kes->overrides.region_index=-1;
-  if (kes->overrides.region) {
-    kate_free(kes->overrides.region);
-    kes->overrides.region=NULL;
-  }
+  kes->overrides.region=NULL;
   kes->overrides.style_index=-1;
-  if (kes->overrides.style) {
-    kate_free(kes->overrides.style);
-    kes->overrides.style=NULL;
-  }
+  kes->overrides.style=NULL;
   kes->overrides.secondary_style_index=-1;
-  if (kes->overrides.secondary_style) {
-    kate_free(kes->overrides.secondary_style);
-    kes->overrides.secondary_style=NULL;
-  }
+  kes->overrides.secondary_style=NULL;
+
   kes->overrides.font_mapping_index=-1;
+
+  kes->overrides.palette_index=-1;
+  kes->overrides.palette=NULL;
+
+  kes->overrides.bitmap_index=-1;
+  kes->overrides.bitmap=NULL;
 
   return 0;
 }

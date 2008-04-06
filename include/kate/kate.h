@@ -32,13 +32,13 @@ typedef float kate_float;
 /** @{ */
 #define KATE_VERSION_MAJOR 0             /**< major version number of the libkate API */
 #define KATE_VERSION_MINOR 1             /**< minor version number of the libkate API */
-#define KATE_VERSION_PATCH 1             /**< patch version number of the libkate API */
+#define KATE_VERSION_PATCH 2             /**< patch version number of the libkate API */
 /** @} */
 
 /** \name Bitstream version */
 /** @{ */
 #define KATE_BITSTREAM_VERSION_MAJOR 0   /**< major version number of the highest bitstream version this version of libkate supports */
-#define KATE_BITSTREAM_VERSION_MINOR 1   /**< minor version number of the highest bitstream version this version of libkate supports */
+#define KATE_BITSTREAM_VERSION_MINOR 2   /**< minor version number of the highest bitstream version this version of libkate supports */
 /** @} */
 
 #ifndef kate_malloc
@@ -344,8 +344,10 @@ typedef struct kate_event {
   kate_const kate_style *style;                 /**< style to display text (may be NULL for no particular style) */
   kate_const kate_style *secondary_style;       /**< secondary style to display text (may be NULL for no particular style) */
   kate_const kate_font_mapping *font_mapping;   /**< font mapping to use for the text (may be NULL for no particular mapping) */
+  kate_const kate_palette *palette;             /**< palette to use as background (may be NULL for none) */
+  kate_const kate_bitmap *bitmap;               /**< bitmap to use as background (may be NULL for none) */
 
-  uintptr_t pad0[11];
+  uintptr_t pad0[9];
 
   /* internal */
   const kate_info *ki;
@@ -525,14 +527,18 @@ extern int kate_encode_set_language(kate_state *k,const char *language); /* lang
 extern int kate_encode_set_text_encoding(kate_state *k,kate_text_encoding text_encoding);
 extern int kate_encode_set_text_directionality(kate_state *k,kate_text_directionality text_directionality);
 extern int kate_encode_set_region_index(kate_state *k,size_t region);
-extern int kate_encode_set_region(kate_state *k,kate_region *kr);
+extern int kate_encode_set_region(kate_state *k,const kate_region *kr);
 extern int kate_encode_set_style_index(kate_state *k,size_t style);
-extern int kate_encode_set_style(kate_state *k,kate_style *ks);
+extern int kate_encode_set_style(kate_state *k,const kate_style *ks);
 extern int kate_encode_set_secondary_style_index(kate_state *k,size_t style);
-extern int kate_encode_set_secondary_style(kate_state *k,kate_style *ks);
+extern int kate_encode_set_secondary_style(kate_state *k,const kate_style *ks);
 extern int kate_encode_set_font_mapping_index(kate_state *k,size_t font_mapping);
 extern int kate_encode_add_motion(kate_state *k,kate_motion *km,int destroy);
 extern int kate_encode_add_motion_index(kate_state *k,size_t motion);
+extern int kate_encode_set_palette_index(kate_state *k,size_t palette);
+extern int kate_encode_set_palette(kate_state *k,const kate_palette *kp);
+extern int kate_encode_set_bitmap_index(kate_state *k,size_t bitmap);
+extern int kate_encode_set_bitmap(kate_state *k,const kate_bitmap *kb);
 
 /** \defgroup decoding Decoding */
 extern int kate_decode_is_idheader(const kate_packet *kp);

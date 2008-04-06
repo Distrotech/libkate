@@ -92,6 +92,10 @@ typedef struct kd_event {
   const kate_style *style;
   int secondary_style_index;
   const kate_style *secondary_style;
+  int palette_index;
+  const kate_palette *palette;
+  int bitmap_index;
+  const kate_bitmap *bitmap;
 } kd_event;
 static kd_event kevent;
 
@@ -661,6 +665,9 @@ static void init_event(kd_event *ev)
   ev->region=NULL;
   ev->style=NULL;
   ev->secondary_style=NULL;
+  ev->palette_index=ev->bitmap_index=-1;
+  ev->palette=NULL;
+  ev->bitmap=NULL;
 }
 
 static void kd_encode_set_id(kate_state *kstate,unsigned int id)
@@ -827,6 +834,44 @@ static void set_event_secondary_style(kd_event *ev,kate_style *ks)
   ev->secondary_style=ks;
   ret=kate_encode_set_secondary_style(&k,ks);
   if (ret<0) yyerrorf("failed to set secondary style: %d",ret);
+}
+
+static void set_event_palette_index(kd_event *ev,int p)
+{
+  int ret;
+  if (ev->palette_index>=0 || ev->palette) { yyerror("palette already set"); return; }
+  ev->palette_index=p;
+  ret=kate_encode_set_palette_index(&k,p);
+  if (ret<0) yyerrorf("failed to set palette index: %d",ret);
+}
+
+static void set_event_palette(kd_event *ev,kate_palette *kp)
+{
+  int ret;
+  check_palette(kp);
+  if (ev->palette_index>=0 || ev->palette) { yyerror("palette already set"); return; }
+  ev->palette=kp;
+  ret=kate_encode_set_palette(&k,kp);
+  if (ret<0) yyerrorf("failed to set palette: %d",ret);
+}
+
+static void set_event_bitmap_index(kd_event *ev,int b)
+{
+  int ret;
+  if (ev->bitmap_index>=0 || ev->bitmap) { yyerror("bitmap already set"); return; }
+  ev->bitmap_index=b;
+  ret=kate_encode_set_bitmap_index(&k,b);
+  if (ret<0) yyerrorf("failed to set bitmap index: %d",ret);
+}
+
+static void set_event_bitmap(kd_event *ev,kate_bitmap *kb)
+{
+  int ret;
+  check_bitmap(kb);
+  if (ev->bitmap_index>=0 || ev->bitmap) { yyerror("bitmap already set"); return; }
+  ev->bitmap=kb;
+  ret=kate_encode_set_bitmap(&k,kb);
+  if (ret<0) yyerrorf("failed to set bitmap: %d",ret);
 }
 
 static kd_event *check_event(kd_event *ev)
@@ -1714,6 +1759,10 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
             | SIMPLE_TIMED_GLYPH_STYLE_MORPH {init_simple_glyph_pointer_motion(); } '{' kd_simple_timed_glyph_style_morph_defs '}'
                     { kd_finalize_simple_timed_glyph_motion(kmotion); kd_add_event_motion(kmotion); }
             | FONT MAPPING kd_font_mapping_name_or_index { kate_encode_set_font_mapping_index(&k,$3); }
+            | PALETTE kd_palette_name_or_index { set_event_palette_index(&kevent,$2); }
+            | PALETTE { init_palette(); } '{' kd_palette_defs '}' { set_event_palette(&kevent,kpalette.palette); }
+            | BITMAP kd_bitmap_name_or_index { set_event_bitmap_index(&kevent,$2); }
+            | BITMAP { init_bitmap(); } '{' kd_bitmap_defs '}' { set_event_bitmap(&kevent,kbitmap.bitmap); }
             ;
 
 kd_optional_secondary: SECONDARY { $$=1; }

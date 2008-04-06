@@ -20,6 +20,8 @@
 
 enum { uninitialized, header_info, header_comment, data };
 
+static int write_bitmaps=0;
+
 static void write_kate_start(FILE *f)
 {
   fprintf(f,"kate {\n");
@@ -317,6 +319,30 @@ static void write_palette_defs(FILE *f,const kate_palette *kp,size_t indent)
   kate_free(sindent);
 }
 
+static void write_bitmap(const char *filename,const kate_bitmap *kb,const kate_palette *kp)
+{
+  size_t n,x,y;
+  FILE *f;
+  
+  f=fopen(filename,"w");
+  if (!f) {
+    fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
+    return;
+  }
+
+  fprintf(f,"P6\n%d %d\n255\n",kb->width,kb->height);
+  n=0;
+  for (y=0;y<kb->height;++y) {
+    for (x=0;x<kb->width;++x) {
+      int pix=kb->pixels[n++];
+      const kate_color *kc=kp->colors+pix;
+      fprintf(f,"%c%c%c",kc->r,kc->g,kc->b);
+    }
+  }
+
+  fclose(f);
+}
+
 static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
 {
   size_t w,h,p;
@@ -564,6 +590,7 @@ static kate_comment kc;
           printf("usage: %s [options] [filename]\n",argv[0]);
           printf("   -V                  version\n");
           printf("   -v                  verbose\n");
+          printf("   -B                  write some bitmaps in /tmp (debug)\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
           exit(0);
@@ -578,6 +605,9 @@ static kate_comment kc;
           break;
         case 'v':
           ++verbose;
+          break;
+        case 'B':
+          write_bitmaps=1;
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
@@ -777,6 +807,34 @@ static kate_comment kc;
                     write_font_mapping_defs(fout,&ki,ev->font_mapping,6);
                     fprintf(fout,"    }\n");
                   }
+                }
+                if (ev->palette) {
+                  int idx=kate_find_palette(&ki,ev->palette);
+                  if (idx<0) {
+                    fprintf(fout,"    palette {\n");
+                    write_palette_defs(fout,ev->palette,6);
+                    fprintf(fout,"    }\n");
+                  }
+                  else {
+                    fprintf(fout,"    palette %d\n",idx);
+                  }
+                }
+                if (ev->bitmap) {
+                  int idx=kate_find_bitmap(&ki,ev->bitmap);
+                  if (idx<0) {
+                    fprintf(fout,"    bitmap {\n");
+                    write_bitmap_defs(fout,ev->bitmap,6);
+                    fprintf(fout,"    }\n");
+                  }
+                  else {
+                    fprintf(fout,"    bitmap %d\n",idx);
+                  }
+                }
+                if (write_bitmaps && ev->palette && ev->bitmap) {
+                  static int n=0;
+                  static char filename[32];
+                  sprintf(filename,"/tmp/kate-bitmap-%d",n++);
+                  write_bitmap(filename,ev->bitmap,ev->palette);
                 }
                 if (ev->nmotions) {
                   size_t m;
