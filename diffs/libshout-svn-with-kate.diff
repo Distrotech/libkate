@@ -38,13 +38,13 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
    include/shout/shout.h src/Makefile src/net/Makefile src/timing/Makefile
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/Makefile.am libshout-svn-with-kate/src/Makefile.am
 --- libshout-svn/src/Makefile.am	2008-03-10 17:23:46.000000000 +0000
-+++ libshout-svn-with-kate/src/Makefile.am	2008-03-23 14:36:07.000000000 +0000
++++ libshout-svn-with-kate/src/Makefile.am	2008-04-09 21:33:29.000000000 +0100
 @@ -22,11 +22,11 @@
  
  EXTRA_DIST = theora.c speex.c
  noinst_HEADERS = shout_ogg.h shout_private.h util.h
 -libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
-+libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c kate.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
++libshout_la_SOURCES = shout.c util.c ogg.c vorbis.c kate.c skeleton.c mp3.c $(MAYBE_THEORA) $(MAYBE_SPEEX)
  AM_CFLAGS = @XIPH_CFLAGS@
  
  libshout_la_LIBADD = net/libicenet.la timing/libicetiming.la avl/libiceavl.la\
@@ -262,12 +262,13 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/ogg.c libshout-svn-with-kate/src/ogg.c
 --- libshout-svn/src/ogg.c	2008-03-10 17:23:46.000000000 +0000
-+++ libshout-svn-with-kate/src/ogg.c	2008-03-18 21:19:03.000000000 +0000
-@@ -54,6 +54,7 @@
++++ libshout-svn-with-kate/src/ogg.c	2008-04-09 21:26:36.000000000 +0100
+@@ -54,6 +54,8 @@
  typedef int (*codec_open_t)(ogg_codec_t *codec, ogg_page *page);
  static codec_open_t codecs[] = {
  	_shout_open_vorbis,
 +	_shout_open_kate,
++	_shout_open_skeleton,
  #ifdef HAVE_THEORA
  	_shout_open_theora,
  #endif
@@ -285,12 +286,122 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  #endif
 diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout_ogg.h libshout-svn-with-kate/src/shout_ogg.h
 --- libshout-svn/src/shout_ogg.h	2008-03-10 17:23:46.000000000 +0000
-+++ libshout-svn-with-kate/src/shout_ogg.h	2008-03-18 21:19:03.000000000 +0000
-@@ -45,6 +45,7 @@
++++ libshout-svn-with-kate/src/shout_ogg.h	2008-04-09 21:26:49.000000000 +0100
+@@ -45,6 +45,8 @@
  
  /* codec hooks */
  int _shout_open_vorbis(ogg_codec_t *codec, ogg_page *page);
 +int _shout_open_kate(ogg_codec_t *codec, ogg_page *page);
++int _shout_open_skeleton(ogg_codec_t *codec, ogg_page *page);
  #ifdef HAVE_THEORA
  int _shout_open_theora(ogg_codec_t *codec, ogg_page *page);
  #endif
+diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/skeleton.c libshout-svn-with-kate/src/skeleton.c
+--- libshout-svn/src/skeleton.c	1970-01-01 01:00:00.000000000 +0100
++++ libshout-svn-with-kate/src/skeleton.c	2008-04-09 21:37:17.000000000 +0100
+@@ -0,0 +1,105 @@
++/* -*- c-basic-offset: 8; -*- */
++/* skeleton.c: Ogg Skeleton data handlers for libshout
++ * $Id: skeleton.c 11416 2006-05-22 00:32:49Z brendan $
++ *
++ *  Copyright (C) 2004 the Icecast team <team@icecast.org>
++ *
++ *  This library is free software; you can redistribute it and/or
++ *  modify it under the terms of the GNU Library General Public
++ *  License as published by the Free Software Foundation; either
++ *  version 2 of the License, or (at your option) any later version.
++ *
++ *  This library is distributed in the hope that it will be useful,
++ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
++ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ *  Library General Public License for more details.
++ *
++ *  You should have received a copy of the GNU Library General Public
++ *  License along with this library; if not, write to the Free
++ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
++ */
++
++#ifdef HAVE_CONFIG_H
++# include <config.h>
++#endif
++
++#ifdef HAVE_INTTYPES_H
++# include <inttypes.h>
++#endif
++
++#include <string.h>
++
++#include "shout_private.h"
++#include "shout_ogg.h"
++
++/* -- local data structures -- */
++typedef struct {
++} skeleton_data_t;
++
++/* -- local prototypes -- */
++static int read_skeleton_page(ogg_codec_t *codec, ogg_page *page);
++static void free_skeleton_data(void *codec_data);
++
++/* -- skeleton functions -- */
++int _shout_open_skeleton(ogg_codec_t *codec, ogg_page *page)
++{
++	ogg_packet packet;
++
++	skeleton_data_t *skeleton_data = calloc(1, sizeof(skeleton_data_t));
++	if (! skeleton_data)
++		return SHOUTERR_MALLOC;
++
++	ogg_stream_packetout(&codec->os, &packet);
++	
++    if (packet.bytes<8 || memcmp(packet.packet, "fishead\0", 8)) {
++		free_skeleton_data(skeleton_data);
++
++		return SHOUTERR_UNSUPPORTED;
++    }
++    //skeleton_data->num_headers = packet.packet[11];
++
++	codec->codec_data = skeleton_data;
++	codec->read_page = read_skeleton_page;
++	codec->free_data = free_skeleton_data;
++	codec->headers = 1;
++
++	return SHOUTERR_SUCCESS;
++}
++
++static int read_skeleton_page(ogg_codec_t *codec, ogg_page *page)
++{
++	skeleton_data_t *skeleton_data = codec->codec_data;
++	ogg_packet packet;
++	ogg_int64_t granulepos;
++
++	granulepos = ogg_page_granulepos(page);
++
++	if (granulepos == 0)
++	{
++		while (ogg_stream_packetout(&codec->os, &packet) > 0) {
++            if (packet.bytes==0)
++            {
++                // eos
++                break;
++            }
++            if (packet.bytes<8)
++				return SHOUTERR_INSANE;
++            if (memcmp(packet.packet+1, "fisbone\0", 8))
++				return SHOUTERR_INSANE;
++
++			codec->headers++;
++		}
++
++		return SHOUTERR_SUCCESS;
++	}
++
++	return SHOUTERR_SUCCESS;
++}
++
++static void free_skeleton_data(void *codec_data)
++{
++	skeleton_data_t *skeleton_data = (skeleton_data_t *)codec_data;
++
++	free(skeleton_data);
++}
++
