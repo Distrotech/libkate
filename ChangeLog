@@ -1,5 +1,6 @@
 0.1.2
   background image
+  pkg-config files moved to misc/pkgconfig
 
 0.1.1
   Examples now build with the new API
