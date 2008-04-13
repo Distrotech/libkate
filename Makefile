@@ -122,12 +122,12 @@ tools/katedesc.tab.c: tools/katedesc.y
 tools/decoder: $(OBJDIR)/decoder.o
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $< `PKG_CONFIG_PATH=pkg/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $< `PKG_CONFIG_PATH=misc/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
 
 tools/encoder: $(OBJDIR)/encoder.o $(OBJDIR)/katedesc.tab.o $(OBJDIR)/lex.katedesc.o $(OBJDIR)/kpng.o
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $^ -lpng `PKG_CONFIG_PATH=pkg/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $^ -lpng `PKG_CONFIG_PATH=misc/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
 
 $(LIBDIR)/libkate.a: $(OBJS_STATIC)
 	@echo " AR $@"
@@ -185,10 +185,10 @@ install:
 	cp -P $(LIBDIR)/lib{,ogg}kate.so $(PREFIX)/lib/
 	cp -P $(LIBDIR)/lib{,ogg}kate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/lib/pkgconfig
-	cat pkg/pkgconfig/kate.pc\
+	cat misc/pkgconfig/kate.pc\
            | awk -v px=$(PREFIX) '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/kate.pc
-	cat pkg/pkgconfig/oggkate.pc | \
+	cat misc/pkgconfig/oggkate.pc | \
            awk -v px=$(PREFIX) '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/oggkate.pc
 
@@ -217,7 +217,7 @@ dist:
 	cp tools/katedesc.tab.[ch] tools/lex.katedesc.c $(distname)/tools
 	cp -R tools/kpng.[ch] $(distname)/tools
 	cp README INSTALL COPYING AUTHORS ChangeLog Makefile $(distname)
-	cp -R pkg $(distname)
+	cp -R misc $(distname)
 	tar cvfz $(distname).tar.gz --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore $(distname)
 	rm -fr $(distname)
 
