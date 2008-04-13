@@ -1,4 +1,4 @@
-diff -urN vlc-original/configure.ac vlc/configure.ac
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/configure.ac vlc/configure.ac
 --- vlc-original/configure.ac	2008-03-21 13:55:57.000000000 +0000
 +++ vlc/configure.ac	2008-03-22 20:47:34.000000000 +0000
 @@ -3881,6 +3881,32 @@
@@ -11,7 +11,7 @@ diff -urN vlc-original/configure.ac vlc/configure.ac
 +AC_ARG_ENABLE(kate,
 +[  --enable-kate           kate codec (default disabled)])
 +if test "${enable_kate}" = "yes"; then
-+  PKG_CHECK_MODULES(KATE,[kate >= 0.1.0], [
++  PKG_CHECK_MODULES(KATE,[kate >= 0.1.2], [
 +      VLC_ADD_PLUGINS([kate])
 +      VLC_ADD_CFLAGS([kate],[$KATE_CFLAGS])
 +      VLC_ADD_LIBS([kate],[$KATE_LIBS]) ],[
@@ -34,7 +34,7 @@ diff -urN vlc-original/configure.ac vlc/configure.ac
  
  dnl
  dnl  Video plugins
-diff -urN vlc-original/modules/LIST vlc/modules/LIST
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/LIST vlc/modules/LIST
 --- vlc-original/modules/LIST	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/LIST	2008-03-21 23:13:51.000000000 +0000
 @@ -156,6 +156,7 @@
@@ -45,7 +45,7 @@ diff -urN vlc-original/modules/LIST vlc/modules/LIST
   * libmpeg2: Mpeg2 video decoder using libmpeg2
   * linear_resampler: linear audio resampler
   * lirc: Linux infrared control module
-diff -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
 --- vlc-original/modules/codec/Modules.am	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/codec/Modules.am	2008-03-21 23:14:15.000000000 +0000
 @@ -33,3 +33,4 @@
@@ -53,10 +53,10 @@ diff -urN vlc-original/modules/codec/Modules.am vlc/modules/codec/Modules.am
  SOURCES_fluidsynth = fluidsynth.c
  SOURCES_cc = cc.c cc.h
 +SOURCES_kate = kate.c
-diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 --- vlc-original/modules/codec/kate.c	1970-01-01 01:00:00.000000000 +0100
-+++ vlc/modules/codec/kate.c	2008-03-22 20:40:15.000000000 +0000
-@@ -0,0 +1,580 @@
++++ vlc/modules/codec/kate.c	2008-04-06 12:27:13.000000000 +0100
+@@ -0,0 +1,647 @@
 +/*****************************************************************************
 + * kate.c : a decoder for the kate bitstream format
 + *****************************************************************************
@@ -199,6 +199,8 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +{
 +    decoder_t     *p_dec = (decoder_t*)p_this;
 +    decoder_sys_t *p_sys;
++
++    msg_Dbg( p_dec, "kate: OpenDecoder");
 +
 +    if( p_dec->fmt_in.i_codec != VLC_FOURCC('k','a','t','e') )
 +    {
@@ -465,6 +467,15 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +    return p_buf;
 +}
 +
++/* nicked off blend.c */
++static inline void rgb_to_yuv( uint8_t *y, uint8_t *u, uint8_t *v,
++                               int r, int g, int b )
++{
++    *y = ( ( (  66 * r + 129 * g +  25 * b + 128 ) >> 8 ) + 16 );
++    *u =   ( ( -38 * r -  74 * g + 112 * b + 128 ) >> 8 ) + 128 ;
++    *v =   ( ( 112 * r -  94 * g -  18 * b + 128 ) >> 8 ) + 128 ;
++}
++
 +/*****************************************************************************
 + * DecodePacket: decodes a Kate packet.
 + *****************************************************************************/
@@ -473,7 +484,10 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +    decoder_sys_t *p_sys = p_dec->p_sys;
 +    const kate_event *ev=NULL;
 +    subpicture_t *p_spu = NULL;
++    subpicture_region_t *p_bitmap_region = NULL;
++    picture_t *pic = NULL;
 +    int ret;
++    size_t n, y;
 +    video_format_t fmt;
 +    kate_tracker kin;
 +    vlc_bool_t tracker_valid = VLC_FALSE;
@@ -508,6 +522,45 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +    }
 +
 +    p_spu->b_pausable = VLC_TRUE;
++
++    if (ev->bitmap && ev->palette) {
++        /* create a separate region for the bitmap */
++        memset( &fmt, 0, sizeof(video_format_t) );
++        fmt.i_chroma = VLC_FOURCC('Y','U','V','P');
++        fmt.i_aspect = 0;
++        fmt.i_width = fmt.i_visible_width = ev->bitmap->width;
++        fmt.i_height = fmt.i_visible_height = ev->bitmap->height;
++        fmt.i_x_offset = fmt.i_y_offset = 0;
++
++        p_bitmap_region = p_spu->pf_create_region( VLC_OBJECT(p_dec), &fmt );
++        if( !p_bitmap_region )
++        {
++            msg_Err( p_dec, "cannot allocate SPU region" );
++            p_dec->pf_spu_buffer_del( p_dec, p_spu );
++            return NULL;
++        }
++
++        /* create the palette */
++        fmt.p_palette->i_entries = ev->palette->ncolors;
++        for (n=0; n<ev->palette->ncolors; ++n)
++        {
++            rgb_to_yuv(
++                &fmt.p_palette->palette[n][0], &fmt.p_palette->palette[n][1], &fmt.p_palette->palette[n][2],
++                ev->palette->colors[n].r, ev->palette->colors[n].g, ev->palette->colors[n].b
++            );
++            fmt.p_palette->palette[n][3] = ev->palette->colors[n].a;
++        }
++
++        /* create the bitmap */
++        pic = &p_bitmap_region->picture;
++        for (y=0; y<ev->bitmap->height; ++y) {
++          uint8_t *dest=pic->Y_PIXELS+pic->Y_PITCH*y;
++          const uint8_t *src=ev->bitmap->pixels+y*ev->bitmap->width;
++          memcpy(dest, src, ev->bitmap->width);
++        }
++
++        msg_Dbg(p_dec, "Created bitmap, %dx%d, %d colors\n", ev->bitmap->width, ev->bitmap->height, ev->palette->ncolors);
++    }
 +
 +    /* Create a new subpicture region */
 +    memset( &fmt, 0, sizeof(video_format_t) );
@@ -573,6 +626,10 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +        {
 +            p_spu->p_region->i_x = kin.region_x;
 +            p_spu->p_region->i_y = kin.region_y;
++            if (p_bitmap_region) {
++                p_bitmap_region->i_x = kin.region_x;
++                p_bitmap_region->i_y = kin.region_y;
++            }
 +        }
 +
 +        kate_tracker_clear(&kin);
@@ -581,8 +638,18 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +    {
 +        /* Normal text subs, easy markup */
 +        p_spu->p_region->i_align = SUBPICTURE_ALIGN_BOTTOM;
++        if (p_bitmap_region) {
++            p_bitmap_region->i_align = SUBPICTURE_ALIGN_BOTTOM;
++        }
 +        p_spu->i_x = 0;
 +        p_spu->i_y = 10;
++    }
++
++    /* if we have a bitmap, chain it before the text */
++    if (p_bitmap_region)
++    {
++        p_bitmap_region->p_next = p_spu->p_region;
++        p_spu->p_region = p_bitmap_region;
 +    }
 +
 +    return p_spu;
@@ -637,7 +704,7 @@ diff -urN vlc-original/modules/codec/kate.c vlc/modules/codec/kate.c
 +    free( p_sys );
 +}
 +
-diff -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
 --- vlc-original/modules/demux/mkv.cpp	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/demux/mkv.cpp	2008-03-21 23:13:51.000000000 +0000
 @@ -2546,6 +2546,55 @@
@@ -696,7 +763,7 @@ diff -urN vlc-original/modules/demux/mkv.cpp vlc/modules/demux/mkv.cpp
          else if( !strcmp( tracks[i_track]->psz_codec, "S_TEXT/UTF8" ) )
          {
              tracks[i_track]->fmt.i_codec = VLC_FOURCC( 's', 'u', 'b', 't' );
-diff -urN vlc-original/modules/demux/ogg.c vlc/modules/demux/ogg.c
+diff -x '*.o' -x '*.lo' -x '*.la' -x '*.loT' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x config.guess -x config.sub -x aclocal.m4 -x config.rpath -x .svn -x .depend -x libtool -x ltmain.sh -x depcomp -x missing -x compile -x install-sh -x POTFILES -x stamp-h1 -x activex -x m4 -x vlc-config -x vlc-config.in -x vlc.win32.nsi -x config.h -x ffmpeg -x modules_builtin.h -x builtin.h -x version.c -x revision.c -x config.h.in -x Makefile.am -x '*.po' -x po -x '*.pc' -x '*~' -x '*.rej' -x ABOUT-NLS -x cvlc -x svlc -x rvlc -x vlc_about.h -x vlc_threads_funcs.h -urN vlc-original/modules/demux/ogg.c vlc/modules/demux/ogg.c
 --- vlc-original/modules/demux/ogg.c	2008-03-17 13:44:23.000000000 +0000
 +++ vlc/modules/demux/ogg.c	2008-03-21 23:30:01.000000000 +0000
 @@ -85,7 +85,10 @@
