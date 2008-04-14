@@ -35,11 +35,20 @@ static int get_packet(ogg_sync_state *oy,ogg_stream_state *os,int *init,ogg_pack
   if (bytes==0) return 1; /* we're done */
   ogg_sync_wrote(oy,bytes);
   while (ogg_sync_pageout(oy,&og)>0) {
-    if (ogg_page_bos(&og)) {
+    if (!*init && ogg_page_bos(&og)) {
       ogg_stream_init(os,ogg_page_serialno(&og));
-      *init=1;
     }
     ogg_stream_pagein(os,&og);
+    if (!*init && ogg_page_bos(&og)) {
+      ogg_packet op;
+      ogg_stream_packetpeek(os,&op);
+      if (op.bytes>=9 && !memcmp(op.packet,"\200kate\0\0\0\0",9)) {
+        *init=1;
+      }
+      else {
+        ogg_stream_clear(os);
+      }
+    }
   }
 
   /* try again with the new data */
