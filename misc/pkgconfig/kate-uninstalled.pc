@@ -10,6 +10,6 @@ Version: 0.1.2
 URL: http://wiki.xiph.org/index.php/OggKate
 Requires: ogg >= 1.1.2
 Conflicts: 
-Libs: ${libdir}/libkate.a
+Libs: -L${libdir} -lkate
 Libs.private: 
 Cflags: -I${includedir}
