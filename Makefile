@@ -122,12 +122,12 @@ tools/katedesc.tab.c: tools/katedesc.y
 tools/decoder: $(OBJDIR)/decoder.o
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $< `PKG_CONFIG_PATH=misc/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $< `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
 tools/encoder: $(OBJDIR)/encoder.o $(OBJDIR)/katedesc.tab.o $(OBJDIR)/lex.katedesc.o $(OBJDIR)/kpng.o
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $^ -lpng `PKG_CONFIG_PATH=misc/pkgconfig:$PKG_CONFIG_PATH pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $^ -lpng `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
 $(LIBDIR)/libkate.a: $(OBJS_STATIC)
 	@echo " AR $@"
