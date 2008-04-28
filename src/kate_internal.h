@@ -44,14 +44,14 @@ extern int kate_event_release(kate_event *ev) kate_internal;
 extern int kate_event_destroy(kate_event *ev) kate_internal;
 
 /* checks for header references */
-extern int kate_find_region(const kate_info *ki,const kate_region *kr) kate_internal;
-extern int kate_find_style(const kate_info *ki,const kate_style *ks) kate_internal;
-extern int kate_find_curve(const kate_info *ki,const kate_curve *kc) kate_internal;
-extern int kate_find_motion(const kate_info *ki,const kate_motion *km) kate_internal;
-extern int kate_find_palette(const kate_info *ki,const kate_palette *kp) kate_internal;
-extern int kate_find_bitmap(const kate_info *ki,const kate_bitmap *kb) kate_internal;
-extern int kate_find_font_range(const kate_info *ki,const kate_font_range *kfr) kate_internal;
-extern int kate_find_font_mapping(const kate_info *ki,const kate_font_mapping *kfm) kate_internal;
+extern int kate_find_region(const kate_info *ki,const kate_region *kr);
+extern int kate_find_style(const kate_info *ki,const kate_style *ks);
+extern int kate_find_curve(const kate_info *ki,const kate_curve *kc);
+extern int kate_find_motion(const kate_info *ki,const kate_motion *km);
+extern int kate_find_palette(const kate_info *ki,const kate_palette *kp);
+extern int kate_find_bitmap(const kate_info *ki,const kate_bitmap *kb);
+extern int kate_find_font_range(const kate_info *ki,const kate_font_range *kfr);
+extern int kate_find_font_mapping(const kate_info *ki,const kate_font_mapping *kfm);
 
 /* utility */
 extern int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n) kate_internal;
