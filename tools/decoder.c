@@ -744,7 +744,7 @@ static kate_comment kc;
                 if (1) {
                   kate_float base,offset;
                   kate_granule_split_time(&ki,granpos,&base,&offset);
-                  fprintf(fout,"    # granule %lld composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
+                  fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
                     granpos,
                     time_hours(base),time_minutes(base),time_seconds(base),
                     time_hours(offset),time_minutes(offset),time_seconds(offset)
