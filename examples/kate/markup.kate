@@ -7,7 +7,7 @@ kate {
     define region "r4" { percent position 10 70 size 80 20 }
   }
 
-  event 0:0:01 --> 0:1:00 region "r1" "normal, <i>italics, <em>em</em></i>"
+  event 0:0:01 --> 0:1:00 region "r1" "normal, <i>italics, <b>+bold</b></i>"
   event 0:0:01 --> 0:1:00 region "r2" "<b>bold, <i>and italics</i></b>"
   event 0:0:01 --> 0:1:00 region "r3" "not<s>strike</s>d text"
   event 0:0:01 --> 0:1:00 region "r4" "<u>under<s>strike</s></u>"
