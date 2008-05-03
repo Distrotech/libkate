@@ -255,6 +255,15 @@ static int kate_encode_region(const kate_region *kr,oggpack_buffer *opb)
   kate_write32v(opb,kr->w);
   kate_write32v(opb,kr->h);
   kate_write32v(opb,kr->style);
+
+  {
+    /* bitstream 0.2: add clip */
+    oggpack_buffer warp;
+    kate_open_warp(&warp);
+    oggpack_write(&warp,kr->clip,1);
+    kate_close_warp(&warp,opb);
+  }
+
   kate_warp(opb);
 
   return 0;
@@ -326,6 +335,15 @@ static int kate_encode_style(const kate_style *ks,oggpack_buffer *opb)
   oggpack_write(opb,ks->italics,1);
   oggpack_write(opb,ks->underline,1);
   oggpack_write(opb,ks->strike,1);
+
+  {
+    /* bitstream 0.2: add justify */
+    oggpack_buffer warp;
+    kate_open_warp(&warp);
+    oggpack_write(&warp,ks->justify,1);
+    kate_close_warp(&warp,opb);
+  }
+
   kate_warp(opb);
 
   return 0;

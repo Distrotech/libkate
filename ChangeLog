@@ -1,6 +1,8 @@
 0.1.2
   background image
   all PNG images can now be read as raw images
+  new style attributes: justify
+  new region attributes: clip
   pkg-config files moved to misc/pkgconfig
 
 0.1.1

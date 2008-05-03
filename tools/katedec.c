@@ -221,6 +221,7 @@ static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
     if (ks->italics) fprintf(f,"%sitalics\n",sindent);
     if (ks->underline) fprintf(f,"%sunderline\n",sindent);
     if (ks->strike) fprintf(f,"%sstrike\n",sindent);
+    if (ks->justify) fprintf(f,"%sjustify\n",sindent);
   }
 
   kate_free(sindent);
@@ -235,6 +236,7 @@ static void write_region_defs(FILE *f,const kate_region *kr,size_t indent)
 
   fprintf(f,"%s%s position %d %d size %d %d\n",sindent,metric2text(kr->metric),kr->x,kr->y,kr->w,kr->h);
   if (kr->style>=0) fprintf(f,"%sdefault style %d\n",sindent,kr->style);
+  if (kr->clip) fprintf(f,"%sclip\n",sindent);
 
   kate_free(sindent);
 }

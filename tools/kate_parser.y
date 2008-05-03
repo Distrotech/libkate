@@ -481,6 +481,7 @@ static void init_style(kd_style *style)
   style->style->italics=0;
   style->style->underline=0;
   style->style->strike=0;
+  style->style->justify=0;
 }
 
 static void set_font_width(kd_style *style,kate_float s,kate_space_metric metric)
@@ -566,6 +567,7 @@ static void init_region(kd_region *region)
   region->region->w=90;
   region->region->h=10;
   region->region->style=-1;
+  region->region->clip=0;
 }
 
 static void init_region_from(int idx)
@@ -1495,10 +1497,10 @@ static void cleanup_memory(void)
 %token <number> BITMAP PALETTE COLORS
 %token <number> FONT RANGE FIRST LAST CODE POINT
 %token <number> USER SOURCE PNG DRAW VISIBLE
-%token <number> ID BOLD ITALICS UNDERLINE STRIKE
+%token <number> ID BOLD ITALICS UNDERLINE STRIKE JUSTIFY
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
-%token <number> HORIZONTAL VERTICAL
+%token <number> HORIZONTAL VERTICAL CLIP
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -1594,6 +1596,7 @@ kd_style_def: HALIGN float { kstyle.style->halign=$2; }
             | ITALICS { kstyle.style->italics=1; }
             | UNDERLINE { kstyle.style->underline=1; }
             | STRIKE { kstyle.style->strike=1; }
+            | JUSTIFY { kstyle.style->justify=1; }
             | FONT SIZE float kd_opt_space_metric { set_font_size(&kstyle,$3,$4); }
             | FONT WIDTH float kd_opt_space_metric { set_font_width(&kstyle,$3,$4); }
             | FONT HEIGHT float kd_opt_space_metric { set_font_height(&kstyle,$3,$4); }
@@ -1616,6 +1619,7 @@ kd_region_defs: kd_region_defs kd_region_def
 kd_region_def: METRIC {kregion.region->metric=$1; }
              | POSITION float float { kregion.region->x=$2;kregion.region->y=$3; }
              | SIZE float float { kregion.region->w=$2;kregion.region->h=$3; }
+             | CLIP { kregion.region->clip=1; }
              | DEFAULT STYLE kd_style_name_or_index { kregion.region->style=$3; }
              ;
 

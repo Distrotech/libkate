@@ -70,7 +70,9 @@ typedef struct kate_region {
   int w;                         /**< size of the region */
   int h;                         /**< size of the region */
   int style;                     /**< default style to apply to text in this region */
-  uintptr_t pad[6];
+  uint32_t clip:1;               /**< text/images will be clipped to the region */
+  uint32_t pad0:31;
+  uintptr_t pad1[6];
 } kate_region;
 
 /** defines an RGBA color */
@@ -104,7 +106,8 @@ typedef struct kate_style {
   uint32_t italics:1;                /**< display text in italics */
   uint32_t underline:1;              /**< display underlined text */
   uint32_t strike:1;                 /**< display striked text */
-  uint32_t pad0:28;
+  uint32_t justify:1;                /**< display justified text */
+  uint32_t pad0:27;
   uintptr_t pad1[10];
 } kate_style;
 

@@ -113,6 +113,7 @@ int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *f
   MORPHINT(italics);
   MORPHINT(underline);
   MORPHINT(strike);
+  MORPHINT(justify);
 #undef MORPHINT
 #undef MORPH
 

@@ -246,7 +246,7 @@ static int kate_decode_comment_packet(const kate_info *ki,kate_comment *kc,oggpa
   return KMG_OK();
 }
 
-static int kate_decode_region(kate_region *kr,oggpack_buffer *opb)
+static int kate_decode_region(const kate_info *ki,kate_region *kr,oggpack_buffer *opb)
 {
   if (!kr || !opb) return KATE_E_INVALID_PARAMETER;
   kr->metric=oggpack_read(opb,8);
@@ -255,6 +255,16 @@ static int kate_decode_region(kate_region *kr,oggpack_buffer *opb)
   kr->w=kate_read32v(opb);
   kr->h=kate_read32v(opb);
   kr->style=kate_read32v(opb);
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0002) {
+    /* 0.2 adds a warp for clip */
+    kate_read32v(opb); /* the size of the warp */
+    kr->clip=oggpack_read(opb,1);
+  }
+  else {
+    kr->clip=0;
+  }
+
   kate_warp(opb);
   return 0;
 }
@@ -275,7 +285,7 @@ static int kate_decode_regions_packet(kate_info *ki,oggpack_buffer *opb)
   for (n=0;n<nregions;++n) {
     regions[n]=(kate_region*)KMG_MALLOC(sizeof(kate_region));
     if (!regions[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-    ret=kate_decode_region(regions[n],opb);
+    ret=kate_decode_region(ki,regions[n],opb);
     if (ret<0) return KMG_ERROR(ret);
   }
 
@@ -300,7 +310,7 @@ static int kate_decode_color(kate_color *kc,oggpack_buffer *opb)
   return 0;
 }
 
-static int kate_decode_style(kate_style *ks,oggpack_buffer *opb)
+static int kate_decode_style(const kate_info *ki,kate_style *ks,oggpack_buffer *opb)
 {
   int ret;
   kate_float d[8];
@@ -332,6 +342,16 @@ static int kate_decode_style(kate_style *ks,oggpack_buffer *opb)
   ks->italics=oggpack_read(opb,1);
   ks->underline=oggpack_read(opb,1);
   ks->strike=oggpack_read(opb,1);
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0002) {
+    /* 0.2 adds a warp for justify */
+    kate_read32v(opb); /* the size of the warp */
+    ks->justify=oggpack_read(opb,1);
+  }
+  else {
+    ks->justify=0;
+  }
+
   kate_warp(opb);
 
   return 0;
@@ -353,7 +373,7 @@ static int kate_decode_styles_packet(kate_info *ki,oggpack_buffer *opb)
   for (n=0;n<nstyles;++n) {
     styles[n]=(kate_style*)KMG_MALLOC(sizeof(kate_style));
     if (!styles[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-    ret=kate_decode_style(styles[n],opb);
+    ret=kate_decode_style(ki,styles[n],opb);
     if (ret<0) return KMG_ERROR(ret);
   }
 
@@ -951,7 +971,7 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
     READ_OVERRIDE(
       ev->region=KMG_MALLOC(sizeof(kate_region));
       if (!ev->region) goto error_out_of_memory;
-      ret=kate_decode_region(ev->region,opb);
+      ret=kate_decode_region(k->ki,ev->region,opb);
       if (ret<0) goto error;
     );
     READ_OVERRIDE(
@@ -962,7 +982,7 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
     READ_OVERRIDE(
       ev->style=kate_malloc(sizeof(kate_style));
       if (!ev->style) goto error_out_of_memory;
-      ret=kate_decode_style(ev->style,opb);
+      ret=kate_decode_style(k->ki,ev->style,opb);
       if (ret<0) goto error;
     );
     READ_OVERRIDE(
@@ -973,7 +993,7 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
     READ_OVERRIDE(
       ev->secondary_style=kate_malloc(sizeof(kate_style));
       if (!ev->secondary_style) goto error_out_of_memory;
-      ret=kate_decode_style(ev->secondary_style,opb);
+      ret=kate_decode_style(k->ki,ev->secondary_style,opb);
       if (ret<0) goto error;
     );
     READ_OVERRIDE(
