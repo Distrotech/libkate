@@ -186,7 +186,7 @@ static void load_palette(const char *filename)
   int ncolors;
   kate_color *palette=NULL;
 
-  if (kd_read_png(filename,NULL,NULL,NULL,&palette,&ncolors,NULL)) {
+  if (kd_read_png8(filename,NULL,NULL,NULL,&palette,&ncolors,NULL)) {
     yyerrorf("failed to load %s",filename);
     return;
   }
@@ -236,20 +236,43 @@ static void init_bitmap(void)
   kbitmap.bitmap->pixels=NULL;
 }
 
-static void load_bitmap(const char *filename)
+static void load_bitmap(const char *filename,int paletted)
 {
-  int bpp,w,h;
+  int w,h;
   unsigned char *pixels=NULL;
 
-  if (kd_read_png(filename,&w,&h,&bpp,NULL,NULL,&pixels)) {
-    yyerrorf("failed to load %s",filename);
-    return;
+  if (paletted) {
+    int bpp;
+
+    if (kd_read_png8(filename,&w,&h,&bpp,NULL,NULL,&pixels)) {
+      yyerrorf("failed to load %s",filename);
+      return;
+    }
+
+    kbitmap.bitmap->type=kate_bitmap_type_paletted;
+    kbitmap.bitmap->width=w;
+    kbitmap.bitmap->height=h;
+    kbitmap.bitmap->bpp=bpp;
+    kbitmap.bitmap->pixels=pixels;
+    kbitmap.bitmap->size=0;
+  }
+  else {
+    size_t size;
+
+    if (kd_read_png(filename,&w,&h,&pixels,&size)) {
+      yyerrorf("failed to load %s",filename);
+      return;
+    }
+
+    kbitmap.bitmap->type=kate_bitmap_type_png;
+    kbitmap.bitmap->width=w;
+    kbitmap.bitmap->height=h;
+    kbitmap.bitmap->bpp=0;
+    kbitmap.bitmap->pixels=pixels;
+    kbitmap.bitmap->size=size;
   }
 
-  kbitmap.bitmap->width=w;
-  kbitmap.bitmap->height=h;
-  kbitmap.bitmap->bpp=bpp;
-  kbitmap.bitmap->pixels=pixels;
+  kbitmap.bitmap->palette=-1;
 }
 
 static void check_bitmap(const kate_bitmap *kb)
@@ -630,6 +653,7 @@ static void init_bitmap_pixels(int width,int height,int bpp)
   if (width==0 || height==0) yyerror("Bitmap dimensions must not be zero");
   if (bpp==0) yyerror("Bitmap bit depth must not be zero");
   if (bpp>8) yyerrorf("Bitmap bit depth must not be more than 8 (is %d)",bpp);
+  kbitmap.bitmap->type=kate_bitmap_type_paletted;
   kbitmap.bitmap->width=width;
   kbitmap.bitmap->height=height;
   kbitmap.bitmap->bpp=bpp;
@@ -638,6 +662,24 @@ static void init_bitmap_pixels(int width,int height,int bpp)
     yyerror("Out of memory");
     exit(-1);
   }
+  kbitmap.bitmap->size=0;
+  n_bitmap_pixels=0;
+}
+
+static void init_png_bitmap_pixels(int width,int height,int size)
+{
+  if (!kbitmap.bitmap) { yyerror("internal error: bitmap not initialized"); exit(-1); }
+  if (width==0 || height==0) yyerror("Bitmap dimensions must not be zero");
+  kbitmap.bitmap->type=kate_bitmap_type_png;
+  kbitmap.bitmap->width=width;
+  kbitmap.bitmap->height=height;
+  kbitmap.bitmap->bpp=0;
+  kbitmap.bitmap->pixels=(unsigned char*)kate_malloc(size);
+  if (!kbitmap.bitmap->pixels) {
+    yyerror("Out of memory");
+    exit(-1);
+  }
+  kbitmap.bitmap->size=size;
   n_bitmap_pixels=0;
 }
 
@@ -1452,7 +1494,7 @@ static void cleanup_memory(void)
 %token <number> DIRECTIONALITY L2R_T2B R2L_T2B T2B_R2L T2B_L2R
 %token <number> BITMAP PALETTE COLORS
 %token <number> FONT RANGE FIRST LAST CODE POINT
-%token <number> USER SOURCE DRAW VISIBLE
+%token <number> USER SOURCE PNG DRAW VISIBLE
 %token <number> ID BOLD ITALICS UNDERLINE STRIKE
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
@@ -1466,7 +1508,8 @@ static void cleanup_memory(void)
 %token <string> IDENTIFIER MACRO_BODY
 
 %type <number> kd_kate kd_opt_defs kd_defs kd_def kd_events kd_event
-%type <number> kd_curve_points kd_palette_colors kd_bitmap_pixels
+%type <number> kd_curve_points kd_palette_colors
+%type <number> kd_bitmap_pixels kd_png_bitmap_pixels
 %type <number> kd_style_defs kd_style_def
 %type <number> kd_region_defs kd_region_def
 %type <number> kd_curve_defs kd_curve_def
@@ -1608,7 +1651,12 @@ kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER { init_bitmap_pixels($1,$3,$5); }
                    katedesc_error("Wrong number of pixels in the bitmap");
                  }
                }
-             | SOURCE STRING { load_bitmap($2); }
+             | UNUMBER 'x' UNUMBER PNG UNUMBER { init_png_bitmap_pixels($1,$3,$5); } '{' kd_png_bitmap_pixels '}' {
+                 if ((size_t)n_bitmap_pixels!=kbitmap.bitmap->size) {
+                   katedesc_error("Wrong number of bytes in the PNG bitmap");
+                 }
+               }
+             | SOURCE STRING { load_bitmap($2,0); }
              | DEFAULT PALETTE kd_palette_name_or_index { kbitmap.bitmap->palette=$3; }
              ;
 
@@ -1660,6 +1708,17 @@ kd_bitmap_pixels: kd_bitmap_pixels UNUMBER kd_opt_comma {
                   }
                 | {}
                 ;
+
+kd_png_bitmap_pixels: kd_png_bitmap_pixels UNUMBER kd_opt_comma {
+                        if ((size_t)n_bitmap_pixels>=kbitmap.bitmap->size) {
+                          katedesc_error("Too many pixels in bitmap");
+                        }
+                        else {
+                          kbitmap.bitmap->pixels[n_bitmap_pixels++]=$2;
+                        }
+                      }
+                    | {}
+                    ;
 
 kd_opt_name: STRING { $$=$1; }
            | { $$=NULL; }

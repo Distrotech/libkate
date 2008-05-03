@@ -16,11 +16,43 @@
 #include <png.h>
 #include "kate/kate.h"
 
-int kd_read_png(const char *filename,int *w,int *h,int *bpp,kate_color **palette,int *ncolors,unsigned char **pixels)
+static FILE *kd_open(const char *filename)
 {
-  FILE *f=NULL;
+  FILE *f;
   size_t bytes;
   unsigned char magic[8];
+
+  if (!filename) {
+    fprintf(stderr,"No filename specified\n");
+    return NULL;
+  }
+
+  f=fopen(filename,"r");
+  if (!f) {
+    fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
+    return NULL;
+  }
+
+  bytes=fread(magic,1,8,f);
+  if (bytes<8) {
+    fprintf(stderr,"Failed to read signature bytes from file\n");
+    goto error;
+  }
+  if (png_sig_cmp(magic,0,8)) {
+    fprintf(stderr,"Signature bytes do not match PNG\n");
+    goto error;
+  }
+
+  return f;
+
+error:
+  fclose(f);
+  return NULL;
+}
+
+int kd_read_png8(const char *filename,int *w,int *h,int *bpp,kate_color **palette,int *ncolors,unsigned char **pixels)
+{
+  FILE *f=NULL;
   png_structp png_ptr=NULL;
   png_infop info_ptr=NULL;
   int cdepth,ctype;
@@ -34,26 +66,8 @@ int kd_read_png(const char *filename,int *w,int *h,int *bpp,kate_color **palette
   int num_trans;
   int has_trans;
 
-  if (!filename) {
-    fprintf(stderr,"No filename specified\n");
-    return -1;
-  }
-
-  f=fopen(filename,"r");
-  if (!f) {
-    fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
-    return -1;
-  }
-
-  bytes=fread(magic,1,8,f);
-  if (bytes<8) {
-    fprintf(stderr,"Failed to read signature bytes from file\n");
-    goto error;
-  }
-  if (png_sig_cmp(magic,0,8)) {
-    fprintf(stderr,"Signature bytes do not match PNG\n");
-    goto error;
-  }
+  f=kd_open(filename);
+  if (!f) return -1;
 
   png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
   if (!png_ptr) {
@@ -162,6 +176,62 @@ int kd_read_png(const char *filename,int *w,int *h,int *bpp,kate_color **palette
   }
 
   png_destroy_read_struct(&png_ptr,&info_ptr,png_infopp_NULL);
+  fclose(f);
+
+  return 0;
+
+error:
+  if (png_ptr) png_destroy_read_struct(&png_ptr,info_ptr?&info_ptr:png_infopp_NULL,png_infopp_NULL);
+  if (f) fclose(f);
+  return -1;
+}
+
+int kd_read_png(const char *filename,int *w,int *h,unsigned char **pixels,size_t *size)
+{
+  FILE *f;
+  png_structp png_ptr=NULL;
+  png_infop info_ptr=NULL;
+  long sz;
+
+  f=kd_open(filename);
+  if (!f) return -1;
+
+  png_ptr=png_create_read_struct(PNG_LIBPNG_VER_STRING,NULL,NULL,NULL);
+  if (!png_ptr) {
+    fprintf(stderr,"Cannot created PNG read structure\n");
+    goto error;
+  }
+
+  info_ptr=png_create_info_struct(png_ptr);
+  if (!info_ptr) {
+    fprintf(stderr,"Cannot created PNG info structure\n");
+    goto error;
+  }
+
+  if (setjmp(png_jmpbuf(png_ptr))) {
+    fprintf(stderr,"PNG read failed\n");
+    goto error;
+  }
+
+  png_init_io(png_ptr,f);
+  png_set_sig_bytes(png_ptr,8);
+  png_read_info(png_ptr,info_ptr);
+
+  if (w) *w=png_get_image_width(png_ptr,info_ptr);
+  if (h) *h=png_get_image_height(png_ptr,info_ptr);
+
+  png_destroy_read_struct(&png_ptr,&info_ptr,png_infopp_NULL);
+
+  /* now read the whole file as a binary blob */
+  fseek(f,0,SEEK_END);
+  sz=ftell(f);
+  fseek(f,0,SEEK_SET);
+  *pixels=malloc(sz);
+  if (!*pixels) goto error;
+  fread(*pixels,sz,1,f);
+
+  if (size) *size=sz;
+
   fclose(f);
 
   return 0;

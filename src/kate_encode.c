@@ -510,17 +510,13 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
   return kate_finalize_packet_buffer(opb,op,k);
 }
 
-static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+static int kate_encode_paletted_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
 {
   size_t w,h,n;
   unsigned int maxpixel;
 
-  if (!kb || !opb) return KATE_E_INVALID_PARAMETER;
   if (kb->bpp>8) return KATE_E_LIMIT;
 
-  kate_write32v(opb,kb->width);
-  kate_write32v(opb,kb->height);
-  oggpack_write(opb,kb->bpp,8);
   kate_write32v(opb,kb->palette);
   n=0;
   maxpixel=(1<<kb->bpp)-1;
@@ -531,6 +527,43 @@ static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
       oggpack_write(opb,pixel,kb->bpp);
     }
   }
+
+  return 0;
+}
+
+static int kate_encode_png_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+{
+  oggpack_write(opb,kate_bitmap_type_png,8);
+  kate_write32(opb,kb->size);
+  kate_writebuf(opb,(const char*)kb->pixels,kb->size);
+
+  return 0;
+}
+
+static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+{
+  int ret;
+
+  if (!kb || !opb) return KATE_E_INVALID_PARAMETER;
+
+  kate_write32v(opb,kb->width);
+  kate_write32v(opb,kb->height);
+  oggpack_write(opb,kb->bpp,8); /* 0 marks a raw bitmap */
+
+  switch (kb->type) {
+    case kate_bitmap_type_paletted:
+      ret=kate_encode_paletted_bitmap(kb,opb);
+      break;
+    case kate_bitmap_type_png:
+      ret=kate_encode_png_bitmap(kb,opb);
+      break;
+    default:
+      ret=KATE_E_INVALID_PARAMETER;
+      break;
+  }
+
+  if (ret<0) return ret;
+
   kate_warp(opb);
 
   return 0;

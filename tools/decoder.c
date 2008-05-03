@@ -351,17 +351,33 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
   for (n=0;n<indent;++n) sindent[n]=' ';
   sindent[indent]=0;
 
-  if (kb->palette>=0) fprintf(f,"%sdefault palette %d\n",sindent,kb->palette);
-  fprintf(f,"%s%dx%dx%d {\n",sindent,kb->width,kb->height,kb->bpp);
-  p=0;
-  for (h=0;h<kb->height;++h) {
-    fprintf(f,"%s ",sindent);
-    for (w=0;w<kb->width;++w) {
-      fprintf(f," %3d",kb->pixels[p++]);
-    }
-    fprintf(f,"\n");
+  switch (kb->type) {
+    case kate_bitmap_type_png:
+      fprintf(f,"%s%dx%d png %u {\n",sindent,kb->width,kb->height,kb->size);
+      for (p=0;p<kb->size;++p) {
+        if (p%16==0) fprintf(f,"%s",sindent);
+        fprintf(f," %3d",kb->pixels[p]);
+        if (p%16==15) fprintf(f,"\n");
+      }
+      fprintf(f,"%s}\n",sindent);
+      break;
+    case kate_bitmap_type_paletted:
+      fprintf(f,"%s%dx%dx%d {\n",sindent,kb->width,kb->height,kb->bpp);
+      p=0;
+      for (h=0;h<kb->height;++h) {
+        fprintf(f,"%s ",sindent);
+        for (w=0;w<kb->width;++w) {
+          fprintf(f," %3d",kb->pixels[p++]);
+        }
+        fprintf(f,"\n");
+      }
+      fprintf(f,"%s}\n",sindent);
+      break;
+    default:
+      fprintf(stderr,"Error: unknown bitmap type: %d\n",kb->type);
+      break;
   }
-  fprintf(f,"%s}\n",sindent);
+  if (kb->palette>=0) fprintf(f,"%sdefault palette %d\n",sindent,kb->palette);
 
   kate_free(sindent);
 }
@@ -830,7 +846,7 @@ static kate_comment kc;
                     fprintf(fout,"    bitmap %d\n",idx);
                   }
                 }
-                if (write_bitmaps && ev->palette && ev->bitmap) {
+                if (write_bitmaps && ev->bitmap && ev->bitmap->bpp>0 && ev->palette) {
                   static int n=0;
                   static char filename[32];
                   sprintf(filename,"/tmp/kate-bitmap-%d",n++);

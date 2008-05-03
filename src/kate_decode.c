@@ -568,17 +568,38 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,oggpack_buffer
   kb->width=kate_read32v(opb);
   kb->height=kate_read32v(opb);
   kb->bpp=oggpack_read(opb,8);
-  kb->palette=kate_read32v(opb);
-  if (kb->width<=0 || kb->height<=0 || kb->bpp<1 || kb->bpp>8) return KATE_E_BAD_PACKET;
+  if (kb->width<=0 || kb->height<=0 || kb->bpp>8) return KATE_E_BAD_PACKET;
   if (!ki->no_limits && (kb->width>KATE_LIMIT_BITMAP_SIZE || kb->height>KATE_LIMIT_BITMAP_SIZE)) return KATE_E_LIMIT;
 
-  npixels=kb->width*kb->height;
-  pixels=(unsigned char*)kate_malloc(npixels);
-  if (!pixels) return KATE_E_OUT_OF_MEMORY;
-
-  for (n=0;n<npixels;++n) {
-    pixels[n]=oggpack_read(opb,kb->bpp);
+  if (kb->bpp==0) {
+    /* raw bitmap */
+    kb->type=oggpack_read(opb,8);
+    kb->palette=-1;
+    switch (kb->type) {
+      case kate_bitmap_type_png:
+        kb->size=kate_read32(opb);
+        pixels=(unsigned char*)kate_malloc(kb->size);
+        if (!pixels) return KATE_E_OUT_OF_MEMORY;
+        kate_readbuf(opb,(char*)pixels,kb->size);
+        break;
+      default:
+        return KATE_E_BAD_PACKET;
+    }
   }
+  else {
+    /* paletted bitmap */
+    kb->type=kate_bitmap_type_paletted;
+    kb->palette=kate_read32v(opb);
+
+    npixels=kb->width*kb->height;
+    pixels=(unsigned char*)kate_malloc(npixels);
+    if (!pixels) return KATE_E_OUT_OF_MEMORY;
+
+    for (n=0;n<npixels;++n) {
+      pixels[n]=oggpack_read(opb,kb->bpp);
+    }
+  }
+
   kate_warp(opb);
 
   kb->pixels=pixels;

@@ -210,15 +210,23 @@ typedef struct kate_palette {
   uintptr_t pad[2];
 } kate_palette;
 
+/** defines a particular type of bitmap */
+typedef enum kate_bitmap_type {
+  kate_bitmap_type_paletted,                     /**< paletted bitmap */
+  kate_bitmap_type_png                           /**< a PNG bitmap */
+} kate_bitmap_type;
+
 /** defines a paletted image */
 typedef struct kate_bitmap {
   size_t width;                                  /**< width in pixels */
   size_t height;                                 /**< height in pixels */
-  unsigned char bpp;                             /**< bits per pixel, from 1 to 8 */
-  unsigned char pad0[3];
+  unsigned char bpp;                             /**< bits per pixel, from 1 to 8, or 0 for a raw PNG bitmap */
+  kate_bitmap_type type;                         /**< the type of this bitmap */
+  unsigned char pad0[2];
   int palette;                                   /**< index of the default palette to use */
   unsigned char *pixels;                         /**< pixels, rows first, one byte per pixel regardless of bpp */
-  uintptr_t pad1[3];
+  size_t size;                                   /**< for raw bitmaps, number of bytes in pixels */
+  uintptr_t pad1[2];
 } kate_bitmap;
 
 /** defines a set of images to map to a range of Unicode code points */

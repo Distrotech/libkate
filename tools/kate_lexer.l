@@ -191,6 +191,7 @@ margin                       {return MARGIN;}
 margins                      {return MARGINS;}
 horizontal                   {return HORIZONTAL;}
 vertical                     {return VERTICAL;}
+png                          {return PNG;}
 
 
 left_to_right|l2r|ltr|ltr_ttb|l2r_t2b        {return L2R_T2B;}
