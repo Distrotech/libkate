@@ -1,5 +1,6 @@
 0.1.2
   background image
+  all PNG images can now be read as raw images
   pkg-config files moved to misc/pkgconfig
 
 0.1.1
