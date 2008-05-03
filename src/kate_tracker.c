@@ -320,9 +320,11 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   if (ks) {
     kin->text_color=ks->text_color;
     kin->background_color=ks->background_color;
-    /* we already have valid text/background colors */
+    kin->draw_color=ks->draw_color;
+    /* we already have valid text/background/draw colors */
     kin->has.text_color=1;
     kin->has.background_color=1;
+    kin->has.draw_color=1;
   }
   else {
     /* can we leave them dangling if the bit isn't set anyway ? */
