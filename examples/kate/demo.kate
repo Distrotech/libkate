@@ -28,8 +28,8 @@ kate {
 
     define motion "321fader_size" {
       semantics text size
-      curve { static 1 points { 0.5 0.5 } } for 50%
-      curve { linear 2 points { 0.5 0.5 8 8 } } for 50%
+      curve { static 1 points { 16 16 } } for 50%
+      curve { linear 2 points { 16 16 128 128 } } for 50%
     }
     define motion "321fader_alpha" {
       semantics text color ba
