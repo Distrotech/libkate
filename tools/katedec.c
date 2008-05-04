@@ -114,6 +114,8 @@ static const char *semantics2text(kate_motion_semantics d)
     case kate_motion_semantics_z: return "z";
     case kate_motion_semantics_horizontal_margins: return "horizontal margins";
     case kate_motion_semantics_vertical_margins: return "vertical margins";
+    case kate_motion_semantics_bitmap_position: return "bitmap position";
+    case kate_motion_semantics_bitmap_size: return "bitmap size";
     default: snprintf(tmp,sizeof(tmp),"user %u",d); return tmp;
   }
   return "invalid";

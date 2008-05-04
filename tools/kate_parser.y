@@ -1886,6 +1886,8 @@ kd_motion_semantics: TIME { $$=kate_motion_semantics_time; }
                    | 'z' { $$=kate_motion_semantics_z; }
                    | HORIZONTAL MARGINS { $$=kate_motion_semantics_horizontal_margins; }
                    | VERTICAL MARGINS { $$=kate_motion_semantics_vertical_margins; }
+                   | BITMAP POSITION { $$=kate_motion_semantics_bitmap_position; }
+                   | BITMAP SIZE { $$=kate_motion_semantics_bitmap_size; }
                    | USER UNUMBER {
                        if ($2<kate_motion_semantics_user) yyerrorf("invalid value for user motion semantics (%u), should be 128 or more",$2);
                        $$=(kate_motion_semantics)$2;

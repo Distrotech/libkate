@@ -179,6 +179,8 @@ typedef enum kate_motion_semantics {
   kate_motion_semantics_text_visible_section,    /**< controls the section of the text which is visible */
   kate_motion_semantics_horizontal_margins,      /**< controls the size of the left and right margins */
   kate_motion_semantics_vertical_margins,        /**< controls the size of the top and bottom margins */
+  kate_motion_semantics_bitmap_position,         /**< controls the position of the background image */
+  kate_motion_semantics_bitmap_size,             /**< controls the size of the background image */
 
   /* more semantics may be added in future versions */
 
@@ -390,8 +392,10 @@ typedef struct kate_tracker {
     uint32_t z:1;                               /**< if set, the tracker has z (depth) information */
     uint32_t hmargins:1;                        /**< if set, the tracker has horizontal margin information */
     uint32_t vmargins:1;                        /**< if set, the tracker has vertical margin information */
-    /* 22 bits */
-    uint32_t pad0:10;
+    uint32_t bitmap_pos:1;                      /**< if set, the tracker has bitmap position information */
+    uint32_t bitmap_size:1;                     /**< if set, the tracker has bitmap size information */
+    /* 24 bits */
+    uint32_t pad0:8;
     uint32_t pad1:32;
     /* 64 bits */
   } has;                                        /**< bitfield describing what information the tracker has */
@@ -461,10 +465,18 @@ typedef struct kate_tracker {
   kate_float top_margin;                        /**< the size of the top margin */
   kate_float bottom_margin;                     /**< the size of the bottom margin */
 
+  /* has.bitmap_pos */
+  kate_float bitmap_x;                          /**< the horizontal bitmap position */
+  kate_float bitmap_y;                          /**< the vertical bitmap position */
+
+  /* has.bitmap_size */
+  kate_float bitmap_size_x;                     /**< the horizontal bitmap size (eg, width) */
+  kate_float bitmap_size_y;                     /**< the vertical bitmap size (eg, height) */
+
   /* internal */
   size_t nglyphs;
 
-  uintptr_t pad[32];
+  uintptr_t pad[28];
 
 } kate_tracker;
 

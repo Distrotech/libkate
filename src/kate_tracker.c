@@ -432,6 +432,14 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     kin->has.text_alignment_ext=1;
   }
 
+  /* update bitmap position */
+  ret=kate_tracker_update_property(kin,kate_motion_semantics_bitmap_position,&kin->bitmap_x,&kin->bitmap_y);
+  if (ret==0) kin->has.bitmap_pos=1;
+
+  /* update bitmap size */
+  ret=kate_tracker_update_property(kin,kate_motion_semantics_bitmap_size,&kin->bitmap_size_x,&kin->bitmap_size_y);
+  if (ret==0) kin->has.bitmap_size=1;
+
   /* update text position */
   ret=kate_tracker_update_property(kin,kate_motion_semantics_text_position,&kin->text_x,&kin->text_y);
   if (ret==0) kin->has.text_pos=1;
