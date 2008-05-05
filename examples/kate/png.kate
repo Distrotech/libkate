@@ -1,30 +1,9 @@
 kate {
   defs {
-    define palette { source "/usr/share/doc/libvorbis-1.0.1/white-xifish.png" }
-    define palette { source "/usr/share/doc/libvorbis-1.0.1/wait.png" }
-    define palette { source "/usr/share/httpd/icons/left.png" }
-    define palette { source "/usr/share/httpd/icons/pie2.png" }
-    define bitmap { source "/usr/share/doc/libvorbis-1.0.1/white-xifish.png" default palette 0 }
-    define bitmap { source "/usr/share/doc/libvorbis-1.0.1/wait.png" default palette 1 }
-    define bitmap { source "/usr/share/httpd/icons/left.png" default palette 2 }
-    define bitmap { source "/usr/share/httpd/icons/pie2.png" default palette 3 }
-    define font range "images" {
-      first code point 0x61
-      last code point 0x64
-      first bitmap 0
-    }
-    define font mapping "images" {
-      range "images"
-    }
-    define region { percent position 20 10 size 60 10 }
-    define region { percent position 20 30 size 60 10 }
-    define region { percent position 20 50 size 60 10 }
-    define region { percent position 20 70 size 60 10 }
-  }
-  event { 00:0.1 --> 1:0:0 region 0 font mapping "images" text "a" }
-  event { 00:0.1 --> 1:0:0 region 1 font mapping "images" text "b" }
+    define bitmap { source "examples/kate/sample.png" }
 
-  // non-text images
-  event { 00:0.1 --> 1:0:0 region 2 palette 2 bitmap 2 }
-  event { 00:0.1 --> 1:0:0 region 3 palette 3 bitmap 3 }
+    define region { percent position 45 45 size 10 10 }
+  }
+
+  event { 00:0.1 --> 1:0:0 region 0 bitmap 0 }
 }
