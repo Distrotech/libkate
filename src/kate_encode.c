@@ -690,7 +690,7 @@ static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
 
 #define WRITE_OVERRIDE(opb,var,def,write) \
   do \
-    if (kes->overrides.var!=(def)) { \
+    if (ret==0 && (kes->overrides.var!=(def))) { \
       oggpack_write(opb,1,1); \
       write; \
     } \
@@ -700,6 +700,7 @@ static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
 static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
 {
   kate_encode_state *kes;
+  int ret=0;
 
   if (!k || !opb) return KATE_E_INVALID_PARAMETER;
   kes=k->kes;
@@ -726,11 +727,11 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
         kate_writebuf(opb,kes->overrides.language,len);
       } while(0));
     WRITE_OVERRIDE(opb,region_index,-1,kate_write32v(opb,kes->overrides.region_index));
-    WRITE_OVERRIDE(opb,region,NULL,kate_encode_region(kes->overrides.region,opb));
+    WRITE_OVERRIDE(opb,region,NULL,ret=kate_encode_region(kes->overrides.region,opb));
     WRITE_OVERRIDE(opb,style_index,-1,kate_write32v(opb,kes->overrides.style_index));
-    WRITE_OVERRIDE(opb,style,NULL,kate_encode_style(kes->overrides.style,opb));
+    WRITE_OVERRIDE(opb,style,NULL,ret=kate_encode_style(kes->overrides.style,opb));
     WRITE_OVERRIDE(opb,secondary_style_index,-1,kate_write32v(opb,kes->overrides.secondary_style_index));
-    WRITE_OVERRIDE(opb,secondary_style,NULL,kate_encode_style(kes->overrides.secondary_style,opb));
+    WRITE_OVERRIDE(opb,secondary_style,NULL,ret=kate_encode_style(kes->overrides.secondary_style,opb));
     WRITE_OVERRIDE(opb,font_mapping_index,-1,kate_write32v(opb,kes->overrides.font_mapping_index));
   }
   else oggpack_write(opb,0,1);
@@ -745,9 +746,9 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
      || kes->overrides.bitmap) {
       oggpack_write(&warp,1,1);
       WRITE_OVERRIDE(&warp,palette_index,-1,kate_write32v(&warp,kes->overrides.palette_index));
-      WRITE_OVERRIDE(&warp,palette,NULL,kate_encode_palette(kes->overrides.palette,&warp));
+      WRITE_OVERRIDE(&warp,palette,NULL,ret=kate_encode_palette(kes->overrides.palette,&warp));
       WRITE_OVERRIDE(&warp,bitmap_index,-1,kate_write32v(&warp,kes->overrides.bitmap_index));
-      WRITE_OVERRIDE(&warp,bitmap,NULL,kate_encode_bitmap(kes->overrides.bitmap,&warp));
+      WRITE_OVERRIDE(&warp,bitmap,NULL,ret=kate_encode_bitmap(kes->overrides.bitmap,&warp));
     }
     else oggpack_write(&warp,0,1);
     kate_close_warp(&warp,opb);
@@ -755,7 +756,7 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
 
   kate_warp(opb);
 
-  return 0;
+  return ret;
 }
 
 /**
