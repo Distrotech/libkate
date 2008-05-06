@@ -1,0 +1,1401 @@
+diff -ru -x autogen.sh svn/annodex/browser_plugin/README svn/annodex/browser_plugin-with-kate/README
+--- svn/annodex/browser_plugin/README	2008-04-04 15:14:27.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/README	2008-04-21 07:56:30.000000000 +0100
+@@ -21,6 +21,10 @@
+     svn co http://svn.annodex.net/liboggz/trunk liboggz
+     svn co http://svn.annodex.net/libfishsound/branches/1.0-stable libfishsound
+ 
++Optionally, for Kate stream support, you need
++
++  * libkate -- from http://libkate.googlecode.com/
++
+ See the README files associated with these libraries for installation
+ instructions.
+ 
+diff -ru -x autogen.sh svn/annodex/browser_plugin/configure.ac svn/annodex/browser_plugin-with-kate/configure.ac
+--- svn/annodex/browser_plugin/configure.ac	2008-04-04 15:14:27.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/configure.ac	2008-04-21 22:12:39.000000000 +0100
+@@ -84,7 +84,7 @@
+ 		       [Path to XPIDL include dir]))
+ 
+ if test "x$with_xpidl_include" != x -a "x$with_xpidl_include" != xyes -a "x$with_xpidl_include" != xno ; then
+-  XPIDL_INCLUDE="$with_xpidl_include"
++  XPIDL_INCLUDE=-I"$with_xpidl_include"
+ else
+   XPIDL_INCLUDE=-I/usr/share/idl/firefox
+ fi
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/Makefile.am svn/annodex/browser_plugin-with-kate/src/Makefile.am
+--- svn/annodex/browser_plugin/src/Makefile.am	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/Makefile.am	2008-04-19 19:47:34.000000000 +0100
+@@ -11,10 +11,10 @@
+ 	win32/resource.h
+ 
+ AM_CXXFLAGS = -Wall -Wno-non-virtual-dtor -Werror -DXP_UX -DMOZ_X11 -DUSE_AUDIO -shared \
+-			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) $(OGGPLAY_CFLAGS)
++			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) $(LIBOGGPLAY_CFLAGS)
+ AM_CFLAGS = -Wall -Werror -DXP_UX -DMOZ_X11 -DUSE_AUDIO -shared \
+ 			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) \
+-			$(ALSA_CFLAGS) $(IMLIB2_CFLAGS) $(OGGPLAY_CFLAGS) -Wdeclaration-after-statement
++			$(ALSA_CFLAGS) $(IMLIB2_CFLAGS) $(LIBOGGPLAY_CFLAGS) -Wdeclaration-after-statement
+ 
+ 
+ INCLUDES=-I$(srcdir)/include -I$(srcdir)/support -I$(srcdir)/audio @GTK_CFLAGS@ @FIREFOX_CFLAGS@
+@@ -50,10 +51,10 @@
+ 	support/npn_gate.cpp			\
+ 	audio/sydney_audio_alsa.c		\
+ 	plugin_cmml.c
+-libnpoggplugin_la_LIBADD = -lX11 -lXt $(LIBOGGPLAY_LIBS) $(ALSA_LIBS) $(IMLIB2_LIBS) $(PTHREAD_LIBS)
++libnpoggplugin_la_LIBADD = -L/usr/X11/lib -lX11 -lXt $(LIBOGGPLAY_LIBS) $(ALSA_LIBS) $(IMLIB2_LIBS) $(PTHREAD_LIBS)
+ 
+ libnpoggplugin_static_la_SOURCES = $(libnpoggplugin_la_SOURCES)
+-libnpoggplugin_static_la_LIBADD = -lX11 -lXt $(LIBOGGPLAY_STATICLIBS) $(PTHREAD_LIBS) ${ALSA_LIBS}
++libnpoggplugin_static_la_LIBADD = -L/usr/X11/lib -lX11 -lXt $(LIBOGGPLAY_STATICLIBS) $(PTHREAD_LIBS) ${ALSA_LIBS}
+ 
+ EXTRA_libnpoggplugin_la_SOURCES = nsILibOggPlugin.idl
+ nodist_libnpoggplugin_la_SOURCES = nsILibOggPlugin.h
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/nsILibOggPlugin.idl svn/annodex/browser_plugin-with-kate/src/nsILibOggPlugin.idl
+--- svn/annodex/browser_plugin/src/nsILibOggPlugin.idl	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/nsILibOggPlugin.idl	2008-04-27 21:31:06.000000000 +0100
+@@ -53,8 +53,9 @@
+ [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0260b0fbd8ac)]
+ interface nsILibOggPlugin : nsISupports {
+ 
++  /* 1.0 -> 1.1 adds kate API */
+   const short apiVersionMajor = 1;
+-  const short apiVersionMinor = 0;
++  const short apiVersionMinor = 1;
+ 
+   string getVersionString();
+ 
+@@ -95,4 +96,22 @@
+                       in nsILibOggCallbackString callback);
+   long getMovieLengthAt(in long position);
+   void registerPlaylistCallback(in nsILibOggCallbackNoArg callback);
++
++  /* kate streams - API 1.1 */
++  const short kateRenderNone = 0;
++  const short kateRenderText = 1;
++  const short kateRenderOverlay = 2; /* not implemented yet */
++
++  long getNumKateTracks();
++  long getCurrentKateTrack();
++  string getKateTrackLanguage(in long track);
++  string getKateTrackCategory(in long track);
++  void selectKateTrack(in long track);
++  void registerKateCallback(in nsILibOggCallbackString callback);
++  void setKateFont(in string font);
++  string getKateFont();
++  void setKateFontSize(in float relsize);
++  float getKateFontSize();
++  void setKateRendering(in long method);
++  long getKateRendering();
+ };
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/browser_plugin-with-kate/src/plugin.cpp
+--- svn/annodex/browser_plugin/src/plugin.cpp	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin.cpp	2008-04-27 22:08:08.000000000 +0100
+@@ -71,7 +71,6 @@
+ #include "plugin_cmml.h"
+ }
+ 
+-
+ #define PLUGIN_VERSION    "1.0"
+ 
+ #if defined (XP_WIN)
+@@ -245,7 +244,9 @@
+   mCmmlCallback(NULL),
+   mAsyncCmmlCallback(NULL),
+   mEndPlayCallback(NULL),
+-  mPlaylistCallback(NULL)
++  mPlaylistCallback(NULL),
++  mMouseClickCallback(NULL),
++  mKateCallback(NULL)
+ #if defined(XP_MACOSX)
+   ,
+   mOutputCleared(FALSE)
+@@ -325,11 +326,15 @@
+   if (mAsyncCmmlCallback != NULL) {
+     NS_RELEASE(mAsyncCmmlCallback);
+   }
++  if (mKateCallback != NULL) {
++    NS_RELEASE(mKateCallback);
++  }
+ 
+   for (unsigned int i = 0; i < mPlaylist.size(); i++) {
+     free(mPlaylist[i]);
+   }
+   clearCmmlStrings();
++  clearKateStrings();
+   SEM_CLOSE(mCrossThreadSem);
+ }
+ 
+@@ -545,6 +550,14 @@
+   mCmmlStrings.clear();
+ }
+ 
++void
++nsPluginInstance::clearKateStrings() {
++  for (unsigned int i = 0; i < mKateStrings.size(); i++) {
++    free(mKateStrings[i]);
++  }
++  mKateStrings.clear();
++}
++
+ char *
+ nsPluginInstance::curMovie() const {
+   return mPlaylist[mPlaylistPos];
+@@ -880,6 +893,21 @@
+   SEM_SIGNAL(mCrossThreadSem);
+ }
+ 
++void
++nsPluginInstance::registerKateCallback(nsILibOggCallbackString *cbObj) {
++  SEM_WAIT(mCrossThreadSem);
++  if (mKateCallback != NULL) {
++    NS_RELEASE(mKateCallback);
++  }
++  mKateCallback = cbObj;
++  if (mKateCallback != NULL) {
++    NS_ADDREF(mKateCallback);
++  } else {
++    clearKateStrings();
++  }
++  SEM_SIGNAL(mCrossThreadSem);
++}
++
+ ////////////////////////////////////////
+ //
+ // Cross-thread event handling
+@@ -929,6 +957,23 @@
+   SEM_SIGNAL(mCrossThreadSem);
+ }
+ 
++/* The same caveat as for CMML data applies here as well, but we do not do async
++   retrieval, only in-stream text is used */
++void
++nsPluginInstance::onKateData(char *kate_text) {
++  SEM_WAIT(mCrossThreadSem);
++  if (mKateCallback != NULL) {
++    // We need to make copies of the strings because the oggplay frame in
++    // which they're stored can be freed before processCrossThreadCalls
++    // passes them to the browser.
++    mKateStrings.push_back(strdup(kate_text));
++  }
++#if defined(XP_UX)
++  processCrossThreadCalls(FALSE);
++#endif
++  SEM_SIGNAL(mCrossThreadSem);
++}
++
+ void
+ nsPluginInstance::onEndOfMovie() {
+   SEM_WAIT(mCrossThreadSem);
+@@ -952,6 +997,78 @@
+   SEM_SIGNAL(mCrossThreadSem);
+ }
+ 
++long
++nsPluginInstance::getNumKateTracks() {
++
++  return get_oggplay_num_kate_tracks(mOggHandle);
++}
++
++long
++nsPluginInstance::getCurrentKateTrack() {
++
++  return get_oggplay_current_kate_track(mOggHandle);
++}
++
++char *
++nsPluginInstance::getKateTrackLanguage(int track) {
++  const char *language = get_oggplay_kate_track_language(mOggHandle, track);
++  char *ret = (char *)NPN_MemAlloc(strlen(language) + 1);
++  if (ret != NULL) {
++    strcpy(ret, language);
++  }
++  return ret;
++}
++
++char *
++nsPluginInstance::getKateTrackCategory(int track) {
++  const char *category = get_oggplay_kate_track_category(mOggHandle, track);
++  char *ret = (char *)NPN_MemAlloc(strlen(category) + 1);
++  if (ret != NULL) {
++    strcpy(ret, category);
++  }
++  return ret;
++}
++
++void
++nsPluginInstance::selectKateTrack(int track) {
++  select_oggplay_kate_track(mOggHandle, track);
++}
++
++void
++nsPluginInstance::setKateFont(const char *font) {
++  gui_set_kate_font(mGuiHandle, font);
++}
++
++char *
++nsPluginInstance::getKateFont() {
++  const char *font = gui_get_kate_font(mGuiHandle);
++  char *ret = (char *)NPN_MemAlloc((font?strlen(font):0) + 1);
++  if (ret != NULL) {
++    strcpy(ret, font?font:"");
++  }
++  return ret;
++}
++
++void
++nsPluginInstance::setKateFontSize(float size) {
++  gui_set_kate_font_size(mGuiHandle, size);
++}
++
++float
++nsPluginInstance::getKateFontSize() {
++  return gui_get_kate_font_size(mGuiHandle);
++}
++
++void
++nsPluginInstance::setKateRendering(int method) {
++  gui_set_kate_rendering(mGuiHandle, method);
++}
++
++long
++nsPluginInstance::getKateRendering() {
++  return gui_get_kate_rendering(mGuiHandle);
++}
++
+ // C hooks for the callback notification functions
+ extern "C" {
+ void
+@@ -960,6 +1077,17 @@
+ }
+ 
+ void
++onKateData(nsPluginInstance *i, char *kate_text) {
++  if (!i || !kate_text) {
++    printf("Oi!\n");
++    *(int*)-1=0;
++  }
++  else {
++    i->onKateData(kate_text);
++  }
++}
++
++void
+ onEndOfMovie(nsPluginInstance *i) {
+   i->onEndOfMovie();
+ }
+@@ -1007,6 +1135,16 @@
+     mAsyncCmmlString = NULL;
+   }
+ 
++  // Send any kate strings collected by onKateData.
++  if (mKateStrings.size() > 0) {
++    if (mKateCallback != NULL) {
++      for (unsigned int i = 0; i < mKateStrings.size(); i++) {
++        mKateCallback->Call(mKateStrings[i]);
++      }
++    }
++    clearKateStrings();
++  }
++
+   // End-of-movie handling.
+   if (mReachedEndOfMovie) {
+     mReachedEndOfMovie = FALSE;
+@@ -1037,7 +1175,9 @@
+   
+   if (mMouseButtonDown) {
+     mMouseButtonDown = FALSE;
+-    mMouseClickCallback->Call();
++    if (this->mMouseClickCallback != NULL) {
++      mMouseClickCallback->Call();
++    }
+   }
+ 
+   if (useSemaphore) {
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.h svn/annodex/browser_plugin-with-kate/src/plugin.h
+--- svn/annodex/browser_plugin/src/plugin.h	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin.h	2008-04-27 22:03:29.000000000 +0100
+@@ -125,12 +125,27 @@
+   void    onMovieDownload();
+   void    onMouseClick();
+ 
++  long    getNumKateTracks();
++  long    getCurrentKateTrack();
++  char  * getKateTrackLanguage(int track);
++  char  * getKateTrackCategory(int track);
++  void    selectKateTrack(int track);
++  void    registerKateCallback(nsILibOggCallbackString *cbObj);
++  void    setKateFont(const char *font);
++  char  * getKateFont();
++  void    setKateFontSize(float relsize);
++  float   getKateFontSize();
++  void    setKateRendering(int method);
++  long    getKateRendering();
++  void    onKateData(char *kate_text);
++
+   // This is only public so the Windows "heartbeat" function can
+   // access it. If you're not PluginCallbackProc, don't touch!
+   void    processCrossThreadCalls(bool useSemaphore);
+ 
+ private:
+   void    clearCmmlStrings();
++  void    clearKateStrings();
+   char  * curMovie() const;
+   bool    playlistIndexOk(long index) const;
+   int     playlistLastIndex() const;
+@@ -152,12 +167,14 @@
+   bool                        mReachedEndOfMovie;
+   bool                        mMouseButtonDown;
+   std::vector<char*>          mCmmlStrings;
++  std::vector<char*>          mKateStrings;
+   char                      * mAsyncCmmlString;
+   nsILibOggCallbackString   * mCmmlCallback;
+   nsILibOggCallbackString   * mAsyncCmmlCallback;
+   nsILibOggCallbackNoArg    * mEndPlayCallback;
+   nsILibOggCallbackNoArg    * mPlaylistCallback;
+   nsILibOggCallbackNoArg    * mMouseClickCallback;
++  nsILibOggCallbackString   * mKateCallback;
+   semaphore                   mCrossThreadSem;
+ 
+ #if defined(XP_WIN)
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_c.h svn/annodex/browser_plugin-with-kate/src/plugin_c.h
+--- svn/annodex/browser_plugin/src/plugin_c.h	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_c.h	2008-04-20 20:33:28.000000000 +0100
+@@ -7,6 +7,9 @@
+ void 
+ onCMMLData(nsPluginInstance *i, char **cmml_data, int cmml_size, int async);
+ 
++void 
++onKateData(nsPluginInstance *i, char *kate_data);
++
+ void
+ onEndOfMovie(nsPluginInstance *i);
+ 
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui.h svn/annodex/browser_plugin-with-kate/src/plugin_gui.h
+--- svn/annodex/browser_plugin/src/plugin_gui.h	2008-04-04 15:14:28.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_gui.h	2008-04-27 22:09:11.000000000 +0100
+@@ -83,4 +83,22 @@
+ long
+ gui_get_window_height(void *gui_handle);
+ 
++void
++gui_set_kate_font(void *gui_handle, const char *font);
++
++const char*
++gui_get_kate_font(void *gui_handle);
++
++void
++gui_set_kate_font_size(void *gui_handle, float size);
++
++float
++gui_get_kate_font_size(void *gui_handle);
++
++void
++gui_set_kate_rendering(void *gui_handle, int method);
++
++long
++gui_get_kate_rendering(void *gui_handle);
++
+ #endif
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_linux.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_linux.c
+--- svn/annodex/browser_plugin/src/plugin_gui_linux.c	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_linux.c	2008-04-27 22:09:44.000000000 +0100
+@@ -32,6 +32,8 @@
+  *
+  * ***** END LICENSE BLOCK ***** */
+ 
++#include "config.h"
++
+ #include <pthread.h>
+ #include "std_semaphore.h"
+ #include <gtk/gtk.h>
+@@ -42,6 +44,7 @@
+ #include <plugin_oggplay.h>
+ #include <plugin_gui.h>
+ #include <unistd.h>
++#include <string.h>
+ 
+ 
+ #include <sys/time.h>
+@@ -72,6 +75,10 @@
+   sa_stream_t         * audio_handle;
+   gboolean	            audio_opened;
+   float                 volume;
++  char                * requested_font_name;
++  char                * font_name;
++  float                 font_relsize;
++  int                   kate_rendering_method;
+   nsPluginInstance    * pluginInstance;
+  } PluginWindowInfo;
+ 
+@@ -129,6 +136,51 @@
+   return FALSE;
+ }
+ 
++static
++int get_text_height(const char *text)
++{
++  int height = 0, last_diff = 0;
++  const char *seps = "\n\r";
++  char *s = strdup(text);
++  if (s) {
++    const char *ptr = strtok(s, seps);
++    while (ptr) {
++      if (*ptr) {
++        int h, vadv, dummy;
++        imlib_get_text_size(ptr, &dummy, &h);
++        imlib_get_text_advance(ptr, &dummy, &vadv);
++        last_diff = vadv-h;
++        height += vadv;
++      }
++      ptr = strtok(NULL, seps);
++    }
++    free(s);
++  }
++  return height-last_diff;
++}
++
++static Imlib_Font
++select_named_font(PluginWindowInfo *info, size_t sz, const char *name)
++{
++  char font_name[64];
++  snprintf(font_name, sizeof(font_name), "%s/%u", name, (size_t)(sz*info->font_relsize));
++  font_name[sizeof(font_name)-1] = 0;
++  return imlib_load_font(font_name);
++}
++
++static Imlib_Font
++select_font(PluginWindowInfo *info, size_t sz)
++{
++  Imlib_Font font = 0;
++  if (info->requested_font_name) {
++    font = select_named_font(info, sz, info->requested_font_name);
++  }
++  if (!font && info->font_name) {
++    font = select_named_font(info, sz, info->font_name);
++  }
++  return font;
++}
++
+ void
+ render_frame_to_screen(PluginWindowInfo * info, PluginOggFrame *frame_data) {
+   Imlib_Image image;
+@@ -137,6 +189,58 @@
+   image = imlib_create_image_using_data(frame_data->width,
+                     frame_data->height, (unsigned int *)frame_data->frame);
+   imlib_context_set_image(image);
++
++  /* add any kate text */
++  if (frame_data->kate_text) {
++    switch (info->kate_rendering_method) {
++      case 0:
++        /* no output, so one can just listen to callbacks */
++        break;
++      case 1:
++        /* text only */
++        if (info->requested_font_name || info->font_name) {
++          size_t sz = (size_t)(frame_data->width/32);
++          Imlib_Font font = select_font(info, sz);
++          if (font) {
++            char *ptr, *s = strdup(frame_data->kate_text);
++            if (s) {
++              const char *seps = "\n\r";
++              int w, h, x, y;
++              imlib_context_set_font(font);
++              imlib_context_set_color(255, 255, 255, 255);
++
++              h = get_text_height(s);
++              y = frame_data->height * 0.9f - h;
++              if (y<0) y=0;
++              ptr = strtok(s, seps);
++              while (ptr) {
++                if (*ptr) {
++                  int dummy, vadv;
++                  imlib_get_text_size(ptr, &w, &dummy);
++                  imlib_get_text_advance(ptr, &dummy, &vadv);
++                  x = (frame_data->width-w)/2;
++                  imlib_text_draw(x, y, ptr);
++                  y += vadv;
++                }
++                ptr = strtok(NULL, seps);
++              }
++
++              free(s);
++            }
++
++            imlib_free_font();
++          }
++        }
++        break;
++      case 2:
++        /* gfx overlay, to be done */
++        break;
++      default:
++        /* invalid */
++        break;
++    }
++  }
++
+   imlib_render_image_on_drawable_at_size(0, 0, info->width, info->height);
+   imlib_free_image_and_decache();
+ }
+@@ -206,7 +310,7 @@
+           samples[i] *= info->volume;
+         }
+       }
+-    	/* wirte audio */
++    	/* write audio */
+     	if (sa_stream_write(info->audio_handle, frame_data.samples,
+     	              frame_data.size) != SA_SUCCESS) {
+         /* can't write data */
+@@ -318,6 +422,43 @@
+ 
+ }
+ 
++static void
++setup_imlib2_font(PluginWindowInfo *info)
++{
++  char **fonts, *home;
++  int nfonts;
++
++  /*
++   * look where fonts are likely to live - would be nice to either use
++   * fontconfig to get these paths, or, even better, ask mozilla itself
++   * for the user font used by thr browser - no clue how to do it though
++   */
++  imlib_set_font_cache_size(512*1024);
++  home = getenv("HOME");
++  if (home) {
++    char *home_fonts = (char*)malloc(strlen(home)+strlen("/.fonts")+1);
++    if (home_fonts) {
++      sprintf(home_fonts, "%s/.fonts", home);
++      imlib_add_path_to_font_path(home_fonts);
++      free(home_fonts);
++    }
++  }
++  imlib_add_path_to_font_path("/usr/share/fonts");
++  imlib_add_path_to_font_path("/usr/local/share/fonts");
++  imlib_add_path_to_font_path("/usr/share/X11/fonts/TTF");
++  imlib_add_path_to_font_path("/usr/X11/lib/X11/fonts/TTF");
++  imlib_add_path_to_font_path("/usr/share/imlib2/data/fonts");
++
++  /*
++   * load a font, any will do for now
++   */
++  fonts=imlib_list_fonts(&nfonts);
++  if (nfonts>0) {
++    info->font_name = strdup(fonts[0]);
++  }
++  imlib_free_font_list(fonts, nfonts);
++}
++
+ void *
+ initialise_gui(nsPluginInstance *instance, NPWindow * aWindow,
+                 void * ogg_handle) {
+@@ -343,6 +484,16 @@
+   info->playback_target = 0;
+   info->playback_finished = FALSE;
+   info->volume = 1.0;
++  info->font_name = NULL;
++  info->requested_font_name = NULL;
++  info->font_relsize = 1.0f;
++  info->kate_rendering_method = 1; /* text only */
++
++  /*
++   * we need a font to display text
++   */
++  setup_imlib2_font(info);
++
+   /*
+    * create semaphore to lock replacement of oggplay object
+    */
+@@ -432,6 +583,9 @@
+   SEM_CLOSE(info->start_stop_sem);
+   SEM_CLOSE(info->oggplay_replace_sem);
+ 
++  if (info->font_name) free(info->font_name);
++  if (info->requested_font_name) free(info->requested_font_name);
++
+   free(info);
+ 
+ }
+@@ -465,3 +619,54 @@
+   PluginWindowInfo  * info = (PluginWindowInfo *)handle;
+   return info->height;
+ }
++
++void
++gui_set_kate_font(void *handle, const char *font)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  if (info->requested_font_name) {
++    free(info->requested_font_name);
++    info->requested_font_name = NULL;
++  }
++  if (font) {
++    info->requested_font_name = strdup(font);
++  }
++}
++
++const char*
++gui_get_kate_font(void *handle)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  return info->requested_font_name;
++}
++
++void
++gui_set_kate_font_size(void *handle, float size)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  info->font_relsize = size;
++  if (info->font_relsize<0.0f)
++    info->font_relsize = 1.0f;
++}
++
++float
++gui_get_kate_font_size(void *handle)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  return info->font_relsize;
++}
++
++void
++gui_set_kate_rendering(void *handle, int method)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  info->kate_rendering_method = method;
++}
++
++long
++gui_get_kate_rendering(void *handle)
++{
++  PluginWindowInfo  * info = (PluginWindowInfo *)handle;
++  return info->kate_rendering_method;
++}
++
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_mac.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_mac.c
+--- svn/annodex/browser_plugin/src/plugin_gui_mac.c	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_mac.c	2008-04-27 22:10:52.000000000 +0100
+@@ -444,6 +444,16 @@
+                     td.frame_data.cmml_size, FALSE);
+     }
+ 
++  // TODO: is this needed since I call onKateData from plugin_oggplay ?
++#if 0
++    /*
++     * Notify the plugin class that we've got some Kate data.
++     */
++    if (td.frame_data.kate_text != NULL) {
++      onKateData(info->plugin_instance, td.frame_data.kate_text);
++    }
++#endif
++
+     /*
+      * Do we have any data to play with?
+      */
+@@ -824,3 +834,35 @@
+   return ((PluginWindowInfo *)gui_handle)->media_height;
+ }
+ 
++void
++gui_set_kate_font(void *handle, const char *font)
++{
++}
++
++const char *
++gui_get_kate_font(void *handle)
++{
++  return NULL;
++}
++
++void
++gui_set_kate_font_size(void *handle, float relsize)
++{
++}
++
++float
++gui_get_kate_font_size(void *handle)
++{
++  return 1.0f;
++}
++
++void
++gui_set_kate_rendering(void *handle, int method)
++{
++}
++
++long
++gui_get_kate_rendering(void *handle)
++{
++  return 0;
++}
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_win32.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_win32.c
+--- svn/annodex/browser_plugin/src/plugin_gui_win32.c	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_win32.c	2008-04-27 22:11:38.000000000 +0100
+@@ -332,6 +332,7 @@
+   BOOL          has_audio = FALSE;
+   BOOL          has_video = FALSE;
+   BOOL          has_cmml = FALSE;
++  BOOL          has_kate = FALSE;
+   HWND          hWnd; 
+   RECT          r;
+   __int64       bytes, ref_time, offset;
+@@ -377,6 +378,7 @@
+   has_video = ((info->frame_data->video_data != NULL) && (info->frame_data->frame != NULL)) ? TRUE : FALSE;
+   has_audio = ((info->frame_data->samples != NULL) && (info->frame_data->size > 0)) ? TRUE : FALSE;
+   has_cmml = ((info->frame_data->cmml_strings != NULL) && (info->frame_data->cmml_size > 0)) ? TRUE : FALSE;
++  has_kate = (info->frame_data->kate_text != NULL) ? TRUE : FALSE;
+   
+   /* if there is need to update plugin GUI then go to next frame */
+   if ((has_video == FALSE) && (has_audio == FALSE)
+@@ -439,6 +441,14 @@
+     onCMMLData(info->plugin_instance, info->frame_data->cmml_strings, info->frame_data->cmml_size, 0);      
+   }      
+    
++  // TODO: is this needed since I call onKateData from plugin_oggplay ?
++#if 0
++  /* call Kate data callback using plugin's main thread call */
++  if (has_kate == TRUE) {    
++    onKateData(info->plugin_instance, info->frame_data->kate_text, 1);
++  }      
++#endif
++   
+   
+ #ifdef USE_AUDIO
+   if (info->audio_opened == TRUE) {
+@@ -634,3 +644,36 @@
+   }
+   return height;
+ }
++
++void
++gui_set_kate_font(void *handle, const char *font)
++{
++}
++
++const char *
++gui_get_kate_font(void *handle)
++{
++  return NULL;
++}
++
++void
++gui_set_kate_font_size(void *handle, float relsize)
++{
++}
++
++float
++gui_get_kate_font_size(void *handle)
++{
++  return 1.0f;
++}
++
++void
++gui_set_kate_rendering(void *handle, int method)
++{
++}
++
++long
++gui_get_kate_rendering(void *handle)
++{
++  return 0;
++}
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.c svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.c
+--- svn/annodex/browser_plugin/src/plugin_oggplay.c	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.c	2008-04-21 21:03:06.000000000 +0100
+@@ -85,6 +85,11 @@
+   int               duration;
+   int               available;
+   int               finished;
++  int               kate_track;
++  int               num_kate_tracks;
++  int               allocated_kate_slots;
++  char           ** current_kate_text;
++  ogg_int64_t     * current_kate_text_end_time;
+   nsPluginInstance *pluginInstance;
+ } PluginPointers;
+ 
+@@ -125,6 +130,8 @@
+   int               video_track   = -1;
+   int               audio_track   = -1;
+   ogg_int64_t		time_ref;
++  const char      *kate_language = "(no language)";
++  const char      *kate_category = "(no category)";
+ 
+   reader = oggplay_tcp_reader_new(pointers->location, pointers->proxy,
+       pointers->proxy_port);
+@@ -197,6 +204,12 @@
+ #endif
+     } else if (oggplay_get_track_type(player, i) == OGGZ_CONTENT_CMML) {
+       oggplay_set_track_active(player, i);
++    } else if (oggplay_get_track_type(player, i) == OGGZ_CONTENT_KATE) {
++      ++pointers->num_kate_tracks;
++      if (pointers->kate_track < 0) {
++        oggplay_set_track_active(player, i);
++        pointers->kate_track = i;
++      }
+     }
+   }
+ 
+@@ -210,6 +223,11 @@
+   }
+ #endif
+ 
++  if (pointers->kate_track >= 0) {
++    oggplay_get_kate_language(player, pointers->kate_track, &kate_language);
++    oggplay_get_kate_category(player, pointers->kate_track, &kate_category);
++  }
++
+   pointers->duration = oggplay_get_duration(pointers->player);
+ 
+   /*
+@@ -221,9 +239,11 @@
+    */
+   pointers->reference_track = (video_track != -1) ? video_track : audio_track;
+ 
+-  printf("video rate: %f audio rate: %d audio channels: %d callback pd: %f\n",
++  printf("video rate: %f audio rate: %d audio channels: %d kate: %s %s callback pd: %f\n",
+                   pointers->video_rate / 65536.0, pointers->audio_rate,
+-                  pointers->audio_channels, pointers->callback_period/65536.0);
++                  pointers->audio_channels,
++                  kate_language, kate_category,
++                  pointers->callback_period/65536.0);
+ 
+   pointers->finished = 0;
+ 
+@@ -313,6 +333,13 @@
+   pointers->seek_pos = 0;
+   pointers->seek_err = E_OGGPLAY_OK;
+ 
++  /* Should we be able to play several kate streams at the same time ? */
++  pointers->num_kate_tracks = 0;
++  pointers->kate_track = -1;
++  pointers->current_kate_text = NULL;
++  pointers->current_kate_text_end_time = NULL;
++  pointers->allocated_kate_slots = 0;
++
+   SEM_CREATE(pointers->seek_sem, 1);
+ 
+   SEM_CREATE(pointers->start_stop_sem, 1);
+@@ -337,6 +364,15 @@
+ 
+   pointers->shutdown_oggplay = 1;
+ 
++  if (pointers->current_kate_text) {
++    int n;
++    for (n=0; n<pointers->allocated_kate_slots; ++n) {
++      if (pointers->current_kate_text[n]) free(pointers->current_kate_text[n]);
++    }
++    free(pointers->current_kate_text);
++  }
++  if (pointers->current_kate_text_end_time) free(pointers->current_kate_text_end_time);
++
+   /*
+    * tell oggplay it's about to be shutdown
+    */
+@@ -355,6 +391,56 @@
+  
+ }
+ 
++static void set_kate_text(PluginPointers *pointers, int i, OggPlayDataHeader *header)
++{
++  const char *kate_text = oggplay_callback_info_get_text_data(header);
++  if (kate_text) {
++    size_t len = strlen(kate_text);
++
++    /* ensure enough space */
++    if (i >= pointers->allocated_kate_slots) {
++      int n, new_slots = i+1;
++      pointers->current_kate_text = (char**)realloc(pointers->current_kate_text, new_slots*sizeof(char*));
++      pointers->current_kate_text_end_time = (ogg_int64_t*)realloc(pointers->current_kate_text_end_time, new_slots*sizeof(ogg_int64_t));
++      for (n=pointers->allocated_kate_slots; n<new_slots; ++n) {
++        pointers->current_kate_text[n] = NULL;
++        pointers->current_kate_text_end_time[n] = 0;
++      }
++      pointers->allocated_kate_slots = new_slots;
++    }
++
++    if (pointers->current_kate_text[i]) free(pointers->current_kate_text[i]);
++    pointers->current_kate_text[i] = malloc(len+1);
++    memcpy(pointers->current_kate_text[i], kate_text, len);
++    pointers->current_kate_text[i][len] = 0;
++    pointers->current_kate_text_end_time[i] =
++      oggplay_callback_info_get_presentation_time(header) +
++      oggplay_callback_info_get_record_size(header);
++
++    if (i == pointers->kate_track) {
++      onKateData(pointers->pluginInstance, pointers->current_kate_text[i]);
++    }
++  }
++}
++
++static void refresh_kate_text(PluginPointers *pointers, PluginOggFrame *frame_data)
++{
++  int kate_track = pointers->kate_track;
++
++  if (kate_track>=0 && kate_track<pointers->allocated_kate_slots) {
++    if (pointers->current_kate_text[kate_track]) {
++      if (pointers->last_displayed_frame_time > pointers->current_kate_text_end_time[kate_track]) {
++        free(pointers->current_kate_text[kate_track]);
++        pointers->current_kate_text[kate_track] = NULL;
++      }
++    }
++    frame_data->kate_text = pointers->current_kate_text[kate_track];
++  }
++  else {
++    frame_data->kate_text = NULL;
++  }
++}
++
+ void
+ get_oggplay_frame(void *handle, PluginOggFrame *frame_data) {
+ 
+@@ -374,6 +460,7 @@
+   frame_data->samples = NULL;
+   frame_data->cmml_strings = NULL;
+   frame_data->oggplay_info = NULL;
++  frame_data->kate_text = NULL;
+   
+   /*
+    * player not yet ready
+@@ -440,11 +527,21 @@
+                   oggplay_callback_info_get_text_data(headers[j]);          
+         }
+         break;
++      case OGGPLAY_KATE:
++        /* we do not support overlapping text, just use the latest one */
++        required = oggplay_callback_info_get_required(track_info[i]);
++        if (required > 0) {
++          set_kate_text(pointers, i, headers[required-1]);
++        }
++        break;
+       default:
+         break;
+     }
+   }
+  
++  /* check kate text lifetime and either use it or dismiss it */
++  refresh_kate_text(pointers, frame_data);
++
+   return;
+ }
+ 
+@@ -509,6 +606,7 @@
+     free(frame_data->cmml_strings);
+     frame_data->cmml_strings = NULL;
+   }
++  frame_data->kate_text = NULL;
+   frame_data->size = 0;
+ 
+   oggplay_buffer_release(player,
+@@ -562,3 +660,103 @@
+   return ((PluginPointers *)handle)->duration;
+ }
+ 
++/* for the Javascript API, it's easier to index kate tracks by their index
++   as kate tracks, rather than by their stream index */
++static int kate_track_index_to_oggplay_track_index(PluginPointers *pointers, int idx)
++{
++  int n, count = oggplay_get_num_tracks(pointers->player);
++  if (idx == -1) return -1;
++  for (n=0; n<count; ++n) {
++    if (oggplay_get_track_type(pointers->player, n) == OGGZ_CONTENT_KATE) {
++      if (idx == 0) {
++        return n;
++      }
++      --idx;
++    }
++  }
++  /* a non existing kate track */
++  return -1;
++}
++
++static int oggplay_track_index_to_kate_track_index(PluginPointers *pointers, int idx)
++{
++  int n, count = 0;
++
++  if (idx == -1) {
++    return -1;
++  }
++
++  /* first check to see if this is really a kate track */
++  if (oggplay_get_track_type(pointers->player, idx) != OGGZ_CONTENT_KATE) {
++    return -1;
++  }
++  for (n=0; n<idx; ++n) {
++    if (oggplay_get_track_type(pointers->player, n) == OGGZ_CONTENT_KATE) {
++      ++count;
++    }
++  }
++  return count;
++}
++
++int
++get_oggplay_current_kate_track(void *handle)
++{
++  PluginPointers *pointers = (PluginPointers *)handle;
++  int track = pointers->kate_track;
++  return oggplay_track_index_to_kate_track_index(pointers, track);
++}
++
++int
++get_oggplay_num_kate_tracks(void *handle)
++{
++  return ((PluginPointers *)handle)->num_kate_tracks;
++}
++
++const char *
++get_oggplay_kate_track_language(void *handle, int track)
++{
++  const char *language = "";
++  PluginPointers *pointers = (PluginPointers *)handle;
++  if (track<0 || track>=pointers->num_kate_tracks) return language;
++  track = kate_track_index_to_oggplay_track_index(pointers, track);
++  oggplay_get_kate_language(pointers->player, track, &language);
++  return language;
++}
++
++const char *
++get_oggplay_kate_track_category(void *handle, int track)
++{
++  const char *category = "";
++  PluginPointers *pointers = (PluginPointers *)handle;
++  if (track<0 || track>=pointers->num_kate_tracks) return category;
++  track = kate_track_index_to_oggplay_track_index(pointers, track);
++  oggplay_get_kate_category(pointers->player, track, &category);
++  return category;
++}
++
++void
++select_oggplay_kate_track(void *handle, int track)
++{
++  PluginPointers *pointers = (PluginPointers *)handle;
++
++  /* ignore out of range tracks */
++  if (track<-1 || track>=pointers->num_kate_tracks) return;
++
++  track = kate_track_index_to_oggplay_track_index(pointers, track);
++
++  /* if the track to select is already selected, do nothing more */
++  if (track == pointers->kate_track) return;
++
++  /* deselect current track if any */
++  if (pointers->kate_track >= 0) {
++    oggplay_set_track_inactive(pointers->player, pointers->kate_track);
++    pointers->kate_track = -1;
++  }
++
++  /* select requested track if any */
++  if (track >= 0) {
++    pointers->kate_track = track;
++    oggplay_set_track_active(pointers->player, pointers->kate_track);
++  }
++}
++
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.h svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.h
+--- svn/annodex/browser_plugin/src/plugin_oggplay.h	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.h	2008-04-21 20:21:27.000000000 +0100
+@@ -63,6 +63,8 @@
+    char          ** cmml_strings;
+    int              cmml_size;
+    void           * oggplay_info;
++   // kate data related
++   char           * kate_text;
+ } PluginOggFrame;
+ 
+ void *
+@@ -103,4 +105,11 @@
+ int get_video_rate(void *ptrs);
+ int get_callback_period(void *ptrs);
+ 
++int get_oggplay_num_kate_tracks(void *handle);
++int get_oggplay_current_kate_track(void *handle);
++const char *get_oggplay_kate_track_language(void *handle, int track);
++const char *get_oggplay_kate_track_category(void *handle, int track);
++void select_oggplay_kate_track(void *handle, int track);
++void set_oggplay_kate_font(void *handle, const char *font);
++
+ #endif //_PLUGIN_OGGPLAY_H
+diff -ru -x autogen.sh svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp svn/annodex/browser_plugin-with-kate/src/support/nsScriptablePeer.cpp
+--- svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp	2008-04-04 15:14:29.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/src/support/nsScriptablePeer.cpp	2008-04-27 22:08:48.000000000 +0100
+@@ -345,3 +345,83 @@
+       mPlugin->registerOnMouseClickCallback(cbObj);
+     return NS_OK;
+ }
++
++NS_IMETHODIMP nsScriptablePeer::GetNumKateTracks(PRInt32 *_retval) {
++  *_retval = 0;
++  if (mPlugin)
++    *_retval = mPlugin->getNumKateTracks();
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetCurrentKateTrack(PRInt32 *_retval) {
++  *_retval = -1;
++  if (mPlugin)
++    *_retval = mPlugin->getCurrentKateTrack();
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetKateTrackLanguage(PRInt32 track, char **_retval) {
++  *_retval = NULL;
++  if (mPlugin)
++    *_retval = mPlugin->getKateTrackLanguage(track);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetKateTrackCategory(PRInt32 track, char **_retval) {
++  *_retval = NULL;
++  if (mPlugin)
++    *_retval = mPlugin->getKateTrackCategory(track);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::SelectKateTrack(PRInt32 track) {
++  if (mPlugin)
++    mPlugin->selectKateTrack(track);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::RegisterKateCallback(nsILibOggCallbackString *cbObj) {
++  if (mPlugin)
++    mPlugin->registerKateCallback(cbObj);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::SetKateFont(const char *font) {
++  if (mPlugin)
++    mPlugin->setKateFont(font);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetKateFont(char **_retval) {
++  *_retval = NULL;
++  if (mPlugin)
++    *_retval = mPlugin->getKateFont();
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::SetKateFontSize(float size) {
++  if (mPlugin)
++    mPlugin->setKateFontSize(size);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetKateFontSize(float *_retval) {
++  *_retval = 0.0f;
++  if (mPlugin)
++    *_retval = mPlugin->getKateFontSize();
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::SetKateRendering(PRInt32 method) {
++  if (mPlugin)
++    mPlugin->setKateRendering(method);
++  return NS_OK;
++}
++
++NS_IMETHODIMP nsScriptablePeer::GetKateRendering(PRInt32 *_retval) {
++  *_retval = 0;
++  if (mPlugin)
++    *_retval = mPlugin->getKateRendering();
++  return NS_OK;
++}
++
+diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/browser_plugin-with-kate/test/test.html
+--- svn/annodex/browser_plugin/test/test.html	2008-04-04 15:14:31.000000000 +0100
++++ svn/annodex/browser_plugin-with-kate/test/test.html	2008-04-27 22:14:00.000000000 +0100
+@@ -34,6 +34,8 @@
+ <label for="c2"><input id="c2" type="checkbox" name="cbEndPlay" checked/>EndPlay</label><br>
+ <input type="button" value="Register:" onclick='RegisterPlaylistCallback()'/>
+ <label for="c3"><input id="c3" type="checkbox" name="cbPlaylist" checked/>Playlist</label><br>
++<input type="button" value="Register:" onclick='RegisterKateCallback()'/>
++<label for="c4"><input id="c4" type="checkbox" name="cbKate" checked/>Kate</label><br>
+ </form>
+ <br><br>
+ <input type="button" value="Clear CMML" onclick='clearCMML()'/><br>
+@@ -51,6 +53,7 @@
+ <td colspan="2"><i>Standard functions</i><hr></td>
+ <td width="30"></td>
+ <td colspan="2"><i>Playlist functions</i><hr></td>
++<td colspan="1"><i>Kate functions</i><hr></td>
+ </tr>
+ <tr valign="top">
+ <td width="180">
+@@ -88,6 +91,15 @@
+ <tt>A </tt><input type="button" value="Retrieve annotations at" onclick='RetrieveAnnotationsAt()'/><br>
+ <tt>L </tt><input type="button" value="Get movie length at" onclick='GetMovieLengthAt()'/><br>
+ </td><td>
++<tt>K </tt><input type="button" value="Next Kate track" onclick='NextKateTrack()'/><br>
++<tt>N </tt><input type="button" value="Get num Kate tracks" onclick='GetNumKateTracks()'/><br>
++<tt>W </tt><input type="button" value="Get current Kate track" onclick='GetCurrentKateTrack()'/><br>
++<tt>C </tt><input type="button" value="Get Kate track category" onclick='GetKateTrackCategory()'/><br>
++<tt>J </tt><input type="button" value="Get Kate track language" onclick='GetKateTrackLanguage()'/><br>
++<tt>E </tt><input type="button" value="Set Kate font" onclick='SetKateFont()'/><br>
++<tt>S </tt><input type="button" value="Set Kate font size" onclick='SetKateFontSize()'/><br>
++<tt>R </tt><input type="button" value="Next Kate render type" onclick='NextKateRenderType()'/><br>
++</td><td>
+ </td>
+ </tr>
+ </table>
+@@ -100,7 +112,7 @@
+ <tr valign="top">
+ <td>
+ Input<br>
+-<input type="text" name="ifield" size="20"/><br>
++<input type="text" name="ifield" size="20" onfocus='input_focus=1;' onblur='input_focus=0;' /><br>
+ <p style="margin-top:5;font-size:85%"><i>Space sets focus here</i></p>
+ </td>
+ <td width="50"></td>
+@@ -144,6 +156,7 @@
+ var input  = document.api.ifield;
+ var output = document.api.ofield;
+ var movies = document.setmovie.list;
++var input_focus = 0;
+ 
+ function GetVersionString() {
+   addOutput("Version: " + plugin.getVersionString());
+@@ -331,6 +344,20 @@
+   }
+ }
+ 
++function RegisterKateCallback() {
++  if (document.callbacks.cbKate.checked) {
++    plugin.registerKateCallback(
++      {
++        call : function(s) {showKate(s);}
++      }
++    );
++    addOutput("Registered Kate callback");
++  } else {
++    plugin.registerKateCallback(null);
++    addOutput("Unregistered Kate callback");
++  }
++}
++
+ function RegisterEndPlayCallback() {
+   if (document.callbacks.cbEndPlay.checked) {
+     plugin.registerEndPlayCallback(
+@@ -395,6 +422,11 @@
+   }
+ }
+ 
++function showKate(data) {
++  /* much simpler, just text data, might want to pipe it to text-to-speech */
++  addOutput("Kate track " + plugin.getCurrentKateTrack() + ": " + data);
++}
++
+ function endPlay() {
+   addOutput("End of play callback received!");
+ }
+@@ -410,10 +442,71 @@
+   }
+ }
+ 
++function NextKateTrack() {
++  i = plugin.getCurrentKateTrack();
++  i++;
++  if (i >= plugin.getNumKateTracks()) {
++    i = -1;
++  }
++  plugin.selectKateTrack(i);
++
++  GetCurrentKateTrack()
++}
++
++function GetNumKateTracks() {
++  i = plugin.getNumKateTracks();
++  addOutput("The current movie contains " + (i>0?i:"no") + " Kate track" + (i==1?"":"s"));
++}
++
++function GetCurrentKateTrack() {
++  i = plugin.getCurrentKateTrack();
++  if (i>=0) {
++    addOutput("The current Kate track is " + i + " (" + plugin.getKateTrackLanguage(i) + " " + plugin.getKateTrackCategory(i) + ")");
++  }
++  else {
++    addOutput("No Kate track currently selected");
++  }
++}
++
++function GetKateTrackLanguage() {
++  i = getInput();
++  addOutput("Kate track " + i + " language is " + plugin.getKateTrackLanguage(i));
++}
++
++function GetKateTrackCategory() {
++  i = getInput();
++  addOutput("Kate track " + i + " category is " + plugin.getKateTrackCategory(i));
++}
++
++function SetKateFont() {
++  i = input.value;
++  plugin.setKateFont(i);
++}
++
++function SetKateFontSize() {
++  i = getInputFloat();
++  plugin.setKateFontSize(i);
++}
++
++function NextKateRenderType() {
++  i = plugin.getKateRendering();
++  i++;
++  if (i==3) i=0;
++  plugin.setKateRendering(i);
++
++  switch (i) {
++  case 0: addOutput("Kate streams not rendered"); break;
++  case 1: addOutput("Kate streams rendered as text"); break;
++  case 2: addOutput("Kate streams rendered as overlays (not implemented yet)"); break;
++  }
++}
++
+ function keyPressed(e) {
+   // unused letters:
+   //  ---d---h------------u---y-
+-  //  -BCDE-GHIJK--N-PQRS-U-WXYZ
++  //  -B-D--GHI------PQ---U--XYZ
++
++  if (input_focus) return;
+ 
+   switch (String.fromCharCode(e.which)) {
+     case "p": Play();  break;
+@@ -453,9 +546,21 @@
+     case "-": changeVolume(-1);  break;
+     case " ": input.focus();  break;
+     case "*": togglePLTimer();  break;
++    case "K": NextKateTrack();  break;
++    case "N": GetNumKateTracks();  break;
++    case "C": GetKateTrackCategory();  break;
++    case "J": GetKateTrackLanguage();  break;
++    case "W": GetCurrentKateTrack();  break;
++    case "E": SetKateFont();  break;
++    case "S": SetKateFontSize();  break;
++    case "R": NextKateRenderType(); break;
+   }
+ }
+ 
++function doNothing(e) {
++  addOutput("nothing")
++}
++
+ function skip(dir) {
+   i = getInput();
+   if (i <= 0) i = 1000;
+@@ -509,6 +614,11 @@
+   return isNaN(i) ? 0 : i;
+ }
+ 
++function getInputFloat() {
++  i = parseFloat(input.value);
++  return isNaN(i) ? 0 : i;
++}
++
+ 
+ var outLines = 0;
+ 

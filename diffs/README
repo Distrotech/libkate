@@ -5,7 +5,7 @@ will be contributed to the relevant projects.
 
 
 
- * oggmerge (oggmerge.diff)
+ * oggmerge (oggmerge.diff) * APPLIED *
 
 This adds support for Kate, Theora, Speex and Skeleton, and adds various
 other little bits.
@@ -33,13 +33,13 @@ In band markup is parsed and tracked, but most of it is ignored.
 
 
 
- * oggsplit (oggsplit.diff)
+ * oggsplit (oggsplit.diff) * APPLIED *
 
 This adds support for Kate bitstreams.
 
 
 
- * liboggz (oggz_kate.diff)
+ * liboggz (oggz_kate.diff) * APPLIED *
 
 This adds support for Kate bitstreams.
 
@@ -58,13 +58,13 @@ This adds support for Kate bitstreams.
 
 
 
- * ffmpeg2theora (ffmpeg2theora-svn-kate.diff)
+ * ffmpeg2theora (ffmpeg2theora-svn-kate.diff) * APPLIED *
 
 This allows creating multiplexed Kate streams from .srt files.
 
 
 
- * icecast 2 (icecast-2.3.1-with-kate.diff)
+ * icecast 2 (icecast-2.3.1-with-kate.diff) * APPLIED *
 
 This adds support for Kate bitstreams.
 
@@ -82,7 +82,7 @@ This allows Kate streams to be muxed in Matroska streams.
 
 
 
- * VLC (vlc-with-kate.diff)
+ * VLC (vlc-with-kate.diff) * APPLIED *
 
 This adds text only Kate decoding support (eg, no styles, regions, or
 motions support).
@@ -94,4 +94,11 @@ It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 This adds text only Kate decoding support (eg, no styles, regions, or
 motions support).
+
+
+
+ * Annodex Mozilla browser plugin (browser_plugin-with-kate.diff)
+
+This adds support for Kate streams as subtitles, and a simple Javascript API
+to manipulate those (Linux only implementation)
 
