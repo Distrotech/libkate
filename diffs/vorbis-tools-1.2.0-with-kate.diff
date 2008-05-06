@@ -1,11 +1,11 @@
-diff -x aclocal.m4 -x config.h -x config.h.in -x config.log -x config.status -x configure -x libtool -x autom4te.cache -x '*.o' -x '*.Po' -x Makefile -x Makefile.in -x '*.rej' -x '*~' -x POTFILES -x stamp-h1 -urN vorbis-tools-1.2.0/configure.ac vorbis-tools-1.2.0-kate/configure.ac
---- vorbis-tools-1.2.0/configure.ac	2008-03-03 05:37:31.000000000 +0000
-+++ vorbis-tools-1.2.0-kate/configure.ac	2008-03-23 13:36:10.000000000 +0000
+diff -ru vorbis-tools/configure.ac vorbis-tools-with-kate/configure.ac
+--- vorbis-tools/configure.ac	2008-04-15 13:57:29.000000000 +0100
++++ vorbis-tools-with-kate/configure.ac	2008-05-06 21:16:31.000000000 +0100
 @@ -100,6 +100,7 @@
  AC_ARG_ENABLE(vorbiscomment, [  --disable-vorbiscomment   Skip building vorbiscomment], build_vorbiscomment="$enableval", build_vorbiscomment="yes")
- AC_ARG_WITH(flac,     [  --without-flac     Do not compile FLAC support], build_flac=no, build_flac="yes")
- AC_ARG_WITH(speex,    [  --without-speex    Do not compile Speex support], build_speex=no, build_speex="yes")
-+AC_ARG_WITH(kate,     [  --without-kate     Do not compile Kate support], build_kate=no, build_kate="yes")
+ AC_ARG_WITH(flac,     [  --without-flac     Do not compile FLAC support], build_flac="$withval", build_flac="yes")
+ AC_ARG_WITH(speex,    [  --without-speex    Do not compile Speex support], build_speex="$withval", build_speex="yes")
++AC_ARG_WITH(kate,     [  --without-kate     Do not compile Kate support], build_kate="$withval", build_kate="yes")
  
  dnl --------------------------------------------------
  dnl Check for generally needed libraries
@@ -66,9 +66,9 @@ diff -x aclocal.m4 -x config.h -x config.h.in -x config.log -x config.status -x 
 +will be built with LIMITED Kate read support.])
 +    fi         
  fi
-diff -x aclocal.m4 -x config.h -x config.h.in -x config.log -x config.status -x configure -x libtool -x autom4te.cache -x '*.o' -x '*.Po' -x Makefile -x Makefile.in -x '*.rej' -x '*~' -x POTFILES -x stamp-h1 -urN vorbis-tools-1.2.0/ogginfo/Makefile.am vorbis-tools-1.2.0-kate/ogginfo/Makefile.am
---- vorbis-tools-1.2.0/ogginfo/Makefile.am	2008-03-03 05:37:25.000000000 +0000
-+++ vorbis-tools-1.2.0-kate/ogginfo/Makefile.am	2008-03-11 19:34:29.000000000 +0000
+diff -ru vorbis-tools/ogginfo/Makefile.am vorbis-tools-with-kate/ogginfo/Makefile.am
+--- vorbis-tools/ogginfo/Makefile.am	2008-04-15 13:57:29.000000000 +0100
++++ vorbis-tools-with-kate/ogginfo/Makefile.am	2008-05-06 21:15:12.000000000 +0100
 @@ -16,7 +16,7 @@
  
  INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @I18N_CFLAGS@
@@ -78,9 +78,9 @@ diff -x aclocal.m4 -x config.h -x config.h.in -x config.log -x config.status -x 
  ogginfo_DEPENDENCIES = @SHARE_LIBS@
  
  ogginfo_SOURCES = $(ogginfosources)
-diff -x aclocal.m4 -x config.h -x config.h.in -x config.log -x config.status -x configure -x libtool -x autom4te.cache -x '*.o' -x '*.Po' -x Makefile -x Makefile.in -x '*.rej' -x '*~' -x POTFILES -x stamp-h1 -urN vorbis-tools-1.2.0/ogginfo/ogginfo2.c vorbis-tools-1.2.0-kate/ogginfo/ogginfo2.c
---- vorbis-tools-1.2.0/ogginfo/ogginfo2.c	2008-03-03 05:37:25.000000000 +0000
-+++ vorbis-tools-1.2.0-kate/ogginfo/ogginfo2.c	2008-03-23 13:39:01.000000000 +0000
+diff -ru vorbis-tools/ogginfo/ogginfo2.c vorbis-tools-with-kate/ogginfo/ogginfo2.c
+--- vorbis-tools/ogginfo/ogginfo2.c	2008-04-15 13:57:30.000000000 +0100
++++ vorbis-tools-with-kate/ogginfo/ogginfo2.c	2008-05-06 21:15:12.000000000 +0100
 @@ -21,6 +21,10 @@
  #include <ogg/ogg.h>
  #include <vorbis/codec.h>
