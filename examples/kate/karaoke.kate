@@ -13,7 +13,7 @@ kate {
     // 10 seconds
     0:0.0 --> 0:5.00
     region "r1"
-    text "L'amour est enfant<br>de boh&#e8;me"
+    text "L'amour est enfant\nde boh&#e8;me"
     //    0 2   6   0  3   7     9  2   6
     simple_timed_glyph_marker {
       pause for 0:1.0
@@ -32,7 +32,7 @@ kate {
     // 10 seconds
     0:5.0 --> 0:10.00
     region "r2"
-    text "Il n'a jamais, jamais<br>connu de loi"
+    text "Il n'a jamais, jamais\nconnu de loi"
     //    01   5  8   2   6   0     2  5  8   2
     simple_timed_glyph_style_morph {
       from style "karaoke1" to style "karaoke2"
@@ -63,7 +63,7 @@ kate {
       "ja"       at 1.9
       "mais, "   at 2.3
       "ja"       at 2.5
-      "mais<br>" at 2.7
+      "mais\n"   at 2.7
       "co"       at 2.9
       "nnu "     at 3.1
       "de "      at 3.5
