@@ -2,7 +2,7 @@
 kate {
   defs {
     timebase 00:01.00
-    define style { text color 255 0 0 255 background color 0 0 0 64 }
+    define style { text color 255 0 0 255 background color 0 0 0 192 }
     define region { percent position 20 60 size 60 20 }
   }
 
