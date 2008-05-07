@@ -64,9 +64,12 @@ OBJS_SHARED=$(foreach module, $(MODULES),$(OBJDIR)/shared/$(module).o)
 LIBOGGKATE_OBJS_STATIC=$(OBJDIR)/static/kate_ogg.o
 LIBOGGKATE_OBJS_SHARED=$(OBJDIR)/shared/kate_ogg.o
 
+STATICLIBS=$(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
+SHAREDLIBS=$(LIBDIR)/liboggkate.$(VERSION).so $(LIBDIR)/libkate.$(VERSION).so
+
 all: staticlib sharedlib tools #doc
-staticlib: $(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
-sharedlib: $(LIBDIR)/liboggkate.$(VERSION).so $(LIBDIR)/libkate.$(VERSION).so
+staticlib: $(STATICLIBS)
+sharedlib: $(SHAREDLIBS)
 
 LEX=$(shell which flex 2> /dev/null)
 YACC=$(shell which bison 2> /dev/null)
@@ -165,10 +168,10 @@ clean:
 	rm -f $(LIBOGGKATE_OBJS_STATIC) $(OBJS_STATIC:.o=.d)
 	rm -f $(OBJS_SHARED) $(OBJS_SHARED:.o=.d)
 	rm -f $(LIBOGGKATE_OBJS_SHARED) $(OBJS_SHARED:.o=.d)
-	rm -f $(LIBDIR)/lib{,ogg}kate.a
-	rm -f $(LIBDIR)/lib{,ogg}kate.$(VERSION).so
-	rm -f $(LIBDIR)/lib{,ogg}kate.so
-	rm -f $(LIBDIR)/lib{,ogg}kate.so.$(SONAME_MAJOR)
+	rm -f $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a
+	rm -f $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so
+	rm -f $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so
+	rm -f $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR)
 	rm -f tools/encoder
 	rm -f tools/decoder
 	rm -f $(OBJDIR)/*.[od]
@@ -178,12 +181,12 @@ clean:
 .PHONY: install
 install:
 	mkdir -p $(PREFIX)/include/kate
-	cp include/kate/{,ogg}kate.h $(PREFIX)/include/kate/
+	cp include/kate/kate.h include/kate/oggkate.h $(PREFIX)/include/kate/
 	mkdir -p $(PREFIX)/lib
-	cp $(LIBDIR)/lib{,ogg}kate.a $(PREFIX)/lib/
-	cp $(LIBDIR)/lib{,ogg}kate.$(VERSION).so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/lib{,ogg}kate.so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/lib{,ogg}kate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
+	cp $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a $(PREFIX)/lib/
+	cp $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so $(PREFIX)/lib/
+	cp -P $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so $(PREFIX)/lib/
+	cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/lib/pkgconfig
 	cat misc/pkgconfig/kate.pc\
            | awk -v px=$(PREFIX) '/^prefix=/ {print "prefix="px; next} {print}' \
@@ -194,14 +197,14 @@ install:
 
 .PHONY: uninstall
 uninstall:
-	-rm -f $(PREFIX)/lib/lib{,ogg}kate.a
-	-rm -f $(PREFIX)/lib/lib{,ogg}kate.$(VERSION).so
-	-rm -f $(PREFIX)/lib/lib{,ogg}kate.so
-	-rm -f $(PREFIX)/lib/lib{,ogg}kate.so.$(SONAME_MAJOR)
+	-rm -f $(PREFIX)/lib/libkate.a $(PREFIX)/lib/liboggkate.a
+	-rm -f $(PREFIX)/lib/libkate.$(VERSION).so $(PREFIX)/lib/liboggkate.$(VERSION).so
+	-rm -f $(PREFIX)/lib/libkate.so $(PREFIX)/lib/liboggkate.so
+	-rm -f $(PREFIX)/lib/libkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/liboggkate.so.$(SONAME_MAJOR)
 	-rm -f $(PREFIX)/include/kate/kate.h
 	-rm -f $(PREFIX)/include/kate/oggkate.h
 	-rmdir $(PREFIX)/include/kate
-	-rm -f $(PREFIX)/lib/pkgconfig/{,ogg}kate.pc
+	-rm -f $(PREFIX)/lib/pkgconfig/kate.pc $(PREFIX)/lib/pkgconfig/oggkate.pc
 
 distname:=libkate-$(VERSION)
 .PHONY: dist
@@ -257,13 +260,14 @@ endif
 .PHONY: check
 check: tools/decoder
 	@echo " Checking Kate namespace"
-	@! nm -a $(LIBDIR)/lib{,ogg}kate.{a,so} \
+	@! nm -a $(STATICLIBS) $(SHAREDLIBS) \
          | grep "^[0-9a-z]\{8\} [A-T] [^\.]" \
 	 | grep -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
          | grep -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
 	@! grep -E '[^_](malloc|realloc|free_calloc|memalign)' \
-           src/* include/kate/* tools/katedesc.h tools/{en,de}coder.c tools/*.[ly] \
+           src/* include/kate/* \
+           tools/katedesc.h tools/encoder.c tools/decoder.c tools/*.[ly] \
 	 | grep -v "^include/kate/kate.h:#define kate_"
 	@echo " Checking forgotten debug traces"
 	@! grep -E '[^sn]printf' \
