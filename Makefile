@@ -265,7 +265,7 @@ check: tools/decoder
 	 | grep -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
          | grep -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
-	@! grep -E '[^_](malloc|realloc|free_calloc|memalign)' \
+	@! grep -E '[^_](malloc|realloc|free|calloc|memalign)\(' \
            src/* include/kate/* \
            tools/katedesc.h tools/encoder.c tools/decoder.c tools/*.[ly] \
 	 | grep -v "^include/kate/kate.h:#define kate_"
