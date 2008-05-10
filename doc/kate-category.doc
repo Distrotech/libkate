@@ -1,0 +1,27 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page categories Kate categories
+
+The category field in the Kate ID header is an ASCII string meant to be
+recognizable automatically (eg, it is kept as non localized ASCII). This
+page lists examples of categories to use for various purposes.
+It is suggested that applications recognizing well known categories such
+as the ones described below may display to the user a localized version
+of them (eg, when a stream has a category of "subtitles", an application
+set up for the French locale might display the category as "sous-titres".
+
+\li \c subtitles Movie (or other) subtitles, either as (possibly formatted) text, or SPU style images.
+
+\li \c lyrics Song lyrics (typically in the language they are sung in)
+
+*/
+
