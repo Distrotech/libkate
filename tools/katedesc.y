@@ -146,6 +146,7 @@ static char *catstrings(char *s1,const char *s2)
   s=(char*)kate_realloc(s1,len);
   if (!s) { yyerror("out of memory"); exit(-1); }
   if (s1) strcat(s,s2); else strcpy(s,s2);
+
   return s;
 }
 
@@ -737,7 +738,7 @@ static char *expand_numeric_entities(const char *text)
     int ret=kate_text_get_character(kate_utf8,&text,&rlen0);
     if (ret<0) {
       yyerrorf("failed to read character: %d",ret);
-      free(newtext);
+      kate_free(newtext);
       return NULL;
     }
     c=ret;
@@ -770,7 +771,7 @@ static char *expand_numeric_entities(const char *text)
       ret=kate_text_set_character(kate_utf8,c,&newtextptr,&wlen0);
       if (ret<0) {
         yyerrorf("failed to write character: %d",ret);
-        free(newtext);
+        kate_free(newtext);
         return NULL;
       }
     }
@@ -779,9 +780,153 @@ static char *expand_numeric_entities(const char *text)
   return newtext;
 }
 
-static void set_event_text(kd_event *ev,const char *text)
+static char *getline(const char **text)
+{
+  size_t rlen0=strlen(*text)+1;
+  int newline,in_newline=0;
+  const char *start_of_line=*text;
+  int c;
+
+  while (1) {
+    const char *ptr=*text;
+    int ret=kate_text_get_character(kate_utf8,text,&rlen0);
+    if (ret<0) {
+      yyerrorf("failed to read character: %d",ret);
+      return NULL;
+    }
+    c=ret;
+    if (c==0) {
+      /* end of the string, return everything */
+      size_t len=strlen(start_of_line);
+      char *line=(char*)kate_malloc(len+1);
+      memcpy(line,start_of_line,len+1);
+      --*text; /* do not push past the 0 */
+      return line;
+    }
+    newline=(strchr("\n\r",c)!=NULL);
+    if (!newline && in_newline) {
+      /* we are at the start of a new line */
+      char *line=(char*)kate_malloc(ptr-start_of_line);
+      memcpy(line,start_of_line,ptr-start_of_line);
+      line[ptr-start_of_line-1]=0;
+      --*text; /* do not push past the start of the new line */
+      return line;
+    }
+    in_newline=newline;
+  }
+}
+
+static void trimend(char *line,size_t rlen0,int *eol)
+{
+  int ret;
+  int c;
+  int ws;
+  char *text=line;
+
+  if (!line) return;
+  
+  ret=kate_text_get_character(kate_utf8,(const char**)&text,&rlen0);
+  if (ret<0) {
+    yyerrorf("failed to read character: %d",ret);
+    return;
+  }
+  c=ret;
+  if (c==0) {
+    *eol=1;
+    return;
+  }
+
+  trimend(text,rlen0,eol);
+
+  ws=(strchr(" \t\n\r",c)!=NULL);
+  if (*eol && ws) *line=0;
+  if (!ws) *eol=0;
+}
+
+static char *trimline(const char *line)
+{
+  char *trimmed;
+  size_t rlen0=strlen(line)+1;
+  int c;
+  int eol=0;
+
+  /* first seek to the first non whitespace character in the line */
+  while (1) {
+    const char *ptr=line;
+    int ret=kate_text_get_character(kate_utf8,&ptr,&rlen0);
+    if (ret<0) {
+      yyerrorf("failed to read character: %d",ret);
+      return NULL;
+    }
+    c=ret;
+    if (!c || !strchr(" \t",c)) {
+      /* we found a non whitespace, or an end of line, stop */
+      break;
+    }
+    /* we can advance the start of the line */
+    line=ptr;
+  }
+
+  rlen0=strlen(line)+1;
+  trimmed=(char*)kate_malloc(rlen0);
+  memcpy(trimmed,line,rlen0);
+  trimend(trimmed,strlen(trimmed)+1,&eol);
+  return trimmed;
+}
+
+static char *trimtext(const char *text)
+{
+  char *newtext=NULL;
+  while (text && *text) {
+    char *line=getline(&text);
+    char *trimmed=trimline(line);
+    kate_free(line);
+    if (*trimmed && strcmp(trimmed,"\n")) {
+      /* ignore empty lines */
+      if (newtext) newtext=catstrings(newtext,"\n");
+      newtext=catstrings(newtext,trimmed);
+    }
+    kate_free(trimmed);
+  }
+  return newtext;
+}
+
+static char *trimtext_pre(const char *text)
+{
+  /* in pre, we just kill a new line at start and one at the end, if any */
+  size_t len=strlen(text);
+  char *newtext=(char*)kate_malloc(len+1);
+
+  /* start */
+  if (*text=='\n') {
+    memcpy(newtext,text+1,len);
+    --len;
+  }
+  else {
+    memcpy(newtext,text,len+1);
+  }
+
+  /* end */
+  if (len>0 && newtext[len-1]=='\n') {
+    newtext[len-1]=0;
+  }
+
+  return newtext;
+}
+
+static void backslash_n_to_newline(char *text)
+{
+  char *ptr=text;
+  while ((ptr=strstr(ptr,"\\n"))) {
+    *ptr='\n';
+    memmove(ptr+1,ptr+2,strlen(ptr+2)+1);
+  }
+}
+
+static void set_event_text(kd_event *ev,const char *text,int pre)
 {
   char *newtext;
+  size_t len;
 
   if (ev->text) {
     yyerrorf("text already set (to %s, trying to set to %s)",ev->text,text);
@@ -792,9 +937,23 @@ static void set_event_text(kd_event *ev,const char *text)
     return;
   }
 
-  newtext=expand_numeric_entities(text);
-  if (!newtext) return;
-  ev->text=newtext;
+  len=strlen(text);
+  newtext=(char*)kate_malloc(len+1);
+  memcpy(newtext,text,len+1);
+  backslash_n_to_newline(newtext);
+
+  if (!pre) {
+    char *trimmed_newtext=trimtext(newtext);
+    kate_free(newtext);
+    ev->text=expand_numeric_entities(trimmed_newtext);
+    kate_free(trimmed_newtext);
+  }
+  else {
+    char *trimmed_newtext=trimtext_pre(newtext);
+    kate_free(newtext);
+    ev->text=expand_numeric_entities(trimmed_newtext);
+    kate_free(trimmed_newtext);
+  }
 }
 
 static void set_event_t0_t1(kd_event *ev,kate_float t0,kate_float t1)
@@ -1115,7 +1274,7 @@ static void add_glyph_transition_to_text(const char *text,kate_float dt,kate_flo
 
   newtext=expand_numeric_entities(kevent.text);
   if (!newtext) return;
-  free(kevent.text);
+  kate_free(kevent.text);
   kevent.text=newtext;
 
   add_glyph_transition(get_num_glyphs(kevent.text)-1,dt,ystart,ytop,absolute,pause_fraction);
@@ -1500,7 +1659,7 @@ static void cleanup_memory(void)
 %token <number> ID BOLD ITALICS UNDERLINE STRIKE JUSTIFY
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
-%token <number> HORIZONTAL VERTICAL CLIP
+%token <number> HORIZONTAL VERTICAL CLIP PRE
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -1813,8 +1972,9 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
                     { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
             | kd_optional_secondary STYLE { init_style(&kstyle); } '{' kd_style_defs '}'
                     { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
-            | TEXT strings { set_event_text(&kevent,$2); kate_free($2); }
-            | strings { set_event_text(&kevent,$1); kate_free($1); }
+            | TEXT strings { set_event_text(&kevent,$2,0); kate_free($2); }
+            | PRE TEXT strings { set_event_text(&kevent,$3,1); kate_free($3); }
+            | strings { set_event_text(&kevent,$1,0); kate_free($1); }
             | MOTION { init_motion(); } '{' kd_motion_defs '}' { kd_add_event_motion(kmotion); }
             | MOTION kd_motion_name_or_index { kd_add_event_motion_index($2); }
             | SIMPLE_TIMED_GLYPH_MARKER {init_simple_glyph_pointer_motion(); } '{' kd_simple_timed_glyph_marker_defs '}'

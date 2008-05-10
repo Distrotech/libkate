@@ -30,7 +30,6 @@ static void replace_macro(const char *name);
 static const char *find_macro(const char *name);
 
 static void process_nlines(const char *text);
-static void backslash_n_to_newline(char *text);
 
 static int freeze_nlines=0;
 
@@ -195,6 +194,7 @@ vertical                     {return VERTICAL;}
 png                          {return PNG;}
 justify                      {return JUSTIFY;}
 clip                         {return CLIP;}
+pre                          {return PRE;}
 
 
 left_to_right|l2r|ltr|ltr_ttb|l2r_t2b        {return L2R_T2B;}
@@ -222,7 +222,6 @@ pause                              {return PAUSE;}
 
 {double_quoted_string}         {
                                  katedesc_text[strlen(katedesc_text)-1]=0;
-                                 backslash_n_to_newline(katedesc_text);
                                  lvalp->string=katedesc_text+1;
                                  process_nlines(katedesc_text);
                                  return STRING;
@@ -328,15 +327,6 @@ static void process_nlines(const char *text)
 {
   if (!freeze_nlines) {
     nlines+=get_nlines(text);
-  }
-}
-
-static void backslash_n_to_newline(char *text)
-{
-  char *ptr=text;
-  while ((ptr=strstr(ptr,"\\n"))) {
-    *ptr='\n';
-    memmove(ptr+1,ptr+2,strlen(ptr+2)+1);
   }
 }
 

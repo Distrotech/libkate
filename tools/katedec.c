@@ -780,7 +780,7 @@ static kate_comment kc;
                 if (ev->text_directionality!=ki.text_directionality) {
                   fprintf(fout,"    directionality %s\n",directionality2text(ev->text_directionality));
                 }
-                fprintf(fout,"    text \"");
+                fprintf(fout,"    pre text \"");
                 write_text(fout,ev->text,ev->len0);
                 fprintf(fout,"\"\n");
                 if (ev->region) {
