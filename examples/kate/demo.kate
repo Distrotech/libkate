@@ -170,10 +170,10 @@ kate {
     define style "morph_dst" { text color 0 0 0 255 vbottom hcenter }
 
     /* predefined regions to be referenced in data packets */
-    define region "katetv"     { percent    position  -20   5    size  115   5    default style "katetv" }
-    define region "scrollbar"  { percent    position    0  85    size  100  10    default style "scrollbar_text" }
-    define region "centerbox"  { percent    position   15  15    size   70  70    default style "centerbox" }
-    define region "321"        { percent    position    0   0    size  100 100    default style "321" }
+    define region "katetv"     { percent    position  -20   5    size  115   5    clip  default style "katetv" }
+    define region "scrollbar"  { percent    position    0  85    size  100  10    clip  default style "scrollbar_text" }
+    define region "centerbox"  { percent    position   15  15    size   70  70          default style "centerbox" }
+    define region "321"        { percent    position    0   0    size  100 100          default style "321" }
 
     /* predefined curves to be referenced in data packets */
     define curve "r2l scroller" { linear 2 points {  1.0 0.0   -1.0 0.0 } } # right to left scroller
@@ -198,7 +198,7 @@ kate {
   event { from 0:1.50 for 1.0 $start321fader text "2" }
 
   /* replace the logo once it's settled on the corner */
-  event { from 0:2.0 to 9999:0 text "KateTV" region "katetv" }
+  event { from 0:2.0 to 22.50 text "KateTV" region "katetv" }
 
   event { from 0:2.50 for 1.0 $start321fader text "1" }
 
@@ -207,7 +207,8 @@ kate {
     00:03.50 --> 00:5.50
 //    /* making the text a long series of dots draws the spline on the screen, good for creating paths */
 //    //text "............................................................."
-    text "GO"
+    text "GO !!!!!"
+    style { font size 32 }
     motion {
       semantics text path
       mapping frame
@@ -248,8 +249,8 @@ kate {
     from 00:04.00 to 00:06.00
     region "centerbox"
     text "
-      A multiline text
-      a second line
+      A multiline text\n
+      a second line\n
       and the third and last one
     "
     style "centerbox" { vcenter }
@@ -268,9 +269,9 @@ kate {
     directionality rtl_ttb
     language "ar"
     region "centerbox"
-    text "&#feb3;&#fefc;&#fee1;<br>"
-       + "&#feb3;&#fefc;&#fee1;<br>"
-       + "&#feb3;&#fefc;&#fee1;"
+    text "&#feb3;&#fefc;&#fee1;\n"
+       + "&#feb3;&#fefc;&#fee1;\n"
+       + "&#feb3;&#fefc;&#fee1;\n"
     style "centerbox" { vcenter hright }
     /* do some move-to-left and move-to-right at the end */
     motion {
@@ -295,7 +296,7 @@ kate {
 
   /* no text - just to set a style (so we have a colored background shared by all scrolling text) */
   event {
-    from 00:06.00 to 00:40.00
+    from 00:06.00 to 00:22.50
     region "scrollbar"
     style "scrollbar_band"
   }
