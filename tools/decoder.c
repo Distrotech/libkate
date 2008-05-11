@@ -450,7 +450,7 @@ static void write_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
   fprintf(f,"    language \"%s\"\n",ki->language);
   fprintf(f,"    directionality %s\n",directionality2text(ki->text_directionality));
 
-  if (kc->comments) {
+  if (kc && kc->comments) {
     fprintf(f,"\n");
     for (c=0;c<kc->comments;++c) {
       fprintf(f,"    comment   \"%s\"\n",kc->user_comments[c]);
@@ -578,6 +578,141 @@ static void print_version(void)
   printf("Kate reference decoder - %s\n",kate_get_version_string());
 }
 
+static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
+{
+  const kate_info *ki=ev->ki;
+  float t0=ev->start_time;
+  float t1=ev->end_time;
+  fprintf(fout,"  event {\n");
+  if (ev->id>=0) {
+    fprintf(fout,"    id %d\n",ev->id);
+  }
+  if (granpos>=0) {
+    kate_float base,offset;
+    kate_granule_split_time(ki,granpos,&base,&offset);
+    fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
+      granpos,
+      time_hours(base),time_minutes(base),time_seconds(base),
+      time_hours(offset),time_minutes(offset),time_seconds(offset)
+    );
+  }
+  fprintf(fout,"    %02d:%02d:%02.8g --> %02d:%02d:%02.8g\n",
+    time_hours(t0),time_minutes(t0),time_seconds(t0),
+    time_hours(t1),time_minutes(t1),time_seconds(t1)
+  );
+  if (ev->language) {
+    fprintf(fout,"    language \"%s\"\n",ev->language);
+  }
+  if (ev->text_directionality!=ki->text_directionality) {
+    fprintf(fout,"    directionality %s\n",directionality2text(ev->text_directionality));
+  }
+  fprintf(fout,"    pre text \"");
+  write_text(fout,ev->text,ev->len0);
+  fprintf(fout,"\"\n");
+  if (ev->region) {
+    int idx=kate_find_region(ki,ev->region);
+    if (idx<0) {
+      fprintf(fout,"    region {\n");
+      write_region_defs(fout,ev->region,6);
+      fprintf(fout,"    }\n");
+    }
+    else {
+      fprintf(fout,"    region %d\n",idx);
+    }
+  }
+  if (ev->style) {
+    int idx=kate_find_style(ki,ev->style);
+    if (idx<0) {
+      fprintf(fout,"    style {\n");
+      write_style_defs(fout,ev->style,6);
+      fprintf(fout,"    }\n");
+    }
+    else if (ev->region && idx!=ev->region->style) {
+      /* don't mention it if it's the region style, we don't want an override here */
+      fprintf(fout,"    style %d\n",idx);
+    }
+  }
+  if (ev->secondary_style) {
+    int idx=kate_find_style(ki,ev->secondary_style);
+    if (idx<0) {
+      fprintf(fout,"    secondary style {\n");
+      write_style_defs(fout,ev->secondary_style,6);
+      fprintf(fout,"    }\n");
+    }
+    else {
+      fprintf(fout,"    secondary style %d\n",idx);
+    }
+  }
+  if (ev->font_mapping) {
+    int idx=kate_find_font_mapping(ki,ev->font_mapping);
+    if (idx>=0) {
+      fprintf(fout,"    font mapping %d\n",idx);
+    }
+    else {
+      fprintf(fout,"    font mapping {\n");
+      write_font_mapping_defs(fout,ki,ev->font_mapping,6);
+      fprintf(fout,"    }\n");
+    }
+  }
+  if (ev->palette) {
+    int idx=kate_find_palette(ki,ev->palette);
+    if (idx<0) {
+      fprintf(fout,"    palette {\n");
+      write_palette_defs(fout,ev->palette,6);
+      fprintf(fout,"    }\n");
+    }
+    else {
+      fprintf(fout,"    palette %d\n",idx);
+    }
+  }
+  if (ev->bitmap) {
+    int idx=kate_find_bitmap(ki,ev->bitmap);
+    if (idx<0) {
+      fprintf(fout,"    bitmap {\n");
+      write_bitmap_defs(fout,ev->bitmap,6);
+      fprintf(fout,"    }\n");
+    }
+    else {
+      fprintf(fout,"    bitmap %d\n",idx);
+    }
+  }
+  if (write_bitmaps && ev->bitmap && ev->bitmap->bpp>0 && ev->palette) {
+    static int n=0;
+    static char filename[32];
+    sprintf(filename,"/tmp/kate-bitmap-%d",n++);
+    write_bitmap(filename,ev->bitmap,ev->palette);
+  }
+  if (ev->nmotions) {
+    size_t m;
+    for (m=0;m<ev->nmotions;++m) {
+      const kate_motion *km=ev->motions[m];
+      int idx=kate_find_motion(ki,km);
+      if (idx<0) {
+        fprintf(fout,"    motion {\n");
+        write_motion_defs(fout,ki,km,6);
+        fprintf(fout,"    }\n");
+      }
+      else {
+        fprintf(fout,"    motion %d\n",idx);
+      }
+    }
+  }
+  fprintf(fout,"  }\n");
+  fprintf(fout,"\n");
+}
+
+static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
+{
+  size_t ret;
+
+  *buffer=(char*)kate_realloc(*buffer,bytes);
+  if (!*buffer) return -1;
+
+  ret=fread(*buffer,1,bytes,f);
+  if (ret<bytes) return -1;
+  return 0;
+}
+
 int main(int argc,char **argv)
 {
   size_t read;
@@ -589,7 +724,12 @@ int main(int argc,char **argv)
   FILE *fin,*fout;
   int verbose=0;
   int n;
-
+  char signature[64]; /* matches the size of the Kate ID header */
+  size_t signature_size;
+  int raw;
+  char *buffer=NULL;
+  ogg_int64_t bytes;
+  int headers_written=0;
 
 static ogg_sync_state oy;
 static ogg_stream_state os;
@@ -667,233 +807,189 @@ static kate_comment kc;
     }
   }
 
-  ogg_sync_init(&oy);
+  /* first, read the first few bytes to know if we have a raw Kate stream
+     or a Kate-in-Ogg stream */
+  read=fread(signature,1,sizeof(signature),fin);
+  if (read!=sizeof(signature)) {
+    /* A Kate stream's first packet is 64 bytes, so this cannot be one */
+    fprintf(stderr,"Failed to read first %u bytes of stream\n",sizeof(signature));
+    exit(-1);
+  }
 
-  while (1) {
-    char *buffer=ogg_sync_buffer(&oy,4096);
-    if (!buffer) {
-      fprintf(stderr,"Failed to get sync buffer\n");
-      break;
-    }
-    read=fread(buffer,1,4096,fin);
-    if (read==0) {
-      eos=1;
-      break;
-    }
-    ogg_sync_wrote(&oy,read);
+  if (!memcmp(signature,"\200kate\0\0\0\0",9)) {
+    /* raw Kate stream */
+    raw=1;
 
-    while (ogg_sync_pageout(&oy,&og)>0) {
-      if (ogg_page_bos(&og)) {
-        if (init==uninitialized) {
-          ogg_stream_init(&os,ogg_page_serialno(&og));
-          ret=kate_info_init(&ki);
-          if (ret<0) {
-            fprintf(stderr,"failed to init info\n");
-            break;
-          }
-          kate_info_no_limits(&ki,1);
-          ret=kate_comment_init(&kc);
-          if (ret<0) {
-            fprintf(stderr,"failed to init comments\n");
-            break;
-          }
-          init=header_info;
-        }
+
+    ret=kate_high_decode_init(&k);
+    if (ret<0) {
+      fprintf(stderr,"failed to init raw kate packet decoding (%d)\n",ret);
+      exit(-1);
+    }
+
+    bytes=64;
+    buffer=(char*)kate_malloc(bytes);
+    memcpy(buffer,signature,bytes);
+
+    while (1) {
+      const kate_event *ev=NULL;
+      kate_packet kp;
+      kate_packet_wrap(&kp,bytes,buffer);
+      ret=kate_high_decode_packetin(&k,&kp,&ev);
+      if (ret<0) {
+        fprintf(stderr,"failed to decode raw kate packet (%d)\n",ret);
+        exit(-1);
       }
-      ret=ogg_stream_pagein(&os,&og);
-      if (ret>=0) {
-        ogg_int64_t granpos=ogg_page_granulepos(&og);
-        while (ogg_stream_packetout(&os,&op)) {
-          if (verbose>=2) printf("Got packet: %ld bytes\n",op.bytes);
-          if (init<data) {
-            ret=kate_ogg_decode_headerin(&ki,&kc,&op);
-            if (ret>=0) {
-              /* we found a Kate bitstream */
-              if (op.packetno==0) {
-                if (verbose>=1) printf("Bitstream %08x looks like Kate\n",ogg_page_serialno(&og));
-              }
-              if (ret>0) {
-                /* we're done parsing headers, go for data */
-                if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\", encoding %d)\n",
-                   ogg_page_serialno(&og),ki.language,ki.text_encoding);
-                write_kate_start(fout);
+      if (k.ki->probe<0 && !headers_written) {
+        write_kate_start(fout);
+        write_headers(fout,k.ki,NULL);
+        headers_written=1;
+      }
+      if (ret>0) {
+        write_kate_end(fout);
+        break; /* last packet decoded */
+      }
+      if (ev) {
+        output_event(fout,ev,-1);
+      }
 
-                kate_decode_init(&k,&ki);
-                init=data;
-                write_headers(fout,&ki,&kc);
-              }
-            }
-            else {
-              if (ret!=KATE_E_NOT_KATE) {
-                fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",op.packetno,ret);
-              }
-              if (init!=uninitialized) {
-                kate_info_clear(&ki);
-                kate_comment_clear(&kc);
-                init=uninitialized;
-              }
-            }
-          }
-          else {
-            ret=kate_ogg_decode_packetin(&k,&op);
+      /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
+      read=fread(&bytes,1,8,fin);
+      if (read!=8 || bytes<=0) {
+        fprintf(stderr,"failed to read raw kate packet size (read %u, bytes %lld)\n",read,bytes);
+        exit(-1);
+      }
+      ret=read_raw_packet(fin,&buffer,bytes);
+      if (ret<0) {
+        fprintf(stderr,"failed to read raw kate packet (%lld bytes)\n",bytes);
+        exit(-1);
+      }
+    }
+
+    kate_high_decode_clear(&k);
+    kate_free(buffer);
+  }
+  else {
+    /* we'll assume we're embedded in Ogg */
+    raw=0;
+    signature_size=read;
+    ogg_sync_init(&oy);
+
+    while (1) {
+      buffer=ogg_sync_buffer(&oy,4096);
+      if (!buffer) {
+        fprintf(stderr,"Failed to get sync buffer\n");
+        break;
+      }
+      if (signature_size>0) {
+        memcpy(buffer,signature,signature_size);
+        signature_size=0;
+      }
+      else {
+        read=fread(buffer,1,4096,fin);
+      }
+      if (read==0) {
+        eos=1;
+        break;
+      }
+      ogg_sync_wrote(&oy,read);
+
+      while (ogg_sync_pageout(&oy,&og)>0) {
+        if (ogg_page_bos(&og)) {
+          if (init==uninitialized) {
+            ogg_stream_init(&os,ogg_page_serialno(&og));
+            ret=kate_info_init(&ki);
             if (ret<0) {
-              fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
-            }
-            else if (ret>0) {
-              /* we're done */
-              write_kate_end(fout);
-              eos=1;
+              fprintf(stderr,"failed to init info\n");
               break;
             }
+            kate_info_no_limits(&ki,1);
+            ret=kate_comment_init(&kc);
+            if (ret<0) {
+              fprintf(stderr,"failed to init comments\n");
+              break;
+            }
+            init=header_info;
+          }
+        }
+        ret=ogg_stream_pagein(&os,&og);
+        if (ret>=0) {
+          ogg_int64_t granpos=ogg_page_granulepos(&og);
+          while (ogg_stream_packetout(&os,&op)) {
+            if (verbose>=2) printf("Got packet: %ld bytes\n",op.bytes);
+            if (init<data) {
+              ret=kate_ogg_decode_headerin(&ki,&kc,&op);
+              if (ret>=0) {
+                /* we found a Kate bitstream */
+                if (op.packetno==0) {
+                  if (verbose>=1) printf("Bitstream %08x looks like Kate\n",ogg_page_serialno(&og));
+                }
+                if (ret>0) {
+                  /* we're done parsing headers, go for data */
+                  if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\", encoding %d)\n",
+                     ogg_page_serialno(&og),ki.language,ki.text_encoding);
+                  write_kate_start(fout);
+
+                  kate_decode_init(&k,&ki);
+                  init=data;
+                  write_headers(fout,&ki,&kc);
+                }
+              }
+              else {
+                if (ret!=KATE_E_NOT_KATE) {
+                  fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",op.packetno,ret);
+                }
+                if (init!=uninitialized) {
+                  kate_info_clear(&ki);
+                  kate_comment_clear(&kc);
+                  init=uninitialized;
+                }
+              }
+            }
             else {
-              const kate_event *ev=NULL;
-              ret=kate_decode_eventout(&k,&ev);
+              ret=kate_ogg_decode_packetin(&k,&op);
               if (ret<0) {
-                fprintf(stderr,"error in kate_decode_eventout: %d\n",ret);
+                fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
               }
               else if (ret>0) {
-                /* printf("No event to go with this packet\n"); */
+                /* we're done */
+                write_kate_end(fout);
+                eos=1;
+                break;
               }
-              else if (ret==0) {
-                float t0=ev->start_time;
-                float t1=ev->end_time;
-                fprintf(fout,"  event {\n");
-                if (ev->id>=0) {
-                  fprintf(fout,"    id %d\n",ev->id);
+              else {
+                const kate_event *ev=NULL;
+                ret=kate_decode_eventout(&k,&ev);
+                if (ret<0) {
+                  fprintf(stderr,"error in kate_decode_eventout: %d\n",ret);
                 }
-                if (1) {
-                  kate_float base,offset;
-                  kate_granule_split_time(&ki,granpos,&base,&offset);
-                  fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
-                    granpos,
-                    time_hours(base),time_minutes(base),time_seconds(base),
-                    time_hours(offset),time_minutes(offset),time_seconds(offset)
-                  );
+                else if (ret>0) {
+                  /* printf("No event to go with this packet\n"); */
                 }
-                fprintf(fout,"    %02d:%02d:%02.8g --> %02d:%02d:%02.8g\n",
-                  time_hours(t0),time_minutes(t0),time_seconds(t0),
-                  time_hours(t1),time_minutes(t1),time_seconds(t1)
-                );
-                if (ev->language) {
-                  fprintf(fout,"    language \"%s\"\n",ev->language);
+                else if (ret==0) {
+                  output_event(fout,ev,granpos);
                 }
-                if (ev->text_directionality!=ki.text_directionality) {
-                  fprintf(fout,"    directionality %s\n",directionality2text(ev->text_directionality));
-                }
-                fprintf(fout,"    pre text \"");
-                write_text(fout,ev->text,ev->len0);
-                fprintf(fout,"\"\n");
-                if (ev->region) {
-                  int idx=kate_find_region(&ki,ev->region);
-                  if (idx<0) {
-                    fprintf(fout,"    region {\n");
-                    write_region_defs(fout,ev->region,6);
-                    fprintf(fout,"    }\n");
-                  }
-                  else {
-                    fprintf(fout,"    region %d\n",idx);
-                  }
-                }
-                if (ev->style) {
-                  int idx=kate_find_style(&ki,ev->style);
-                  if (idx<0) {
-                    fprintf(fout,"    style {\n");
-                    write_style_defs(fout,ev->style,6);
-                    fprintf(fout,"    }\n");
-                  }
-                  else if (ev->region && idx!=ev->region->style) {
-                    /* don't mention it if it's the region style, we don't want an override here */
-                    fprintf(fout,"    style %d\n",idx);
-                  }
-                }
-                if (ev->secondary_style) {
-                  int idx=kate_find_style(&ki,ev->secondary_style);
-                  if (idx<0) {
-                    fprintf(fout,"    secondary style {\n");
-                    write_style_defs(fout,ev->secondary_style,6);
-                    fprintf(fout,"    }\n");
-                  }
-                  else {
-                    fprintf(fout,"    secondary style %d\n",idx);
-                  }
-                }
-                if (ev->font_mapping) {
-                  int idx=kate_find_font_mapping(&ki,ev->font_mapping);
-                  if (idx>=0) {
-                    fprintf(fout,"    font mapping %d\n",idx);
-                  }
-                  else {
-                    fprintf(fout,"    font mapping {\n");
-                    write_font_mapping_defs(fout,&ki,ev->font_mapping,6);
-                    fprintf(fout,"    }\n");
-                  }
-                }
-                if (ev->palette) {
-                  int idx=kate_find_palette(&ki,ev->palette);
-                  if (idx<0) {
-                    fprintf(fout,"    palette {\n");
-                    write_palette_defs(fout,ev->palette,6);
-                    fprintf(fout,"    }\n");
-                  }
-                  else {
-                    fprintf(fout,"    palette %d\n",idx);
-                  }
-                }
-                if (ev->bitmap) {
-                  int idx=kate_find_bitmap(&ki,ev->bitmap);
-                  if (idx<0) {
-                    fprintf(fout,"    bitmap {\n");
-                    write_bitmap_defs(fout,ev->bitmap,6);
-                    fprintf(fout,"    }\n");
-                  }
-                  else {
-                    fprintf(fout,"    bitmap %d\n",idx);
-                  }
-                }
-                if (write_bitmaps && ev->bitmap && ev->bitmap->bpp>0 && ev->palette) {
-                  static int n=0;
-                  static char filename[32];
-                  sprintf(filename,"/tmp/kate-bitmap-%d",n++);
-                  write_bitmap(filename,ev->bitmap,ev->palette);
-                }
-                if (ev->nmotions) {
-                  size_t m;
-                  for (m=0;m<ev->nmotions;++m) {
-                    const kate_motion *km=ev->motions[m];
-                    int idx=kate_find_motion(&ki,km);
-                    if (idx<0) {
-                      fprintf(fout,"    motion {\n");
-                      write_motion_defs(fout,&ki,km,6);
-                      fprintf(fout,"    }\n");
-                    }
-                    else {
-                      fprintf(fout,"    motion %d\n",idx);
-                    }
-                  }
-                }
-                fprintf(fout,"  }\n");
-                fprintf(fout,"\n");
               }
             }
           }
         }
       }
+
+      if (eos) break;
     }
 
-    if (eos) break;
-  }
+    if (init!=uninitialized) {
+      ogg_stream_clear(&os);
+    }
+    ogg_sync_clear(&oy);
 
-  if (init!=uninitialized) {
-    ogg_stream_clear(&os);
-  }
-  ogg_sync_clear(&oy);
-
-  if (init==data) {
-    kate_clear(&k);
-  }
-  if (init!=uninitialized) {
-    kate_info_clear(&ki);
-    kate_comment_clear(&kc);
+    if (init==data) {
+      kate_clear(&k);
+    }
+    if (init!=uninitialized) {
+      kate_info_clear(&ki);
+      kate_comment_clear(&kc);
+    }
   }
 
   if (fout!=stdout) {

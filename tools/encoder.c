@@ -32,6 +32,7 @@ ogg_int64_t packetno;
 
 static char str[4096];
 static int headers_written=0;
+static int raw=0;
 static unsigned char utf8bom[3]={0xef,0xbb,0xbf};
 static unsigned char utf16lebom[2]={0xff,0xfe};
 static unsigned char utf16bebom[2]={0xfe,0xff};
@@ -67,8 +68,14 @@ void write_headers(FILE *f)
       break;
     }
     if (ret>0) break; /* we're done */
-    ogg_stream_packetin(&os,&op);
-    ogg_packet_clear(&op);
+
+    if (raw) {
+      send_packet();
+    }
+    else {
+      ogg_stream_packetin(&os,&op);
+      ogg_packet_clear(&op);
+    }
 
     /* place all headers on the same page, it keeps oggmerge happy */
     /* poll_page(f); */
@@ -79,9 +86,18 @@ void write_headers(FILE *f)
 
 void send_packet(void)
 {
-  ogg_stream_packetin(&os,&op);
-  ogg_packet_clear(&op);
-  poll_page(katedesc_out);
+  if (raw) {
+    if (op.packetno>0) {
+      ogg_int64_t bytes=op.bytes;
+      fwrite(&bytes,1,8,katedesc_out);
+    }
+    fwrite(op.packet,1,op.bytes,katedesc_out);
+  }
+  else {
+    ogg_stream_packetin(&os,&op);
+    ogg_packet_clear(&op);
+    poll_page(katedesc_out);
+  }
 }
 
 void cancel_packet(void)
@@ -203,9 +219,7 @@ static int convert_srt(FILE *fin,FILE *fout)
         if (*str=='\n') {
           if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
           kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
-          ogg_stream_packetin(&os,&op);
-          ogg_packet_clear(&op);
-          poll_page(fout);
+          send_packet();
           need=need_id;
         }
         else {
@@ -253,6 +267,7 @@ int main(int argc,char **argv)
           printf("       types can be: kate, srt\n");
           printf("   -l <language>       set input filename language\n");
           printf("   -s <hex number>     set serial number of output stream\n");
+          printf("   -r                  write raw Kate stream\n");
           exit(0);
         case 'o':
           if (!output_filename) {
@@ -283,6 +298,9 @@ int main(int argc,char **argv)
           break;
         case 's':
           serial=strtoul(eat_arg(argc,argv,&n),NULL,16);
+          break;
+        case 'r':
+          raw=1;
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
@@ -334,7 +352,7 @@ int main(int argc,char **argv)
 
   if (language) kate_info_set_language(&ki,language);
 
-  ogg_stream_init(&os,serial);
+  if (!raw) ogg_stream_init(&os,serial);
 
   ret=0;
   if (!strcmp(output_filename_type,"kate")) {
@@ -353,15 +371,14 @@ int main(int argc,char **argv)
     if (ret<0) {
       fprintf(stderr,"error encoding end packet: %d\n",ret);
     }
-    ogg_stream_packetin(&os,&op);
-    ogg_packet_clear(&op);
-    poll_page(fout);
-
-    flush_page(fout);
+    send_packet();
+    if (!raw) {
+      flush_page(fout);
+    }
   }
 
 
-  ogg_stream_clear(&os);
+  if (!raw) ogg_stream_clear(&os);
   kate_clear(&k);
 
   kate_info_clear(&ki);
