@@ -186,7 +186,7 @@ static const kate_motion *kate_tracker_find_motion(const kate_tracker *kin,kate_
   return NULL;
 }
 
-static int kate_tracker_update_property_at_duration(const kate_tracker *kin,kate_float duration,kate_float t,kate_motion_semantics semantics,kate_float *x,kate_float *y)
+int kate_tracker_update_property_at_duration(const kate_tracker *kin,kate_float duration,kate_float t,kate_motion_semantics semantics,kate_float *x,kate_float *y)
 {
   const kate_motion *km;
   int ret;
