@@ -876,7 +876,7 @@ static char *trimline(const char *line)
 
 static char *trimtext(const char *text)
 {
-  char *newtext=(char*)malloc(1);
+  char *newtext=(char*)kate_malloc(1);
   *newtext=0;
   while (text && *text) {
     char *line=getline(&text);
