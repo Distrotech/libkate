@@ -28,17 +28,17 @@ kate {
     define style { $bg font width 10 font height 40 }
   }
 
-  event 0:0:01 --> 0:1:00 region 0 style 0 text "italics"
-  event 0:0:01 --> 0:1:00 region 1 style 1 text "bold"
-  event 0:0:01 --> 0:1:00 region 2 style 2 text "underline"
-  event 0:0:01 --> 0:1:00 region 3 style 3 text "strike"
-  event 0:0:01 --> 0:1:00 region 4 style 4 text "large"
-  event 0:0:01 --> 0:1:00 region 5 style 5 text "narrow"
-  event 0:0:01 --> 0:1:00 region 6 style 6 text "i/u/s"
-  event 0:0:01 --> 0:1:00 region 7 style 7 text "pixmar"
-  event 0:0:01 --> 0:1:00 region 8 style 8 text "permar"
-  event 0:0:01 --> 0:1:00 region 9 style 9 text "i/b"
-  event 0:0:01 --> 0:1:00 region 10 style 10 text "wide"
-  event 0:0:01 --> 0:1:00 region 11 style 11 text "narrow"
+  event 0:0:01 --> 0:0:10 region 0 style 0 text "italics"
+  event 0:0:01 --> 0:0:10 region 1 style 1 text "bold"
+  event 0:0:01 --> 0:0:10 region 2 style 2 text "underline"
+  event 0:0:01 --> 0:0:10 region 3 style 3 text "strike"
+  event 0:0:01 --> 0:0:10 region 4 style 4 text "large"
+  event 0:0:01 --> 0:0:10 region 5 style 5 text "narrow"
+  event 0:0:01 --> 0:0:10 region 6 style 6 text "i/u/s"
+  event 0:0:01 --> 0:0:10 region 7 style 7 text "pixmar"
+  event 0:0:01 --> 0:0:10 region 8 style 8 text "permar"
+  event 0:0:01 --> 0:0:10 region 9 style 9 text "i/b"
+  event 0:0:01 --> 0:0:10 region 10 style 10 text "wide"
+  event 0:0:01 --> 0:0:10 region 11 style 11 text "narrow"
 }
 

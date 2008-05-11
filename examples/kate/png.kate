@@ -5,5 +5,5 @@ kate {
     define region { percent position 45 45 size 10 10 }
   }
 
-  event { 00:0.1 --> 1:0:0 region 0 bitmap 0 }
+  event { 00:0.1 --> 0:0:30 region 0 bitmap 0 }
 }
