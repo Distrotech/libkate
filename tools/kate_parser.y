@@ -884,7 +884,10 @@ static char *trimtext(const char *text)
     kate_free(line);
     if (*trimmed && strcmp(trimmed,"\n")) {
       /* ignore empty lines */
-      if (newtext) newtext=catstrings(newtext,"\n");
+      if (newtext && *newtext) {
+        /* add a newline between lines (eg, not before the first line) */
+        newtext=catstrings(newtext,"\n");
+      }
       newtext=catstrings(newtext,trimmed);
     }
     kate_free(trimmed);
