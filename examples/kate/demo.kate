@@ -236,11 +236,11 @@ kate {
     text "COLOR"
     motion {
       semantics text color rg
-      curve { bspline 8 points { 255 53 79 129 92 240 56 169 237 78 189 230 120 210 78 32 } }
+      curve { catmull_rom 8 points { 255 53 79 129 92 240 56 169 237 78 189 230 120 210 78 32 } }
     }
     motion {
       semantics text color ba
-      curve { bspline 8 points { 90 73 255 12 76 200 78 192 60 70 20 50 255 255 80 127 } }
+      curve { catmull_rom 8 points { 90 73 255 12 76 200 78 192 60 70 20 50 255 255 80 127 } }
     }
   }
 
