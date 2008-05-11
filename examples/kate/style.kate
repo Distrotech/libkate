@@ -2,18 +2,22 @@
 kate {
   defs {
     define macro bg background color 128 100 100 100
-    define region { percent position 10 10 size 20 19 }
-    define region { percent position 10 30 size 20 19 }
-    define region { percent position 10 50 size 20 19 }
-    define region { percent position 10 70 size 20 19 }
-    define region { percent position 40 10 size 20 19 }
-    define region { percent position 40 30 size 20 19 }
-    define region { percent position 40 50 size 20 19 }
-    define region { percent position 40 70 size 20 19 }
-    define region { percent position 70 10 size 20 19 }
-    define region { percent position 70 30 size 20 19 }
-    define region { percent position 70 50 size 20 19 }
-    define region { percent position 70 70 size 20 19 }
+    define region { percent position 10 10 size 19 19 }
+    define region { percent position 10 30 size 19 19 }
+    define region { percent position 10 50 size 19 19 }
+    define region { percent position 10 70 size 19 19 }
+    define region { percent position 30 10 size 19 19 }
+    define region { percent position 30 30 size 19 19 }
+    define region { percent position 30 50 size 19 19 }
+    define region { percent position 30 70 size 19 19 }
+    define region { percent position 50 10 size 19 19 }
+    define region { percent position 50 30 size 19 19 }
+    define region { percent position 50 50 size 19 19 }
+    define region { percent position 50 70 size 19 19 }
+    define region { percent position 70 10 size 19 19 clip }
+    define region { percent position 70 30 size 19 19 }
+    define region { percent position 70 50 size 19 19 }
+    define region { percent position 70 70 size 19 19 }
     define style { $bg italics }
     define style { $bg bold }
     define style { $bg underline }
@@ -26,6 +30,10 @@ kate {
     define style { $bg italics bold }
     define style { $bg font width 40 font height 10 }
     define style { $bg font width 10 font height 40 }
+    define style { $bg }
+    define style { $bg font "monospace" }
+    define style { $bg font "helvetica" }
+    define style { $bg }
   }
 
   event 0:0:01 --> 0:0:10 region 0 style 0 text "italics"
@@ -40,5 +48,9 @@ kate {
   event 0:0:01 --> 0:0:10 region 9 style 9 text "i/b"
   event 0:0:01 --> 0:0:10 region 10 style 10 text "wide"
   event 0:0:01 --> 0:0:10 region 11 style 11 text "narrow"
+  event 0:0:01 --> 0:0:10 region 12 style 12 text "multiline text\nclipped as it's a wee bit too long\nfor the region"
+  event 0:0:01 --> 0:0:10 region 13 style 13 text "monospace"
+  event 0:0:01 --> 0:0:10 region 14 style 14 text "helvetica"
+  event 0:0:01 --> 0:0:10 region 15 style 15 text "-"
 }
 

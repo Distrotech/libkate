@@ -114,6 +114,7 @@ int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *f
   MORPHINT(underline);
   MORPHINT(strike);
   MORPHINT(justify);
+  style->font=(t<(kate_float)0.5)?from->font:to->font;
 #undef MORPHINT
 #undef MORPH
 

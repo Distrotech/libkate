@@ -483,6 +483,7 @@ static void init_style(kd_style *style)
   style->style->underline=0;
   style->style->strike=0;
   style->style->justify=0;
+  style->style->font=NULL;
 }
 
 static void set_font_width(kd_style *style,kate_float s,kate_space_metric metric)
@@ -507,6 +508,16 @@ static void set_font_height(kd_style *style,kate_float s,kate_space_metric metri
   }
   style->style->font_height=s;
   style->style->font_metric=metric;
+}
+
+static void set_font(kd_style *style,const char *font)
+{
+  size_t len=strlen(font);
+  if (style->style->font) {
+    yyerror("Font already set");
+  }
+  style->style->font=(char*)kate_malloc(len+1);
+  strcpy(style->style->font,font);
 }
 
 static void set_font_size(kd_style *style,kate_float s,kate_space_metric metric)
@@ -1760,6 +1771,7 @@ kd_style_def: HALIGN float { kstyle.style->halign=$2; }
             | UNDERLINE { kstyle.style->underline=1; }
             | STRIKE { kstyle.style->strike=1; }
             | JUSTIFY { kstyle.style->justify=1; }
+            | FONT STRING { set_font(&kstyle,$2); }
             | FONT SIZE float kd_opt_space_metric { set_font_size(&kstyle,$3,$4); }
             | FONT WIDTH float kd_opt_space_metric { set_font_width(&kstyle,$3,$4); }
             | FONT HEIGHT float kd_opt_space_metric { set_font_height(&kstyle,$3,$4); }

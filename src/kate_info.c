@@ -416,7 +416,11 @@ int kate_info_clear(kate_info *ki)
     kate_free(ki->regions);
   }
   if (ki->styles) {
-    for (n=0;n<ki->nstyles;++n) kate_free(ki->styles[n]);
+    for (n=0;n<ki->nstyles;++n) {
+      kate_style *ks=ki->styles[n];
+      if (ks->font) kate_free(ks->font);
+      kate_free(ks);
+    }
     kate_free(ki->styles);
   }
   if (ki->language) kate_free(ki->language);

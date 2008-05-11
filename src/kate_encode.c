@@ -337,10 +337,18 @@ static int kate_encode_style(const kate_style *ks,oggpack_buffer *opb)
   oggpack_write(opb,ks->strike,1);
 
   {
-    /* bitstream 0.2: add justify */
+    /* bitstream 0.2: add justify and font */
     oggpack_buffer warp;
     kate_open_warp(&warp);
     oggpack_write(&warp,ks->justify,1);
+    if (ks->font) {
+      size_t len=strlen(ks->font);
+      kate_write32v(&warp,len);
+      kate_writebuf(&warp,ks->font,len);
+    }
+    else {
+      kate_write32v(&warp,0);
+    }
     kate_close_warp(&warp,opb);
   }
 

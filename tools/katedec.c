@@ -199,6 +199,9 @@ static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
     write_color(f,"text color",&tc,indent);
     write_color(f,"background color",&bc,indent);
     write_color(f,"draw color",&dc,indent);
+    if (ks->font) {
+      fprintf(f,"%sfont \"%s\"\n",sindent,ks->font);
+    }
     if (ks->font_width>=0 || ks->font_height>=0) {
       if (ks->font_width==ks->font_height) {
         fprintf(f,"%sfont size %f%s\n",sindent,ks->font_height,metric2suffix(ks->font_metric));

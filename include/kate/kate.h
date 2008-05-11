@@ -108,7 +108,10 @@ typedef struct kate_style {
   uint32_t strike:1;                 /**< display striked text */
   uint32_t justify:1;                /**< display justified text */
   uint32_t pad0:27;
-  uintptr_t pad1[10];
+
+  kate_const char *font;             /**< name of the font to use */
+
+  uintptr_t pad1[9];
 } kate_style;
 
 /** defines a type of curve */

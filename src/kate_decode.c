@@ -315,6 +315,7 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,oggpack_buffer *
   int ret;
   kate_float d[8];
   size_t idx;
+  int len;
 
   if (!ks || !opb) return KATE_E_INVALID_PARAMETER;
 
@@ -347,6 +348,19 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,oggpack_buffer *
     /* 0.2 adds a warp for justify */
     kate_read32v(opb); /* the size of the warp */
     ks->justify=oggpack_read(opb,1);
+    len=kate_read32v(opb);
+    if (len<0) {
+      return KATE_E_BAD_PACKET;
+    }
+    else if (len>0) {
+      ks->font=(char*)kate_malloc(len+1);
+      if (!ks->font) return KATE_E_OUT_OF_MEMORY;
+      kate_readbuf(opb,ks->font,len);
+      ks->font[len]=0;
+    }
+    else {
+      ks->font=NULL;
+    }
   }
   else {
     ks->justify=0;

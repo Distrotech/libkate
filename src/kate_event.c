@@ -78,6 +78,7 @@ int kate_event_destroy(kate_event *ev)
     kate_free(ev->region);
   }
   if (ev->style && kate_find_style(ev->ki,ev->style)<0) {
+    if (ev->style->font) kate_free(ev->style->font);
     kate_free(ev->style);
   }
   if (ev->secondary_style && kate_find_style(ev->ki,ev->secondary_style)<0) {
