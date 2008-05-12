@@ -207,7 +207,8 @@ kate {
     00:03.50 --> 00:5.50
 //    /* making the text a long series of dots draws the spline on the screen, good for creating paths */
 //    //text "............................................................."
-    text "GO !!!!!"
+    //text "GO !!!!!"
+    text "GO !!!!!\nmultiline path"
     style { font size 32 }
     motion {
       semantics text path
@@ -229,7 +230,7 @@ kate {
     }
     motion {
       semantics text size
-      curve { linear 3 points { 1 1 64 64 1 1 } }
+      curve { linear 3 points { 16 16 64 64 16 16 } }
     }
   }
 
