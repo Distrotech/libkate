@@ -195,6 +195,7 @@ png                          {return PNG;}
 justify                      {return JUSTIFY;}
 clip                         {return CLIP;}
 pre                          {return PRE;}
+markup                       {return MARKUP;}
 
 
 left_to_right|l2r|ltr|ltr_ttb|l2r_t2b        {return L2R_T2B;}

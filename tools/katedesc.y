@@ -150,6 +150,23 @@ static char *catstrings(char *s1,const char *s2)
   return s;
 }
 
+static char *catstrings_part(char *s1,const char *s2,size_t bytes)
+{
+  size_t len;
+  char *s;
+
+  if (!s2) yyerror("internal error: no string to append");
+  len=(s1?strlen(s1):0)+bytes+1;
+  s=(char*)kate_realloc(s1,len);
+  if (!s) { yyerror("out of memory"); exit(-1); }
+  if (!s1) {
+    *s=0;
+  }
+  strncat(s,s2,bytes);
+
+  return s;
+}
+
 static char *dupstring(const char *s)
 {
   size_t len;
@@ -737,7 +754,8 @@ static char *expand_numeric_entities(const char *text)
   enum {
     s_text,
     s_amp,
-    s_hex
+    s_hex,
+    s_named
   } state=s_text;
   int c,code=0;
   size_t len=strlen(text),len0=len+1,rlen0=len0,wlen0=len0;
@@ -762,7 +780,21 @@ static char *expand_numeric_entities(const char *text)
         }
         break;
       case s_amp:
-        if (c=='#') state=s_hex; else yyerrorf("invalid entity specification, expected '#', got %d",c);
+        if (c=='#') {
+          state=s_hex;
+        }
+        else {
+          state=s_named;
+
+          /* we've encountered a named entity, and we've discarded the & already,
+             so we need to add it now before the newly read character */
+          ret=kate_text_set_character(kate_utf8,'&',&newtextptr,&wlen0);
+          if (ret<0) {
+            yyerrorf("failed to write character: %d",ret);
+            kate_free(newtext);
+            return NULL;
+          }
+        }
         break;
       case s_hex:
         if (c==';') {
@@ -776,9 +808,14 @@ static char *expand_numeric_entities(const char *text)
           else yyerrorf("invalid character in numeric entity (only numeric entities are supported), got %d",c);
         }
         break;
+      case s_named:
+        if (c==';') {
+          state=s_text;
+        }
+        break;
     }
 
-    if (state==s_text) {
+    if (state==s_text || state==s_named) {
       ret=kate_text_set_character(kate_utf8,c,&newtextptr,&wlen0);
       if (ret<0) {
         yyerrorf("failed to write character: %d",ret);
@@ -938,7 +975,33 @@ static void backslash_n_to_newline(char *text)
   }
 }
 
-static void set_event_text(kd_event *ev,const char *text,int pre)
+static char *escape_markup(const char *text)
+{
+  char *newtext=(char*)kate_malloc(1);
+  *newtext=0;
+
+  for (;;) {
+    /* this search only works for ASCII target characters */
+    const char *next=strpbrk(text,"<>");
+    if (!next) {
+      newtext=catstrings(newtext,text);
+      break;
+    }
+
+    newtext=catstrings_part(newtext,text,next-text);
+
+    switch (*next) {
+      case '<': newtext=catstrings(newtext,"&lt;"); break;
+      case '>': newtext=catstrings(newtext,"&gt;"); break;
+      default: yyerrorf("did not expect to have to escape %c",*next); break;
+    }
+    text=next+1;
+  }
+
+  return newtext;
+}
+
+static void set_event_text(kd_event *ev,const char *text,int pre,int markup)
 {
   char *newtext;
   size_t len;
@@ -957,18 +1020,25 @@ static void set_event_text(kd_event *ev,const char *text,int pre)
   memcpy(newtext,text,len+1);
   backslash_n_to_newline(newtext);
 
+  if (!markup) {
+    char *escaped=escape_markup(newtext);
+    kate_free(newtext);
+    newtext=escaped;
+  }
+
   if (!pre) {
     char *trimmed_newtext=trimtext(newtext);
     kate_free(newtext);
-    ev->text=expand_numeric_entities(trimmed_newtext);
-    kate_free(trimmed_newtext);
+    newtext=trimmed_newtext;
   }
   else {
     char *trimmed_newtext=trimtext_pre(newtext);
     kate_free(newtext);
-    ev->text=expand_numeric_entities(trimmed_newtext);
-    kate_free(trimmed_newtext);
+    newtext=trimmed_newtext;
   }
+
+  ev->text=expand_numeric_entities(newtext);
+  kate_free(newtext);
 }
 
 static void set_event_t0_t1(kd_event *ev,kate_float t0,kate_float t1)
@@ -1675,7 +1745,7 @@ static void cleanup_memory(void)
 %token <number> ID BOLD ITALICS UNDERLINE STRIKE JUSTIFY
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
-%token <number> HORIZONTAL VERTICAL CLIP PRE
+%token <number> HORIZONTAL VERTICAL CLIP PRE MARKUP
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -1989,9 +2059,11 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
                     { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
             | kd_optional_secondary STYLE { init_style(&kstyle); } '{' kd_style_defs '}'
                     { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
-            | TEXT strings { set_event_text(&kevent,$2,0); kate_free($2); }
-            | PRE TEXT strings { set_event_text(&kevent,$3,1); kate_free($3); }
-            | strings { set_event_text(&kevent,$1,0); kate_free($1); }
+            | TEXT strings { set_event_text(&kevent,$2,0,0); kate_free($2); }
+            | PRE TEXT strings { set_event_text(&kevent,$3,1,0); kate_free($3); }
+            | MARKUP strings { set_event_text(&kevent,$2,0,1); kate_free($2); }
+            | PRE MARKUP strings { set_event_text(&kevent,$3,1,1); kate_free($3); }
+            | strings { set_event_text(&kevent,$1,0,0); kate_free($1); }
             | MOTION { init_motion(); } '{' kd_motion_defs '}' { kd_add_event_motion(kmotion); }
             | MOTION kd_motion_name_or_index { kd_add_event_motion_index($2); }
             | SIMPLE_TIMED_GLYPH_MARKER {init_simple_glyph_pointer_motion(); } '{' kd_simple_timed_glyph_marker_defs '}'

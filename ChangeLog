@@ -1,5 +1,6 @@
 0.1.2
   background image
+  text can now be escaped for markup if needed
   all PNG images can now be read as raw images
   new style attributes: font name, justify
   new region attributes: clip
