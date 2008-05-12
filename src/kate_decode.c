@@ -364,6 +364,7 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,oggpack_buffer *
   }
   else {
     ks->justify=0;
+    ks->font=NULL;
   }
 
   kate_warp(opb);
