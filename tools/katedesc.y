@@ -1287,6 +1287,7 @@ static void add_glyph_transition_to_text(const char *text,kate_float dt,kate_flo
     kevent.text=text2;
   }
 
+  backslash_n_to_newline(kevent.text);
   newtext=expand_numeric_entities(kevent.text);
   if (!newtext) return;
   kate_free(kevent.text);
