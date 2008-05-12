@@ -3,6 +3,7 @@
   all PNG images can now be read as raw images
   new style attributes: font name, justify
   new region attributes: clip
+  new mapping: bitmap size
   pkg-config files moved to misc/pkgconfig
 
 0.1.1
