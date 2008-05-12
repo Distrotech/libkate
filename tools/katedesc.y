@@ -2033,6 +2033,7 @@ kd_motion_mapping: NONE { $$=kate_motion_mapping_none; }
                  | FRAME { $$=kate_motion_mapping_frame; }
                  | REGION { $$=kate_motion_mapping_region; }
                  | EVENT DURATION { $$=kate_motion_mapping_event_duration; }
+                 | BITMAP SIZE { $$=kate_motion_mapping_bitmap_size; }
                  | USER UNUMBER {
                      if ($2<kate_motion_mapping_user) yyerrorf("invalid value for user motion mapping (%u), should be 128 or more",$2);
                      $$=(kate_motion_mapping)$2;

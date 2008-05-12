@@ -129,6 +129,7 @@ static const char *mapping2text(kate_motion_mapping d)
     case kate_motion_mapping_frame: return "frame";
     case kate_motion_mapping_region: return "region";
     case kate_motion_mapping_event_duration: return "event duration";
+    case kate_motion_mapping_bitmap_size: return "bitmap size";
     default: snprintf(tmp,sizeof(tmp),"user %u",d); return tmp;
   }
   return "invalid";

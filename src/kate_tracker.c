@@ -141,6 +141,10 @@ static int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapp
     case kate_motion_mapping_event_duration:
       *x=(*x)*(kin->event->end_time-kin->event->start_time);
       break;
+    case kate_motion_mapping_bitmap_size:
+      if (!kin->event->bitmap) return KATE_E_INVALID_PARAMETER;
+      *x=(*x)*kin->event->bitmap->width;
+      break;
     default:
       /* unknown mapping */
       return KATE_E_INVALID_PARAMETER;
@@ -161,6 +165,10 @@ static int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapp
       break;
     case kate_motion_mapping_event_duration:
       *y=(*y)*(kin->event->end_time-kin->event->start_time);
+      break;
+    case kate_motion_mapping_bitmap_size:
+      if (!kin->event->bitmap) return KATE_E_INVALID_PARAMETER;
+      *y=(*y)*kin->event->bitmap->height;
       break;
     default:
       /* unknown mapping */

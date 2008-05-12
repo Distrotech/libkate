@@ -3,7 +3,24 @@ kate {
     define bitmap { source "examples/kate/sample.png" }
 
     define region { percent position 45 45 size 10 10 }
+    define region { percent position 15 75 size 10 10 clip }
+    define style { background color 190 190 250 32 }
+
+    define motion "brownian" {
+      mapping region
+      semantics bitmap position
+      curve { catmull_rom 5 points { 0.5 0.5   0 0   1 0  0 1  1 1 } } for 3
+      periodic
+    }
+    define motion "pulse" {
+      mapping bitmap size
+      semantics bitmap size
+      curve { catmull_rom 2 points { 0.5 0.5   1.5 1.5 } } for 2
+      periodic
+    }
   }
 
-  event { 00:0.1 --> 0:0:30 region 0 bitmap 0 }
+  event { 0:0:0 --> 0:0:30 region 0 bitmap 0 }
+  event { 0:0:0 --> 0:0:30 region 1 bitmap 0 style 0 motion "brownian" motion "pulse" }
+
 }

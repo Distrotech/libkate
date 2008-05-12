@@ -140,6 +140,7 @@ typedef enum kate_motion_mapping {
   kate_motion_mapping_window,                /**< 0x0 at top left of window, 1x1 at bottom right of window */
   kate_motion_mapping_region,                /**< 0x0 at top left of region, 1x1 at bottom right of region */
   kate_motion_mapping_event_duration,        /**< 0-1 map to 0 to the duration of the event (to be used with time) */
+  kate_motion_mapping_bitmap_size,           /**< 0x0 at top left of bitmap, 1x1 at bottom right of bitmap */
 
 #if 0
   text is useful, find a way to readd it easily
