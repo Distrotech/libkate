@@ -982,7 +982,7 @@ static char *escape_markup(const char *text)
 
   for (;;) {
     /* this search only works for ASCII target characters */
-    const char *next=strpbrk(text,"<>");
+    const char *next=strpbrk(text,"<&>");
     if (!next) {
       newtext=catstrings(newtext,text);
       break;
@@ -992,6 +992,7 @@ static char *escape_markup(const char *text)
 
     switch (*next) {
       case '<': newtext=catstrings(newtext,"&lt;"); break;
+      case '&': newtext=catstrings(newtext,"&amp;"); break;
       case '>': newtext=catstrings(newtext,"&gt;"); break;
       default: yyerrorf("did not expect to have to escape %c",*next); break;
     }
