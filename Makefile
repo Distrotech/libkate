@@ -189,10 +189,10 @@ install:
 	cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/lib/pkgconfig
 	cat misc/pkgconfig/kate.pc\
-           | awk -v px=$(PREFIX) '/^prefix=/ {print "prefix="px; next} {print}' \
+           | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/kate.pc
 	cat misc/pkgconfig/oggkate.pc | \
-           awk -v px=$(PREFIX) '/^prefix=/ {print "prefix="px; next} {print}' \
+           awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/oggkate.pc
 
 .PHONY: uninstall
