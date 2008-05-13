@@ -258,7 +258,7 @@ oggzdiff=cmp
 endif
 
 .PHONY: check
-check: tools/decoder
+check: tools/decoder tools/encoder
 	@echo " Checking Kate namespace"
 	@! nm -a $(STATICLIBS) $(SHAREDLIBS) \
          | grep "^[0-9a-z]\{8\} [A-T] [^\.]" \
