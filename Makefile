@@ -228,24 +228,35 @@ ogg_merger:=$(shell which oggzmerge 2> /dev/null | sed -e 's,oggzmerge$$,oggzmer
 ifeq ($(ogg_merger),)
 ogg_merger:=$(shell which oggmerge 2> /dev/null | sed -e 's,oggmerge$$,oggmerge -q,')
 endif
+video_theora_ogg:=$(shell ls video.theora.ogg 2> /dev/null)
 
-$(OGGDIR)/%.ogg: examples/kate/%.kate video.theora.ogg tools/encoder
-ifneq ($(ogg_merger),)
+.PRECIOUS: $(OGGDIR)/%.kate.ogg
+$(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/encoder
 	@echo " Building Kate stream from $<"
 	@mkdir -p $(dir $@)
 	@./tools/encoder -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
-	@$(ogg_merger) -o $@ $(OGGDIR)/$(notdir $<).ogg video.theora.ogg
+
+$(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg video.theora.ogg tools/encoder
+ifneq ($(ogg_merger),)
+	@echo " Merging video with Kate stream from $<"
+	@$(ogg_merger) -o $@ $(OGGDIR)/$(notdir $<) video.theora.ogg
 else
 	echo "Building $@ needs either oggmerge or oggzmerge"
 endif
 
 video.theora.ogg:
-	@echo You need to link a Theora file to video.theora.ogg in the main Kate directory
+	@echo To be able to merge Kate streams to a sample video, you need to link a Theora file
+	@echo to video.theora.ogg in the main Kate directory.
 	@echo A plain darkish background at 640x480 should be good
-	@/bin/false
+	@echo If no such file is found, Kate streams will be built as single lone streams.
 
 STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
+ifneq ($(video_theora_ogg),)
 streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).ogg)
+else
+streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).kate.ogg) \
+         video.theora.ogg
+endif
 
 tmp_ogg1:="kate-check-1.kate.ogg"
 tmp_ogg2:="kate-check-2.kate.ogg"
