@@ -613,6 +613,7 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,oggpack_buffer
     switch (kb->type) {
       case kate_bitmap_type_png:
         kb->size=kate_read32(opb);
+        if (!ki->no_limits && kb->size>KATE_LIMIT_BITMAP_RAW_SIZE) return KATE_E_LIMIT;
         pixels=(unsigned char*)kate_malloc(kb->size);
         if (!pixels) return KATE_E_OUT_OF_MEMORY;
         kate_readbuf(opb,(char*)pixels,kb->size);
