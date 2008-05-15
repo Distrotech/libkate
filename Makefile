@@ -179,14 +179,15 @@ clean:
 	rm -f tools/lex.katedesc.c
 
 .PHONY: install
-install:
+install: staticlib sharedlib
 	mkdir -p $(PREFIX)/include/kate
 	cp include/kate/kate.h include/kate/oggkate.h $(PREFIX)/include/kate/
 	mkdir -p $(PREFIX)/lib
 	cp $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a $(PREFIX)/lib/
 	cp $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so $(PREFIX)/lib/
 	cp -P $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
+	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
+	-/sbin/ldconfig -n $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/lib/pkgconfig
 	cat misc/pkgconfig/kate.pc\
            | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \

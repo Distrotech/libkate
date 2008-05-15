@@ -6,6 +6,7 @@
   new region attributes: clip
   new mapping: bitmap size
   pkg-config files moved to misc/pkgconfig
+  dodgy workarounds for building with enforcing SELinux
 
 0.1.1
   Examples now build with the new API
