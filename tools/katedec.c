@@ -146,7 +146,7 @@ static const char *directionality2text(kate_text_directionality d)
   return "invalid";
 }
 
-static void write_text(FILE *f,const char *text,size_t len0)
+static void write_text(FILE *f,const char *text,size_t len0,kate_markup_type text_markup_type)
 {
   while (1) {
     int ret=kate_text_get_character(kate_utf8,&text,&len0);
@@ -159,7 +159,13 @@ static void write_text(FILE *f,const char *text,size_t len0)
     }
     else {
       /* be conservative in what we encode */
-      if (ret>=32 && ret<127 && !strchr("\"\r\n&<>`'|\\",ret)) {
+      const char *escape="";
+      switch (text_markup_type) {
+        case kate_markup_none: escape="\"\r\n`'|\\"; break; // "<&>"; break;
+        case kate_markup_simple: escape="\"\r\n`'|\\"; break;
+        default: fprintf(stderr,"Unknown text markup type (%d)\n",text_markup_type); break;
+      }
+      if (ret>=32 && ret<127 && !strchr(escape,ret)) {
         fprintf(f,"%c",ret);
       }
       else {
@@ -610,8 +616,14 @@ static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
   if (ev->text_directionality!=ki->text_directionality) {
     fprintf(fout,"    directionality %s\n",directionality2text(ev->text_directionality));
   }
-  fprintf(fout,"    pre text \"");
-  write_text(fout,ev->text,ev->len0);
+  fprintf(fout,"    pre ");
+  switch (ev->text_markup_type) {
+    default: /* default to a sensible default */
+    case kate_markup_none: fprintf(fout,"text"); break;
+    case kate_markup_simple: fprintf(fout,"markup"); break;
+  }
+  fprintf(fout," \"");
+  write_text(fout,ev->text,ev->len0,ev->text_markup_type);
   fprintf(fout,"\"\n");
   if (ev->region) {
     int idx=kate_find_region(ki,ev->region);

@@ -86,6 +86,7 @@ typedef struct kd_event {
   kate_float t1;
   kate_float duration;
   char *text;
+  kate_markup_type text_markup_type;
   int region_index;
   const kate_region *region;
   int style_index;
@@ -146,23 +147,6 @@ static char *catstrings(char *s1,const char *s2)
   s=(char*)kate_realloc(s1,len);
   if (!s) { yyerror("out of memory"); exit(-1); }
   if (s1) strcat(s,s2); else strcpy(s,s2);
-
-  return s;
-}
-
-static char *catstrings_part(char *s1,const char *s2,size_t bytes)
-{
-  size_t len;
-  char *s;
-
-  if (!s2) yyerror("internal error: no string to append");
-  len=(s1?strlen(s1):0)+bytes+1;
-  s=(char*)kate_realloc(s1,len);
-  if (!s) { yyerror("out of memory"); exit(-1); }
-  if (!s1) {
-    *s=0;
-  }
-  strncat(s,s2,bytes);
 
   return s;
 }
@@ -734,6 +718,7 @@ static void init_event(kd_event *ev)
 {
   ev->t0=ev->t1=ev->duration=-1.0;
   ev->text=NULL;
+  ev->text_markup_type=kate_markup_none;
   ev->region_index=ev->style_index=ev->secondary_style_index=-1;
   ev->region=NULL;
   ev->style=NULL;
@@ -749,6 +734,20 @@ static void kd_encode_set_id(kate_state *kstate,unsigned int id)
   kate_encode_set_id(kstate,id);
 }
 
+static int add_entity(const char *entity,char **text,size_t *wlen0)
+{
+  int count=0;
+
+  /* write out the entity */
+  while (*entity) {
+    int ret=kate_text_set_character(kate_utf8,*entity,text,wlen0);
+    if (ret<0) return ret;
+    count+=ret;
+    ++entity;
+  }
+  return count;
+}
+
 static char *expand_numeric_entities(const char *text)
 {
   enum {
@@ -757,9 +756,11 @@ static char *expand_numeric_entities(const char *text)
     s_hex,
     s_named
   } state=s_text;
-  int c,code=0;
-  size_t len=strlen(text),len0=len+1,rlen0=len0,wlen0=len0;
-  char *newtext=(char*)kate_malloc(len0),*newtextptr=newtext;
+  int c,code=0,code_from_numeric;
+  size_t len=strlen(text),len0=len+1,rlen0=len0,wlen0=len0,allocated=len0;
+  /* we might need to replace "&#00;" with "&amp;" - we can't use more characters, so we needn't allocate more */
+  /* this might change if we even can replace a numeric entity with a named one that is longer as a string */
+  char *newtext=(char*)kate_malloc(allocated),*newtextptr=newtext;
 
   if (!newtext) { yyerror("out of memory"); exit(-1); }
 
@@ -772,6 +773,7 @@ static char *expand_numeric_entities(const char *text)
     }
     c=ret;
 
+    code_from_numeric=0;
     switch (state) {
       case s_text:
         if (c=='&') {
@@ -799,6 +801,7 @@ static char *expand_numeric_entities(const char *text)
       case s_hex:
         if (c==';') {
           c=code; /* this will be written below */
+          code_from_numeric=1;
           state=s_text;
         }
         else {
@@ -816,7 +819,19 @@ static char *expand_numeric_entities(const char *text)
     }
 
     if (state==s_text || state==s_named) {
-      ret=kate_text_set_character(kate_utf8,c,&newtextptr,&wlen0);
+      /* we don't want to expand characters in "<&>" as they would then be wrongly interpreted,
+         so we insert here as entities - note that we don't want to expand them and do another
+         pass to reencode them, as we then might pick up others that *were* in the text verbatim */
+      if (code_from_numeric && strchr("<&>",c)) {
+        switch (c) {
+          case '<': ret=add_entity("&lt;",&newtextptr,&wlen0); break;
+          case '&': ret=add_entity("&amp;",&newtextptr,&wlen0); break;
+          case '>': ret=add_entity("&gt;",&newtextptr,&wlen0); break;
+        }
+      }
+      else {
+        ret=kate_text_set_character(kate_utf8,c,&newtextptr,&wlen0);
+      }
       if (ret<0) {
         yyerrorf("failed to write character: %d",ret);
         kate_free(newtext);
@@ -848,16 +863,16 @@ static char *getline(const char **text)
       size_t len=strlen(start_of_line);
       char *line=(char*)kate_malloc(len+1);
       memcpy(line,start_of_line,len+1);
-      --*text; /* do not push past the 0 */
+      *text=ptr; /* do not push past the start of the new line */
       return line;
     }
     newline=(strchr("\n\r",c)!=NULL);
     if (!newline && in_newline) {
       /* we are at the start of a new line */
-      char *line=(char*)kate_malloc(ptr-start_of_line);
+      char *line=(char*)kate_malloc(ptr-start_of_line+1);
       memcpy(line,start_of_line,ptr-start_of_line);
-      line[ptr-start_of_line-1]=0;
-      --*text; /* do not push past the start of the new line */
+      line[ptr-start_of_line]=0;
+      *text=ptr; /* do not push past the start of the new line */
       return line;
     }
     in_newline=newline;
@@ -975,36 +990,9 @@ static void backslash_n_to_newline(char *text)
   }
 }
 
-static char *escape_markup(const char *text)
-{
-  char *newtext=(char*)kate_malloc(1);
-  *newtext=0;
-
-  for (;;) {
-    /* this search only works for ASCII target characters */
-    const char *next=strpbrk(text,"<&>");
-    if (!next) {
-      newtext=catstrings(newtext,text);
-      break;
-    }
-
-    newtext=catstrings_part(newtext,text,next-text);
-
-    switch (*next) {
-      case '<': newtext=catstrings(newtext,"&lt;"); break;
-      case '&': newtext=catstrings(newtext,"&amp;"); break;
-      case '>': newtext=catstrings(newtext,"&gt;"); break;
-      default: yyerrorf("did not expect to have to escape %c",*next); break;
-    }
-    text=next+1;
-  }
-
-  return newtext;
-}
-
 static void set_event_text(kd_event *ev,const char *text,int pre,int markup)
 {
-  char *newtext;
+  char *newtext,*expanded;
   size_t len;
 
   if (ev->text) {
@@ -1021,11 +1009,9 @@ static void set_event_text(kd_event *ev,const char *text,int pre,int markup)
   memcpy(newtext,text,len+1);
   backslash_n_to_newline(newtext);
 
-  if (!markup) {
-    char *escaped=escape_markup(newtext);
-    kate_free(newtext);
-    newtext=escaped;
-  }
+  expanded=expand_numeric_entities(newtext);
+  kate_free(newtext);
+  newtext=expanded;
 
   if (!pre) {
     char *trimmed_newtext=trimtext(newtext);
@@ -1038,8 +1024,14 @@ static void set_event_text(kd_event *ev,const char *text,int pre,int markup)
     newtext=trimmed_newtext;
   }
 
-  ev->text=expand_numeric_entities(newtext);
-  kate_free(newtext);
+  if (markup) {
+    ev->text_markup_type=kate_markup_simple;
+  }
+  else {
+    ev->text_markup_type=kate_markup_none;
+  }
+
+  ev->text=newtext;
 }
 
 static void set_event_t0_t1(kd_event *ev,kate_float t0,kate_float t1)
@@ -1228,7 +1220,7 @@ static size_t get_num_glyphs(const char *text)
   size_t nglyphs=0;
   int intag=0,c;
 
-  while ((c=kate_text_get_character(kate_utf8,&text,&len0))) {
+  while ((c=kate_text_get_character(kate_utf8,&text,&len0))>0) {
     if (c=='<') intag++;
     if (!intag) ++nglyphs;
     if (c=='>') intag--;
@@ -1628,7 +1620,15 @@ static void kd_write_headers(void)
 
 static void kd_encode_text(kate_state *k,kd_event *ev)
 {
-  int ret=kate_ogg_encode_text(k,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
+  int ret;
+
+  ret=kate_encode_set_markup_type(k,ev->text_markup_type);
+  if (ret<0) {
+    yyerrorf("failed to set text markup type: %d",ret);
+    cancel_packet();
+    return;
+  }
+  ret=kate_ogg_encode_text(k,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
   if (ret<0) {
     yyerrorf("failed to encode text %s: %d",ev->text?ev->text:"<none>",ret);
     cancel_packet();

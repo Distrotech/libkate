@@ -25,6 +25,7 @@ static int kate_event_init(kate_event *ev,const kate_info *ki)
 
   ev->text_encoding=ki->text_encoding;
   ev->text_directionality=ki->text_directionality;
+  ev->text_markup_type=ki->text_markup_type;
   ev->language=NULL;
   ev->text=NULL;
   ev->len=0;

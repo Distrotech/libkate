@@ -72,6 +72,7 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
   }
   kes->overrides.text_encoding=ki->text_encoding;
   kes->overrides.text_directionality=ki->text_directionality;
+  kes->overrides.text_markup_type=ki->text_markup_type;
 
   kes->overrides.region_index=-1;
   kes->overrides.region=NULL;

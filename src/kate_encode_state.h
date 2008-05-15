@@ -42,6 +42,7 @@ typedef struct kate_encode_state {
     char *language;
     kate_text_encoding text_encoding;
     kate_text_directionality text_directionality;
+    kate_markup_type text_markup_type;
     int region_index;
     const kate_region *region;
     int style_index;

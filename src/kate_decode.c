@@ -924,11 +924,6 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
   ev->len=len;
   ev->len0=len+4;
 
-  if (k->ki->remove_markup) {
-    ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);
-    if (ret<0) goto error;
-  }
-
   if (oggpack_read(opb,1)) {
     ev->id=kate_read32v(opb);
   }
@@ -1019,7 +1014,7 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
   }
 
   if (((k->ki->bitstream_version_major<<8)|k->ki->bitstream_version_minor)>=0x0002) {
-    /* 0.2 adds a warp for palette and bitmap */
+    /* 0.2 adds a warp for palette, bitmap, markup type */
     kate_read32v(opb); /* the size of the warp */
     if (oggpack_read(opb,1)) {
       READ_OVERRIDE(
@@ -1044,10 +1039,17 @@ static int kate_decode_text_packet(kate_state *k,oggpack_buffer *opb)
         ret=kate_decode_bitmap(k->ki,ev->bitmap,opb);
         if (ret<0) goto error;
       );
+      READ_OVERRIDE(ev->text_markup_type=oggpack_read(opb,8));
     }
   }
 
   kate_warp(opb);
+
+  if (ev->text_markup_type!=kate_markup_none && k->ki->remove_markup) {
+    ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);
+    if (ret<0) goto error;
+    ev->text_markup_type=kate_markup_none;
+  }
 
   /* if no style, use the region (if any) default style */
   if (!ev->style && ev->region) {

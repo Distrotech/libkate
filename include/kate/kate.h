@@ -56,6 +56,12 @@ typedef enum {
   kate_utf8                      /**< utf-8 variable length byte encoding, see RFC 3629 */
 } kate_text_encoding;
 
+/** defines the type of markup in a text */
+typedef enum {
+  kate_markup_none,              /**< the text should not be interpreted for markup */
+  kate_markup_simple,            /**< the text should be interpreted for simple markup */
+} kate_markup_type;
+
 /** defines how to interpret spatial dimension values */
 typedef enum {
   kate_pixel,                    /**< dimensions are in pixels */
@@ -301,7 +307,9 @@ typedef struct kate_info {
   size_t nfont_mappings;                                     /**< the number of predefined font mappings */
   kate_const kate_font_mapping *kate_const *font_mappings;   /**< the list of predefined font mappings */
 
-  uintptr_t pad2[14];
+  kate_markup_type text_markup_type;             /**< how to interpret any markup found in the text */
+
+  uintptr_t pad2[13];
 
   /* internal */
   int remove_markup;
@@ -364,7 +372,9 @@ typedef struct kate_event {
   kate_const kate_palette *palette;             /**< palette to use as background (may be NULL for none) */
   kate_const kate_bitmap *bitmap;               /**< bitmap to use as background (may be NULL for none) */
 
-  uintptr_t pad0[9];
+  kate_markup_type text_markup_type;            /**< how to interpret any markup found in the text */
+
+  uintptr_t pad0[8];
 
   /* internal */
   const kate_info *ki;
@@ -505,6 +515,7 @@ extern int kate_info_init(kate_info *ki);
 extern int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_float max_length,kate_float max_event_lifetime);
 extern int kate_info_set_language(kate_info *ki,const char *language);
 extern int kate_info_set_text_directionality(kate_info *ki,kate_text_directionality text_directionality);
+extern int kate_info_set_markup_type(kate_info *ki,kate_markup_type text_markup_type);
 extern int kate_info_set_category(kate_info *ki,const char *category);
 extern int kate_info_add_region(kate_info *ki,kate_region *kr);
 extern int kate_info_add_style(kate_info *ki,kate_style *ks);
@@ -566,6 +577,7 @@ extern int kate_encode_set_palette_index(kate_state *k,size_t palette);
 extern int kate_encode_set_palette(kate_state *k,const kate_palette *kp);
 extern int kate_encode_set_bitmap_index(kate_state *k,size_t bitmap);
 extern int kate_encode_set_bitmap(kate_state *k,const kate_bitmap *kb);
+extern int kate_encode_set_markup_type(kate_state *k,int markup_type);
 
 /** \defgroup decoding Decoding */
 extern int kate_decode_is_idheader(const kate_packet *kp);

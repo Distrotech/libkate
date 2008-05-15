@@ -38,6 +38,7 @@ int kate_info_init(kate_info *ki)
 
   ki->text_encoding=kate_utf8;
   ki->text_directionality=kate_l2r_t2b;
+  ki->text_markup_type=kate_markup_none;
 
   ki->language=NULL;
   ki->category=NULL;
@@ -189,6 +190,21 @@ int kate_info_set_category(kate_info *ki,const char *category)
 {
   if (!ki) return KATE_E_INVALID_PARAMETER;
   return kate_replace_string(&ki->category,category);
+}
+
+/**
+  \ingroup info
+  Sets the default text markup type for this bitstream
+  \param ki the kate_info structure for the stream
+  \param text_markup_type the default text markup type to set for this stream
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_info_set_markup_type(kate_info *ki,kate_markup_type text_markup_type)
+{
+  if (!ki) return KATE_E_INVALID_PARAMETER;
+  ki->text_markup_type=text_markup_type;
+  return 0;
 }
 
 static int kate_info_add_item(kate_info *ki,size_t *nitems,void ***items,void *item)

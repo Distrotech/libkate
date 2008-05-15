@@ -745,18 +745,20 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
   else oggpack_write(opb,0,1);
 
   {
-    /* bitstream 0.2: add palette and bitmap */
+    /* bitstream 0.2: add palette, bitmap, markup type */
     oggpack_buffer warp;
     kate_open_warp(&warp);
     if (kes->overrides.palette_index>=0
      || kes->overrides.palette
      || kes->overrides.bitmap_index>=0
-     || kes->overrides.bitmap) {
+     || kes->overrides.bitmap
+     || kes->overrides.text_markup_type!=k->ki->text_markup_type) {
       oggpack_write(&warp,1,1);
       WRITE_OVERRIDE(&warp,palette_index,-1,kate_write32v(&warp,kes->overrides.palette_index));
       WRITE_OVERRIDE(&warp,palette,NULL,ret=kate_encode_palette(kes->overrides.palette,&warp));
       WRITE_OVERRIDE(&warp,bitmap_index,-1,kate_write32v(&warp,kes->overrides.bitmap_index));
       WRITE_OVERRIDE(&warp,bitmap,NULL,ret=kate_encode_bitmap(kes->overrides.bitmap,&warp));
+      WRITE_OVERRIDE(&warp,text_markup_type,k->ki->text_markup_type,oggpack_write(&warp,kes->overrides.text_markup_type,8));
     }
     else oggpack_write(&warp,0,1);
     kate_close_warp(&warp,opb);
@@ -1284,6 +1286,24 @@ int kate_encode_set_language(kate_state *k,const char *language) /* language can
 
   if (k->kes->overrides.language) kate_free(k->kes->overrides.language);
   k->kes->overrides.language=l;
+
+  return 0;
+}
+
+/**
+  \ingroup encoding
+  Sets the markup type of this event
+  \param k the kate_state to encode to
+  \param text_markup_type the markup type of this event
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_set_markup_type(kate_state *k,int text_markup_type)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  k->kes->overrides.text_markup_type=text_markup_type;
 
   return 0;
 }

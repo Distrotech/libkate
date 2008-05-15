@@ -2,14 +2,16 @@
 kate {
   defs {
     define region "r1" { percent position 10 10 size 80 20 }
-    define region "r2" { percent position 10 30 size 80 20 }
-    define region "r3" { percent position 10 50 size 80 20 }
-    define region "r4" { percent position 10 70 size 80 20 }
+    define region "r2" { percent position 10 25 size 80 20 }
+    define region "r3" { percent position 10 40 size 80 20 }
+    define region "r4" { percent position 10 55 size 80 20 }
+    define region "r5" { percent position 10 70 size 80 20 }
   }
 
   event 0:0:01 --> 0:1:00 region "r1" markup "normal, <i>italics, <b>+bold</b></i>"
   event 0:0:01 --> 0:1:00 region "r2" markup "<b>bold, <i>and italics</i></b>"
   event 0:0:01 --> 0:1:00 region "r3" markup "not<s>strike</s>d text"
   event 0:0:01 --> 0:1:00 region "r4" markup "<u>under<s>strike</s></u>"
+  event 0:0:01 --> 0:1:00 region "r5" text "no <b>markup</b>: <>&&&<<<"
 }
 
