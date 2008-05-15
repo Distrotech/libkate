@@ -536,8 +536,15 @@ extern kate_float kate_granule_time(const kate_info *ki,kate_int64_t granulepos)
 extern kate_int64_t kate_duration_granule(const kate_info *ki,kate_float duration);
 extern kate_float kate_granule_duration(const kate_info *ki,kate_int64_t duration);
 
+/** \defgroup misc misc */
 extern int kate_clear(kate_state *k);
 extern int kate_motion_get_point(const kate_motion *km,kate_float duration,kate_float t,kate_float *x,kate_float *y);
+extern int kate_region_init(kate_region *kr);
+extern int kate_style_init(kate_style *ks);
+extern int kate_palette_init(kate_palette *kp);
+extern int kate_bitmap_init(kate_bitmap *kb);
+extern int kate_curve_init(kate_curve *kc);
+extern int kate_motion_init(kate_motion *km);
 
 /** \defgroup text Text manipulation */
 extern int kate_text_get_character(kate_text_encoding text_encoding,const char ** const text,size_t *len0);

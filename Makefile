@@ -48,7 +48,7 @@ CFLAGS_SHARED=$(CFLAGS) -fPIC
 CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
 LDFLAGS+=-L$(LIBDIR)
 
-VERSION=0.1.2
+VERSION=0.1.3
 SONAME_MAJOR=0
 
 MODULES=kate kate_info kate_comment kate_granule kate_event \

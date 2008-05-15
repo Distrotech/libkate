@@ -101,3 +101,151 @@ int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n)
   return 0;
 }
 
+/**
+  \ingroup misc
+  Initializes a kate region to sensible defaults
+  \param kr the region to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_region_init(kate_region *kr)
+{
+  static const kate_region default_region={
+    kate_percentage,
+    10,80,80,10,
+    -1,
+    0,
+    0,
+    {0,0,0,0,0,0}
+  };
+
+  if (!kr) return KATE_E_INVALID_PARAMETER;
+  memcpy(kr,&default_region,sizeof(kate_region));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate style to sensible defaults
+  \param ks the style to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_style_init(kate_style *ks)
+{
+  static const kate_style default_style={
+    0,0,
+    {255,255,255,255},
+    {0,0,0,0},
+    {255,255,255,255},
+    kate_pixel,
+    -1,-1,
+    kate_pixel,
+    0,0,0,0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    NULL,
+    {0,0,0,0,0,0,0,0,0}
+  };
+
+  if (!ks) return KATE_E_INVALID_PARAMETER;
+  memcpy(ks,&default_style,sizeof(kate_style));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate palette to sensible defaults
+  \param kp the palette to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_palette_init(kate_palette *kp)
+{
+  static const kate_palette default_palette={
+    0,
+    NULL,
+    {0,0}
+  };
+
+  if (!kp) return KATE_E_INVALID_PARAMETER;
+  memcpy(kp,&default_palette,sizeof(kate_palette));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate bitmap to sensible defaults
+  \param kb the bitmap to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_bitmap_init(kate_bitmap *kb)
+{
+  static const kate_bitmap default_bitmap={
+    0,0,
+    0,
+    kate_bitmap_type_png,
+    {0,0},
+    -1,
+    NULL,
+    0,
+    {0,0}
+  };
+
+  if (!kb) return KATE_E_INVALID_PARAMETER;
+  memcpy(kb,&default_bitmap,sizeof(kate_bitmap));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate curve to sensible defaults
+  \param kc the curve to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_curve_init(kate_curve *kc)
+{
+  static const kate_curve default_curve={
+    kate_curve_none,
+    0,
+    NULL,
+    {0,0,0,0,0}
+  };
+
+  if (!kc) return KATE_E_INVALID_PARAMETER;
+  memcpy(kc,&default_curve,sizeof(kate_curve));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate motion to sensible defaults
+  \param km the motion to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_motion_init(kate_motion *km)
+{
+  static const kate_motion default_motion={
+    0,
+    NULL,
+    NULL,
+    kate_motion_mapping_none,
+    kate_motion_mapping_none,
+    kate_motion_semantics_time,
+    0,
+    0,
+    {0,0,0,0,0}
+  };
+
+  if (!km) return KATE_E_INVALID_PARAMETER;
+  memcpy(km,&default_motion,sizeof(kate_motion));
+  return 0;
+}
+
