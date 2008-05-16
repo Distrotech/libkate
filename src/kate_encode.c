@@ -41,37 +41,42 @@ int kate_encode_init(kate_state *k,kate_info *ki)
   return 0;
 }
 
-static void kate_writebuf(oggpack_buffer *opb,const char *s,int len)
+static inline void kate_pack_write1(kate_pack_buffer *kpb,long value)
 {
-  while (len--) oggpack_write(opb,*s++,8);
+  kate_pack_write(kpb,value,1);
 }
 
-static void kate_write32(oggpack_buffer *opb,kate_int32_t v)
+static void kate_writebuf(kate_pack_buffer *kpb,const char *s,int len)
 {
-  oggpack_write(opb,v&0xff,8);
-  v>>=8;
-  oggpack_write(opb,v&0xff,8);
-  v>>=8;
-  oggpack_write(opb,v&0xff,8);
-  v>>=8;
-  oggpack_write(opb,v&0xff,8);
+  while (len--) kate_pack_write(kpb,*s++,8);
 }
 
-static void kate_write32v(oggpack_buffer *opb,kate_int32_t v)
+static void kate_write32(kate_pack_buffer *kpb,kate_int32_t v)
+{
+  kate_pack_write(kpb,v&0xff,8);
+  v>>=8;
+  kate_pack_write(kpb,v&0xff,8);
+  v>>=8;
+  kate_pack_write(kpb,v&0xff,8);
+  v>>=8;
+  kate_pack_write(kpb,v&0xff,8);
+}
+
+static void kate_write32v(kate_pack_buffer *kpb,kate_int32_t v)
 {
   if (v>=0 && v<=14) {
-    oggpack_write(opb,v,4);
+    kate_pack_write(kpb,v,4);
   }
   else {
     int bits=0;
     kate_int32_t tmp;
-    oggpack_write(opb,15,4);
+    kate_pack_write(kpb,15,4);
     if (v&0x80000000) {
-      oggpack_write(opb,1,1);
+      kate_pack_write1(kpb,1);
       v=-v;
     }
     else {
-      oggpack_write(opb,0,1);
+      kate_pack_write1(kpb,0);
     }
     tmp=v;
     while (tmp) {
@@ -79,60 +84,60 @@ static void kate_write32v(oggpack_buffer *opb,kate_int32_t v)
       tmp>>=1;
     }
     if (bits==0) bits=1;
-    oggpack_write(opb,bits-1,5);
-    oggpack_write(opb,v,bits);
+    kate_pack_write(kpb,bits-1,5);
+    kate_pack_write(kpb,v,bits);
   }
 }
 
-static void kate_write64(oggpack_buffer *opb,kate_int64_t v)
+static void kate_write64(kate_pack_buffer *kpb,kate_int64_t v)
 {
-  kate_write32(opb,(kate_int32_t)v);
+  kate_write32(kpb,(kate_int32_t)v);
   v>>=32;
-  kate_write32(opb,(kate_int32_t)v);
+  kate_write32(kpb,(kate_int32_t)v);
 }
 
-static void kate_open_warp(oggpack_buffer *warp)
+static void kate_open_warp(kate_pack_buffer *warp)
 {
-  oggpack_writeinit(warp);
+  kate_pack_writeinit(warp);
 }
 
-static void kate_close_warp(oggpack_buffer *warp,oggpack_buffer *opb)
+static void kate_close_warp(kate_pack_buffer *warp,kate_pack_buffer *kpb)
 {
-  int bits=oggpack_bits(warp);
-  unsigned char *buffer=oggpack_get_buffer(warp);
-  kate_write32v(opb,bits);
+  int bits=kate_pack_bits(warp);
+  unsigned char *buffer=kate_pack_get_buffer(warp);
+  kate_write32v(kpb,bits);
   while (bits>0) {
-    oggpack_writecopy(opb,buffer,bits>32?32:bits);
+    kate_pack_writecopy(kpb,buffer,bits>32?32:bits);
     buffer+=32/8;
     bits-=32;
   }
-  oggpack_writeclear(warp);
+  kate_pack_writeclear(warp);
 }
 
-static void kate_warp(oggpack_buffer *opb)
+static void kate_warp(kate_pack_buffer *kpb)
 {
-  oggpack_buffer warp;
+  kate_pack_buffer warp;
   kate_open_warp(&warp);
-  kate_close_warp(&warp,opb);
+  kate_close_warp(&warp,kpb);
 }
 
-static int kate_finalize_packet_buffer(oggpack_buffer *opb,kate_packet *op,kate_state *k)
+static int kate_finalize_packet_buffer(kate_pack_buffer *kpb,kate_packet *op,kate_state *k)
 {
-  if (!opb || !op || !k) return KATE_E_INVALID_PARAMETER;
+  if (!kpb || !op || !k) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   /* fill up any remaining bits in the last byte with zeros */
-  oggpack_writealign(opb);
+  kate_pack_writealign(kpb);
 
-  op->nbytes=oggpack_bytes(opb);
+  op->nbytes=kate_pack_bytes(kpb);
   op->data=kate_malloc(op->nbytes);
   if (!op->data) return KATE_E_OUT_OF_MEMORY;
 
-  memcpy(op->data,oggpack_get_buffer(opb),op->nbytes);
+  memcpy(op->data,kate_pack_get_buffer(kpb),op->nbytes);
 
   /* reset the buffer so we're ready for next packet */
-  oggpack_writeclear(opb);
-  oggpack_writeinit(opb);
+  kate_pack_writeclear(kpb);
+  kate_pack_writeinit(kpb);
 
   ++k->kes->packetno;
 
@@ -142,19 +147,19 @@ static int kate_finalize_packet_buffer(oggpack_buffer *opb,kate_packet *op,kate_
   return 0;
 }
 
-static int kate_encode_start_header(oggpack_buffer *opb,int headerid)
+static int kate_encode_start_header(kate_pack_buffer *kpb,int headerid)
 {
-  if (!opb || !(headerid&0x80)) return KATE_E_INVALID_PARAMETER;
+  if (!kpb || !(headerid&0x80)) return KATE_E_INVALID_PARAMETER;
 
-  oggpack_write(opb,headerid,8);
-  kate_writebuf(opb,"kate\0\0\0\0",8);
+  kate_pack_write(kpb,headerid,8);
+  kate_writebuf(kpb,"kate\0\0\0\0",8);
 
   return 0;
 }
 
 static int kate_encode_info(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t len;
   int ret;
@@ -162,48 +167,48 @@ static int kate_encode_info(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x80);
+  ret=kate_encode_start_header(kpb,0x80);
   if (ret<0) return ret;
 
   ki=k->ki;
-  oggpack_write(opb,KATE_BITSTREAM_VERSION_MAJOR,8);
-  oggpack_write(opb,KATE_BITSTREAM_VERSION_MINOR,8);
-  oggpack_write(opb,ki->num_headers,8);
-  oggpack_write(opb,ki->text_encoding,8);
-  oggpack_write(opb,ki->text_directionality,8);
-  oggpack_write(opb,0,8); /* reserved - 0 */
-  oggpack_write(opb,kate_granule_shift(k->ki),8);
-  kate_write32(opb,0); /* reserved - 0 */
-  kate_write32(opb,0); /* reserved - 0 */
-  kate_write32(opb,ki->gps_numerator);
-  kate_write32(opb,ki->gps_denominator);
+  kate_pack_write(kpb,KATE_BITSTREAM_VERSION_MAJOR,8);
+  kate_pack_write(kpb,KATE_BITSTREAM_VERSION_MINOR,8);
+  kate_pack_write(kpb,ki->num_headers,8);
+  kate_pack_write(kpb,ki->text_encoding,8);
+  kate_pack_write(kpb,ki->text_directionality,8);
+  kate_pack_write(kpb,0,8); /* reserved - 0 */
+  kate_pack_write(kpb,kate_granule_shift(k->ki),8);
+  kate_write32(kpb,0); /* reserved - 0 */
+  kate_write32(kpb,0); /* reserved - 0 */
+  kate_write32(kpb,ki->gps_numerator);
+  kate_write32(kpb,ki->gps_denominator);
 
   /* language is a 15+1 character max null terminated string */
   if (ki->language) {
     len=strlen(ki->language);
     if (len>15) return KATE_E_LIMIT;
-    kate_writebuf(opb,ki->language,len);
+    kate_writebuf(kpb,ki->language,len);
   }
   else len=0;
-  while (len++<16) oggpack_write(opb,0,8);
+  while (len++<16) kate_pack_write(kpb,0,8);
 
   /* category is a 15+1 character max null terminated string */
   if (ki->category) {
     len=strlen(ki->category);
     if (len>15) return KATE_E_LIMIT;
-    kate_writebuf(opb,ki->category,len);
+    kate_writebuf(kpb,ki->category,len);
   }
   else len=0;
-  while (len++<16) oggpack_write(opb,0,8);
+  while (len++<16) kate_pack_write(kpb,0,8);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
 static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   const char *vendor;
   int vendor_len;
   int ret;
@@ -211,9 +216,9 @@ static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *op)
   if (!k || !kc || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x81);
+  ret=kate_encode_start_header(kpb,0x81);
   if (ret<0) return ret;
 
   vendor=kate_get_version_string();
@@ -221,57 +226,57 @@ static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *op)
   vendor_len=strlen(vendor);
 
   /* mostly copied from theora encoder_toplevel.c */
-  kate_write32(opb,vendor_len);
-  kate_writebuf(opb,vendor,vendor_len);
+  kate_write32(kpb,vendor_len);
+  kate_writebuf(kpb,vendor,vendor_len);
 
   if (kc->comments<0) return KATE_E_INIT;
-  kate_write32(opb,kc->comments);
+  kate_write32(kpb,kc->comments);
   if (kc->comments) {
     int i;
     for(i=0;i<kc->comments;++i) {
       if (kc->user_comments[i]) {
         if (kc->comment_lengths[i]<0) return KATE_E_INIT;
-        kate_write32(opb,kc->comment_lengths[i]);
+        kate_write32(kpb,kc->comment_lengths[i]);
         ret=kate_text_validate(kate_utf8,kc->user_comments[i],kc->comment_lengths[i]);
         if (ret<0) return ret;
-        kate_writebuf(opb,kc->user_comments[i],kc->comment_lengths[i]);
+        kate_writebuf(kpb,kc->user_comments[i],kc->comment_lengths[i]);
       }
       else {
-        kate_write32(opb,0);
+        kate_write32(kpb,0);
       }
     }
   }
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_region(const kate_region *kr,oggpack_buffer *opb)
+static int kate_encode_region(const kate_region *kr,kate_pack_buffer *kpb)
 {
-  if (!kr || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kr || !kpb) return KATE_E_INVALID_PARAMETER;
 
-  oggpack_write(opb,kr->metric,8);
-  kate_write32v(opb,kr->x);
-  kate_write32v(opb,kr->y);
-  kate_write32v(opb,kr->w);
-  kate_write32v(opb,kr->h);
-  kate_write32v(opb,kr->style);
+  kate_pack_write(kpb,kr->metric,8);
+  kate_write32v(kpb,kr->x);
+  kate_write32v(kpb,kr->y);
+  kate_write32v(kpb,kr->w);
+  kate_write32v(kpb,kr->h);
+  kate_write32v(kpb,kr->style);
 
   {
     /* bitstream 0.2: add clip */
-    oggpack_buffer warp;
+    kate_pack_buffer warp;
     kate_open_warp(&warp);
-    oggpack_write(&warp,kr->clip,1);
-    kate_close_warp(&warp,opb);
+    kate_pack_write1(&warp,kr->clip);
+    kate_close_warp(&warp,kpb);
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_regions(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -279,42 +284,42 @@ static int kate_encode_regions(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x82);
+  ret=kate_encode_start_header(kpb,0x82);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->nregions);
+  kate_write32v(kpb,ki->nregions);
 
   for(n=0;n<ki->nregions;++n) {
-    ret=kate_encode_region(ki->regions[n],opb);
+    ret=kate_encode_region(ki->regions[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_color(const kate_color *kc,oggpack_buffer *opb)
+static int kate_encode_color(const kate_color *kc,kate_pack_buffer *kpb)
 {
-  if (!kc || !opb) return KATE_E_INVALID_PARAMETER;
-  oggpack_write(opb,kc->r,8);
-  oggpack_write(opb,kc->g,8);
-  oggpack_write(opb,kc->b,8);
-  oggpack_write(opb,kc->a,8);
+  if (!kc || !kpb) return KATE_E_INVALID_PARAMETER;
+  kate_pack_write(kpb,kc->r,8);
+  kate_pack_write(kpb,kc->g,8);
+  kate_pack_write(kpb,kc->b,8);
+  kate_pack_write(kpb,kc->a,8);
   return 0;
 }
 
-static int kate_encode_style(const kate_style *ks,oggpack_buffer *opb)
+static int kate_encode_style(const kate_style *ks,kate_pack_buffer *kpb)
 {
   kate_float d[8];
   size_t idx;
 
-  if (!ks || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!ks || !kpb) return KATE_E_INVALID_PARAMETER;
 
   idx=0;
   d[idx++]=ks->halign;
@@ -325,22 +330,22 @@ static int kate_encode_style(const kate_style *ks,oggpack_buffer *opb)
   d[idx++]=ks->top_margin;
   d[idx++]=ks->right_margin;
   d[idx++]=ks->bottom_margin;
-  kate_fp_encode_kate_float(sizeof(d)/sizeof(d[0]),d,1,opb);
-  kate_encode_color(&ks->text_color,opb);
-  kate_encode_color(&ks->background_color,opb);
-  kate_encode_color(&ks->draw_color,opb);
-  oggpack_write(opb,ks->font_metric,8);
-  oggpack_write(opb,ks->margin_metric,8);
-  oggpack_write(opb,ks->bold,1);
-  oggpack_write(opb,ks->italics,1);
-  oggpack_write(opb,ks->underline,1);
-  oggpack_write(opb,ks->strike,1);
+  kate_fp_encode_kate_float(sizeof(d)/sizeof(d[0]),d,1,kpb);
+  kate_encode_color(&ks->text_color,kpb);
+  kate_encode_color(&ks->background_color,kpb);
+  kate_encode_color(&ks->draw_color,kpb);
+  kate_pack_write(kpb,ks->font_metric,8);
+  kate_pack_write(kpb,ks->margin_metric,8);
+  kate_pack_write1(kpb,ks->bold);
+  kate_pack_write1(kpb,ks->italics);
+  kate_pack_write1(kpb,ks->underline);
+  kate_pack_write1(kpb,ks->strike);
 
   {
     /* bitstream 0.2: add justify and font */
-    oggpack_buffer warp;
+    kate_pack_buffer warp;
     kate_open_warp(&warp);
-    oggpack_write(&warp,ks->justify,1);
+    kate_pack_write1(&warp,ks->justify);
     if (ks->font) {
       size_t len=strlen(ks->font);
       kate_write32v(&warp,len);
@@ -349,17 +354,17 @@ static int kate_encode_style(const kate_style *ks,oggpack_buffer *opb)
     else {
       kate_write32v(&warp,0);
     }
-    kate_close_warp(&warp,opb);
+    kate_close_warp(&warp,kpb);
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_styles(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -367,41 +372,41 @@ static int kate_encode_styles(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x83);
+  ret=kate_encode_start_header(kpb,0x83);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->nstyles);
+  kate_write32v(kpb,ki->nstyles);
 
   for(n=0;n<ki->nstyles;++n) {
-    ret=kate_encode_style(ki->styles[n],opb);
+    ret=kate_encode_style(ki->styles[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_curve(const kate_curve *kc,oggpack_buffer *opb)
+static int kate_encode_curve(const kate_curve *kc,kate_pack_buffer *kpb)
 {
-  if (!kc || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kc || !kpb) return KATE_E_INVALID_PARAMETER;
 
-  oggpack_write(opb,kc->type,8);
-  kate_write32v(opb,kc->npts);
-  kate_warp(opb);
-  if (kc->npts) kate_fp_encode_kate_float(kc->npts,kc->pts,2,opb);
+  kate_pack_write(kpb,kc->type,8);
+  kate_write32v(kpb,kc->npts);
+  kate_warp(kpb);
+  if (kc->npts) kate_fp_encode_kate_float(kc->npts,kc->pts,2,kpb);
 
   return 0;
 }
 
 static int kate_encode_curves(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -409,59 +414,59 @@ static int kate_encode_curves(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x84);
+  ret=kate_encode_start_header(kpb,0x84);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->ncurves);
+  kate_write32v(kpb,ki->ncurves);
 
   for(n=0;n<ki->ncurves;++n) {
-    ret=kate_encode_curve(ki->curves[n],opb);
+    ret=kate_encode_curve(ki->curves[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_motion(const kate_info *ki,const kate_motion *km,oggpack_buffer *opb)
+static int kate_encode_motion(const kate_info *ki,const kate_motion *km,kate_pack_buffer *kpb)
 {
   size_t n;
   int ret;
 
-  if (!ki || !km || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!ki || !km || !kpb) return KATE_E_INVALID_PARAMETER;
 
-  kate_write32v(opb,km->ncurves);
+  kate_write32v(kpb,km->ncurves);
   for (n=0;n<km->ncurves;++n) {
     int idx=kate_find_curve(ki,km->curves[n]);
     if (idx<0) {
-      oggpack_write(opb,0,1);
-      ret=kate_encode_curve(km->curves[n],opb);
+      kate_pack_write1(kpb,0);
+      ret=kate_encode_curve(km->curves[n],kpb);
       if (ret<0) return ret;
     }
     else {
-      oggpack_write(opb,1,1);
-      kate_write32v(opb,idx);
+      kate_pack_write1(kpb,1);
+      kate_write32v(kpb,idx);
     }
   }
-  kate_fp_encode_kate_float(km->ncurves,km->durations,1,opb);
-  oggpack_write(opb,km->x_mapping,8);
-  oggpack_write(opb,km->y_mapping,8);
-  oggpack_write(opb,km->semantics,8);
-  oggpack_write(opb,km->periodic,1);
-  kate_warp(opb);
+  kate_fp_encode_kate_float(km->ncurves,km->durations,1,kpb);
+  kate_pack_write(kpb,km->x_mapping,8);
+  kate_pack_write(kpb,km->y_mapping,8);
+  kate_pack_write(kpb,km->semantics,8);
+  kate_pack_write1(kpb,km->periodic);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_motions(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -469,46 +474,46 @@ static int kate_encode_motions(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x85);
+  ret=kate_encode_start_header(kpb,0x85);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->nmotions);
+  kate_write32v(kpb,ki->nmotions);
 
   for(n=0;n<ki->nmotions;++n) {
-    ret=kate_encode_motion(ki,ki->motions[n],opb);
+    ret=kate_encode_motion(ki,ki->motions[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_palette(const kate_palette *kp,oggpack_buffer *opb)
+static int kate_encode_palette(const kate_palette *kp,kate_pack_buffer *kpb)
 {
   size_t n;
 
-  if (!kp || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kp || !kpb) return KATE_E_INVALID_PARAMETER;
   if (kp->ncolors<=0 || kp->ncolors>256) return KATE_E_LIMIT;
 
-  oggpack_write(opb,kp->ncolors-1,8);
+  kate_pack_write(kpb,kp->ncolors-1,8);
   for (n=0;n<kp->ncolors;++n) {
-    int ret=kate_encode_color(kp->colors+n,opb);
+    int ret=kate_encode_color(kp->colors+n,kpb);
     if (ret<0) return ret;
   }
-  kate_warp(opb);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_palettes(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -516,72 +521,72 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x86);
+  ret=kate_encode_start_header(kpb,0x86);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->npalettes);
+  kate_write32v(kpb,ki->npalettes);
 
   for(n=0;n<ki->npalettes;++n) {
-    ret=kate_encode_palette(ki->palettes[n],opb);
+    ret=kate_encode_palette(ki->palettes[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_paletted_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+static int kate_encode_paletted_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 {
   size_t w,h,n;
   unsigned int maxpixel;
 
   if (kb->bpp>8) return KATE_E_LIMIT;
 
-  kate_write32v(opb,kb->palette);
+  kate_write32v(kpb,kb->palette);
   n=0;
   maxpixel=(1<<kb->bpp)-1;
   for (h=0;h<kb->height;++h) {
     for (w=0;w<kb->width;++w) {
       unsigned int pixel=kb->pixels[n++];
       if (pixel>maxpixel) return KATE_E_LIMIT;
-      oggpack_write(opb,pixel,kb->bpp);
+      kate_pack_write(kpb,pixel,kb->bpp);
     }
   }
 
   return 0;
 }
 
-static int kate_encode_png_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+static int kate_encode_png_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 {
-  oggpack_write(opb,kate_bitmap_type_png,8);
-  kate_write32(opb,kb->size);
-  kate_writebuf(opb,(const char*)kb->pixels,kb->size);
+  kate_pack_write(kpb,kate_bitmap_type_png,8);
+  kate_write32(kpb,kb->size);
+  kate_writebuf(kpb,(const char*)kb->pixels,kb->size);
 
   return 0;
 }
 
-static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
+static int kate_encode_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 {
   int ret;
 
-  if (!kb || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!kb || !kpb) return KATE_E_INVALID_PARAMETER;
 
-  kate_write32v(opb,kb->width);
-  kate_write32v(opb,kb->height);
-  oggpack_write(opb,kb->bpp,8); /* 0 marks a raw bitmap */
+  kate_write32v(kpb,kb->width);
+  kate_write32v(kpb,kb->height);
+  kate_pack_write(kpb,kb->bpp,8); /* 0 marks a raw bitmap */
 
   switch (kb->type) {
     case kate_bitmap_type_paletted:
-      ret=kate_encode_paletted_bitmap(kb,opb);
+      ret=kate_encode_paletted_bitmap(kb,kpb);
       break;
     case kate_bitmap_type_png:
-      ret=kate_encode_png_bitmap(kb,opb);
+      ret=kate_encode_png_bitmap(kb,kpb);
       break;
     default:
       ret=KATE_E_INVALID_PARAMETER;
@@ -590,14 +595,14 @@ static int kate_encode_bitmap(const kate_bitmap *kb,oggpack_buffer *opb)
 
   if (ret<0) return ret;
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_bitmaps(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
@@ -605,46 +610,46 @@ static int kate_encode_bitmaps(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x87);
+  ret=kate_encode_start_header(kpb,0x87);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->nbitmaps);
+  kate_write32v(kpb,ki->nbitmaps);
 
   for(n=0;n<ki->nbitmaps;++n) {
-    ret=kate_encode_bitmap(ki->bitmaps[n],opb);
+    ret=kate_encode_bitmap(ki->bitmaps[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
-static int kate_encode_font_range(const kate_info *ki,const kate_font_range *kfr,oggpack_buffer *opb)
+static int kate_encode_font_range(const kate_info *ki,const kate_font_range *kfr,kate_pack_buffer *kpb)
 {
-  if (!ki || !kfr || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!ki || !kfr || !kpb) return KATE_E_INVALID_PARAMETER;
 
   if (!kate_is_valid_code_point(kfr->first_code_point)) return KATE_E_TEXT;
   if (!kate_is_valid_code_point(kfr->last_code_point)) return KATE_E_TEXT;
   if (kfr->first_bitmap<0) return KATE_E_LIMIT;
   if ((size_t)(kfr->first_bitmap+(kfr->last_code_point-kfr->first_code_point))>=ki->nbitmaps) return KATE_E_LIMIT;
 
-  kate_write32v(opb,kfr->first_code_point);
-  kate_write32v(opb,kfr->last_code_point);
-  kate_write32v(opb,kfr->first_bitmap);
-  kate_warp(opb);
+  kate_write32v(kpb,kfr->first_code_point);
+  kate_write32v(kpb,kfr->last_code_point);
+  kate_write32v(kpb,kfr->first_bitmap);
+  kate_warp(kpb);
 
   return 0;
 }
 
 static int kate_encode_font_ranges(kate_state *k,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n,l;
   int ret;
@@ -652,42 +657,42 @@ static int kate_encode_font_ranges(kate_state *k,kate_packet *op)
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  opb=&k->kes->opb;
+  kpb=&k->kes->kpb;
 
-  ret=kate_encode_start_header(opb,0x88);
+  ret=kate_encode_start_header(kpb,0x88);
   if (ret<0) return ret;
 
   ki=k->ki;
   if (!ki) return KATE_E_INIT;
 
-  kate_write32v(opb,ki->nfont_ranges);
+  kate_write32v(kpb,ki->nfont_ranges);
   for(n=0;n<ki->nfont_ranges;++n) {
-    ret=kate_encode_font_range(ki,ki->font_ranges[n],opb);
+    ret=kate_encode_font_range(ki,ki->font_ranges[n],kpb);
     if (ret<0) return ret;
   }
 
-  kate_write32v(opb,ki->nfont_mappings);
+  kate_write32v(kpb,ki->nfont_mappings);
   for(n=0;n<ki->nfont_mappings;++n) {
     const kate_font_mapping *kfm=ki->font_mappings[n];
-    kate_write32v(opb,kfm->nranges);
+    kate_write32v(kpb,kfm->nranges);
     for (l=0;l<kfm->nranges;++l) {
       const kate_font_range *kfr=kfm->ranges[l];
       int idx=kate_find_font_range(ki,kfr);
       if (idx>=0) {
-        oggpack_write(opb,1,1);
-        kate_write32v(opb,idx);
+        kate_pack_write1(kpb,1);
+        kate_write32v(kpb,idx);
       }
       else {
-        oggpack_write(opb,0,1);
-        ret=kate_encode_font_range(ki,kfr,opb);
+        kate_pack_write1(kpb,0);
+        ret=kate_encode_font_range(ki,kfr,kpb);
         if (ret<0) return ret;
       }
     }
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
 static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
@@ -696,21 +701,21 @@ static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
   return 0;
 }
 
-#define WRITE_OVERRIDE(opb,var,def,write) \
+#define WRITE_OVERRIDE(kpb,var,def,write) \
   do \
     if (ret==0 && (kes->overrides.var!=(def))) { \
-      oggpack_write(opb,1,1); \
+      kate_pack_write1(kpb,1); \
       write; \
     } \
-    else oggpack_write(opb,0,1); \
+    else kate_pack_write1(kpb,0); \
   while(0)
 
-static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
+static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
 {
   kate_encode_state *kes;
   int ret=0;
 
-  if (!k || !opb) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kpb) return KATE_E_INVALID_PARAMETER;
   kes=k->kes;
   if (!kes) return KATE_E_INIT;
 
@@ -725,46 +730,46 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
    || kes->overrides.secondary_style
    || kes->overrides.font_mapping_index>=0
   ) {
-    oggpack_write(opb,1,1);
-    WRITE_OVERRIDE(opb,text_encoding,k->ki->text_encoding,oggpack_write(opb,kes->overrides.text_encoding,8));
-    WRITE_OVERRIDE(opb,text_directionality,k->ki->text_directionality,oggpack_write(opb,kes->overrides.text_directionality,8));
-    WRITE_OVERRIDE(opb,language,NULL,
+    kate_pack_write1(kpb,1);
+    WRITE_OVERRIDE(kpb,text_encoding,k->ki->text_encoding,kate_pack_write(kpb,kes->overrides.text_encoding,8));
+    WRITE_OVERRIDE(kpb,text_directionality,k->ki->text_directionality,kate_pack_write(kpb,kes->overrides.text_directionality,8));
+    WRITE_OVERRIDE(kpb,language,NULL,
       do {
         size_t len=strlen(kes->overrides.language);
-        kate_write32v(opb,len);
-        kate_writebuf(opb,kes->overrides.language,len);
+        kate_write32v(kpb,len);
+        kate_writebuf(kpb,kes->overrides.language,len);
       } while(0));
-    WRITE_OVERRIDE(opb,region_index,-1,kate_write32v(opb,kes->overrides.region_index));
-    WRITE_OVERRIDE(opb,region,NULL,ret=kate_encode_region(kes->overrides.region,opb));
-    WRITE_OVERRIDE(opb,style_index,-1,kate_write32v(opb,kes->overrides.style_index));
-    WRITE_OVERRIDE(opb,style,NULL,ret=kate_encode_style(kes->overrides.style,opb));
-    WRITE_OVERRIDE(opb,secondary_style_index,-1,kate_write32v(opb,kes->overrides.secondary_style_index));
-    WRITE_OVERRIDE(opb,secondary_style,NULL,ret=kate_encode_style(kes->overrides.secondary_style,opb));
-    WRITE_OVERRIDE(opb,font_mapping_index,-1,kate_write32v(opb,kes->overrides.font_mapping_index));
+    WRITE_OVERRIDE(kpb,region_index,-1,kate_write32v(kpb,kes->overrides.region_index));
+    WRITE_OVERRIDE(kpb,region,NULL,ret=kate_encode_region(kes->overrides.region,kpb));
+    WRITE_OVERRIDE(kpb,style_index,-1,kate_write32v(kpb,kes->overrides.style_index));
+    WRITE_OVERRIDE(kpb,style,NULL,ret=kate_encode_style(kes->overrides.style,kpb));
+    WRITE_OVERRIDE(kpb,secondary_style_index,-1,kate_write32v(kpb,kes->overrides.secondary_style_index));
+    WRITE_OVERRIDE(kpb,secondary_style,NULL,ret=kate_encode_style(kes->overrides.secondary_style,kpb));
+    WRITE_OVERRIDE(kpb,font_mapping_index,-1,kate_write32v(kpb,kes->overrides.font_mapping_index));
   }
-  else oggpack_write(opb,0,1);
+  else kate_pack_write1(kpb,0);
 
   {
     /* bitstream 0.2: add palette, bitmap, markup type */
-    oggpack_buffer warp;
+    kate_pack_buffer warp;
     kate_open_warp(&warp);
     if (kes->overrides.palette_index>=0
      || kes->overrides.palette
      || kes->overrides.bitmap_index>=0
      || kes->overrides.bitmap
      || kes->overrides.text_markup_type!=k->ki->text_markup_type) {
-      oggpack_write(&warp,1,1);
+      kate_pack_write1(&warp,1);
       WRITE_OVERRIDE(&warp,palette_index,-1,kate_write32v(&warp,kes->overrides.palette_index));
       WRITE_OVERRIDE(&warp,palette,NULL,ret=kate_encode_palette(kes->overrides.palette,&warp));
       WRITE_OVERRIDE(&warp,bitmap_index,-1,kate_write32v(&warp,kes->overrides.bitmap_index));
       WRITE_OVERRIDE(&warp,bitmap,NULL,ret=kate_encode_bitmap(kes->overrides.bitmap,&warp));
-      WRITE_OVERRIDE(&warp,text_markup_type,k->ki->text_markup_type,oggpack_write(&warp,kes->overrides.text_markup_type,8));
+      WRITE_OVERRIDE(&warp,text_markup_type,k->ki->text_markup_type,kate_pack_write(&warp,kes->overrides.text_markup_type,8));
     }
-    else oggpack_write(&warp,0,1);
-    kate_close_warp(&warp,opb);
+    else kate_pack_write1(&warp,0);
+    kate_close_warp(&warp,kpb);
   }
 
-  kate_warp(opb);
+  kate_warp(kpb);
 
   return ret;
 }
@@ -785,7 +790,7 @@ static int kate_encode_overrides(kate_state *k,oggpack_buffer *opb)
   */
 int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,size_t sz,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_int64_t start_granulepos;
   kate_int64_t start;
   kate_int64_t duration;
@@ -820,49 +825,49 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   backlink=kate_duration_granule(k->ki,t0-earliest_t);
   if (backlink<0) return backlink;
 
-  opb=&k->kes->opb;
-  oggpack_write(opb,0x00,8);
+  kpb=&k->kes->kpb;
+  kate_pack_write(kpb,0x00,8);
 
-  kate_write64(opb,start);
-  kate_write64(opb,duration);
-  kate_write64(opb,backlink);
+  kate_write64(kpb,start);
+  kate_write64(kpb,duration);
+  kate_write64(kpb,backlink);
 
-  kate_write32(opb,sz);
-  kate_writebuf(opb,text,sz);
+  kate_write32(kpb,sz);
+  kate_writebuf(kpb,text,sz);
 
   if (k->kes->id>=0) {
-    oggpack_write(opb,1,1);
-    kate_write32v(opb,k->kes->id);
+    kate_pack_write1(kpb,1);
+    kate_write32v(kpb,k->kes->id);
   }
   else {
-    oggpack_write(opb,0,1);
+    kate_pack_write1(kpb,0);
   }
 
   if (k->kes->nmotions) {
-    oggpack_write(opb,1,1);
-    kate_write32v(opb,k->kes->nmotions);
+    kate_pack_write1(kpb,1);
+    kate_write32v(kpb,k->kes->nmotions);
     for (n=0;n<k->kes->nmotions;++n) {
       if (k->kes->motions[n]==NULL) {
         /* we have an index into the motions header */
-        oggpack_write(opb,1,1);
-        kate_write32v(opb,k->kes->motion_indices[n]);
+        kate_pack_write1(kpb,1);
+        kate_write32v(kpb,k->kes->motion_indices[n]);
       }
       else {
         /* we have a fully defined motion */
-        oggpack_write(opb,0,1);
-        ret=kate_encode_motion(k->ki,k->kes->motions[n],opb);
+        kate_pack_write1(kpb,0);
+        ret=kate_encode_motion(k->ki,k->kes->motions[n],kpb);
         if (ret<0) return ret;
       }
     }
   }
-  else oggpack_write(opb,0,1);
+  else kate_pack_write1(kpb,0);
 
-  kate_encode_overrides(k,opb);
+  kate_encode_overrides(k,kpb);
 
   if (start_granulepos>k->kes->furthest_granule) k->kes->furthest_granule=start_granulepos;
 
   k->kes->granulepos=start_granulepos;
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
 /**
@@ -876,7 +881,7 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   */
 int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_int64_t granulepos;
 
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
@@ -889,10 +894,10 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
   k->kes->granulepos=granulepos;
 
-  opb=&k->kes->opb;
-  oggpack_write(opb,0x01,8);
+  kpb=&k->kes->kpb;
+  kate_pack_write(kpb,0x01,8);
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
 /**
@@ -907,7 +912,7 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
   */
 int kate_encode_finish(kate_state *k,kate_float t,kate_packet *op)
 {
-  oggpack_buffer *opb;
+  kate_pack_buffer *kpb;
   kate_int64_t granulepos;
 
   if (!k || !op) return KATE_E_INVALID_PARAMETER;
@@ -930,12 +935,12 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *op)
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
   k->kes->granulepos=granulepos;
 
-  opb=&k->kes->opb;
-  oggpack_write(opb,0x7f,8);
+  kpb=&k->kes->kpb;
+  kate_pack_write(kpb,0x7f,8);
 
   k->kes->eos=1;
 
-  return kate_finalize_packet_buffer(opb,op,k);
+  return kate_finalize_packet_buffer(kpb,op,k);
 }
 
 /**

@@ -19,7 +19,7 @@ kate_encode_state *kate_encode_state_create(void)
 {
   kate_encode_state *kes=(kate_encode_state*)kate_malloc(sizeof(kate_encode_state));
   if (kes) {
-    oggpack_writeinit(&kes->opb);
+    kate_pack_writeinit(&kes->kpb);
 
     kes->id=-1;
 
@@ -136,7 +136,7 @@ int kate_encode_state_destroy(kate_encode_state *kes)
 {
   if (!kes) return KATE_E_INVALID_PARAMETER;
 
-  oggpack_writeclear(&kes->opb);
+  kate_pack_writeclear(&kes->kpb);
   if (kes->timings) kate_free(kes->timings);
   if (kes->motions) kate_free(kes->motions);
   if (kes->destroy_motions) kate_free(kes->destroy_motions);

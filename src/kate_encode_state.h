@@ -11,6 +11,7 @@
 #define _KATE_ENCODE_STATE_H_
 
 #include <kate/kate.h>
+#include "kate_bitwise.h"
 #include "kate_internal.h"
 
 typedef struct kate_event_timing {
@@ -19,7 +20,7 @@ typedef struct kate_event_timing {
 } kate_event_timing;
 
 typedef struct kate_encode_state {
-  oggpack_buffer opb;
+  kate_pack_buffer kpb;
 
   kate_int32_t id;
 

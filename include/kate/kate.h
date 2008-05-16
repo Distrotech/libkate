@@ -16,7 +16,6 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <ogg/ogg.h>
 
 #ifdef KATE_INTERNAL
 #define kate_const

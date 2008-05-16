@@ -32,7 +32,6 @@ extern int yylex(union YYSTYPE *lvalp);
 extern int nerrors;
 extern int nwarnings;
 
-extern ogg_packet op;
 extern kate_state k;
 extern kate_info ki;
 extern kate_comment kc;

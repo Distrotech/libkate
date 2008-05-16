@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
-#include <ogg/ogg.h>
 #include <kate/kate.h>
+#include "kate_bitwise.h"
 #include "kate_fp.h"
 
 #define MERGE_STREAMS
@@ -84,46 +84,46 @@ static int kate_fp_scan_constant(size_t count,const kate_fp *values,size_t strea
 #endif
 
 /* need 8 bits, then a bit for sign and kate_fp_bits-(t+h) per value */
-int kate_fp_encode(size_t count,const kate_fp *values,size_t streams,oggpack_buffer *opb)
+int kate_fp_encode(size_t count,const kate_fp *values,size_t streams,kate_pack_buffer *kpb)
 {
   int head,tail;
   int bits;
 
-  if (!opb || count==0 || !values) return KATE_E_INVALID_PARAMETER;
+  if (!kpb || count==0 || !values) return KATE_E_INVALID_PARAMETER;
 
   kate_fp_scan(count,values,streams,&head,&tail);
-  oggpack_write(opb,head,kate_fp_cut_bits_bits); /* can be between 0 and kate_fp_cut_bits */
-  oggpack_write(opb,tail,kate_fp_cut_bits_bits); /* can be between 0 and kate_fp_cut_bits */
+  kate_pack_write(kpb,head,kate_fp_cut_bits_bits); /* can be between 0 and kate_fp_cut_bits */
+  kate_pack_write(kpb,tail,kate_fp_cut_bits_bits); /* can be between 0 and kate_fp_cut_bits */
   bits=kate_fp_bits-tail-head;
   while (count--) {
     kate_fp v=*values++;
     if (head>0) {
       if (v<0) {
-        oggpack_write(opb,1,1);
+        kate_pack_write(kpb,1,1);
         v=-v;
       }
       else {
-        oggpack_write(opb,0,1);
+        kate_pack_write(kpb,0,1);
       }
     }
     v>>=tail;
 #ifdef WRITE_64_IN_TWO_32
     if (bits>32) {
-      oggpack_write(opb,v,32);
+      kate_pack_write(kpb,v,32);
       v>>=32;
-      oggpack_write(opb,v,bits-32); /* will autoclip the head */
+      kate_pack_write(kpb,v,bits-32); /* will autoclip the head */
     }
     else
 #endif
     {
-      oggpack_write(opb,v,bits); /* will autoclip the head */
+      kate_pack_write(kpb,v,bits); /* will autoclip the head */
     }
   }
 
   return 0;
 }
 
-int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t streams,oggpack_buffer *opb)
+int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t streams,kate_pack_buffer *kpb)
 {
   kate_fp *fp_values;
   size_t s,n;
@@ -135,9 +135,9 @@ int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t strea
 #ifdef MERGE_STREAMS
     count*=streams;
     streams=1;
-    oggpack_write(opb,1,1);
+    kate_pack_write(kpb,1,1);
 #else
-    oggpack_write(opb,0,1);
+    kate_pack_write(kpb,0,1);
 #endif
   }
 
@@ -150,7 +150,7 @@ int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t strea
       fp_values[n]=f2kfp(v);
     }
 
-    ret=kate_fp_encode(count,fp_values,1,opb);
+    ret=kate_fp_encode(count,fp_values,1,kpb);
     if (ret<0) {
       kate_free(fp_values);
       return ret;
@@ -162,32 +162,32 @@ int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t strea
   return 0;
 }
 
-int kate_fp_decode(size_t count,kate_fp *values,size_t streams,oggpack_buffer *opb)
+int kate_fp_decode(size_t count,kate_fp *values,size_t streams,kate_pack_buffer *kpb)
 {
   int head,tail,bits;
   kate_fp v;
 
-  if (!opb || count==0 || !values) return KATE_E_INVALID_PARAMETER;
+  if (!kpb || count==0 || !values) return KATE_E_INVALID_PARAMETER;
 
-  head=oggpack_read(opb,kate_fp_cut_bits_bits);
-  tail=oggpack_read(opb,kate_fp_cut_bits_bits);
+  head=kate_pack_read(kpb,kate_fp_cut_bits_bits);
+  tail=kate_pack_read(kpb,kate_fp_cut_bits_bits);
   bits=kate_fp_bits-head-tail;
   while (count--) {
     int sign=0;
     if (head>0) {
-      sign=oggpack_read(opb,1);
+      sign=kate_pack_read1(kpb);
     }
 #ifdef WRITE_64_IN_TWO_32
     if (bits>32) {
-      kate_fp low=oggpack_read(opb,32);
-      v=oggpack_read(opb,bits-32);
+      kate_fp low=kate_pack_read(kpb,32);
+      v=kate_pack_read(kpb,bits-32);
       v<<=32;
       v|=low;
     }
     else
 #endif
     {
-      v=oggpack_read(opb,bits);
+      v=kate_pack_read(kpb,bits);
     }
     v<<=tail;
     if (sign) v=-v;
@@ -198,7 +198,7 @@ int kate_fp_decode(size_t count,kate_fp *values,size_t streams,oggpack_buffer *o
   return 0;
 }
 
-int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,oggpack_buffer *opb)
+int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,kate_pack_buffer *kpb)
 {
   kate_fp *fp_values;
   size_t s,n;
@@ -207,7 +207,7 @@ int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,ogg
   if (count*streams==0) return 0;
 
   if (streams>1 && count>MERGE_STREAMS_COUNT_THRESHOLD) {
-    if (oggpack_read(opb,1)) {
+    if (kate_pack_read1(kpb)) {
       count*=streams;
       streams=1;
     }
@@ -217,7 +217,7 @@ int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,ogg
   if (!fp_values) return KATE_E_OUT_OF_MEMORY;
 
   for (s=0;s<streams;++s) {
-    ret=kate_fp_decode(count,fp_values,1,opb);
+    ret=kate_fp_decode(count,fp_values,1,kpb);
     if (ret<0) {
       kate_free(fp_values);
       return ret;

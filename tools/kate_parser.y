@@ -26,6 +26,8 @@
 int nerrors=0;
 int nwarnings=0;
 
+extern ogg_packet op;
+
 static char *temp_macro_name=NULL;
 static kate_float timebase = 0.0;
 

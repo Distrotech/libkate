@@ -12,7 +12,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ogg/ogg.h>
 #include <kate/kate.h>
 #include "kate_internal.h"
 #include "kate_decode_state.h"

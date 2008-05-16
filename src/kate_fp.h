@@ -11,6 +11,7 @@
 #define _KATE_FP_H_
 
 #include <kate/kate.h>
+#include "kate_bitwise.h"
 #include "kate_internal.h"
 
 typedef int32_t kate_fp;
@@ -48,10 +49,10 @@ static inline kate_fp kate_fp_sub(kate_fp x, kate_fp y)
 }
 #endif
 
-extern int kate_fp_encode(size_t count,const kate_fp *values,size_t streams,oggpack_buffer *opb) kate_internal;
-extern int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t streams,oggpack_buffer *opb) kate_internal;
-extern int kate_fp_decode(size_t count,kate_fp *values,size_t streams,oggpack_buffer *opb) kate_internal;
-extern int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,oggpack_buffer *opb) kate_internal;
+extern int kate_fp_encode(size_t count,const kate_fp *values,size_t streams,kate_pack_buffer *kpb) kate_internal;
+extern int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t streams,kate_pack_buffer *kpb) kate_internal;
+extern int kate_fp_decode(size_t count,kate_fp *values,size_t streams,kate_pack_buffer *kpb) kate_internal;
+extern int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,kate_pack_buffer *kpb) kate_internal;
 
 #endif
 
