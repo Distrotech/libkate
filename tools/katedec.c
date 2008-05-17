@@ -263,7 +263,7 @@ static void write_curve_defs(FILE *f,const kate_curve *kc,size_t indent)
   fprintf(f,"%s%s\n",sindent,curve2text(kc->type));
   if (kc->npts>0) {
     size_t pt;
-    fprintf(f,"%s%u points {\n",sindent,kc->npts);
+    fprintf(f,"%s%zu points {\n",sindent,kc->npts);
     for (pt=0;pt<kc->npts;++pt) fprintf(f,"%s  %.16g %.16g\n",sindent,kc->pts[pt*2],kc->pts[pt*2+1]);
     fprintf(f,"%s}\n",sindent);
   }
@@ -323,7 +323,7 @@ static void write_palette_defs(FILE *f,const kate_palette *kp,size_t indent)
   for (n=0;n<indent;++n) sindent[n]=' ';
   sindent[indent]=0;
 
-  fprintf(f,"%s%d colors {\n",sindent,kp->ncolors);
+  fprintf(f,"%s%zu colors {\n",sindent,kp->ncolors);
   for (s=0;s<kp->ncolors;++s) {
     const kate_color *kc=kp->colors+s;
     fprintf(f,"%s  { %d %d %d %d },\n",sindent,kc->r,kc->g,kc->b,kc->a);
@@ -344,7 +344,7 @@ static void write_bitmap(const char *filename,const kate_bitmap *kb,const kate_p
     return;
   }
 
-  fprintf(f,"P6\n%d %d\n255\n",kb->width,kb->height);
+  fprintf(f,"P6\n%zu %zu\n255\n",kb->width,kb->height);
   n=0;
   for (y=0;y<kb->height;++y) {
     for (x=0;x<kb->width;++x) {
@@ -367,7 +367,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
 
   switch (kb->type) {
     case kate_bitmap_type_png:
-      fprintf(f,"%s%dx%d png %u {\n",sindent,kb->width,kb->height,kb->size);
+      fprintf(f,"%s%zux%zu png %zu {\n",sindent,kb->width,kb->height,kb->size);
       for (p=0;p<kb->size;++p) {
         if (p%16==0) fprintf(f,"%s",sindent);
         fprintf(f," %3d",kb->pixels[p]);
@@ -376,7 +376,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
       fprintf(f,"%s}\n",sindent);
       break;
     case kate_bitmap_type_paletted:
-      fprintf(f,"%s%dx%dx%d {\n",sindent,kb->width,kb->height,kb->bpp);
+      fprintf(f,"%s%zux%zux%d {\n",sindent,kb->width,kb->height,kb->bpp);
       p=0;
       for (h=0;h<kb->height;++h) {
         fprintf(f,"%s ",sindent);
@@ -601,7 +601,7 @@ static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
     kate_float base,offset;
     kate_granule_split_time(ki,granpos,&base,&offset);
     fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
-      granpos,
+      (long long)granpos,
       time_hours(base),time_minutes(base),time_seconds(base),
       time_hours(offset),time_minutes(offset),time_seconds(offset)
     );
@@ -725,7 +725,7 @@ static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
   if (!*buffer) return -1;
 
   ret=fread(*buffer,1,bytes,f);
-  if (ret<bytes) return -1;
+  if (ret<(size_t)bytes) return -1;
   return 0;
 }
 
@@ -828,7 +828,7 @@ static kate_comment kc;
   read=fread(signature,1,sizeof(signature),fin);
   if (read!=sizeof(signature)) {
     /* A Kate stream's first packet is 64 bytes, so this cannot be one */
-    fprintf(stderr,"Failed to read first %u bytes of stream\n",sizeof(signature));
+    fprintf(stderr,"Failed to read first %zu bytes of stream\n",sizeof(signature));
     exit(-1);
   }
 
@@ -872,12 +872,12 @@ static kate_comment kc;
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
       read=fread(&bytes,1,8,fin);
       if (read!=8 || bytes<=0) {
-        fprintf(stderr,"failed to read raw kate packet size (read %u, bytes %lld)\n",read,bytes);
+        fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",read,(long long)bytes);
         exit(-1);
       }
       ret=read_raw_packet(fin,&buffer,bytes);
       if (ret<0) {
-        fprintf(stderr,"failed to read raw kate packet (%lld bytes)\n",bytes);
+        fprintf(stderr,"failed to read raw kate packet (%lld bytes)\n",(long long)bytes);
         exit(-1);
       }
     }
@@ -953,7 +953,7 @@ static kate_comment kc;
               }
               else {
                 if (ret!=KATE_E_NOT_KATE) {
-                  fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",op.packetno,ret);
+                  fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
                 }
                 if (init!=uninitialized) {
                   kate_info_clear(&ki);
