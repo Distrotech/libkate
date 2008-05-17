@@ -31,6 +31,4 @@ long kate_pack_bytes(kate_pack_buffer *b) kate_internal;
 long kate_pack_bits(kate_pack_buffer *b) kate_internal;
 unsigned char *kate_pack_get_buffer(kate_pack_buffer *b) kate_internal;
 
-#include "kate_bitwise.inl"
-
 #endif
