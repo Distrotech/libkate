@@ -26,7 +26,7 @@ endif
 CFLAGS=-std=c99 -Iinclude -Isrc
 
 ifeq ($(DEBUG),1)
-CFLAGS+=-g -O0
+CFLAGS+=-g -O0 -DDEBUG
 STRIP=/bin/true
 else
 CFLAGS+=-O2
