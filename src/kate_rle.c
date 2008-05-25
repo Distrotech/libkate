@@ -54,12 +54,18 @@ static size_t get_run_length(size_t max_run_length,size_t count,const unsigned c
   return run_length;
 }
 
-static size_t get_run_length_identical(size_t max_run_length,size_t count,const unsigned char *values,const unsigned char *previous)
+static size_t get_run_length_identical(size_t max_run_length,size_t count,const unsigned char *values,const unsigned char *previous,unsigned char zero)
 {
   const size_t limit=max_run_length>count?count:max_run_length;
   size_t run_length=0;
-  while (run_length<limit && values[run_length]==previous[run_length])
-    ++run_length;
+  if (previous) {
+    while (run_length<limit && values[run_length]==previous[run_length])
+      ++run_length;
+  }
+  else {
+    while (run_length<limit && values[run_length]==zero)
+      ++run_length;
+  }
   return run_length;
 }
 
@@ -202,11 +208,9 @@ static int kate_rle_encode_line_delta(size_t count,const unsigned char *values,s
   size_t max_run_length_delta,max_run_length_basic;
   size_t run_length_delta,run_length_basic;
 
-  if (!previous) return -1;
-
   while (count>0) {
     max_run_length_delta=run_length_delta_cutoff;
-    run_length_delta=get_run_length_identical(max_run_length_delta,count,values,previous);
+    run_length_delta=get_run_length_identical(max_run_length_delta,count,values,previous,zero);
 
     max_run_length_basic=run_length_basic_cutoff;
     run_length_basic=get_run_length(max_run_length_basic,count,values);
@@ -215,7 +219,7 @@ static int kate_rle_encode_line_delta(size_t count,const unsigned char *values,s
       kate_pack_write(kpb,1,1);
       kate_pack_write(kpb,run_length_delta-1,run_length_delta_bits);
       values+=run_length_delta;
-      previous+=run_length_delta;
+      if (previous) previous+=run_length_delta;
       count-=run_length_delta;
     }
     else {
@@ -223,7 +227,7 @@ static int kate_rle_encode_line_delta(size_t count,const unsigned char *values,s
       kate_pack_write(kpb,run_length_basic-1,run_length_basic_bits);
       kate_pack_write(kpb,values[0],bits);
       values+=run_length_basic;
-      previous+=run_length_basic;
+      if (previous) previous+=run_length_basic;
       count-=run_length_basic;
     }
   }
@@ -238,13 +242,11 @@ static int kate_rle_encode_line_delta_stop(size_t count,const unsigned char *val
   const size_t run_length_basic_bits=KATE_RLE_RUN_LENGTH_BITS_BASIC_IN_DELTA_STOP;
   const size_t run_length_basic_cutoff=(1<<run_length_basic_bits)-1;
   size_t max_run_length_delta,max_run_length_basic;
-  size_t run_length_delta,run_length_basic;
-
-  if (!previous) return -1;
+  size_t run_length_delta,run_length_basic,run_length;
 
   while (count>0) {
     if (values[0]==zero) {
-      size_t run_length=get_run_length(count,count,values);
+      run_length=get_run_length(count,count,values);
       if (run_length==count) {
         kate_pack_write(kpb,0,1);
         kate_pack_write(kpb,0,run_length_basic_bits);
@@ -253,26 +255,25 @@ static int kate_rle_encode_line_delta_stop(size_t count,const unsigned char *val
     }
 
     max_run_length_delta=run_length_delta_cutoff;
-    run_length_delta=get_run_length_identical(max_run_length_delta,count,values,previous);
+    run_length_delta=get_run_length_identical(max_run_length_delta,count,values,previous,zero);
 
     max_run_length_basic=run_length_basic_cutoff;
     run_length_basic=get_run_length(max_run_length_basic,count,values);
 
     if (run_length_delta>run_length_basic) {
       kate_pack_write(kpb,1,1);
-      kate_pack_write(kpb,run_length_delta-1,run_length_delta_bits);
-      values+=run_length_delta;
-      previous+=run_length_delta;
-      count-=run_length_delta;
+      run_length=run_length_delta;
+      kate_pack_write(kpb,run_length-1,run_length_delta_bits);
     }
     else {
       kate_pack_write(kpb,0,1);
-      kate_pack_write(kpb,run_length_basic,run_length_basic_bits);
+      run_length=run_length_basic;
+      kate_pack_write(kpb,run_length,run_length_basic_bits);
       kate_pack_write(kpb,values[0],bits);
-      values+=run_length_basic;
-      previous+=run_length_basic;
-      count-=run_length_basic;
     }
+    values+=run_length;
+    if (previous) previous+=run_length;
+    count-=run_length;
   }
 
   return 0;
@@ -467,22 +468,25 @@ static int kate_rle_decode_line_basic_startend(size_t count,unsigned char *value
   return 0;
 }
 
-static int kate_rle_decode_line_delta(size_t count,unsigned char *values,const unsigned char *previous,size_t bits,kate_pack_buffer *kpb)
+static int kate_rle_decode_line_delta(size_t count,unsigned char *values,const unsigned char *previous,size_t bits,unsigned char zero,kate_pack_buffer *kpb)
 {
   const size_t run_length_delta_bits=KATE_RLE_RUN_LENGTH_BITS_DELTA;
   const size_t run_length_basic_bits=KATE_RLE_RUN_LENGTH_BITS_BASIC_IN_DELTA;
   int value;
-
-  if (!previous) return KATE_E_BAD_PACKET;
 
   while (count>0) {
     int type=kate_pack_read1(kpb);
     if (type) {
       size_t run_length=1+kate_pack_read(kpb,run_length_delta_bits);
       if (run_length==0 || run_length>count) return KATE_E_BAD_PACKET;
-      memcpy(values,previous,run_length);
+      if (previous) {
+        memcpy(values,previous,run_length);
+        previous+=run_length;
+      }
+      else {
+        memset(values,zero,run_length);
+      }
       values+=run_length;
-      previous+=run_length;
       count-=run_length;
     }
     else {
@@ -491,7 +495,7 @@ static int kate_rle_decode_line_delta(size_t count,unsigned char *values,const u
       value=kate_pack_read(kpb,bits);
       memset(values,value,run_length);
       values+=run_length;
-      previous+=run_length;
+      if (previous) previous+=run_length;
       count-=run_length;
     }
   }
@@ -500,24 +504,25 @@ static int kate_rle_decode_line_delta(size_t count,unsigned char *values,const u
 
 static int kate_rle_decode_line_delta_stop(size_t count,unsigned char *values,const unsigned char *previous,size_t bits,unsigned char zero,kate_pack_buffer *kpb)
 {
-  const size_t run_length_delta_bits=KATE_RLE_RUN_LENGTH_BITS_DELTA;
-  const size_t run_length_basic_bits=KATE_RLE_RUN_LENGTH_BITS_BASIC_IN_DELTA;
-  int value;
-
-  if (!previous) return KATE_E_BAD_PACKET;
+  const size_t run_length_delta_bits=KATE_RLE_RUN_LENGTH_BITS_DELTA_STOP;
+  const size_t run_length_basic_bits=KATE_RLE_RUN_LENGTH_BITS_BASIC_IN_DELTA_STOP;
+  size_t run_length;
+  int value,type;
 
   while (count>0) {
-    int type=kate_pack_read1(kpb);
+    type=kate_pack_read1(kpb);
     if (type) {
-      size_t run_length=1+kate_pack_read(kpb,run_length_delta_bits);
+      run_length=1+kate_pack_read(kpb,run_length_delta_bits);
       if (run_length==0 || run_length>count) return KATE_E_BAD_PACKET;
-      memcpy(values,previous,run_length);
-      values+=run_length;
-      previous+=run_length;
-      count-=run_length;
+      if (previous) {
+        memcpy(values,previous,run_length);
+      }
+      else {
+        memset(values,zero,run_length);
+      }
     }
     else {
-      size_t run_length=kate_pack_read(kpb,run_length_basic_bits);
+      run_length=kate_pack_read(kpb,run_length_basic_bits);
       if (run_length==0) {
         memset(values,zero,count);
         break;
@@ -525,10 +530,10 @@ static int kate_rle_decode_line_delta_stop(size_t count,unsigned char *values,co
       if (run_length>count) return KATE_E_BAD_PACKET;
       value=kate_pack_read(kpb,bits);
       memset(values,value,run_length);
-      values+=run_length;
-      previous+=run_length;
-      count-=run_length;
     }
+    values+=run_length;
+    if (previous) previous+=run_length;
+    count-=run_length;
   }
   return 0;
 }
@@ -546,7 +551,7 @@ static int kate_rle_decode_best(size_t width,size_t height,unsigned char *values
         ret=kate_rle_decode_line_empty(width,values,bits,zero,kpb);
         break;
       case KATE_RLE_TYPE_DELTA:
-        ret=kate_rle_decode_line_delta(width,values,previous,bits,kpb);
+        ret=kate_rle_decode_line_delta(width,values,previous,bits,zero,kpb);
         break;
       case KATE_RLE_TYPE_BASIC:
         ret=kate_rle_decode_line_basic(width,values,bits,kpb);
