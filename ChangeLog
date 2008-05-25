@@ -1,6 +1,7 @@
 0.1.3
   remove last dependency on libogg from libkate (the bitpacker)
   new kate_region_init, kate_style_init, etc, functions
+  RLE and delta compression for paletted images
   fix 64 bit warnings
 
 0.1.2

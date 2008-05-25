@@ -16,6 +16,7 @@
 #include "kate_internal.h"
 #include "kate_encode_state.h"
 #include "kate_fp.h"
+#include "kate_rle.h"
 
 #define NUM_HEADERS 9
 
@@ -541,6 +542,7 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
   return kate_finalize_packet_buffer(kpb,op,k);
 }
 
+#if 0
 static int kate_encode_paletted_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 {
   size_t w,h,n;
@@ -561,6 +563,19 @@ static int kate_encode_paletted_bitmap(const kate_bitmap *kb,kate_pack_buffer *k
 
   return 0;
 }
+#endif
+
+static int kate_encode_rle_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
+{
+  if (kb->bpp>8) return KATE_E_LIMIT;
+
+  kate_pack_write(kpb,kate_bitmap_type_paletted,8);
+  kate_pack_write(kpb,1,8); /* RLE encoding */
+  kate_write32v(kpb,kb->bpp);
+  kate_write32v(kpb,kb->palette);
+
+  return kate_rle_encode(kb->width,kb->height,kb->pixels,kb->bpp,kpb);
+}
 
 static int kate_encode_png_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 {
@@ -579,11 +594,16 @@ static int kate_encode_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 
   kate_write32v(kpb,kb->width);
   kate_write32v(kpb,kb->height);
+#if 0
+  /* paletted bitmaps are now written compressed */
   kate_pack_write(kpb,kb->bpp,8); /* 0 marks a raw bitmap */
+#else
+  kate_pack_write(kpb,0,8); /* 0 marks a raw bitmap */
+#endif
 
   switch (kb->type) {
     case kate_bitmap_type_paletted:
-      ret=kate_encode_paletted_bitmap(kb,kpb);
+      ret=kate_encode_rle_bitmap(kb,kpb);
       break;
     case kate_bitmap_type_png:
       ret=kate_encode_png_bitmap(kb,kpb);

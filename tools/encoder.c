@@ -237,6 +237,28 @@ static void print_version(void)
   printf("Kate reference encoder - %s\n",kate_get_version_string());
 }
 
+static void print_rle_stats(void)
+{
+#ifdef DEBUG
+  int n,total=0;
+  extern int kate_rle_stats_overall[8];
+  static const char *kate_rle_type_names[8]={
+    "empty",
+    "basic",
+    "delta",
+    "stop",
+    "start/end",
+    "",
+    "",
+    "",
+  };
+  for (n=0;n<8;++n) total+=kate_rle_stats_overall[n];
+  for (n=0;n<8;++n) {
+    printf("%s: %d (%.2f%%)\n",kate_rle_type_names[n],kate_rle_stats_overall[n],100.0f*kate_rle_stats_overall[n]/total);
+  }
+#endif
+}
+
 int main(int argc,char **argv)
 {
   int n,ret;
@@ -389,6 +411,8 @@ int main(int argc,char **argv)
     if (ret<0) unlink(output_filename);
   }
   if (fin!=stdin) fclose(fin);
+
+  print_rle_stats();
 
   return ret;
 }

@@ -16,6 +16,7 @@
 #include "kate_internal.h"
 #include "kate_decode_state.h"
 #include "kate_fp.h"
+#include "kate_rle.h"
 
 typedef struct kate_memory_guard {
   size_t size;
@@ -596,6 +597,7 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
 {
   size_t n,npixels;
   unsigned char *pixels;
+  int ret,encoding;
 
   if (!ki || !kb || !kpb) return KATE_E_INVALID_PARAMETER;
 
@@ -610,6 +612,21 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     kb->type=kate_pack_read(kpb,8);
     kb->palette=-1;
     switch (kb->type) {
+      case kate_bitmap_type_paletted:
+        encoding=kate_pack_read(kpb,8);
+        switch (encoding) {
+          case 1: /* RLE encoded */
+            kb->bpp=kate_read32v(kpb);
+            kb->palette=kate_read32v(kpb);
+            pixels=(unsigned char*)kate_malloc(kb->width*kb->height);
+            if (!pixels) return KATE_E_OUT_OF_MEMORY;
+            ret=kate_rle_decode(kb->width,kb->height,pixels,kb->bpp,kpb);
+            if (ret<0) return ret;
+            break;
+          default:
+            return KATE_E_BAD_PACKET;
+        }
+        break;
       case kate_bitmap_type_png:
         kb->size=kate_read32(kpb);
         if (!ki->no_limits && kb->size>KATE_LIMIT_BITMAP_RAW_SIZE) return KATE_E_LIMIT;

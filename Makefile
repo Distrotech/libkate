@@ -55,7 +55,7 @@ MODULES=kate kate_info kate_comment kate_granule kate_event \
         kate_motion kate_text kate_tracker kate_fp kate_font \
         kate_encode_state kate_encode \
         kate_decode_state kate_decode \
-        kate_packet kate_bitwise \
+        kate_packet kate_bitwise kate_rle \
         kate_high
 
 OBJS_STATIC=$(foreach module, $(MODULES),$(OBJDIR)/static/$(module).o)
