@@ -161,7 +161,7 @@ static void write_text(FILE *f,const char *text,size_t len0,kate_markup_type tex
       /* be conservative in what we encode */
       const char *escape="";
       switch (text_markup_type) {
-        case kate_markup_none: escape="\"\r\n`'|\\"; break; // "<&>"; break;
+        case kate_markup_none: escape="\"\r\n`'|\\"; break;
         case kate_markup_simple: escape="\"\r\n`'|\\"; break;
         default: fprintf(stderr,"Unknown text markup type (%d)\n",text_markup_type); break;
       }
@@ -303,7 +303,6 @@ static void write_motion_defs(FILE *f,const kate_info *ki,const kate_motion *km,
     else {
       fprintf(f,"%scurve %d",sindent,idx);
     }
-    //if (km->ncurves>1) {
     if (km->durations[s]!=-1) {
       fprintf(f," for %.16g\n",km->durations[s]);
     }
