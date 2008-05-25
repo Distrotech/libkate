@@ -39,34 +39,38 @@
 
 #define kate_unused __attribute__((unused))
 
-static size_t get_run_length(size_t count,const unsigned char *values)
+static size_t get_run_length(size_t max_run_length,size_t count,const unsigned char *values)
 {
+  const size_t limit=max_run_length>count?count:max_run_length;
   size_t run_length=1;
-  while (run_length<count && values[run_length]==values[0])
+  while (run_length<limit && values[run_length]==values[0])
     ++run_length;
   return run_length;
 }
 
-static size_t get_run_length_identical(size_t count,const unsigned char *values,const unsigned char *previous)
+static size_t get_run_length_identical(size_t max_run_length,size_t count,const unsigned char *values,const unsigned char *previous)
 {
+  const size_t limit=max_run_length>count?count:max_run_length;
   size_t run_length=0;
-  while (run_length<count && values[run_length]==previous[run_length])
+  while (run_length<limit && values[run_length]==previous[run_length])
     ++run_length;
   return run_length;
 }
 
-static size_t get_run_length_zero(size_t count,const unsigned char *values,unsigned char zero)
+static size_t get_run_length_zero(size_t max_run_length,size_t count,const unsigned char *values,unsigned char zero)
 {
+  const size_t limit=max_run_length>count?count:max_run_length;
   size_t run_length=1;
-  while (run_length<count && values[run_length]==zero)
+  while (run_length<limit && values[run_length]==zero)
     ++run_length;
   return run_length;
 }
 
-static size_t get_run_length_zero_back(size_t count,const unsigned char *values,size_t nvalues,unsigned char zero)
+static size_t get_run_length_zero_back(size_t max_run_length,size_t count,const unsigned char *values,size_t nvalues,unsigned char zero)
 {
+  const size_t limit=max_run_length>count?count:max_run_length;
   size_t run_length=0;
-  while (run_length<count && values[nvalues-1-run_length]==zero)
+  while (run_length<limit && values[nvalues-1-run_length]==zero)
     ++run_length;
   return run_length;
 }
@@ -79,8 +83,7 @@ static int kate_rle_encode_line_basic(size_t count,const unsigned char *values,s
 
   while (count>0) {
     max_run_length=run_length_cutoff;
-    if (max_run_length>count) max_run_length=count;
-    run_length=get_run_length(max_run_length,values);
+    run_length=get_run_length(max_run_length,count,values);
     kate_pack_write(kpb,run_length-1,run_length_bits);
     kate_pack_write(kpb,values[0],bits);
     values+=run_length;
@@ -100,22 +103,19 @@ static int kate_rle_encode_line_basic_startend(size_t count,const unsigned char 
   kate_pack_write(kpb,zero,bits);
 
   max_run_length=(1<<KATE_RLE_RUN_LENGTH_BITS_BASIC_STARTEND_START)-1;
-  if (max_run_length>count) max_run_length=count;
-  run_length_start=get_run_length_zero(max_run_length,values,zero);
+  run_length_start=get_run_length_zero(max_run_length,count,values,zero);
   kate_pack_write(kpb,run_length_start,KATE_RLE_RUN_LENGTH_BITS_BASIC_STARTEND_START);
   values+=run_length_start;
   count-=run_length_start;
 
   max_run_length=(1<<KATE_RLE_RUN_LENGTH_BITS_BASIC_STARTEND_END)-1;
-  if (max_run_length>count) max_run_length=count;
-  run_length_end=get_run_length_zero_back(max_run_length,values,count,zero);
+  run_length_end=get_run_length_zero_back(max_run_length,count,values,count,zero);
   kate_pack_write(kpb,run_length_end,KATE_RLE_RUN_LENGTH_BITS_BASIC_STARTEND_END);
   count-=run_length_end;
 
   while (count>0) {
     max_run_length=run_length_cutoff;
-    if (max_run_length>count) max_run_length=count;
-    run_length=get_run_length(max_run_length,values);
+    run_length=get_run_length(max_run_length,count,values);
     kate_pack_write(kpb,run_length-1,run_length_bits);
     kate_pack_write(kpb,values[0],bits);
     values+=run_length;
@@ -135,23 +135,21 @@ static int kate_rle_encode_line_basic_stop(size_t count,const unsigned char *val
   kate_pack_write(kpb,zero,bits);
 
   max_run_length=(1<<KATE_RLE_RUN_LENGTH_BITS_BASIC_STOP_START)-1;
-  if (max_run_length>count) max_run_length=count;
-  run_length_start=get_run_length_zero(max_run_length,values,zero);
+  run_length_start=get_run_length_zero(max_run_length,count,values,zero);
   kate_pack_write(kpb,run_length_start,KATE_RLE_RUN_LENGTH_BITS_BASIC_STOP_START);
   values+=run_length_start;
   count-=run_length_start;
 
   while (count>0) {
     if (values[0]==zero) {
-      run_length=get_run_length(count,values);
+      run_length=get_run_length(count,count,values);
       if (run_length==count) {
         kate_pack_write(kpb,0,run_length_bits);
         break;
       }
     }
     max_run_length=run_length_cutoff;
-    if (max_run_length>count) max_run_length=count;
-    run_length=get_run_length(max_run_length,values);
+    run_length=get_run_length(max_run_length,count,values);
     kate_pack_write(kpb,run_length,run_length_bits);
     kate_pack_write(kpb,values[0],bits);
     values+=run_length;
@@ -164,7 +162,7 @@ static int kate_rle_encode_line_basic_stop(size_t count,const unsigned char *val
 static int kate_rle_encode_line_empty(size_t count,const unsigned char *values,size_t bits,const unsigned char *previous kate_unused,kate_pack_buffer *kpb)
 {
   const unsigned char zero=values[0];
-  size_t run_length=get_run_length_zero(count,values,zero);
+  size_t run_length=get_run_length_zero(count,count,values,zero);
   if (run_length<count) return -1;
   kate_pack_write(kpb,zero,bits);
   return 0;
@@ -183,12 +181,10 @@ static int kate_rle_encode_line_delta(size_t count,const unsigned char *values,s
 
   while (count>0) {
     max_run_length_delta=run_length_delta_cutoff;
-    if (max_run_length_delta>count) max_run_length_delta=count;
-    run_length_delta=get_run_length_identical(max_run_length_delta,values,previous);
+    run_length_delta=get_run_length_identical(max_run_length_delta,count,values,previous);
 
     max_run_length_basic=run_length_basic_cutoff;
-    if (max_run_length_basic>count) max_run_length_basic=count;
-    run_length_basic=get_run_length(max_run_length_basic,values);
+    run_length_basic=get_run_length(max_run_length_basic,count,values);
 
     if (run_length_delta>run_length_basic) {
       kate_pack_write(kpb,1,1);
