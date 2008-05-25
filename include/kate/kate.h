@@ -58,7 +58,7 @@ typedef enum {
 /** defines the type of markup in a text */
 typedef enum {
   kate_markup_none,              /**< the text should not be interpreted for markup */
-  kate_markup_simple,            /**< the text should be interpreted for simple markup */
+  kate_markup_simple             /**< the text should be interpreted for simple markup */
 } kate_markup_type;
 
 /** defines how to interpret spatial dimension values */
@@ -126,7 +126,7 @@ typedef enum kate_curve_type {
   kate_curve_linear,                 /**< linear interpolation of line segments */
   kate_curve_catmull_rom_spline,     /**< Catmull-Rom spline, goes through each point (even the first and last) */
   kate_curve_bezier_cubic_spline,    /**< Bezier cubic spline, goes through the first and last points, but not others */
-  kate_curve_bspline,                /**< Cubic uniform B-spline with 3-multiplicity end knots (goes through each point) */
+  kate_curve_bspline                 /**< Cubic uniform B-spline with 3-multiplicity end knots (goes through each point) */
 } kate_curve_type;
 
 /** defines a curve */
