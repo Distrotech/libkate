@@ -15,7 +15,7 @@
 #include <kate/kate.h>
 #include "kate_internal.h"
 
-//#define ENABLE_CODE_POINTS_ABOVE_0x10ffff
+/* #define ENABLE_CODE_POINTS_ABOVE_0x10ffff */
 
 inline int kate_is_valid_code_point(int c)
 {
