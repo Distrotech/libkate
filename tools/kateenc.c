@@ -17,11 +17,17 @@
 #include <kate/oggkate.h>
 #include "katedesc.h"
 
+/* #define HAVE_LEX_DESTROY */
+
 extern int katedesc_parse(void);
 extern int katedesc_restart(FILE*);
 extern FILE *katedesc_in;
 extern FILE *katedesc_out;
 extern int nerrors;
+
+#ifdef HAVE_LEX_DESTROY
+extern int katedesc_lex_destroy(void);
+#endif
 
 ogg_stream_state os;
 ogg_packet op;
@@ -70,7 +76,7 @@ void write_headers(FILE *f)
     if (ret>0) break; /* we're done */
 
     if (raw) {
-      send_packet();
+      send_packet(f);
     }
     else {
       ogg_stream_packetin(&os,&op);
@@ -84,19 +90,19 @@ void write_headers(FILE *f)
   flush_page(f);
 }
 
-void send_packet(void)
+void send_packet(FILE *f)
 {
   if (raw) {
     if (op.packetno>0) {
       ogg_int64_t bytes=op.bytes;
-      fwrite(&bytes,1,8,katedesc_out);
+      fwrite(&bytes,1,8,f);
     }
-    fwrite(op.packet,1,op.bytes,katedesc_out);
+    fwrite(op.packet,1,op.bytes,f);
   }
   else {
     ogg_stream_packetin(&os,&op);
     ogg_packet_clear(&op);
-    poll_page(katedesc_out);
+    poll_page(f);
   }
 }
 
@@ -148,6 +154,9 @@ static int convert_kate(FILE *fin,FILE *fout)
   katedesc_restart(katedesc_in);
   nerrors=0;
   katedesc_parse();
+#ifdef HAVE_LEX_DESTROY
+  katedesc_lex_destroy();
+#endif
   if (nerrors>0) return -1;
   return 0;
 }
@@ -219,7 +228,7 @@ static int convert_srt(FILE *fin,FILE *fout)
         if (*str=='\n') {
           if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
           kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
-          send_packet();
+          send_packet(fout);
           need=need_id;
         }
         else {
@@ -393,7 +402,7 @@ int main(int argc,char **argv)
     if (ret<0) {
       fprintf(stderr,"error encoding end packet: %d\n",ret);
     }
-    send_packet();
+    send_packet(fout);
     if (!raw) {
       flush_page(fout);
     }

@@ -1618,7 +1618,7 @@ static void kd_encode_text(kate_state *k,kd_event *ev)
     cancel_packet();
     return;
   }
-  send_packet();
+  send_packet(katedesc_out);
 }
 
 static void kd_encode_set_language(const char *s)
