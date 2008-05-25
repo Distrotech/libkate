@@ -262,8 +262,10 @@ static void print_rle_stats(void)
     "",
   };
   for (n=0;n<8;++n) total+=kate_rle_stats_overall[n];
-  for (n=0;n<8;++n) {
-    printf("%s: %d (%.2f%%)\n",kate_rle_type_names[n],kate_rle_stats_overall[n],100.0f*kate_rle_stats_overall[n]/total);
+  if (total) {
+    for (n=0;n<8;++n) {
+      printf("%s: %d (%.2f%%)\n",kate_rle_type_names[n],kate_rle_stats_overall[n],100.0f*kate_rle_stats_overall[n]/total);
+    }
   }
 #endif
 }
