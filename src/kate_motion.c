@@ -183,8 +183,6 @@ int kate_motion_get_point(const kate_motion *km,kate_float duration,kate_float t
   if (t<0 || t>duration) return KATE_E_INVALID_PARAMETER;
   /* x and y may be NULL */
 
-  // TODO: if a periodic motion is used for a lengthy event, we might spend a
-  // very long time in that loop
   motion_duration=0;
   do {
     for (n=0;n<km->ncurves;++n) {
