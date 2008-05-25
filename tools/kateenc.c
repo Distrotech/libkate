@@ -257,7 +257,7 @@ static void print_rle_stats(void)
     "delta",
     "stop",
     "start/end",
-    "",
+    "delta/stop",
     "",
     "",
   };
