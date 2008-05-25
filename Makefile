@@ -12,8 +12,7 @@ SPAMMY_WARNINGS=0
 
 CWARNFLAGS_LIGHT:=-W -Wall -Wwrite-strings -Wdeclaration-after-statement -Wcast-qual -Wcast-align \
                   -Winit-self -Wcast-align -pedantic -Wformat=2 -Wunused \
-                  -Wstrict-aliasing=2 -Wpointer-arith -Wbad-function-cast -Waggregate-return \
-                  -Winline -Wdisabled-optimization
+                  -Wstrict-aliasing=2 -Wpointer-arith -Wbad-function-cast -Waggregate-return
 
 CWARNFLAGS_FULL:=$(CWARNFLAGS_LIGHT)
 CWARNFLAGS_FULL+=-Wshadow -Wsign-compare -Wredundant-decls -Wmissing-prototypes -Wundef -Wmissing-declarations
@@ -29,9 +28,10 @@ ifeq ($(DEBUG),1)
 CFLAGS+=-g -O0 -DDEBUG
 STRIP=/bin/true
 else
+CWARNFLAGS_LIGHT+=-Winline -Wdisabled-optimization
 CFLAGS+=-O2
 LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
-STRIPFLAGS=-X #-d -x -X --strip-unneeded
+STRIPFLAGS=-X -d -x -X --strip-unneeded
 endif
 
 ifeq ($(PROFILE),1)
