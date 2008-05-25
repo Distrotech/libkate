@@ -29,7 +29,9 @@
 #define KATE_RLE_RUN_LENGTH_BITS_BASIC_STARTEND_END 8
 #define KATE_RLE_RUN_LENGTH_BITS_BASIC_STOP_START 8
 #define KATE_RLE_RUN_LENGTH_BITS_BASIC_IN_DELTA_STOP 3
-#define KATE_RLE_RUN_LENGTH_BITS_DELTA_STOP 6
+#define KATE_RLE_RUN_LENGTH_BITS_DELTA_STOP 5
+#define KATE_RLE_RUN_LENGTH_BITS_BASIC_ZERO 8
+#define KATE_RLE_RUN_LENGTH_BITS_BASIC_NON_ZERO 3
 
 #define KATE_RLE_TYPE_EMPTY 0
 #define KATE_RLE_TYPE_BASIC 1
@@ -37,6 +39,7 @@
 #define KATE_RLE_TYPE_BASIC_STOP 3
 #define KATE_RLE_TYPE_BASIC_STARTEND 4
 #define KATE_RLE_TYPE_DELTA_STOP 5
+#define KATE_RLE_TYPE_BASIC_ZERO 6
 
 #define KATE_RLE_TYPE_BITS 3
 
@@ -89,6 +92,33 @@ static int kate_rle_encode_line_basic(size_t count,const unsigned char *values,s
     run_length=get_run_length(max_run_length,count,values);
     kate_pack_write(kpb,run_length-1,run_length_bits);
     kate_pack_write(kpb,values[0],bits);
+    values+=run_length;
+    count-=run_length;
+  }
+
+  return 0;
+}
+
+static int kate_rle_encode_line_basic_zero(size_t count,const unsigned char *values,size_t bits,unsigned char zero kate_unused,const unsigned char *previous kate_unused,kate_pack_buffer *kpb)
+{
+  const size_t run_length_bits_zero=KATE_RLE_RUN_LENGTH_BITS_BASIC_ZERO;
+  const size_t run_length_bits_non_zero=KATE_RLE_RUN_LENGTH_BITS_BASIC_NON_ZERO;
+  const size_t run_length_zero_cutoff=1<<run_length_bits_zero;
+  const size_t run_length_non_zero_cutoff=1<<run_length_bits_non_zero;
+  size_t run_length,max_run_length,run_length_bits;
+
+  while (count>0) {
+    if (values[0]==zero) {
+      max_run_length=run_length_zero_cutoff;
+      run_length_bits=run_length_bits_zero;
+    }
+    else {
+      max_run_length=run_length_non_zero_cutoff;
+      run_length_bits=run_length_bits_non_zero;
+    }
+    run_length=get_run_length(max_run_length,count,values);
+    kate_pack_write(kpb,values[0],bits);
+    kate_pack_write(kpb,run_length-1,run_length_bits);
     values+=run_length;
     count-=run_length;
   }
@@ -300,6 +330,7 @@ static int kate_rle_encode_best(size_t width,size_t height,const unsigned char *
     best_type=kate_rle_try_encoding(&best_buffer,&kate_rle_encode_line_basic_startend,width,values,bits,zero,previous,best_type,KATE_RLE_TYPE_BASIC_STARTEND);
     best_type=kate_rle_try_encoding(&best_buffer,&kate_rle_encode_line_basic_stop,width,values,bits,zero,previous,best_type,KATE_RLE_TYPE_BASIC_STOP);
     best_type=kate_rle_try_encoding(&best_buffer,&kate_rle_encode_line_delta_stop,width,values,bits,zero,previous,best_type,KATE_RLE_TYPE_DELTA_STOP);
+    best_type=kate_rle_try_encoding(&best_buffer,&kate_rle_encode_line_basic_zero,width,values,bits,zero,previous,best_type,KATE_RLE_TYPE_BASIC_ZERO);
 
 #ifdef DEBUG
     ++kate_rle_stats[best_type];
@@ -341,6 +372,30 @@ static int kate_rle_decode_line_basic(size_t count,unsigned char *values,size_t 
     run_length=1+kate_pack_read(kpb,run_length_bits);
     if (run_length==0 || run_length>count) return KATE_E_BAD_PACKET;
     value=kate_pack_read(kpb,bits);
+    memset(values,value,run_length);
+    values+=run_length;
+    count-=run_length;
+  }
+
+  return 0;
+}
+
+static int kate_rle_decode_line_basic_zero(size_t count,unsigned char *values,size_t bits,unsigned char zero,kate_pack_buffer *kpb)
+{
+  const size_t run_length_bits_zero=KATE_RLE_RUN_LENGTH_BITS_BASIC_ZERO;
+  const size_t run_length_bits_non_zero=KATE_RLE_RUN_LENGTH_BITS_BASIC_NON_ZERO;
+  size_t run_length;
+  int value;
+
+  while (count>0) {
+    value=kate_pack_read(kpb,bits);
+    if (value==zero) {
+      run_length=1+kate_pack_read(kpb,run_length_bits_zero);
+    }
+    else {
+      run_length=1+kate_pack_read(kpb,run_length_bits_non_zero);
+    }
+    if (run_length==0 || run_length>count) return KATE_E_BAD_PACKET;
     memset(values,value,run_length);
     values+=run_length;
     count-=run_length;
@@ -504,6 +559,9 @@ static int kate_rle_decode_best(size_t width,size_t height,unsigned char *values
         break;
       case KATE_RLE_TYPE_DELTA_STOP:
         ret=kate_rle_decode_line_delta_stop(width,values,previous,bits,zero,kpb);
+        break;
+      case KATE_RLE_TYPE_BASIC_ZERO:
+        ret=kate_rle_decode_line_basic_zero(width,values,bits,zero,kpb);
         break;
       default:
         ret=KATE_E_BAD_PACKET;

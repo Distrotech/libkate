@@ -258,7 +258,7 @@ static void print_rle_stats(void)
     "stop",
     "start/end",
     "delta/stop",
-    "",
+    "basic/zero",
     "",
   };
   for (n=0;n<8;++n) total+=kate_rle_stats_overall[n];
