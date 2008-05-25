@@ -5,13 +5,6 @@ will be contributed to the relevant projects.
 
 
 
- * oggmerge (oggmerge.diff) * APPLIED *
-
-This adds support for Kate, Theora, Speex and Skeleton, and adds various
-other little bits.
-
-
-
  * MPlayer (mplayer-svn.diff)
 
 This adds support for multiple Kate streams multiplexed alongside any
@@ -30,18 +23,6 @@ audio and video. Kate streams can be selected at runtime.
 There is experimental support for almost everything Kate supports (as
 xine is my testbed).
 In band markup is parsed and tracked, but most of it is ignored.
-
-
-
- * oggsplit (oggsplit.diff) * APPLIED *
-
-This adds support for Kate bitstreams.
-
-
-
- * liboggz (oggz_kate.diff) * APPLIED *
-
-This adds support for Kate bitstreams.
 
 
 
@@ -64,12 +45,6 @@ This allows creating multiplexed Kate streams from .srt files.
 
 
 
- * icecast 2 (icecast-2.3.1-with-kate.diff) * APPLIED *
-
-This adds support for Kate bitstreams.
-
-
-
  * libshout (libshout-2.2.2-with-kate.diff)
 
 This adds support for Kate bitstreams.
@@ -79,14 +54,6 @@ This adds support for Kate bitstreams.
  * mkvtoolnix (mkvtoolnix-2.1.0-kate.diff)
 
 This allows Kate streams to be muxed in Matroska streams.
-
-
-
- * VLC (vlc-with-kate.diff) * APPLIED *
-
-This adds text only Kate decoding support (eg, no styles, regions, or
-motions support).
-It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 
 
