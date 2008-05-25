@@ -221,9 +221,10 @@ static int kate_rle_try_encoding(kate_pack_buffer *kpb,int (*encoder)(size_t,con
     if (kpb_size==0 || tmp_size<kpb_size) {
       kate_pack_writeclear(kpb);
       memcpy(kpb,&tmp,sizeof(tmp));
-      kpb_type=type;
+      return type;
     }
   }
+  kate_pack_writeclear(&tmp);
   return kpb_type;
 }
 
