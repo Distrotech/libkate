@@ -31,13 +31,8 @@ extern ogg_packet op;
 static char *temp_macro_name=NULL;
 static kate_float timebase = 0.0;
 
-typedef struct kd_style {
-  kate_style *style;
-} kd_style;
-
-typedef struct kd_region {
-  kate_region *region;
-} kd_region;
+typedef kate_style kd_style;
+typedef kate_region kd_region;
 
 typedef struct kd_curve {
   size_t idx;
@@ -57,8 +52,8 @@ typedef struct kd_bitmap {
   kate_bitmap *bitmap;
 } kd_bitmap;
 
-static kd_style kstyle;
-static kd_region kregion;
+static kate_style kstyle;
+static kate_region kregion;
 static kd_palette kpalette;
 static kd_bitmap kbitmap;
 static kd_curve kcurve;
@@ -314,13 +309,21 @@ static void check_style(const kate_style *ks)
   if (!ks) { yyerror("internal error: no style"); exit(-1); }
 }
 
-static void add_style(kate_info *ki,const char *name,kate_style *ks)
+static void add_style(kate_info *ki,const char *name,const kate_style *ks)
 {
   int ret;
+  kate_style *ks2;
 
   check_style(ks);
 
-  ret=kate_info_add_style(ki,ks);
+  ks2=(kate_style*)kate_malloc(sizeof(*ks2));
+  if (!ks2) {
+    yyerrorf("Out of memory");
+    exit(-1);
+  }
+  memcpy(ks2,ks,sizeof(*ks2));
+
+  ret=kate_info_add_style(ki,ks2);
   if (ret<0) {
     yyerrorf("Failed to register style: %d",ret);
   }
@@ -346,13 +349,21 @@ static void check_region(const kate_region *kr)
   if (kr->h<0) yyerrorf("Region height (%d) must be non negative",kr->h);
 }
 
-static void add_region(kate_info *ki,const char *name,kate_region *kr)
+static void add_region(kate_info *ki,const char *name,const kate_region *kr)
 {
   int ret;
+  kate_region *kr2;
 
   check_region(kr);
 
-  ret=kate_info_add_region(ki,kr);
+  kr2=(kate_region*)kate_malloc(sizeof(*kr2));
+  if (!kr2) {
+    yyerrorf("Out of memory");
+    exit(-1);
+  }
+  memcpy(kr2,kr,sizeof(*kr2));
+
+  ret=kate_info_add_region(ki,kr2);
   if (ret<0) {
     yyerrorf("Failed to register region: %d",ret);
   }
@@ -457,95 +468,70 @@ static int find_motion(const char *name)
 
 static void init_style(kd_style *style)
 {
-  style->style=(kate_style*)kate_malloc(sizeof(kate_style));
-  if (!style->style) { yyerror("out of memory"); exit(-1); }
-  style->style->halign=-1.0;
-  style->style->valign=-1.0;
-  style->style->text_color.r=255;
-  style->style->text_color.g=255;
-  style->style->text_color.b=255;
-  style->style->text_color.a=255;
-  style->style->background_color.r=0;
-  style->style->background_color.g=0;
-  style->style->background_color.b=0;
-  style->style->background_color.a=0;
-  style->style->draw_color.r=0;
-  style->style->draw_color.g=0;
-  style->style->draw_color.b=0;
-  style->style->draw_color.a=0;
-  style->style->font_metric=kate_percentage;
-  style->style->font_width=-1.0;
-  style->style->font_height=-1.0;
-  style->style->margin_metric=kate_pixel;
-  style->style->left_margin=0;
-  style->style->top_margin=0;
-  style->style->right_margin=0;
-  style->style->bottom_margin=0;
-  style->style->bold=0;
-  style->style->italics=0;
-  style->style->underline=0;
-  style->style->strike=0;
-  style->style->justify=0;
-  style->style->font=NULL;
+  int ret=kate_style_init(style);
+  if (ret<0) {
+    fprintf(stderr,"Error initializing style: %d\n",ret);
+    exit(1);
+  }
 }
 
 static void set_font_width(kd_style *style,kate_float s,kate_space_metric metric)
 {
-  if (style->style->font_width>=0) {
+  if (style->font_width>=0) {
     yyerror("Font width already set");
   }
-  if (style->style->font_height>=0 && style->style->font_metric!=metric) {
+  if (style->font_height>=0 && style->font_metric!=metric) {
     yyerror("All font size metrics must be the same");
   }
-  style->style->font_width=s;
-  style->style->font_metric=metric;
+  style->font_width=s;
+  style->font_metric=metric;
 }
 
 static void set_font_height(kd_style *style,kate_float s,kate_space_metric metric)
 {
-  if (style->style->font_height>=0) {
+  if (style->font_height>=0) {
     yyerror("Font height already set");
   }
-  if (style->style->font_width>=0 && style->style->font_metric!=metric) {
+  if (style->font_width>=0 && style->font_metric!=metric) {
     yyerror("All font size metrics must be the same");
   }
-  style->style->font_height=s;
-  style->style->font_metric=metric;
+  style->font_height=s;
+  style->font_metric=metric;
 }
 
 static void set_font(kd_style *style,const char *font)
 {
   size_t len=strlen(font);
-  if (style->style->font) {
+  if (style->font) {
     yyerror("Font already set");
   }
-  style->style->font=(char*)kate_malloc(len+1);
-  strcpy(style->style->font,font);
+  style->font=(char*)kate_malloc(len+1);
+  strcpy(style->font,font);
 }
 
 static void set_font_size(kd_style *style,kate_float s,kate_space_metric metric)
 {
-  if (style->style->font_height>=0 || style->style->font_width>=0) {
+  if (style->font_height>=0 || style->font_width>=0) {
     yyerror("Font width and/or height already set");
   }
-  style->style->font_width=s;
-  style->style->font_height=s;
-  style->style->font_metric=metric;
+  style->font_width=s;
+  style->font_height=s;
+  style->font_metric=metric;
 }
 
 static void set_margin(kd_style *style,kate_float *margin,kate_float m,kate_space_metric metric)
 {
   int metric_already_set=0;
-  if (&style->style->left_margin!=margin && style->style->left_margin!=0) metric_already_set=1;
-  if (&style->style->top_margin!=margin && style->style->top_margin!=0) metric_already_set=1;
-  if (&style->style->right_margin!=margin && style->style->right_margin!=0) metric_already_set=1;
-  if (&style->style->bottom_margin!=margin && style->style->bottom_margin!=0) metric_already_set=1;
-  if (metric_already_set && metric!=style->style->margin_metric) {
+  if (&style->left_margin!=margin && style->left_margin!=0) metric_already_set=1;
+  if (&style->top_margin!=margin && style->top_margin!=0) metric_already_set=1;
+  if (&style->right_margin!=margin && style->right_margin!=0) metric_already_set=1;
+  if (&style->bottom_margin!=margin && style->bottom_margin!=0) metric_already_set=1;
+  if (metric_already_set && metric!=style->margin_metric) {
     yyerror("Metric must be the same for all margins");
     return;
   }
   *margin=m;
-  style->style->margin_metric=metric;
+  style->margin_metric=metric;
 }
 
 static void set_margins(kd_style *style,
@@ -558,38 +544,34 @@ static void set_margins(kd_style *style,
     yyerror("Metric must be the same for all margins");
     return;
   }
-  style->style->left_margin=left;
-  style->style->top_margin=top;
-  style->style->right_margin=right;
-  style->style->bottom_margin=bottom;
-  style->style->margin_metric=left_metric;
+  style->left_margin=left;
+  style->top_margin=top;
+  style->right_margin=right;
+  style->bottom_margin=bottom;
+  style->margin_metric=left_metric;
 }
 
 static void init_style_from(int idx)
 {
   const kate_style *from=ki.styles[idx];
   init_style(&kstyle);
-  memcpy(kstyle.style,from,sizeof(kate_style));
+  memcpy(&kstyle,from,sizeof(kate_style));
 }
 
 static void init_region(kd_region *region)
 {
-  region->region=(kate_region*)kate_malloc(sizeof(kate_region));
-  if (!region->region) { yyerror("out of memory"); exit(-1); }
-  region->region->metric=kate_percentage;
-  region->region->x=5;
-  region->region->y=85;
-  region->region->w=90;
-  region->region->h=10;
-  region->region->style=-1;
-  region->region->clip=0;
+  int ret=kate_region_init(region);
+  if (ret<0) {
+    fprintf(stderr,"Error initializing region: %d\n",ret);
+    exit(1);
+  }
 }
 
 static void init_region_from(int idx)
 {
   const kate_region *from=ki.regions[idx];
   init_region(&kregion);
-  memcpy(kregion.region,from,sizeof(kate_region));
+  memcpy(&kregion,from,sizeof(kate_region));
 }
 
 static void reference_curve_from(int idx)
@@ -1708,7 +1690,6 @@ static void cleanup_memory(void)
 }
 
 
-
 %}
 
 %pure_parser
@@ -1812,8 +1793,8 @@ kd_def: LANGUAGE STRING { kate_info_set_language(&ki,$2); }
       | COMMENT STRING { kate_comment_add(&kc,$2); }
       | DEFINE MACRO {set_macro_mode();} IDENTIFIER {record_macro_name($4);} MACRO_BODY
                      { add_temp_macro($6); unset_macro_mode(); }
-      | DEFINE STYLE kd_opt_name {init_style(&kstyle);} '{' kd_style_defs '}' { add_style(&ki,$3,kstyle.style); }
-      | DEFINE REGION kd_opt_name {init_region(&kregion);} '{' kd_region_defs '}' { add_region(&ki,$3,kregion.region); }
+      | DEFINE STYLE kd_opt_name {init_style(&kstyle);} '{' kd_style_defs '}' { add_style(&ki,$3,&kstyle); }
+      | DEFINE REGION kd_opt_name {init_region(&kregion);} '{' kd_region_defs '}' { add_region(&ki,$3,&kregion); }
       | DEFINE CURVE kd_opt_name {init_curve();} '{' kd_curve_defs '}' { add_curve(&ki,$3,kcurve.curve); }
       | DEFINE MOTION kd_opt_name {init_motion();} '{' kd_motion_defs '}' { add_motion(&ki,$3,kmotion); }
       | DEFINE PALETTE kd_opt_name {init_palette();} '{' kd_palette_defs '}' { add_palette(&ki,$3,kpalette.palette); }
@@ -1829,30 +1810,30 @@ kd_style_defs: kd_style_defs kd_style_def
              | {}
              ;
 
-kd_style_def: HALIGN float { kstyle.style->halign=$2; }
-            | VALIGN float { kstyle.style->valign=$2; }
-            | HLEFT { kstyle.style->halign=-1.0; }
-            | HCENTER { kstyle.style->halign=0.0; }
-            | HRIGHT { kstyle.style->halign=1.0; }
-            | VTOP { kstyle.style->valign=-1.0; }
-            | VCENTER { kstyle.style->valign=0.0; }
-            | VBOTTOM { kstyle.style->valign=1.0; }
-            | TEXT COLOR kd_color { set_color(&kstyle.style->text_color,$3); }
-            | BACKGROUND COLOR kd_color { set_color(&kstyle.style->background_color,$3); }
-            | DRAW COLOR kd_color { set_color(&kstyle.style->draw_color,$3); }
-            | BOLD { kstyle.style->bold=1; }
-            | ITALICS { kstyle.style->italics=1; }
-            | UNDERLINE { kstyle.style->underline=1; }
-            | STRIKE { kstyle.style->strike=1; }
-            | JUSTIFY { kstyle.style->justify=1; }
+kd_style_def: HALIGN float { kstyle.halign=$2; }
+            | VALIGN float { kstyle.valign=$2; }
+            | HLEFT { kstyle.halign=-1.0; }
+            | HCENTER { kstyle.halign=0.0; }
+            | HRIGHT { kstyle.halign=1.0; }
+            | VTOP { kstyle.valign=-1.0; }
+            | VCENTER { kstyle.valign=0.0; }
+            | VBOTTOM { kstyle.valign=1.0; }
+            | TEXT COLOR kd_color { set_color(&kstyle.text_color,$3); }
+            | BACKGROUND COLOR kd_color { set_color(&kstyle.background_color,$3); }
+            | DRAW COLOR kd_color { set_color(&kstyle.draw_color,$3); }
+            | BOLD { kstyle.bold=1; }
+            | ITALICS { kstyle.italics=1; }
+            | UNDERLINE { kstyle.underline=1; }
+            | STRIKE { kstyle.strike=1; }
+            | JUSTIFY { kstyle.justify=1; }
             | FONT STRING { set_font(&kstyle,$2); }
             | FONT SIZE float kd_opt_space_metric { set_font_size(&kstyle,$3,$4); }
             | FONT WIDTH float kd_opt_space_metric { set_font_width(&kstyle,$3,$4); }
             | FONT HEIGHT float kd_opt_space_metric { set_font_height(&kstyle,$3,$4); }
-            | LEFT MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.style->left_margin,$3,$4); }
-            | TOP MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.style->top_margin,$3,$4); }
-            | RIGHT MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.style->right_margin,$3,$4); }
-            | BOTTOM MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.style->bottom_margin,$3,$4); }
+            | LEFT MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.left_margin,$3,$4); }
+            | TOP MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.top_margin,$3,$4); }
+            | RIGHT MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.right_margin,$3,$4); }
+            | BOTTOM MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.bottom_margin,$3,$4); }
             | MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
                   { set_margins(&kstyle,$2,$3,$4,$5,$6,$7,$8,$9); }
             ;
@@ -1865,11 +1846,11 @@ kd_region_defs: kd_region_defs kd_region_def
               | {}
               ;
 
-kd_region_def: METRIC {kregion.region->metric=$1; }
-             | POSITION float float { kregion.region->x=$2;kregion.region->y=$3; }
-             | SIZE float float { kregion.region->w=$2;kregion.region->h=$3; }
-             | CLIP { kregion.region->clip=1; }
-             | DEFAULT STYLE kd_style_name_or_index { kregion.region->style=$3; }
+kd_region_def: METRIC {kregion.metric=$1; }
+             | POSITION float float { kregion.x=$2;kregion.y=$3; }
+             | SIZE float float { kregion.w=$2;kregion.h=$3; }
+             | CLIP { kregion.clip=1; }
+             | DEFAULT STYLE kd_style_name_or_index { kregion.style=$3; }
              ;
 
 kd_curve_defs: kd_curve_defs kd_curve_def
@@ -2054,14 +2035,14 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
             | timespec ARROW timespec { set_event_t0_t1(&kevent,$1,$3); }
             | REGION kd_region_name_or_index { set_event_region_index(&kevent,$2); }
             | REGION kd_region_name_or_index { init_region_from($2); } '{' kd_region_defs '}'
-                     { set_event_region(&kevent,kregion.region); }
-            | REGION { init_region(&kregion); } '{' kd_region_defs '}' { set_event_region(&kevent,kregion.region); }
+                     { set_event_region(&kevent,&kregion); }
+            | REGION { init_region(&kregion); } '{' kd_region_defs '}' { set_event_region(&kevent,&kregion); }
             | kd_optional_secondary STYLE kd_style_name_or_index
                     { if ($1) set_event_secondary_style_index(&kevent,$3); else set_event_style_index(&kevent,$3); }
             | kd_optional_secondary STYLE kd_style_name_or_index {init_style_from($3); } '{' kd_style_defs '}'
-                    { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
+                    { if ($1) set_event_secondary_style(&kevent,&kstyle); else set_event_style(&kevent,&kstyle); }
             | kd_optional_secondary STYLE { init_style(&kstyle); } '{' kd_style_defs '}'
-                    { if ($1) set_event_secondary_style(&kevent,kstyle.style); else set_event_style(&kevent,kstyle.style); }
+                    { if ($1) set_event_secondary_style(&kevent,&kstyle); else set_event_style(&kevent,&kstyle); }
             | TEXT strings { set_event_text(&kevent,$2,0,0); kate_free($2); }
             | PRE TEXT strings { set_event_text(&kevent,$3,1,0); kate_free($3); }
             | MARKUP strings { set_event_text(&kevent,$2,0,1); kate_free($2); }
