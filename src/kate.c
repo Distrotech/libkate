@@ -84,6 +84,7 @@ int kate_clear(kate_state *k)
   return 0;
 }
 
+static inline int kate_ascii_tolower(int c) __attribute__((const));
 static inline int kate_ascii_tolower(int c)
 {
   if (c>='A' && c<='Z') return c|32;

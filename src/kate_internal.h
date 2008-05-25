@@ -55,9 +55,9 @@ extern int kate_find_font_range(const kate_info *ki,const kate_font_range *kfr);
 extern int kate_find_font_mapping(const kate_info *ki,const kate_font_mapping *kfm);
 
 /* utility */
-extern int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n) kate_internal;
+extern int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n) kate_internal __attribute__((pure));
 
-extern int kate_is_valid_code_point(int c) kate_internal;
+extern int kate_is_valid_code_point(int c) kate_internal __attribute__((const));
 
 extern int kate_font_check_ranges(const kate_font_mapping *kfm) kate_internal;
 

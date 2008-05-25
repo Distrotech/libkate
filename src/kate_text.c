@@ -26,6 +26,7 @@ inline int kate_is_valid_code_point(int c)
 #endif
 }
 
+static inline int get_bytes_for_code_point(int c) __attribute__((const));
 static inline int get_bytes_for_code_point(int c)
 {
   if (!kate_is_valid_code_point(c)) return -1;
