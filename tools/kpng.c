@@ -146,8 +146,6 @@ int kd_read_png8(const char *filename,int *w,int *h,int *bpp,kate_color **palett
     }
   }
 
-  //printf("%s: %dx%dx%d, %d colors, rowbytes %d\n",filename,width,height,cdepth,num_palette,png_get_rowbytes(png_ptr,info_ptr));
-
   /* fill data */
   if (w) *w=width;
   if (h) *h=height;
