@@ -88,7 +88,6 @@ static void kate_make_fraction(kate_float resolution,kate_int32_t *numerator,kat
   \param max_length the maximum time we need to represent, in seconds
   \param max_event_lifetime the maximum time an event may last, in seconds
   \returns 0 success
-  \returns 1 success, and the granule encoding is compatible with skeleton
   \returns KATE_E_* error
   */
 int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_float max_length,kate_float max_event_lifetime)
@@ -118,13 +117,11 @@ int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_floa
   kate_make_fraction(resolution,&ki->gps_numerator,&ki->gps_denominator);
 
   if (base_min_resolution<=resolution) {
-    /* we can have a skeleton compatible encoding */
+    /* we can represent the required encoding */
     return 0;
   }
   else {
-    /* we cannot have a skeleton compatible encoding */
-    //kate_make_fraction(base_min_resolution,&ki->gps_base_numerator,&ki->gps_base_denominator);
-    //return 0;
+    /* we cannot represent the required encoding */
     return KATE_E_BAD_GRANULE;
   }
 }
