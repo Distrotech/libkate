@@ -29,6 +29,10 @@
 #define KATE_LIMIT_LANGUAGE_LENGTH 1024
 #define KATE_LIMIT_TEXT_LENGTH 1048576
 
+#ifndef __GNUC__
+#define __attribute__(x)
+#endif
+
 #define kate_internal __attribute__((visibility("internal")))
 
 /* granule operations */
