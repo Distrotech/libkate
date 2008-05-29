@@ -11,9 +11,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <kate/oggkate.h>
-#include "kate_encode_state.h"
 #include "kate_internal.h"
+#include "kate/oggkate.h"
+#include "kate_encode_state.h"
 
 static void kate_packet_wrap_ogg(kate_packet *kp,const ogg_packet *op)
 {

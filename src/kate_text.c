@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 /* #define ENABLE_CODE_POINTS_ABOVE_0x10ffff */
 

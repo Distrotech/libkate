@@ -10,9 +10,9 @@
 #ifndef _KATE_RLE_H_
 #define _KATE_RLE_H_
 
-#include <kate/kate.h>
-#include "kate_bitwise.h"
 #include "kate_internal.h"
+#include "kate/kate.h"
+#include "kate_bitwise.h"
 
 extern int kate_rle_encode(size_t width,size_t height,const unsigned char *values,size_t bits,kate_pack_buffer *kpb) kate_internal;
 extern int kate_rle_decode(size_t width,size_t height,unsigned char *values,size_t bits,kate_pack_buffer *kpb) kate_internal;

@@ -11,8 +11,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 static kate_float kate_catmull_rom(kate_float t,const kate_float *pts,int k0,int k1,int k2,int k3)
 {

@@ -11,8 +11,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 #include "kate_encode_state.h"
 
 kate_encode_state *kate_encode_state_create(void)

@@ -11,8 +11,8 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 /**
   \ingroup info

@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 static int kate_font_check_overlap(const kate_font_range *kfr0,const kate_font_range *kfr1)
 {

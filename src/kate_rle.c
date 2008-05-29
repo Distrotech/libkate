@@ -14,7 +14,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <string.h>
-#include <kate/kate.h>
+#include "kate_internal.h"
+#include "kate/kate.h"
 #include "kate_rle.h"
 
 /* 4 seems to be optimal for basic - 723 KB */

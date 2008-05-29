@@ -12,8 +12,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 static const kate_color default_text_color={255,255,255,255};
 static const kate_color default_background_color={0,0,0,0};

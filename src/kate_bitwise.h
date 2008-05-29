@@ -1,8 +1,8 @@
 #ifndef _KATE_BITWISE_H_
 #define _KATE_BITWISE_H_
 
-#include "kate/kate.h"
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 typedef struct {
   long endbyte;

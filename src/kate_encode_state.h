@@ -10,9 +10,9 @@
 #ifndef _KATE_ENCODE_STATE_H_
 #define _KATE_ENCODE_STATE_H_
 
-#include <kate/kate.h>
-#include "kate_bitwise.h"
 #include "kate_internal.h"
+#include "kate_bitwise.h"
+#include "kate/kate.h"
 
 typedef struct kate_event_timing {
   kate_float start;

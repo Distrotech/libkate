@@ -9,8 +9,8 @@
 
 #define KATE_INTERNAL
 
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 /**
   \ingroup granule

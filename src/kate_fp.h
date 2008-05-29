@@ -10,9 +10,9 @@
 #ifndef _KATE_FP_H_
 #define _KATE_FP_H_
 
-#include <kate/kate.h>
-#include "kate_bitwise.h"
 #include "kate_internal.h"
+#include "kate/kate.h"
+#include "kate_bitwise.h"
 
 typedef int32_t kate_fp;
 

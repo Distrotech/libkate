@@ -13,8 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 /**
   \ingroup comments

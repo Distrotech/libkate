@@ -10,8 +10,8 @@
 #ifndef _KATE_DECODE_STATE_H_
 #define _KATE_DECODE_STATE_H_
 
-#include <kate/kate.h>
 #include "kate_internal.h"
+#include "kate/kate.h"
 
 typedef struct kate_decode_state {
   kate_info *ki;
