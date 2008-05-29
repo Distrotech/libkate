@@ -39,9 +39,9 @@ This adds support for Kate bitstreams.
 
 
 
- * ffmpeg2theora (ffmpeg2theora-svn-kate.diff) * APPLIED *
+ * ffmpeg2theora (ffmpeg2theora-svn-kate.diff)
 
-This allows creating multiplexed Kate streams from .srt files.
+This allows creating Kate streams with bitmaps from DVD style SPU subtitles.
 
 
 
