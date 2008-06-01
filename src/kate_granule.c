@@ -94,10 +94,14 @@ int kate_granule_split_time(const kate_info *ki,kate_int64_t granulepos,kate_flo
   */
 kate_int64_t kate_duration_granule(const kate_info *ki,kate_float duration)
 {
+  kate_int64_t granule;
+
   if (!ki) return KATE_E_INVALID_PARAMETER;
   if (duration<0) return KATE_E_INVALID_PARAMETER;
 
-  return (kate_int64_t)((duration*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
+  granule=(kate_int64_t)((duration*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
+  if (granule<0) return KATE_E_BAD_GRANULE;
+  return granule;
 }
 
 /**
