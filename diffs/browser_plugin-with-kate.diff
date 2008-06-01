@@ -1,61 +1,20 @@
-diff -ru -x autogen.sh svn/annodex/browser_plugin/README svn/annodex/browser_plugin-with-kate/README
---- svn/annodex/browser_plugin/README	2008-04-04 15:14:27.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/README	2008-04-21 07:56:30.000000000 +0100
-@@ -21,6 +21,10 @@
-     svn co http://svn.annodex.net/liboggz/trunk liboggz
-     svn co http://svn.annodex.net/libfishsound/branches/1.0-stable libfishsound
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/README browser_plugin/README
+--- /mnt/dvd/svn/annodex/browser_plugin/README	2008-05-05 14:28:13.000000000 +0100
++++ browser_plugin/README	2008-06-01 21:24:37.000000000 +0100
+@@ -22,6 +22,10 @@
+   * Firefox (development environment) -- http://developer.mozilla.org/
+   * GTK2.0 -- from http://www.gtk.org/
  
 +Optionally, for Kate stream support, you need
 +
 +  * libkate -- from http://libkate.googlecode.com/
 +
- See the README files associated with these libraries for installation
- instructions.
- 
-diff -ru -x autogen.sh svn/annodex/browser_plugin/configure.ac svn/annodex/browser_plugin-with-kate/configure.ac
---- svn/annodex/browser_plugin/configure.ac	2008-04-04 15:14:27.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/configure.ac	2008-04-21 22:12:39.000000000 +0100
-@@ -84,7 +84,7 @@
- 		       [Path to XPIDL include dir]))
- 
- if test "x$with_xpidl_include" != x -a "x$with_xpidl_include" != xyes -a "x$with_xpidl_include" != xno ; then
--  XPIDL_INCLUDE="$with_xpidl_include"
-+  XPIDL_INCLUDE=-I"$with_xpidl_include"
- else
-   XPIDL_INCLUDE=-I/usr/share/idl/firefox
- fi
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/Makefile.am svn/annodex/browser_plugin-with-kate/src/Makefile.am
---- svn/annodex/browser_plugin/src/Makefile.am	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/Makefile.am	2008-04-19 19:47:34.000000000 +0100
-@@ -11,10 +11,10 @@
- 	win32/resource.h
- 
- AM_CXXFLAGS = -Wall -Wno-non-virtual-dtor -Werror -DXP_UX -DMOZ_X11 -DUSE_AUDIO -shared \
--			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) $(OGGPLAY_CFLAGS)
-+			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) $(LIBOGGPLAY_CFLAGS)
- AM_CFLAGS = -Wall -Werror -DXP_UX -DMOZ_X11 -DUSE_AUDIO -shared \
- 			-g $(SSE2_CFLAGS) -Wno-strict-aliasing $(OGGZ_CFLAGS) \
--			$(ALSA_CFLAGS) $(IMLIB2_CFLAGS) $(OGGPLAY_CFLAGS) -Wdeclaration-after-statement
-+			$(ALSA_CFLAGS) $(IMLIB2_CFLAGS) $(LIBOGGPLAY_CFLAGS) -Wdeclaration-after-statement
- 
- 
- INCLUDES=-I$(srcdir)/include -I$(srcdir)/support -I$(srcdir)/audio @GTK_CFLAGS@ @FIREFOX_CFLAGS@
-@@ -50,10 +51,10 @@
- 	support/npn_gate.cpp			\
- 	audio/sydney_audio_alsa.c		\
- 	plugin_cmml.c
--libnpoggplugin_la_LIBADD = -lX11 -lXt $(LIBOGGPLAY_LIBS) $(ALSA_LIBS) $(IMLIB2_LIBS) $(PTHREAD_LIBS)
-+libnpoggplugin_la_LIBADD = -L/usr/X11/lib -lX11 -lXt $(LIBOGGPLAY_LIBS) $(ALSA_LIBS) $(IMLIB2_LIBS) $(PTHREAD_LIBS)
- 
- libnpoggplugin_static_la_SOURCES = $(libnpoggplugin_la_SOURCES)
--libnpoggplugin_static_la_LIBADD = -lX11 -lXt $(LIBOGGPLAY_STATICLIBS) $(PTHREAD_LIBS) ${ALSA_LIBS}
-+libnpoggplugin_static_la_LIBADD = -L/usr/X11/lib -lX11 -lXt $(LIBOGGPLAY_STATICLIBS) $(PTHREAD_LIBS) ${ALSA_LIBS}
- 
- EXTRA_libnpoggplugin_la_SOURCES = nsILibOggPlugin.idl
- nodist_libnpoggplugin_la_SOURCES = nsILibOggPlugin.h
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/nsILibOggPlugin.idl svn/annodex/browser_plugin-with-kate/src/nsILibOggPlugin.idl
---- svn/annodex/browser_plugin/src/nsILibOggPlugin.idl	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/nsILibOggPlugin.idl	2008-04-27 21:31:06.000000000 +0100
+ On Debian, the required packages for all additional libraries, 
+ except for liboggplay and its dependencies, are:
+   g++ libimlib2-dev firefox-dev libgtk2.0-dev
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/nsILibOggPlugin.idl browser_plugin/src/nsILibOggPlugin.idl
+--- /mnt/dvd/svn/annodex/browser_plugin/src/nsILibOggPlugin.idl	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/nsILibOggPlugin.idl	2008-06-01 21:23:23.000000000 +0100
 @@ -53,8 +53,9 @@
  [scriptable, uuid(482e1890-1fe5-11d5-9cf8-0260b0fbd8ac)]
  interface nsILibOggPlugin : nsISupports {
@@ -90,9 +49,22 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/nsILibOggPlugin.idl svn/an
 +  void setKateRendering(in long method);
 +  long getKateRendering();
  };
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/browser_plugin-with-kate/src/plugin.cpp
---- svn/annodex/browser_plugin/src/plugin.cpp	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin.cpp	2008-04-27 22:08:08.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_c.h browser_plugin/src/plugin_c.h
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_c.h	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_c.h	2008-06-01 21:23:23.000000000 +0100
+@@ -7,6 +7,9 @@
+ void 
+ onCMMLData(nsPluginInstance *i, char **cmml_data, int cmml_size, int async);
+ 
++void 
++onKateData(nsPluginInstance *i, char *kate_data);
++
+ void
+ onEndOfMovie(nsPluginInstance *i);
+ 
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin.cpp browser_plugin/src/plugin.cpp
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin.cpp	2008-04-30 16:27:59.000000000 +0100
++++ browser_plugin/src/plugin.cpp	2008-06-01 21:27:32.000000000 +0100
 @@ -71,7 +71,6 @@
  #include "plugin_cmml.h"
  }
@@ -101,18 +73,17 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  #define PLUGIN_VERSION    "1.0"
  
  #if defined (XP_WIN)
-@@ -245,7 +244,9 @@
-   mCmmlCallback(NULL),
+@@ -246,7 +245,8 @@
    mAsyncCmmlCallback(NULL),
    mEndPlayCallback(NULL),
--  mPlaylistCallback(NULL)
-+  mPlaylistCallback(NULL),
+   mPlaylistCallback(NULL),
+-  mMouseClickCallback(NULL)
 +  mMouseClickCallback(NULL),
 +  mKateCallback(NULL)
  #if defined(XP_MACOSX)
    ,
    mOutputCleared(FALSE)
-@@ -325,11 +326,15 @@
+@@ -326,11 +326,15 @@
    if (mAsyncCmmlCallback != NULL) {
      NS_RELEASE(mAsyncCmmlCallback);
    }
@@ -128,7 +99,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
    SEM_CLOSE(mCrossThreadSem);
  }
  
-@@ -545,6 +550,14 @@
+@@ -546,6 +550,14 @@
    mCmmlStrings.clear();
  }
  
@@ -143,7 +114,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  char *
  nsPluginInstance::curMovie() const {
    return mPlaylist[mPlaylistPos];
-@@ -880,6 +893,21 @@
+@@ -881,6 +893,21 @@
    SEM_SIGNAL(mCrossThreadSem);
  }
  
@@ -165,7 +136,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  ////////////////////////////////////////
  //
  // Cross-thread event handling
-@@ -929,6 +957,23 @@
+@@ -930,6 +957,23 @@
    SEM_SIGNAL(mCrossThreadSem);
  }
  
@@ -189,7 +160,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  void
  nsPluginInstance::onEndOfMovie() {
    SEM_WAIT(mCrossThreadSem);
-@@ -952,6 +997,78 @@
+@@ -953,6 +997,78 @@
    SEM_SIGNAL(mCrossThreadSem);
  }
  
@@ -268,7 +239,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  // C hooks for the callback notification functions
  extern "C" {
  void
-@@ -960,6 +1077,17 @@
+@@ -961,6 +1077,17 @@
  }
  
  void
@@ -286,7 +257,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
  onEndOfMovie(nsPluginInstance *i) {
    i->onEndOfMovie();
  }
-@@ -1007,6 +1135,16 @@
+@@ -1008,6 +1135,16 @@
      mAsyncCmmlString = NULL;
    }
  
@@ -303,79 +274,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.cpp svn/annodex/bro
    // End-of-movie handling.
    if (mReachedEndOfMovie) {
      mReachedEndOfMovie = FALSE;
-@@ -1037,7 +1175,9 @@
-   
-   if (mMouseButtonDown) {
-     mMouseButtonDown = FALSE;
--    mMouseClickCallback->Call();
-+    if (this->mMouseClickCallback != NULL) {
-+      mMouseClickCallback->Call();
-+    }
-   }
- 
-   if (useSemaphore) {
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin.h svn/annodex/browser_plugin-with-kate/src/plugin.h
---- svn/annodex/browser_plugin/src/plugin.h	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin.h	2008-04-27 22:03:29.000000000 +0100
-@@ -125,12 +125,27 @@
-   void    onMovieDownload();
-   void    onMouseClick();
- 
-+  long    getNumKateTracks();
-+  long    getCurrentKateTrack();
-+  char  * getKateTrackLanguage(int track);
-+  char  * getKateTrackCategory(int track);
-+  void    selectKateTrack(int track);
-+  void    registerKateCallback(nsILibOggCallbackString *cbObj);
-+  void    setKateFont(const char *font);
-+  char  * getKateFont();
-+  void    setKateFontSize(float relsize);
-+  float   getKateFontSize();
-+  void    setKateRendering(int method);
-+  long    getKateRendering();
-+  void    onKateData(char *kate_text);
-+
-   // This is only public so the Windows "heartbeat" function can
-   // access it. If you're not PluginCallbackProc, don't touch!
-   void    processCrossThreadCalls(bool useSemaphore);
- 
- private:
-   void    clearCmmlStrings();
-+  void    clearKateStrings();
-   char  * curMovie() const;
-   bool    playlistIndexOk(long index) const;
-   int     playlistLastIndex() const;
-@@ -152,12 +167,14 @@
-   bool                        mReachedEndOfMovie;
-   bool                        mMouseButtonDown;
-   std::vector<char*>          mCmmlStrings;
-+  std::vector<char*>          mKateStrings;
-   char                      * mAsyncCmmlString;
-   nsILibOggCallbackString   * mCmmlCallback;
-   nsILibOggCallbackString   * mAsyncCmmlCallback;
-   nsILibOggCallbackNoArg    * mEndPlayCallback;
-   nsILibOggCallbackNoArg    * mPlaylistCallback;
-   nsILibOggCallbackNoArg    * mMouseClickCallback;
-+  nsILibOggCallbackString   * mKateCallback;
-   semaphore                   mCrossThreadSem;
- 
- #if defined(XP_WIN)
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_c.h svn/annodex/browser_plugin-with-kate/src/plugin_c.h
---- svn/annodex/browser_plugin/src/plugin_c.h	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_c.h	2008-04-20 20:33:28.000000000 +0100
-@@ -7,6 +7,9 @@
- void 
- onCMMLData(nsPluginInstance *i, char **cmml_data, int cmml_size, int async);
- 
-+void 
-+onKateData(nsPluginInstance *i, char *kate_data);
-+
- void
- onEndOfMovie(nsPluginInstance *i);
- 
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui.h svn/annodex/browser_plugin-with-kate/src/plugin_gui.h
---- svn/annodex/browser_plugin/src/plugin_gui.h	2008-04-04 15:14:28.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_gui.h	2008-04-27 22:09:11.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui.h browser_plugin/src/plugin_gui.h
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui.h	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_gui.h	2008-06-01 21:23:23.000000000 +0100
 @@ -83,4 +83,22 @@
  long
  gui_get_window_height(void *gui_handle);
@@ -399,9 +300,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui.h svn/annodex/b
 +gui_get_kate_rendering(void *gui_handle);
 +
  #endif
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_linux.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_linux.c
---- svn/annodex/browser_plugin/src/plugin_gui_linux.c	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_linux.c	2008-04-27 22:09:44.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_linux.c browser_plugin/src/plugin_gui_linux.c
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_linux.c	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_gui_linux.c	2008-06-01 21:23:23.000000000 +0100
 @@ -32,6 +32,8 @@
   *
   * ***** END LICENSE BLOCK ***** */
@@ -676,9 +577,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_linux.c svn/ann
 +  return info->kate_rendering_method;
 +}
 +
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_mac.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_mac.c
---- svn/annodex/browser_plugin/src/plugin_gui_mac.c	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_mac.c	2008-04-27 22:10:52.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_mac.c browser_plugin/src/plugin_gui_mac.c
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_mac.c	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_gui_mac.c	2008-06-01 21:23:23.000000000 +0100
 @@ -444,6 +444,16 @@
                      td.frame_data.cmml_size, FALSE);
      }
@@ -732,9 +633,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_mac.c svn/annod
 +{
 +  return 0;
 +}
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_win32.c svn/annodex/browser_plugin-with-kate/src/plugin_gui_win32.c
---- svn/annodex/browser_plugin/src/plugin_gui_win32.c	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_gui_win32.c	2008-04-27 22:11:38.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_win32.c browser_plugin/src/plugin_gui_win32.c
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_gui_win32.c	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_gui_win32.c	2008-06-01 21:23:23.000000000 +0100
 @@ -332,6 +332,7 @@
    BOOL          has_audio = FALSE;
    BOOL          has_video = FALSE;
@@ -803,9 +704,55 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_gui_win32.c svn/ann
 +{
 +  return 0;
 +}
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.c svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.c
---- svn/annodex/browser_plugin/src/plugin_oggplay.c	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.c	2008-04-21 21:03:06.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin.h browser_plugin/src/plugin.h
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin.h	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin.h	2008-06-01 21:23:23.000000000 +0100
+@@ -125,12 +125,27 @@
+   void    onMovieDownload();
+   void    onMouseClick();
+ 
++  long    getNumKateTracks();
++  long    getCurrentKateTrack();
++  char  * getKateTrackLanguage(int track);
++  char  * getKateTrackCategory(int track);
++  void    selectKateTrack(int track);
++  void    registerKateCallback(nsILibOggCallbackString *cbObj);
++  void    setKateFont(const char *font);
++  char  * getKateFont();
++  void    setKateFontSize(float relsize);
++  float   getKateFontSize();
++  void    setKateRendering(int method);
++  long    getKateRendering();
++  void    onKateData(char *kate_text);
++
+   // This is only public so the Windows "heartbeat" function can
+   // access it. If you're not PluginCallbackProc, don't touch!
+   void    processCrossThreadCalls(bool useSemaphore);
+ 
+ private:
+   void    clearCmmlStrings();
++  void    clearKateStrings();
+   char  * curMovie() const;
+   bool    playlistIndexOk(long index) const;
+   int     playlistLastIndex() const;
+@@ -152,12 +167,14 @@
+   bool                        mReachedEndOfMovie;
+   bool                        mMouseButtonDown;
+   std::vector<char*>          mCmmlStrings;
++  std::vector<char*>          mKateStrings;
+   char                      * mAsyncCmmlString;
+   nsILibOggCallbackString   * mCmmlCallback;
+   nsILibOggCallbackString   * mAsyncCmmlCallback;
+   nsILibOggCallbackNoArg    * mEndPlayCallback;
+   nsILibOggCallbackNoArg    * mPlaylistCallback;
+   nsILibOggCallbackNoArg    * mMouseClickCallback;
++  nsILibOggCallbackString   * mKateCallback;
+   semaphore                   mCrossThreadSem;
+ 
+ #if defined(XP_WIN)
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_oggplay.c browser_plugin/src/plugin_oggplay.c
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_oggplay.c	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_oggplay.c	2008-06-01 21:23:23.000000000 +0100
 @@ -85,6 +85,11 @@
    int               duration;
    int               available;
@@ -1095,9 +1042,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.c svn/annod
 +  }
 +}
 +
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.h svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.h
---- svn/annodex/browser_plugin/src/plugin_oggplay.h	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/plugin_oggplay.h	2008-04-21 20:21:27.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/plugin_oggplay.h browser_plugin/src/plugin_oggplay.h
+--- /mnt/dvd/svn/annodex/browser_plugin/src/plugin_oggplay.h	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/plugin_oggplay.h	2008-06-01 21:23:23.000000000 +0100
 @@ -63,6 +63,8 @@
     char          ** cmml_strings;
     int              cmml_size;
@@ -1119,9 +1066,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/plugin_oggplay.h svn/annod
 +void set_oggplay_kate_font(void *handle, const char *font);
 +
  #endif //_PLUGIN_OGGPLAY_H
-diff -ru -x autogen.sh svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp svn/annodex/browser_plugin-with-kate/src/support/nsScriptablePeer.cpp
---- svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp	2008-04-04 15:14:29.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/src/support/nsScriptablePeer.cpp	2008-04-27 22:08:48.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp browser_plugin/src/support/nsScriptablePeer.cpp
+--- /mnt/dvd/svn/annodex/browser_plugin/src/support/nsScriptablePeer.cpp	2008-03-04 15:51:54.000000000 +0000
++++ browser_plugin/src/support/nsScriptablePeer.cpp	2008-06-01 21:23:23.000000000 +0100
 @@ -345,3 +345,83 @@
        mPlugin->registerOnMouseClickCallback(cbObj);
      return NS_OK;
@@ -1206,9 +1153,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/src/support/nsScriptablePeer.c
 +  return NS_OK;
 +}
 +
-diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/browser_plugin-with-kate/test/test.html
---- svn/annodex/browser_plugin/test/test.html	2008-04-04 15:14:31.000000000 +0100
-+++ svn/annodex/browser_plugin-with-kate/test/test.html	2008-04-27 22:14:00.000000000 +0100
+diff -ru /mnt/dvd/svn/annodex/browser_plugin/test/test.html browser_plugin/test/test.html
+--- /mnt/dvd/svn/annodex/browser_plugin/test/test.html	2008-04-29 13:18:22.000000000 +0100
++++ browser_plugin/test/test.html	2008-06-01 21:23:23.000000000 +0100
 @@ -34,6 +34,8 @@
  <label for="c2"><input id="c2" type="checkbox" name="cbEndPlay" checked/>EndPlay</label><br>
  <input type="button" value="Register:" onclick='RegisterPlaylistCallback()'/>
@@ -1242,24 +1189,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/bro
  </td>
  </tr>
  </table>
-@@ -100,7 +112,7 @@
- <tr valign="top">
- <td>
- Input<br>
--<input type="text" name="ifield" size="20"/><br>
-+<input type="text" name="ifield" size="20" onfocus='input_focus=1;' onblur='input_focus=0;' /><br>
- <p style="margin-top:5;font-size:85%"><i>Space sets focus here</i></p>
- </td>
- <td width="50"></td>
-@@ -144,6 +156,7 @@
- var input  = document.api.ifield;
- var output = document.api.ofield;
- var movies = document.setmovie.list;
-+var input_focus = 0;
- 
- function GetVersionString() {
-   addOutput("Version: " + plugin.getVersionString());
-@@ -331,6 +344,20 @@
+@@ -332,6 +344,20 @@
    }
  }
  
@@ -1280,7 +1210,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/bro
  function RegisterEndPlayCallback() {
    if (document.callbacks.cbEndPlay.checked) {
      plugin.registerEndPlayCallback(
-@@ -395,6 +422,11 @@
+@@ -396,6 +422,11 @@
    }
  }
  
@@ -1292,7 +1222,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/bro
  function endPlay() {
    addOutput("End of play callback received!");
  }
-@@ -410,10 +442,71 @@
+@@ -411,10 +442,71 @@
    }
  }
  
@@ -1363,9 +1293,9 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/bro
 +
 +  if (input_focus) return;
  
-   switch (String.fromCharCode(e.which)) {
-     case "p": Play();  break;
-@@ -453,9 +546,21 @@
+   if (input_focus) return;
+ 
+@@ -456,9 +548,21 @@
      case "-": changeVolume(-1);  break;
      case " ": input.focus();  break;
      case "*": togglePLTimer();  break;
@@ -1387,7 +1317,7 @@ diff -ru -x autogen.sh svn/annodex/browser_plugin/test/test.html svn/annodex/bro
  function skip(dir) {
    i = getInput();
    if (i <= 0) i = 1000;
-@@ -509,6 +614,11 @@
+@@ -512,6 +616,11 @@
    return isNaN(i) ? 0 : i;
  }
  
