@@ -59,8 +59,8 @@ This allows Kate streams to be muxed in Matroska streams.
 
  * GStreamer (gst-plugins-bad-with-kate.diff, gst-plugins-good-with-kate.diff)
 
-This adds text only Kate decoding support (eg, no styles, regions, or
-motions support).
+This adds text only Kate decoding and encoding support (eg, no styles, regions,
+or motions support).
 
 
 

@@ -1,7 +1,7 @@
-diff -ru /tmp/gst-ogg/gstoggmux.c ./gstoggmux.c
---- /tmp/gst-ogg/gstoggmux.c	2008-04-02 19:53:47.000000000 +0100
-+++ ./gstoggmux.c	2008-04-01 22:06:49.000000000 +0100
-@@ -89,7 +183,8 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-base/ext/ogg/gstoggmux.c gst-plugins-base/ext/ogg/gstoggmux.c
+--- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-base/ext/ogg/gstoggmux.c	2008-05-30 13:18:14.000000000 +0100
++++ gst-plugins-base/ext/ogg/gstoggmux.c	2008-06-01 18:18:29.000000000 +0100
+@@ -111,7 +111,8 @@
      GST_STATIC_CAPS ("video/x-theora; "
          "audio/x-vorbis; audio/x-flac; audio/x-speex; "
          "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
