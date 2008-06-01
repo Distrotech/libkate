@@ -234,11 +234,13 @@ ifeq ($(video_theora_ogg),)
 video_theora_ogg:=$(shell ls video.theora.ogv 2> /dev/null)
 endif
 
+ldsodir=LD_LIBRARY_PATH=$(LIBDIR):$(LD_LIBRARY_PATH)
+
 .PRECIOUS: $(OGGDIR)/%.kate.ogg
 $(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/encoder
 	@echo " Building Kate stream from $<"
 	@mkdir -p $(dir $@)
-	@./tools/encoder -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
+	@$(ldsodir) ./tools/encoder -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
 
 $(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg $(video_theora_ogg) tools/encoder
 ifneq ($(ogg_merger),)
@@ -290,11 +292,11 @@ check: tools/decoder tools/encoder
 	| grep .
 	@$(foreach stream, $(STREAMS), \
 	  echo " Checking Kate stream $(stream)" && \
-	  $(valgrind) ./tools/encoder -s 0 -t kate -o $(tmp_ogg1) examples/kate/$(stream).kate && \
-	  $(valgrind) ./tools/decoder -o $(tmp_kate1) $(tmp_ogg1) && \
-	  $(valgrind) ./tools/encoder -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
+	  $(ldsodir) $(valgrind) ./tools/encoder -s 0 -t kate -o $(tmp_ogg1) examples/kate/$(stream).kate && \
+	  $(ldsodir) $(valgrind) ./tools/decoder -o $(tmp_kate1) $(tmp_ogg1) && \
+	  $(ldsodir) $(valgrind) ./tools/encoder -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
 	  $(oggzdiff) $(tmp_ogg1) $(tmp_ogg2) && \
-	  $(valgrind) ./tools/decoder -o $(tmp_kate2) $(tmp_ogg2) && \
+	  $(ldsodir) $(valgrind) ./tools/decoder -o $(tmp_kate2) $(tmp_ogg2) && \
 	  cmp $(tmp_kate1) $(tmp_kate2) && \
 	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
 
