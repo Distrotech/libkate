@@ -51,7 +51,7 @@ This adds support for Kate bitstreams.
 
 
 
- * mkvtoolnix (mkvtoolnix-2.1.0-kate.diff)
+ * mkvtoolnix (mkvtoolnix-2.1.0-kate.diff, mkvtoolnix-svn-kate.diff)
 
 This allows Kate streams to be muxed in Matroska streams.
 
