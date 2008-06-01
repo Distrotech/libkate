@@ -33,12 +33,6 @@ encoding, language, and category.
 
 
 
- * ogginfo (vorbis-tools-1.2.0-with-kate.diff)
-
-This adds support for Kate bitstreams.
-
-
-
  * ffmpeg2theora (ffmpeg2theora-svn-kate.diff)
 
 This allows creating Kate streams with bitmaps from DVD style SPU subtitles.
