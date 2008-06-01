@@ -122,19 +122,19 @@ static void kate_warp(kate_pack_buffer *kpb)
   kate_close_warp(&warp,kpb);
 }
 
-static int kate_finalize_packet_buffer(kate_pack_buffer *kpb,kate_packet *op,kate_state *k)
+static int kate_finalize_packet_buffer(kate_pack_buffer *kpb,kate_packet *kp,kate_state *k)
 {
-  if (!kpb || !op || !k) return KATE_E_INVALID_PARAMETER;
+  if (!kpb || !kp || !k) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   /* fill up any remaining bits in the last byte with zeros */
   kate_pack_writealign(kpb);
 
-  op->nbytes=kate_pack_bytes(kpb);
-  op->data=kate_malloc(op->nbytes);
-  if (!op->data) return KATE_E_OUT_OF_MEMORY;
+  kp->nbytes=kate_pack_bytes(kpb);
+  kp->data=kate_malloc(kp->nbytes);
+  if (!kp->data) return KATE_E_OUT_OF_MEMORY;
 
-  memcpy(op->data,kate_pack_get_buffer(kpb),op->nbytes);
+  memcpy(kp->data,kate_pack_get_buffer(kpb),kp->nbytes);
 
   /* reset the buffer so we're ready for next packet */
   kate_pack_writeclear(kpb);
@@ -158,14 +158,14 @@ static int kate_encode_start_header(kate_pack_buffer *kpb,int headerid)
   return 0;
 }
 
-static int kate_encode_info(kate_state *k,kate_packet *op)
+static int kate_encode_info(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t len;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -204,17 +204,17 @@ static int kate_encode_info(kate_state *k,kate_packet *op)
   else len=0;
   while (len++<16) kate_pack_write(kpb,0,8);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
-static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *op)
+static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   const char *vendor;
   int vendor_len;
   int ret;
 
-  if (!k || !kc || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kc || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -248,7 +248,7 @@ static int kate_encode_comment(kate_state *k,kate_comment *kc,kate_packet *op)
     }
   }
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_region(const kate_region *kr,kate_pack_buffer *kpb)
@@ -275,14 +275,14 @@ static int kate_encode_region(const kate_region *kr,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_encode_regions(kate_state *k,kate_packet *op)
+static int kate_encode_regions(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -302,7 +302,7 @@ static int kate_encode_regions(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_color(const kate_color *kc,kate_pack_buffer *kpb)
@@ -363,14 +363,14 @@ static int kate_encode_style(const kate_style *ks,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_encode_styles(kate_state *k,kate_packet *op)
+static int kate_encode_styles(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -390,7 +390,7 @@ static int kate_encode_styles(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_curve(const kate_curve *kc,kate_pack_buffer *kpb)
@@ -405,14 +405,14 @@ static int kate_encode_curve(const kate_curve *kc,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_encode_curves(kate_state *k,kate_packet *op)
+static int kate_encode_curves(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -432,7 +432,7 @@ static int kate_encode_curves(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_motion(const kate_info *ki,const kate_motion *km,kate_pack_buffer *kpb)
@@ -465,14 +465,14 @@ static int kate_encode_motion(const kate_info *ki,const kate_motion *km,kate_pac
   return 0;
 }
 
-static int kate_encode_motions(kate_state *k,kate_packet *op)
+static int kate_encode_motions(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -492,7 +492,7 @@ static int kate_encode_motions(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_palette(const kate_palette *kp,kate_pack_buffer *kpb)
@@ -512,14 +512,14 @@ static int kate_encode_palette(const kate_palette *kp,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_encode_palettes(kate_state *k,kate_packet *op)
+static int kate_encode_palettes(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -539,7 +539,7 @@ static int kate_encode_palettes(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 #if 0
@@ -620,14 +620,14 @@ static int kate_encode_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_encode_bitmaps(kate_state *k,kate_packet *op)
+static int kate_encode_bitmaps(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -647,7 +647,7 @@ static int kate_encode_bitmaps(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static int kate_encode_font_range(const kate_info *ki,const kate_font_range *kfr,kate_pack_buffer *kpb)
@@ -667,14 +667,14 @@ static int kate_encode_font_range(const kate_info *ki,const kate_font_range *kfr
   return 0;
 }
 
-static int kate_encode_font_ranges(kate_state *k,kate_packet *op)
+static int kate_encode_font_ranges(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_info *ki;
   size_t n,l;
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
   kpb=&k->kes->kpb;
@@ -712,7 +712,7 @@ static int kate_encode_font_ranges(kate_state *k,kate_packet *op)
 
   kate_warp(kpb);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
@@ -804,11 +804,11 @@ static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
   \param t1 the end time in seconds of the text
   \param text the text to add (may be NULL)
   \param sz the length in bytes of the text to add
-  \param op the packet to encode to
+  \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,size_t sz,kate_packet *op)
+int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,size_t sz,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t start_granulepos;
@@ -819,7 +819,7 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   int ret;
   size_t n;
 
-  if (!k || !text || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !text || !kp) return KATE_E_INVALID_PARAMETER;
   if (t0<0 || t1<t0) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
@@ -887,7 +887,7 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   if (start_granulepos>k->kes->furthest_granule) k->kes->furthest_granule=start_granulepos;
 
   k->kes->granulepos=start_granulepos;
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 /**
@@ -895,16 +895,16 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   Emits a keepalive packet, to help with seeking.
   \param k the kate_state to encode to
   \param t the timestamp for the keepalive packet
-  \param op the packet to encode to
+  \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
+int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
 
@@ -917,7 +917,7 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
   kpb=&k->kes->kpb;
   kate_pack_write(kpb,0x01,8);
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 /**
@@ -926,16 +926,16 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *op)
   No more events may be added after this is called.
   \param k the kate_state to encode to
   \param t the timestamp for the end (if negative, the end time of the last event will be used)
-  \param op the packet to encode to
+  \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_finish(kate_state *k,kate_float t,kate_packet *op)
+int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
 
@@ -960,7 +960,7 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *op)
 
   k->kes->eos=1;
 
-  return kate_finalize_packet_buffer(kpb,op,k);
+  return kate_finalize_packet_buffer(kpb,kp,k);
 }
 
 /**
@@ -970,26 +970,26 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *op)
   positive value is returned, marking the encoding of the last header.
   \param k the kate_state to encode to
   \param kc the list of comments to add to the headers
-  \param op the packet to encode to
+  \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_headers(kate_state *k,kate_comment *kc,kate_packet *op)
+int kate_encode_headers(kate_state *k,kate_comment *kc,kate_packet *kp)
 {
-  if (!k || !kc || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kc || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
 
   switch (k->kes->packetno+1) {
-    case 0: return kate_encode_info(k,op);
-    case 1: return kate_encode_comment(k,kc,op);
-    case 2: return kate_encode_regions(k,op);
-    case 3: return kate_encode_styles(k,op);
-    case 4: return kate_encode_curves(k,op);
-    case 5: return kate_encode_motions(k,op);
-    case 6: return kate_encode_palettes(k,op);
-    case 7: return kate_encode_bitmaps(k,op);
-    case 8: return kate_encode_font_ranges(k,op);
+    case 0: return kate_encode_info(k,kp);
+    case 1: return kate_encode_comment(k,kc,kp);
+    case 2: return kate_encode_regions(k,kp);
+    case 3: return kate_encode_styles(k,kp);
+    case 4: return kate_encode_curves(k,kp);
+    case 5: return kate_encode_motions(k,kp);
+    case 6: return kate_encode_palettes(k,kp);
+    case 7: return kate_encode_bitmaps(k,kp);
+    case 8: return kate_encode_font_ranges(k,kp);
     case 9: return 1;
     default: return KATE_E_INVALID_PARAMETER;
   }

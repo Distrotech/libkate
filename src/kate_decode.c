@@ -113,18 +113,18 @@ static int kate_decode_check_magic(kate_pack_buffer *kpb)
 /**
   \ingroup decoding
   Checks if a packet is a Kate ID header
-  \param op the packet to inspect
+  \param kp the packet to inspect
   \returns 0 the packet is not an ID header
   \returns !=0 the packet is an ID header
   */
-int kate_decode_is_idheader(const kate_packet *op)
+int kate_decode_is_idheader(const kate_packet *kp)
 {
   kate_pack_buffer kpb;
   unsigned char headerid;
 
-  if (!op) return 0;
+  if (!kp) return 0;
 
-  kate_pack_readinit(&kpb,op->data,op->nbytes);
+  kate_pack_readinit(&kpb,kp->data,kp->nbytes);
   headerid=kate_pack_read(&kpb,8);
   if (headerid!=0x80) return 0;
 
@@ -794,20 +794,20 @@ static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
   from the decoded data.
   \param ki the kate_info structure to update
   \param kc the kate_comment structure to update
-  \param op the packet to decode
+  \param kp the packet to decode
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_decode_headerin(kate_info *ki,kate_comment *kc,kate_packet *op)
+int kate_decode_headerin(kate_info *ki,kate_comment *kc,kate_packet *kp)
 {
   kate_pack_buffer kpb;
   unsigned char headerid;
   int ret;
   int packetno;
 
-  if (!ki || !kc || !op) return KATE_E_INVALID_PARAMETER;
+  if (!ki || !kc || !kp) return KATE_E_INVALID_PARAMETER;
 
-  kate_pack_readinit(&kpb,op->data,op->nbytes);
+  kate_pack_readinit(&kpb,kp->data,kp->nbytes);
   headerid=kate_pack_read(&kpb,8);
 
   ret=kate_decode_check_magic(&kpb);
@@ -1120,24 +1120,24 @@ static int kate_decode_end_packet(kate_state *k,kate_pack_buffer *kpb)
   \ingroup decoding
   Decodes a data packet.
   \param k the kate_state to decode to
-  \param op the packet to decode
+  \param kp the packet to decode
   \returns 0 success
   \returns 1 success, and we're at end of stream
   \returns KATE_E_* error
   */
-int kate_decode_packetin(kate_state *k,kate_packet *op)
+int kate_decode_packetin(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer kpb;
   int ret,id;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->ki) return KATE_E_INIT;
   if (!k->kds) return KATE_E_INIT;
 
   ret=kate_decode_state_clear(k->kds,k->ki,0);
   if (ret<0) return ret;
 
-  kate_pack_readinit(&kpb,op->data,op->nbytes);
+  kate_pack_readinit(&kpb,kp->data,kp->nbytes);
   id=kate_pack_read(&kpb,8);
   if (id&0x80) {
     /* we have a header - we'll ignore it

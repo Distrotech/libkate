@@ -77,16 +77,16 @@ int kate_high_decode_init(kate_state *k)
   \ingroup high
   Processes a packet and outputs an event if possible
   \param k the kate_state structure representing the stream to decode
-  \param op the packet to decode
+  \param kp the packet to decode
   \param ev where to place a pointer to an event if there we just decoded one
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_event **ev)
+int kate_high_decode_packetin(kate_state *k,kate_packet *kp,kate_const kate_event **ev)
 {
   int ret;
 
-  if (!k || !op) return KATE_E_INVALID_PARAMETER;
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kds) return KATE_E_INIT;
   if (!k->kds->ki) return KATE_E_INIT;
   if (!k->kds->kc) return KATE_E_INIT;
@@ -94,9 +94,9 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
   if (ev) *ev=NULL;
   if (k->kds->ki->probe>=0) {
     /* still probing headers */
-    if (k->kds->ki->probe==0 && !kate_decode_is_idheader(op))
+    if (k->kds->ki->probe==0 && !kate_decode_is_idheader(kp))
       return 0;
-    ret=kate_decode_headerin(k->kds->ki,k->kds->kc,op);
+    ret=kate_decode_headerin(k->kds->ki,k->kds->kc,kp);
     if (ret>0) {
       k->kds->ki->probe=-1;
       ret=0;
@@ -106,7 +106,7 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *op,kate_const kate_even
   else {
     /* in data */
     int eos=0;
-    ret=kate_decode_packetin(k,op);
+    ret=kate_decode_packetin(k,kp);
     if (ret<0) return ret;
     if (ret>0) eos=1;
     ret=kate_decode_eventout(k,ev);
