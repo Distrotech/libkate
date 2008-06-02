@@ -94,8 +94,6 @@ int kate_high_decode_packetin(kate_state *k,kate_packet *kp,kate_const kate_even
   if (ev) *ev=NULL;
   if (k->kds->ki->probe>=0) {
     /* still probing headers */
-    if (k->kds->ki->probe==0 && !kate_decode_is_idheader(kp))
-      return 0;
     ret=kate_decode_headerin(k->kds->ki,k->kds->kc,kp);
     if (ret>0) {
       k->kds->ki->probe=-1;
