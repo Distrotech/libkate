@@ -6,7 +6,7 @@ includedir=${prefix}/include
 
 Name: Kate
 Description: libkate is a codec library for the Kate bitstream format
-Version: 0.1.3
+Version: 0.1.4
 URL: http://wiki.xiph.org/index.php/OggKate
 Requires: 
 Conflicts: 
