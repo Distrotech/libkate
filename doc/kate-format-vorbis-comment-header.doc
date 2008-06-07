@@ -20,6 +20,8 @@ signature at the start of the packet.
 As for Vorbis, note that the comments are not necessarily NUL
 terminated.
 
+Note that, as Theora, Kate does not add a framing bit to the packet.
+
 \endverbatim
 
 
