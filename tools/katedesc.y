@@ -29,7 +29,7 @@ int nwarnings=0;
 extern ogg_packet op;
 
 static char *temp_macro_name=NULL;
-static kate_float timebase = 0.0;
+static kate_float timebase = (kate_float)0.0;
 
 typedef kate_style kd_style;
 typedef kate_region kd_region;
@@ -219,9 +219,9 @@ static void add_palette(kate_info *ki,const char *name,kate_palette *kp)
   }
 }
 
-static int find_palette(const char *name)
+static int find_palette(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.npalettes,palette_names);
+  return find_item(name,ki->npalettes,palette_names);
 }
 
 static void init_bitmap(void)
@@ -299,9 +299,9 @@ static void add_bitmap(kate_info *ki,const char *name,kate_bitmap *kb)
   }
 }
 
-static int find_bitmap(const char *name)
+static int find_bitmap(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nbitmaps,bitmap_names);
+  return find_item(name,ki->nbitmaps,bitmap_names);
 }
 
 static void check_style(const kate_style *ks)
@@ -337,9 +337,9 @@ static void add_style(kate_info *ki,const char *name,const kate_style *ks)
   }
 }
 
-static int find_style(const char *name)
+static int find_style(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nstyles,style_names);
+  return find_item(name,ki->nstyles,style_names);
 }
 
 static void check_region(const kate_region *kr)
@@ -377,9 +377,9 @@ static void add_region(kate_info *ki,const char *name,const kate_region *kr)
   }
 }
 
-static int find_region(const char *name)
+static int find_region(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nregions,region_names);
+  return find_item(name,ki->nregions,region_names);
 }
 
 static void check_curve(const kate_curve *kc)
@@ -418,9 +418,9 @@ static void add_curve(kate_info *ki,const char *name,kate_curve *kc)
   }
 }
 
-static int find_curve(const char *name)
+static int find_curve(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.ncurves,curve_names);
+  return find_item(name,ki->ncurves,curve_names);
 }
 
 static void clear_motions(void)
@@ -461,9 +461,9 @@ static void add_motion(kate_info *ki,const char *name,kate_motion *km)
   clear_motions();
 }
 
-static int find_motion(const char *name)
+static int find_motion(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nmotions,motion_names);
+  return find_item(name,ki->nmotions,motion_names);
 }
 
 static void init_style(kd_style *style)
@@ -700,7 +700,7 @@ static void set_color(kate_color *kc,uint32_t c)
 
 static void init_event(kd_event *ev)
 {
-  ev->t0=ev->t1=ev->duration=-1.0;
+  ev->t0=ev->t1=ev->duration=(kate_float)-1.0;
   ev->text=NULL;
   ev->text_markup_type=kate_markup_none;
   ev->region_index=ev->style_index=ev->secondary_style_index=-1;
@@ -1147,14 +1147,14 @@ static kd_event *check_event(kd_event *ev)
      duration and end
      */
   int sets=0;
-  if (ev->t0>=0.0) ++sets;
-  if (ev->t1>=0.0) ++sets;
-  if (ev->duration>=0.0) ++sets;
+  if (ev->t0>=(kate_float)0.0) ++sets;
+  if (ev->t1>=(kate_float)0.0) ++sets;
+  if (ev->duration>=(kate_float)0.0) ++sets;
   if (sets<2) { yyerror("start/end times underspecified"); return NULL; }
   if (sets>2) { yyerror("start/end times overspecified"); return NULL; }
 
-  if (ev->t0<0.0) ev->t0=ev->t1-ev->duration;
-  if (ev->t1<0.0) ev->t1=ev->t0+ev->duration;
+  if (ev->t0<(kate_float)0.0) ev->t0=ev->t1-ev->duration;
+  if (ev->t1<(kate_float)0.0) ev->t1=ev->t0+ev->duration;
 
   return ev;
 }
@@ -1228,7 +1228,7 @@ static kate_float get_last_glyph_x(const kate_motion *km)
 {
   const kate_curve *kc;
   if (!km) yyerror("internal error: no motion");
-  if (km->ncurves==0) return -0.5; /* by default, center of the glyph before the first one (eg, marks nothing yet) */
+  if (km->ncurves==0) return (kate_float)-0.5; /* by default, center of the glyph before the first one (eg, marks nothing yet) */
   kc=km->curves[km->ncurves-1];
   if (kc->npts<1) yyerror("internal error: no points in last curve");
   return kc->pts[kc->npts*2-2]; /* -1 would be y */
@@ -1250,7 +1250,7 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
 {
   /* get the last glyph position and the new one */
   kate_float x0=get_last_glyph_x(kmotion);
-  kate_float x1=glyph+0.5;
+  kate_float x1=glyph+(kate_float)0.5;
   size_t n;
 
   /* convert absolute to relative */
@@ -1258,20 +1258,20 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
     for (n=0;n<kmotion->ncurves;++n) dt-=kmotion->durations[n];
   }
 
-  if (dt<0.0) yyerrorf("duration (%f) must not be negative\n",dt);
+  if (dt<(kate_float)0.0) yyerrorf("duration (%f) must not be negative\n",dt);
 
   /* add a pause before the next jump */
-  if (pause_fraction>0.0) {
+  if (pause_fraction>(kate_float)0.0) {
     kate_float delay=dt*pause_fraction;
     add_glyph_pause(delay,ystart);
     dt-=delay;
-    if (dt<0.0) dt=0.0;
+    if (dt<(kate_float)0.0) dt=(kate_float)0.0;
     x0=get_last_glyph_x(kmotion);
   }
 
   init_curve();
 
-  if (dt==0.0) {
+  if (dt==(kate_float)0.0) {
     /* if zero duration, just add static point at the end point */
     kcurve.curve->type=kate_curve_static;
     kcurve.curve->npts=1;
@@ -1294,7 +1294,7 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
     /* the interpolated points */
     for (n=2;n<kcurve.curve->npts-2;++n) {
       kate_float t=(n-1)/(kate_float)(kcurve.curve->npts-2-1);
-      kcurve.curve->pts[n*2]=kcurve.curve->pts[n*2+2]=x1*t+x0*(1.0-t);
+      kcurve.curve->pts[n*2]=kcurve.curve->pts[n*2+2]=x1*t+x0*((kate_float)1.0-t);
       kcurve.curve->pts[n*2+1]=kcurve.curve->pts[n*2+3]=ytop;
     }
 
@@ -1374,23 +1374,23 @@ static void kd_finalize_simple_timed_glyph_motion(kate_motion *kmotion)
 
   /* for this helper motion, we require the timing of the event to be known in advance */
   int sets=0;
-  if (t0>=0.0) ++sets;
-  if (t1>=0.0) ++sets;
-  if (duration>=0.0) ++sets;
+  if (t0>=(kate_float)0.0) ++sets;
+  if (t1>=(kate_float)0.0) ++sets;
+  if (duration>=(kate_float)0.0) ++sets;
   if (sets<2) { yyerror("start/end times must be specified before timed glyph marker motion setup"); return; }
   if (sets>2) { yyerror("start/end times overspecified"); return; }
 
-  if (t0<0.0) t0=t1-duration;
-  if (t1<0.0) t1=t0+duration;
+  if (t0<(kate_float)0.0) t0=t1-duration;
+  if (t1<(kate_float)0.0) t1=t0+duration;
   duration=t1-t0;
 
   /* add a pause to take us to the end time */
-  duration_so_far=0.0;
+  duration_so_far=(kate_float)0.0;
   for (n=0;n<kmotion->ncurves;++n) duration_so_far+=kmotion->durations[n];
   if (duration_so_far>duration) {
     yyerrorf("Simple timed glyph motion lasts longer than its event (motion %f, event %f)",duration_so_far,duration);
   }
-  add_glyph_pause(duration-duration_so_far,1.0);
+  add_glyph_pause(duration-duration_so_far,(kate_float)1.0);
 }
 
 static void set_motion_mapping(kate_motion *kmotion,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping)
@@ -1543,9 +1543,9 @@ static void add_font_range(kate_info *ki,const char *name,kate_font_range *kfr)
   }
 }
 
-static int find_font_range(const char *name)
+static int find_font_range(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nfont_ranges,font_range_names);
+  return find_item(name,ki->nfont_ranges,font_range_names);
 }
 
 static void init_font_mapping(void)
@@ -1592,9 +1592,9 @@ static void add_font_mapping(kate_info *ki,const char *name,kate_font_mapping *k
   }
 }
 
-static int find_font_mapping(const char *name)
+static int find_font_mapping(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki.nfont_mappings,font_mapping_names);
+  return find_item(name,ki->nfont_mappings,font_mapping_names);
 }
 
 static void kd_write_headers(void)
@@ -1602,17 +1602,17 @@ static void kd_write_headers(void)
   write_headers(katedesc_out);
 }
 
-static void kd_encode_text(kate_state *k,kd_event *ev)
+static void kd_encode_text(kate_state *kstate,kd_event *ev)
 {
   int ret;
 
-  ret=kate_encode_set_markup_type(k,ev->text_markup_type);
+  ret=kate_encode_set_markup_type(kstate,ev->text_markup_type);
   if (ret<0) {
     yyerrorf("failed to set text markup type: %d",ret);
     cancel_packet();
     return;
   }
-  ret=kate_ogg_encode_text(k,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
+  ret=kate_ogg_encode_text(kstate,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
   if (ret<0) {
     yyerrorf("failed to encode text %s: %d",ev->text?ev->text:"<none>",ret);
     cancel_packet();
@@ -1621,9 +1621,9 @@ static void kd_encode_text(kate_state *k,kd_event *ev)
   send_packet(katedesc_out);
 }
 
-static void kd_encode_set_language(const char *s)
+static void kd_encode_set_language(kate_state *kstate,const char *s)
 {
-  int ret=kate_encode_set_language(&k,s);
+  int ret=kate_encode_set_language(kstate,s);
   if (ret<0) yyerrorf("failed to set event language override: %d",ret);
 }
 
@@ -1812,12 +1812,12 @@ kd_style_defs: kd_style_defs kd_style_def
 
 kd_style_def: HALIGN float { kstyle.halign=$2; }
             | VALIGN float { kstyle.valign=$2; }
-            | HLEFT { kstyle.halign=-1.0; }
-            | HCENTER { kstyle.halign=0.0; }
-            | HRIGHT { kstyle.halign=1.0; }
-            | VTOP { kstyle.valign=-1.0; }
-            | VCENTER { kstyle.valign=0.0; }
-            | VBOTTOM { kstyle.valign=1.0; }
+            | HLEFT { kstyle.halign=(kate_float)-1.0; }
+            | HCENTER { kstyle.halign=(kate_float)0.0; }
+            | HRIGHT { kstyle.halign=(kate_float)1.0; }
+            | VTOP { kstyle.valign=(kate_float)-1.0; }
+            | VCENTER { kstyle.valign=(kate_float)0.0; }
+            | VBOTTOM { kstyle.valign=(kate_float)1.0; }
             | TEXT COLOR kd_color { set_color(&kstyle.text_color,$3); }
             | BACKGROUND COLOR kd_color { set_color(&kstyle.background_color,$3); }
             | DRAW COLOR kd_color { set_color(&kstyle.draw_color,$3); }
@@ -1958,35 +1958,35 @@ kd_opt_name: STRING { $$=$1; }
            | { $$=NULL; }
            ;
 
-kd_style_name_or_index: STRING { $$=find_style($1); }
+kd_style_name_or_index: STRING { $$=find_style(&ki,$1); }
                       | UNUMBER { if ($1>=ki.nstyles) yyerrorf("Invalid style index (%u/%d)",$1,ki.nstyles); $$=$1; }
                       ;
 
-kd_region_name_or_index: STRING { $$=find_region($1); }
+kd_region_name_or_index: STRING { $$=find_region(&ki,$1); }
                       | UNUMBER { if ($1>=ki.nregions) yyerrorf("Invalid region index (%u/%u)",$1,ki.nregions); $$=$1; }
                       ;
 
-kd_curve_name_or_index: STRING { $$=find_curve($1); }
+kd_curve_name_or_index: STRING { $$=find_curve(&ki,$1); }
                       | UNUMBER { if ($1>=ki.ncurves) yyerrorf("Invalid curve index (%u/%u)",$1,ki.ncurves); $$=$1; }
                       ;
 
-kd_motion_name_or_index: STRING { $$=find_motion($1); }
+kd_motion_name_or_index: STRING { $$=find_motion(&ki,$1); }
                        | UNUMBER { if ($1>=ki.nmotions) yyerrorf("Invalid motion index (%u/%u)",$1,ki.nmotions); $$=$1; }
                        ;
 
-kd_palette_name_or_index: STRING { $$=find_palette($1); }
+kd_palette_name_or_index: STRING { $$=find_palette(&ki,$1); }
                         | UNUMBER { if ($1>=ki.npalettes) yyerrorf("Invalid palette index (%u/%u)",$1,ki.npalettes); $$=$1; }
                         ;
 
-kd_bitmap_name_or_index: STRING { $$=find_bitmap($1); }
+kd_bitmap_name_or_index: STRING { $$=find_bitmap(&ki,$1); }
                        | UNUMBER { if ($1>=ki.nbitmaps) yyerrorf("Invalid bitmap index (%u/%u)",$1,ki.nbitmaps); $$=$1; }
                        ;
 
-kd_font_range_name_or_index: STRING { $$=find_font_range($1); }
+kd_font_range_name_or_index: STRING { $$=find_font_range(&ki,$1); }
                            | UNUMBER { if ($1>=ki.nfont_ranges) yyerrorf("Invalid font range index (%u/%u)",$1,ki.nfont_ranges); $$=$1; }
                            ;
 
-kd_font_mapping_name_or_index: STRING { $$=find_font_mapping($1); }
+kd_font_mapping_name_or_index: STRING { $$=find_font_mapping(&ki,$1); }
                              | UNUMBER { if ($1>=ki.nfont_mappings) yyerrorf("Invalid font mapping index (%u/%u)",$1,ki.nfont_mappings); $$=$1; }
                              ;
 
@@ -2023,7 +2023,7 @@ kd_event_defs: kd_event_defs kd_event_def
              ;
 
 kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
-            | LANGUAGE STRING { kd_encode_set_language($2); }
+            | LANGUAGE STRING { kd_encode_set_language(&k,$2); }
             | DIRECTIONALITY directionality { kate_encode_set_text_directionality(&k,$2); }
             | STARTS AT timespec { set_event_t0(&kevent,$3); }
             | ENDS AT timespec { set_event_t1(&kevent,$3); }
@@ -2081,8 +2081,8 @@ kd_motion_def: MAPPING kd_motion_mapping { set_motion_mapping(kmotion,$2,$2); }
              ;
 
 kd_optional_curve_duration: FOR float { $$=$2; }
-                          | FOR float '%' { $$=-$2/100.0; }
-                          | { $$=-1.0; }
+                          | FOR float '%' { $$=-$2/(kate_float)100.0; }
+                          | { $$=(kate_float)-1.0; }
                           ;
 
 kd_motion_mapping: NONE { $$=kate_motion_mapping_none; }
@@ -2134,9 +2134,9 @@ kd_simple_timed_glyph_marker_defs: kd_simple_timed_glyph_marker_defs kd_simple_t
 
 kd_simple_timed_glyph_marker_def: GLYPH POINTER UNUMBER { kmotion->semantics=get_glyph_pointer_offset($3); }
                                 | 'Y' MAPPING kd_motion_mapping { kmotion->y_mapping=$3; }
-                                | PAUSE FOR timespec { add_glyph_pause($3,1.0); }
-                                | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,1.0,2.0,0,0.0); }
-                                | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,1.0,2.0,1,0.0); }
+                                | PAUSE FOR timespec { add_glyph_pause($3,(kate_float)1.0); }
+                                | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,(kate_float)1.0,(kate_float)2.0,0,(kate_float)0.0); }
+                                | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,(kate_float)1.0,(kate_float)2.0,1,(kate_float)0.0); }
                                 ;
 
 kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs kd_simple_timed_glyph_style_morph_def
@@ -2146,17 +2146,17 @@ kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs k
 kd_simple_timed_glyph_style_morph_def: GLYPH POINTER UNUMBER { kmotion->semantics=get_glyph_pointer_offset($3); }
                                      | FROM STYLE kd_style_name_or_index TO STYLE kd_style_name_or_index
                                               { set_style_morph(&kevent,$3,$6); }
-                                     | PAUSE FOR timespec { add_glyph_pause($3,0.0); }
-                                     | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,0.0,0.0,0,1.0); }
-                                     | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,0.0,0.0,1,1.0); }
-                                     | STRING IN timespec { add_glyph_transition_to_text($1,$3,0.0,0.0,0,1.0); }
-                                     | STRING AT timespec { add_glyph_transition_to_text($1,$3,0.0,0.0,1,1.0); }
+                                     | PAUSE FOR timespec { add_glyph_pause($3,(kate_float)0.0); }
+                                     | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,(kate_float)0.0,(kate_float)0.0,0,(kate_float)1.0); }
+                                     | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,(kate_float)0.0,(kate_float)0.0,1,(kate_float)1.0); }
+                                     | STRING IN timespec { add_glyph_transition_to_text($1,$3,(kate_float)0.0,(kate_float)0.0,0,(kate_float)1.0); }
+                                     | STRING AT timespec { add_glyph_transition_to_text($1,$3,(kate_float)0.0,(kate_float)0.0,1,(kate_float)1.0); }
                                      ;
 
 unumber60: UNUMBER { if ($1>59) yyerrorf("Value must be between 0 and 59, but is %u",$1); } { $$=$1; }
          ;
 
-float60: float { if ($1<0.0 || $1>=60.0) yyerrorf("Value must be between 0 (inclusive) and 60 (exclusive), but is %f",$1); } { $$=$1; }
+float60: float { if ($1<(kate_float)0.0 || $1>=(kate_float)60.0) yyerrorf("Value must be between 0 (inclusive) and 60 (exclusive), but is %f",$1); } { $$=$1; }
        ;
 
 kd_opt_comma: ',' {}
