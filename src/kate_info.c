@@ -93,7 +93,7 @@ static void kate_make_fraction(kate_float resolution,kate_int32_t *numerator,kat
 int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_float max_length,kate_float max_event_lifetime)
 {
   kate_float offset_granules;
-  int offset_bits,bits;
+  unsigned char offset_bits,bits;
   kate_float base_min_resolution;
 
   if (!ki || resolution<=0 || max_event_lifetime<0) return KATE_E_INVALID_PARAMETER;
