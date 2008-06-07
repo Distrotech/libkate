@@ -730,7 +730,7 @@ static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
 
 int main(int argc,char **argv)
 {
-  size_t read;
+  size_t bytes_read;
   int ret=-1;
   int eos=0;
   int init=uninitialized;
@@ -824,8 +824,8 @@ static kate_comment kc;
 
   /* first, read the first few bytes to know if we have a raw Kate stream
      or a Kate-in-Ogg stream */
-  read=fread(signature,1,sizeof(signature),fin);
-  if (read!=sizeof(signature)) {
+  bytes_read=fread(signature,1,sizeof(signature),fin);
+  if (bytes_read!=sizeof(signature)) {
     /* A Kate stream's first packet is 64 bytes, so this cannot be one */
     fprintf(stderr,"Failed to read first %zu bytes of stream\n",sizeof(signature));
     exit(-1);
@@ -869,9 +869,9 @@ static kate_comment kc;
       }
 
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
-      read=fread(&bytes,1,8,fin);
-      if (read!=8 || bytes<=0) {
-        fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",read,(long long)bytes);
+      bytes_read=fread(&bytes,1,8,fin);
+      if (bytes_read!=8 || bytes<=0) {
+        fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",bytes_read,(long long)bytes);
         exit(-1);
       }
       ret=read_raw_packet(fin,&buffer,bytes);
@@ -887,7 +887,7 @@ static kate_comment kc;
   else {
     /* we'll assume we're embedded in Ogg */
     raw=0;
-    signature_size=read;
+    signature_size=bytes_read;
     ogg_sync_init(&oy);
 
     while (1) {
@@ -901,13 +901,13 @@ static kate_comment kc;
         signature_size=0;
       }
       else {
-        read=fread(buffer,1,4096,fin);
+        bytes_read=fread(buffer,1,4096,fin);
       }
-      if (read==0) {
+      if (bytes_read==0) {
         eos=1;
         break;
       }
-      ogg_sync_wrote(&oy,read);
+      ogg_sync_wrote(&oy,bytes_read);
 
       while (ogg_sync_pageout(&oy,&og)>0) {
         if (ogg_page_bos(&og)) {
