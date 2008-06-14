@@ -39,7 +39,7 @@ This allows creating Kate streams with bitmaps from DVD style SPU subtitles.
 
 
 
- * libshout (libshout-2.2.2-with-kate.diff)
+ * libshout (libshout-svn-with-kate.diff)
 
 This adds support for Kate bitstreams.
 
