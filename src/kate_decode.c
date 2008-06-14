@@ -104,8 +104,8 @@ static int kate_decode_check_magic(kate_pack_buffer *kpb)
 
   if (!kpb) return KATE_E_INVALID_PARAMETER;
 
-  kate_readbuf(kpb,magic,8);
-  if (memcmp(magic,"kate\0\0\0\0",8)) return KATE_E_NOT_KATE;
+  kate_readbuf(kpb,magic,7);
+  if (memcmp(magic,"kate\0\0\0",7)) return KATE_E_NOT_KATE;
 
   return 0;
 }
@@ -818,6 +818,15 @@ int kate_decode_headerin(kate_info *ki,kate_comment *kc,kate_packet *kp)
   if (packetno<ki->num_headers) {
     if (ki->probe!=packetno) return KATE_E_BAD_PACKET;
   }
+
+  /* starting with 0.1.4 (bitstream version 0.2, unchanged), there
+     was a change in the interpretation of the Kate magic, at the
+     request of Xiph, to limit signature length to 8 bytes. So the
+     signature (from byte offset 1, after the packet type byte) is
+     now only 7 bytes rather than 8, but all headers packets have
+     a reserved 0 byte after the signature, so the actual bitstream
+     format is left unchanged */
+  if (kate_pack_read(&kpb,8)!=0) return KATE_E_BAD_PACKET;
 
   switch (packetno) {
     case 0: /* this is the info packet */

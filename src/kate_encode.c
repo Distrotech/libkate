@@ -153,7 +153,8 @@ static int kate_encode_start_header(kate_pack_buffer *kpb,int headerid)
   if (!kpb || !(headerid&0x80)) return KATE_E_INVALID_PARAMETER;
 
   kate_pack_write(kpb,headerid,8);
-  kate_writebuf(kpb,"kate\0\0\0\0",8);
+  kate_writebuf(kpb,"kate\0\0\0",7);
+  kate_pack_write(kpb,0,8); /* reserved - 0 */
 
   return 0;
 }

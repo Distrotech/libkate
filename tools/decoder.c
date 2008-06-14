@@ -831,7 +831,7 @@ static kate_comment kc;
     exit(-1);
   }
 
-  if (!memcmp(signature,"\200kate\0\0\0\0",9)) {
+  if (!memcmp(signature,"\200kate\0\0\0",8)) {
     /* raw Kate stream */
     raw=1;
 
