@@ -1,4 +1,4 @@
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/configure.ac libshout-svn-with-kate/configure.ac
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/configure.ac libshout-svn-with-kate/configure.ac
 --- libshout-svn/configure.ac	2008-03-10 17:23:45.000000000 +0000
 +++ libshout-svn-with-kate/configure.ac	2008-03-18 22:15:15.000000000 +0000
 @@ -160,6 +160,25 @@
@@ -36,7 +36,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  
  AC_OUTPUT([Makefile debian/Makefile include/Makefile include/shout/Makefile
    include/shout/shout.h src/Makefile src/net/Makefile src/timing/Makefile
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/Makefile.am libshout-svn-with-kate/src/Makefile.am
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/Makefile.am libshout-svn-with-kate/src/Makefile.am
 --- libshout-svn/src/Makefile.am	2008-03-10 17:23:46.000000000 +0000
 +++ libshout-svn-with-kate/src/Makefile.am	2008-04-09 21:33:29.000000000 +0100
 @@ -22,11 +22,11 @@
@@ -53,9 +53,9 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  
  INCLUDES = -I$(top_builddir)/include
  
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/kate.c libshout-svn-with-kate/src/kate.c
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/kate.c libshout-svn-with-kate/src/kate.c
 --- libshout-svn/src/kate.c	1970-01-01 01:00:00.000000000 +0100
-+++ libshout-svn-with-kate/src/kate.c	2008-03-23 15:20:10.000000000 +0000
++++ libshout-svn-with-kate/src/kate.c	2008-06-14 15:53:47.000000000 +0100
 @@ -0,0 +1,182 @@
 +/* -*- c-basic-offset: 8; -*- */
 +/* kate.c: Ogg Kate data handlers for libshout
@@ -146,7 +146,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +		return SHOUTERR_UNSUPPORTED;
 +	}
 +#else
-+    if (packet.bytes<9 || memcmp(packet.packet, "\x80kate\0\0\0\0", 9)) {
++    if (packet.bytes<8 || memcmp(packet.packet, "\x80kate\0\0\0", 8)) {
 +		free_kate_data(kate_data);
 +
 +		return SHOUTERR_UNSUPPORTED;
@@ -183,9 +183,9 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +                break;
 +            }
 +#else
-+            if (packet.bytes<9)
++            if (packet.bytes<8)
 +				return SHOUTERR_INSANE;
-+            if (memcmp(packet.packet+1, "kate\0\0\0\0", 8))
++            if (memcmp(packet.packet+1, "kate\0\0\0", 7))
 +				return SHOUTERR_INSANE;
 +
 +            if (packet.packet[0]==0x80) {
@@ -239,7 +239,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
 +	free(kate_data);
 +}
 +
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/mp3.c libshout-svn-with-kate/src/mp3.c
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/mp3.c libshout-svn-with-kate/src/mp3.c
 --- libshout-svn/src/mp3.c	2008-03-10 17:23:46.000000000 +0000
 +++ libshout-svn-with-kate/src/mp3.c	2008-03-18 22:18:26.000000000 +0000
 @@ -204,7 +204,7 @@
@@ -260,7 +260,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  		else
  			ret = 0;
  
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/ogg.c libshout-svn-with-kate/src/ogg.c
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/ogg.c libshout-svn-with-kate/src/ogg.c
 --- libshout-svn/src/ogg.c	2008-03-10 17:23:46.000000000 +0000
 +++ libshout-svn-with-kate/src/ogg.c	2008-04-09 21:26:36.000000000 +0100
 @@ -54,6 +54,8 @@
@@ -272,7 +272,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  #ifdef HAVE_THEORA
  	_shout_open_theora,
  #endif
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout.c libshout-svn-with-kate/src/shout.c
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout.c libshout-svn-with-kate/src/shout.c
 --- libshout-svn/src/shout.c	2008-03-10 17:23:46.000000000 +0000
 +++ libshout-svn-with-kate/src/shout.c	2008-03-23 15:11:01.000000000 +0000
 @@ -1200,7 +1200,7 @@
@@ -284,7 +284,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  #if 0
  	char *realm;
  #endif
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout_ogg.h libshout-svn-with-kate/src/shout_ogg.h
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/shout_ogg.h libshout-svn-with-kate/src/shout_ogg.h
 --- libshout-svn/src/shout_ogg.h	2008-03-10 17:23:46.000000000 +0000
 +++ libshout-svn-with-kate/src/shout_ogg.h	2008-04-09 21:26:49.000000000 +0100
 @@ -45,6 +45,8 @@
@@ -296,7 +296,7 @@ diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache 
  #ifdef HAVE_THEORA
  int _shout_open_theora(ogg_codec_t *codec, ogg_page *page);
  #endif
-diff -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/skeleton.c libshout-svn-with-kate/src/skeleton.c
+diff -x .svn -x '*.o' -x '*.la' -x '*.lo' -x '*.Po' -x .deps -x .libs -x autom4te.cache -x Makefile -x Makefile.in -x configure -x config.log -x config.status -x aclocal.m4 -x config.guess -x config.sub -x libtool -x config.h -x examples -x stamp-h1 -x shout-config -x shout.pc -x depcomp -x missing -x compile -x ltmain.sh -x libtool -x install-sh -x shout.h -x shout-config.in -x config.h.in -urN libshout-svn/src/skeleton.c libshout-svn-with-kate/src/skeleton.c
 --- libshout-svn/src/skeleton.c	1970-01-01 01:00:00.000000000 +0100
 +++ libshout-svn-with-kate/src/skeleton.c	2008-04-09 21:37:17.000000000 +0100
 @@ -0,0 +1,105 @@
