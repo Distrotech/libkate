@@ -5,7 +5,7 @@ will be contributed to the relevant projects.
 
 
 
- * MPlayer (mplayer-svn.diff)
+ * MPlayer (mplayer-svn.diff) - OBSOLETE - DO NOT USE
 
 This adds support for multiple Kate streams multiplexed alongside any
 audio and video. Kate streams can be selected at runtime.
@@ -16,7 +16,7 @@ It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 
 
- * xine (xine-lib-1.1.9.1-with-kate.diff)
+ * xine (xine-lib-1.1.9.1-with-kate.diff) - OBSOLETE - DO NOT USE
 
 This adds support for multiple Kate streams multiplexed alongside any
 audio and video. Kate streams can be selected at runtime.
