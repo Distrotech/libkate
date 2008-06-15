@@ -1,3 +1,6 @@
+0.1.4
+  Kate magic is now 8 bytes (though the bitstream is unchanged)
+
 0.1.3
   remove last dependency on libogg from libkate (the bitpacker)
   new kate_region_init, kate_style_init, etc, functions
