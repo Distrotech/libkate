@@ -5,13 +5,13 @@ will be contributed to the relevant projects.
 
 
 
- * MPlayer (mplayer-svn.diff) - OBSOLETE - DO NOT USE
+ * MPlayer (mplayer-svn.diff)
 
 This adds support for multiple Kate streams multiplexed alongside any
 audio and video. Kate streams can be selected at runtime.
 There is no support for Kate advanced features such as regions, styles,
-and motions, only pure text is extracted and passed to the subtitle code.
-In band markup is ignored.
+and motions, only pure text or SPU style pictures are extracted and
+passed to the subtitle code. In band markup is ignored.
 It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 
