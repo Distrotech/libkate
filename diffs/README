@@ -63,3 +63,10 @@ or motions support).
 This adds support for Kate streams as subtitles, and a simple Javascript API
 to manipulate those (Linux only implementation)
 
+
+
+ * Thoggen (thoggen-with-kate.diff)
+
+Adds support for encoding DVD SPU subtitles as Kate streams. This patches needs
+the GStreamer patch above to be applied.
+

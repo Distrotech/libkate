@@ -1,0 +1,1044 @@
+diff -ru /mnt/dvd/svn/thoggen/configure.ac thoggen/configure.ac
+--- /mnt/dvd/svn/thoggen/configure.ac	2008-06-06 11:03:40.000000000 +0100
++++ thoggen/configure.ac	2008-06-08 00:43:43.000000000 +0100
+@@ -13,9 +13,11 @@
+ AC_DEFINE([RELEASENAME],["Long Time No See"],[The Release Name])
+ 
+ AC_PROG_CC
++AC_PROG_SED
++AC_PROG_RANLIB
+ AC_PROG_INSTALL
+ AC_PROG_LIBTOOL
+ AC_PROG_INTLTOOL([0.20])
+ AC_LANG(C)
+ 
+ m4_pattern_allow(^AC)
+@@ -405,13 +407,20 @@
+   LIBS="-pg $LIBS"
+ fi
+ 
+-AC_SUBST([GLIB_CFLAGS GLIB_LIBS])
+-AC_SUBST([GTK_CFLAGS GTK_LIBS])
+-AC_SUBST([GLADE_CFLAGS GLADE_LIBS])
+-AC_SUBST([GSTREAMER_CFLAGS GSTREAMER_LIBS])
+-AC_SUBST([DBUS_CFLAGS DBUS_LIBS])
+-AC_SUBST([DBUS_GLIB_CFLAGS DBUS_GLIB_LIBS])
+-AC_SUBST([HAL_CFLAGS HAL_LIBS])
++AC_SUBST([GLIB_CFLAGS])
++AC_SUBST([GLIB_LIBS])
++AC_SUBST([GTK_CFLAGS])
++AC_SUBST([GTK_LIBS])
++AC_SUBST([GLADE_CFLAGS])
++AC_SUBST([GLADE_LIBS])
++AC_SUBST([GSTREAMER_CFLAGS])
++AC_SUBST([GSTREAMER_LIBS])
++AC_SUBST([DBUS_CFLAGS])
++AC_SUBST([DBUS_LIBS])
++AC_SUBST([DBUS_GLIB_CFLAGS])
++AC_SUBST([DBUS_GLIB_LIBS])
++AC_SUBST([HAL_CFLAGS])
++AC_SUBST([HAL_LIBS])
+ 
+ 
+ dnl ============================
+diff -ru /mnt/dvd/svn/thoggen/src/th-disc-drive.c thoggen/src/th-disc-drive.c
+--- /mnt/dvd/svn/thoggen/src/th-disc-drive.c	2008-06-06 11:03:51.000000000 +0100
++++ thoggen/src/th-disc-drive.c	2008-06-15 17:21:46.000000000 +0100
+@@ -1156,10 +1156,10 @@
+ 		/* get stream ID (depending on aspect ratio) (FIXME?) */
+ 		if (tinfo->video_aspect == 0) {
+ 			/* 4:3 */
+-			phys_streamid = (pgc->subp_control[i] >> 16) & 0x3;
++			phys_streamid = (pgc->subp_control[i] >> 16) & 0x1f;
+ 		} else {
+ 			/* 16:9 */
+-			phys_streamid = (pgc->subp_control[i] >> 16) & 0x3;
++			phys_streamid = (pgc->subp_control[i] >> 16) & 0x1f;
+ 		}
+ 
+ 		attr = vts_file->vtsi_mat->vts_subp_attr[i];
+@@ -1185,11 +1185,19 @@
+ 		if (attr.lang_extension >= SUBPICTURE_TYPE_LARGE)
+ 			continue;
+ 
++                /* The "dupe" check below means that, on a few of my DVDs, the normal stream
++                   gets dumped because a stream for hearing impaired was already seen with
++                   the same language - I don't see what we shouldn't have both as they can
++                   be selectively enabled/disabled by the user anyway */
++#if 0
+ 		/* Check if we already have a stream in the same language */
+ 		for (j = 0;  j < tinfo->num_subpicture_streams;  ++j) {
+ 			if (tinfo->subpicture_streams[j].attr.lang_code == attr.lang_code)
+ 				break; /* => this stream will not be added below */
+ 		}
++#else
++                j = tinfo->num_subpicture_streams;
++#endif
+ 			
+ 		/* Don't have a stream in this language yet? add it */
+ 		if (j == tinfo->num_subpicture_streams) {
+diff -ru /mnt/dvd/svn/thoggen/src/th-job.c thoggen/src/th-job.c
+--- /mnt/dvd/svn/thoggen/src/th-job.c	2008-06-06 11:03:52.000000000 +0100
++++ thoggen/src/th-job.c	2008-06-15 20:17:45.000000000 +0100
+@@ -57,6 +57,8 @@
+ 	PROP_AUDIO_BITRATE,         /* in kbps */
+ 	PROP_AUDIO_STREAM_ID,
+ 	PROP_AUDIO_ALL,             /* Flag whether to record all streams */
++	PROP_SUBPICTURE_ALL,        /* Flag whether to record all streams */
++	PROP_SUBPICTURE_STREAM_ID,
+ 	PROP_NUM_SUB_STREAMS,
+ 	PROP_TARGET_OUTPUT_SIZE,    /* in MB   */
+ 	PROP_TARGET_QUALITY,
+@@ -103,6 +105,7 @@
+ 	guint          sub_stream_id;   /* logical subpicture stream selected
+ 	                                 * (G_MAXUINT = NONE) */
+ 	gboolean       audio_all; /* Set if all audiostreams should be recorded */
++        gboolean       sub_all;   /* Set if all SPU streams should be recorded */
+ 
+ 	guint          crop_left, crop_right;
+ 	guint          crop_top, crop_bottom;
+@@ -115,9 +118,11 @@
+ 
+ 	GstElement    *pipeline;
+ 	
+-	const gchar   *audio_pad_name;   /* interned string */
+-	const gchar   *video_pad_name;   /* interned string */
++	const gchar   *audio_pad_name;        /* interned string */
++	const gchar   *video_pad_name;        /* interned string */
++	const gchar   *subpicture_pad_name;   /* interned string */
+ 	const gchar   *audio_decoder;
++	const gchar   *subpicture_decoder;
+ 
+ 	guint          bytes_total;
+ 	guint          num_frames;        /* ATOMIC access */
+@@ -162,6 +167,8 @@
+ 
+ static guint            job_get_total_audio_bitrate (ThJob *j);
+ 
++static guint            job_get_total_subpicture_bitrate (ThJob *j);
++
+ static gdouble          job_calculate_weight (ThJob *j);
+ 
+ 
+@@ -195,6 +202,28 @@
+ 
+ /***************************************************************************
+  *
++ *   job_get_subpicture_stream_from_sid
++ *
++ ***************************************************************************/
++
++static ThJobSubStream *
++job_get_subpicture_stream_from_sid (ThJob *j, guint sid)
++{
++	guint i;
++
++	for (i = 0; i < j->subpicture_streams->len; ++i) {
++		ThJobSubStream *ss;
++
++		ss = &g_array_index (j->subpicture_streams, ThJobSubStream, i);
++		if (ss->sid == sid)
++			return ss;
++	}
++
++	return NULL;
++}
++
++/***************************************************************************
++ *
+  *   job_set_property
+  *
+  ***************************************************************************/
+@@ -286,6 +315,42 @@
+ 			j->priv->audio_all = g_value_get_boolean(value);
+ 			break;
+ 		}
++		case PROP_SUBPICTURE_STREAM_ID:
++		{
++			ThJobSubStream *ss;
++			guint           new_sid;
++			/* If you set a stream ID, you don't want all SPU streams */
++			j->priv->sub_all = FALSE;
++			new_sid = g_value_get_uint (value);
++
++                        if (new_sid != G_MAXUINT)
++                        {
++				ss = job_get_subpicture_stream_from_sid (j, new_sid);
++				if (ss != NULL)
++				{
++					j->priv->sub_stream_id = new_sid;
++					th_log ("[%u] Selected SPU Stream: %s (sid = %u, pad = %s)\n", 
++				        	j->priv->title_num + 1, 
++				        	(ss) ? ss->lang : "??", 
++				        	new_sid, ss->pad_name);
++				}
++				else
++				{
++					g_warning ("Unknown SPU stream ID %u for job %p\n", new_sid, j);
++				}
++			}
++                        else
++			{
++		                j->priv->sub_stream_id = G_MAXUINT;
++				th_log ("No selected SPU Stream\n");
++			}
++			break;
++		}
++		case PROP_SUBPICTURE_ALL:
++		{
++			j->priv->sub_all = g_value_get_boolean(value);
++			break;
++		}
+ 		case PROP_NUM_FRAMES_ENCODED:
+ 		{
+ 			th_atomic_uint_set (&j->priv->num_frames,
+@@ -432,6 +497,14 @@
+ 			g_value_set_boolean (value, j->priv->audio_all);
+ 			break;
+ 
++		case PROP_SUBPICTURE_STREAM_ID:
++			g_value_set_uint (value, j->priv->sub_stream_id);
++			break;
++
++		case PROP_SUBPICTURE_ALL:
++			g_value_set_boolean (value, j->priv->sub_all);
++			break;
++
+ 		case PROP_NUM_SUB_STREAMS:
+ 			g_value_set_uint (value, g_list_length (j->priv->sub_streams));
+ 			break;
+@@ -456,7 +529,6 @@
+ 				guint pos_ms;
+ 				 
+ 				pos_ms = (guint) g_atomic_int_get ((gint*) &j->priv->current_buf_timestamp);
+-				
+ 				g_object_set_data (G_OBJECT (pixbuf), "timestamp", GUINT_TO_POINTER (pos_ms));
+ 			}
+ 		}
+@@ -628,6 +700,20 @@
+ 	                                                    FALSE, 
+ 	                                                    G_PARAM_READWRITE));
+ 
++	g_object_class_install_property (object_class, PROP_SUBPICTURE_STREAM_ID,
++	                                 g_param_spec_uint ("spu-stream-id", 
++	                                                    "Which SPU Stream to Encode", 
++	                                                    "Which SPU Stream to Encode", 
++	                                                    0, G_MAXUINT, G_MAXUINT, 
++	                                                    G_PARAM_READWRITE));
++
++	g_object_class_install_property (object_class, PROP_SUBPICTURE_ALL,
++	                                 g_param_spec_boolean ("spu-all", 
++	                                                    "Whether to encode all streams", 
++	                                                    "Whether to encode all streams", 
++	                                                    FALSE, 
++	                                                    G_PARAM_READWRITE));
++
+ 	/* FIXME: get rid of this useless property and replace with direct
+ 	 * structure access instead */
+ 	g_object_class_install_property (object_class, PROP_NUM_SUB_STREAMS,
+@@ -778,6 +864,7 @@
+ 	j->priv->sub_stream_id = G_MAXUINT;
+ 
+ 	j->audio_streams = g_array_new (TRUE, TRUE, sizeof (ThJobAudioStream));
++	j->subpicture_streams = g_array_new (TRUE, TRUE, sizeof (ThJobSubStream));
+ }
+ 
+ /***************************************************************************
+@@ -806,6 +893,7 @@
+ 	j->priv = NULL;
+ 
+ 	g_array_free (j->audio_streams, TRUE);
++	g_array_free (j->subpicture_streams, TRUE);
+ 
+ 	/* chain up */
+ 	j_parent_class->finalize (object);
+@@ -1249,6 +1337,7 @@
+ 	
+ 	total_bitrate_kbps = (gdouble) video_bitrate;
+ 	total_bitrate_kbps +=  (gdouble) job_get_total_audio_bitrate (j);
++	total_bitrate_kbps +=  (gdouble) job_get_total_subpicture_bitrate (j);
+ 	
+ 	/* Add 1.75% overhead for the Ogg encapsulation (ca. 1-2% apparently) */
+ 	total_bitrate_kbps = total_bitrate_kbps * 1.0175;
+@@ -1290,6 +1379,29 @@
+ 
+ /***************************************************************************
+  *
++ *   job_get_total_subpicture_bitrate
++ *
++ *   Returns the sum of the bitrates of all (selected) SPU streams
++ *
++ ***************************************************************************/
++
++static guint
++job_get_total_subpicture_bitrate (ThJob * job)
++{
++  guint num_subpicture_streams;
++
++  if (job->priv->sub_all) {
++    num_subpicture_streams = job->subpicture_streams->len;
++  } else {
++    num_subpicture_streams = 1;
++  }
++
++  return 0; // TODO: varies a lot, what to do ?
++  /* return num_subpicture_streams * job->priv->audio_bitrate; */
++}
++
++/***************************************************************************
++ *
+  *   job_set_video_bitrate_from_file_size
+  *
+  ***************************************************************************/
+@@ -1514,6 +1626,27 @@
+     }
+   }
+ 
++  /* configure SPU in queues */
++  for (i = 0; i < j->subpicture_streams->len; ++i) {
++    ThJobSubStream *ss;
++
++    ss = &g_array_index (j->subpicture_streams, ThJobSubStream, i);
++
++    /* FIXME: use ss->selected once the config dialog gets fixed up */
++    if (j->priv->sub_all || j->priv->sub_stream_id == ss->sid) {
++      gchar enc_name[32];
++
++      g_snprintf (enc_name, sizeof (enc_name), "q-s-in-%u", ss->sid);
++
++      /* unset/disable all limits apart from the bytes limit - needed ? */
++      th_bin_set_child_properties (GST_BIN (j->priv->pipeline), enc_name,
++          "max-size-buffers", (guint) 0,
++          "max-size-bytes", (guint) 10 * 1024 * 1024,
++         "max-size-time", (guint64) 0,
++          NULL);
++    }
++  }
++
+   /* configure video in queue */
+   th_bin_set_child_properties (GST_BIN (j->priv->pipeline), "q-v-in",
+       "max-size-buffers", (guint) 0,
+@@ -1534,6 +1667,7 @@
+ {
+ 	GstPadLinkReturn  linkret;
+ 	ThJobAudioStream *as = NULL;
++	ThJobSubStream   *ss = NULL;
+ 	const gchar      *pad_name;
+ 	GstElement       *queue, *fakesink, *pipeline;
+ 	GstPad           *queue_sink_pad;
+@@ -1544,6 +1678,8 @@
+ 
+ 	as = job_get_audio_stream_from_aid (j, j->priv->audio_stream_id);
+ 
++	ss = job_get_subpicture_stream_from_sid (j, j->priv->sub_stream_id);
++
+ 	/* FIXME: sanity check, remove again */
+ 	{
+ 	  ThJobAudioStream *as2;
+@@ -1598,6 +1734,39 @@
+ 		         pad_name, j->priv->audio_decoder, (mime) ? mime : "???");
+ 		goto hook_up;
+ 	}
++#if 1
++        /* why is this that way for audio ? seems to work, but it needs to change for spu */
++	else if (g_str_has_prefix (pad_name, "subpicture_")
++	      && ((ss != NULL && g_str_equal (pad_name, ss->pad_name)) || j->priv->sub_all))
++#else
++	else if (j->priv->subpicture_pad_name == NULL
++	      && g_str_has_prefix (pad_name, "subpicture_")
++	      && ss != NULL && g_str_equal (pad_name, ss->pad_name))
++#endif
++	{
++		const gchar *mime = NULL;
++		GstCaps *caps;
++		
++		j->priv->subpicture_pad_name = g_intern_string (pad_name);
++		j->priv->subpicture_decoder = "decodebin";
++		
++		caps = gst_pad_get_caps (new_pad);
++		if (caps)
++		{
++			GstStructure *s = gst_caps_get_structure (caps, 0);
++			if (s)
++			{
++				mime = gst_structure_get_name (s);
++				if (gst_structure_has_name (s, "video/x-dvd-subpicture"))
++					j->priv->subpicture_decoder = "dvdsubparse";
++			}
++			gst_caps_unref (caps);
++		}
++		
++		th_log ("dvddemux::new-pad '%s' (using) (%s) (%s)", 
++		         pad_name, j->priv->subpicture_decoder, (mime) ? mime : "???");
++		goto hook_up;
++	}
+ 	
+ 	th_log ("dvddemux::new-pad '%s' (skipping)", pad_name);
+ 	return;
+@@ -1805,6 +1974,19 @@
+ 	  }
+ 	}
+ 
++	for (i = 0; i < j->subpicture_streams->len; ++i) {
++	  ThJobSubStream *ss;
++	  gchar enc_name[32];
++
++	  ss = &g_array_index (j->subpicture_streams, ThJobSubStream, i);
++	  g_snprintf (enc_name, sizeof (enc_name), "s-encoder-%u", ss->sid);
++	  tagsetter = gst_bin_get_by_name (pipeline, enc_name);
++	  if (tagsetter) {
++	    job_pipeline_set_tags_on_encoder (j, tagsetter, ss->lang);
++            gst_object_unref (tagsetter);
++	  }
++	}
++
+ 	tagsetter = gst_bin_get_by_name (pipeline, "v-encoder");
+ 	job_pipeline_set_tags_on_encoder (j, tagsetter, NULL);
+ 	gst_object_unref (tagsetter);
+@@ -1889,6 +2071,29 @@
+   }
+ }
+ 
++static void
++job_create_pipeline_setup_subpicture_encoders (ThJob * j)
++{
++  guint i;
++
++  for (i = 0; i < j->subpicture_streams->len; ++i) {
++    ThJobSubStream *ss;
++
++    ss = &g_array_index (j->subpicture_streams, ThJobSubStream, i);
++
++    /* FIXME: fix up configuration dialog so we can use ss->selected in future */
++    if (j->priv->sub_all || j->priv->sub_stream_id == ss->sid) {
++      gchar enc_name[32];
++
++      g_snprintf (enc_name, sizeof (enc_name), "s-encoder-%u", ss->sid);
++
++      /* configure kateenc */
++      th_bin_set_child_properties (GST_BIN (j->priv->pipeline), enc_name,
++          "category", "spu-subtitles", "language", ss->lang ? ss->lang : "",  NULL);
++    }
++  }
++}
++
+ /***************************************************************************
+  *
+  *   job_create_pipeline
+@@ -1971,6 +2176,30 @@
+ 	  }
+ 	}
+ 
++	/* subpicture transcoder(s) */
++	{
++	  guint i;
++
++	  for (i = 0; i < j->subpicture_streams->len; ++i) {
++	    ThJobSubStream *ss;
++
++	    ss = &g_array_index (j->subpicture_streams, ThJobSubStream, i);
++
++	    if (j->priv->sub_all || j->priv->sub_stream_id == ss->sid) {
++	      g_string_append_printf (pipe_desc,
++	          "          demux.%s                                        "
++	          "    ! queue name=q-s-in-%u                                "
++	          "    ! %s                                                  "
++	          "    ! kateenc name=s-encoder-%u                           "
++	          "    ! mux.                                                "
++	          "                                                          ",
++	          ss->pad_name, ss->sid, j->priv->subpicture_decoder, ss->sid);
++
++	      th_log ("Adding subpicture stream %u, pad = %s\n", i, ss->pad_name);
++	    }
++	  }
++	}
++
+ 	/* video transcoder  */	
+ 	g_string_append_printf (pipe_desc,
+ 	      "      demux.%s                                                "
+@@ -2033,6 +2262,8 @@
+ 
+ 	job_create_pipeline_setup_audio_encoders (j);
+ 
++	job_create_pipeline_setup_subpicture_encoders (j);
++
+ 	/* oggmux */
+ 	th_bin_set_child_properties (GST_BIN (pipe), "mux",
+ 	              "max-delay", (guint64) GST_SECOND/2,
+@@ -2124,6 +2355,7 @@
+ 	}
+ 
+ 	j->priv->audio_pad_name = NULL;
++	j->priv->subpicture_pad_name = NULL;
+ 	j->priv->video_pad_name = NULL;
+ 
+ 	if (j->priv->err)
+@@ -2381,6 +2613,7 @@
+     const gchar * lang)
+ {
+ 	ThJobSubStream *ss;
++	const gchar      *cur_lang;
+ 
+ 	g_return_if_fail (TH_IS_JOB (j));
+ 	g_return_if_fail (sid <= 99);
+@@ -2395,7 +2628,27 @@
+ 
+ 	j->priv->sub_streams = g_list_append (j->priv->sub_streams, ss);
+ 	
++	g_array_append_vals (j->subpicture_streams, ss, 1);
++	
+ 	g_object_notify (G_OBJECT (j), "num-sub-streams");
++
++	/* Get current locale; if none set, assume English */
++	cur_lang = g_getenv ("LANG");
++	if (cur_lang == NULL)
++		cur_lang = g_getenv ("LC_ALL");
++	if (cur_lang == NULL || g_str_equal (cur_lang, "C") || strlen (cur_lang) < 2)
++		cur_lang = "en_GB";
++
++	/* If stream has same language as locale, or we have no
++	 *  default subpicture stream set yet, use this one as default */
++	if ((ss->lang && strncmp (cur_lang, ss->lang, 2) == 0)
++	 || j->priv->sub_stream_id == G_MAXUINT)
++	{
++		j->priv->sub_stream_id = sid;
++		g_object_notify (G_OBJECT (j), "spu-stream-id");
++		th_log ("[%u] Default Subpicture Stream: %s (sid = %u, pad = %s)", 
++		        j->priv->title_num + 1, ss->lang, sid, ss->pad_name);
++	}
+ }
+ 
+ /***************************************************************************
+diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.c thoggen/src/th-job-config-dialog.c
+--- /mnt/dvd/svn/thoggen/src/th-job-config-dialog.c	2008-06-06 11:03:51.000000000 +0100
++++ thoggen/src/th-job-config-dialog.c	2008-06-15 14:02:04.000000000 +0100
+@@ -36,6 +36,7 @@
+ enum
+ {
+ 	COL_AUDIO_STREAM_ID = 0,
++	COL_SPU_STREAM_ID = COL_AUDIO_STREAM_ID, /* just an alias for clarity */
+ 	COL_LANG_NAME
+ };
+ 
+@@ -54,11 +55,17 @@
+ 	GtkWidget    *crop_bottom_label;
+ 	GtkWidget    *crop_button;
+ 	
+-	gulong        lang_combobox_sigid;
+-	GtkWidget    *lang_combobox;
+-	gulong        lang_all_sigid;
+-	GtkWidget    *lang_all;
+-	GtkListStore *lang_list;
++	gulong        audio_lang_combobox_sigid;
++	GtkWidget    *audio_lang_combobox;
++	gulong        audio_lang_all_sigid;
++	GtkWidget    *audio_lang_all;
++	GtkListStore *audio_lang_list;
++	
++	gulong        spu_lang_combobox_sigid;
++	GtkWidget    *spu_lang_combobox;
++	gulong        spu_lang_all_sigid;
++	GtkWidget    *spu_lang_all;
++	GtkListStore *spu_lang_list;
+ 	
+ 	GtkWidget    *picsize_combobox;
+ 	GtkListStore *picsize_list;
+@@ -442,6 +449,161 @@
+ 
+ /***************************************************************************
+  *
++ *   job_config_dialog_spu_language_changed
++ *
++ ***************************************************************************/
++
++static void
++job_config_dialog_spu_language_changed (ThJobConfigDialog *jcd, GtkComboBox *cbox)
++{
++	GtkTreeIter   iter;
++	guint         sid;
++	
++	if (!gtk_combo_box_get_active_iter (cbox, &iter))
++		g_return_if_reached ();
++
++	gtk_tree_model_get (gtk_combo_box_get_model (cbox), &iter, COL_SPU_STREAM_ID, &sid, -1);
++	
++	g_object_set (jcd->priv->job, "spu-stream-id", sid, NULL);
++}
++
++/***************************************************************************
++ *
++ *   job_config_dialog_spu_language_all_toggled
++ *
++ ***************************************************************************/
++
++static void
++job_config_dialog_spu_language_all_toggled (ThJobConfigDialog *jcd, GtkCheckButton *cbox)
++{
++  gboolean active;
++
++  active = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (cbox));
++
++  /* Disable combobox, set all spu flag */
++  gtk_widget_set_sensitive (jcd->priv->spu_lang_combobox, !active);
++  g_object_set (jcd->priv->job, "spu-all", active, NULL);
++
++  job_config_dialog_update_file_size_range (jcd);
++
++  /* force re-calculation of effective video bitrate if the number of SPU
++   * streams has changed */
++  if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (jcd->priv->filesize_radiobutton))) {
++    gdouble target_size;
++
++    g_object_get (jcd->priv->job, "target-output-size", &target_size, NULL);
++    g_object_set (jcd->priv->job, "target-output-size", target_size, NULL);
++  }
++}
++
++/***************************************************************************
++ *
++ *   job_config_dialog_setup_spu_language_combobox
++ *
++ ***************************************************************************/
++
++static void
++job_config_dialog_setup_spu_language_combobox (ThJobConfigDialog *jcd)
++{
++	GtkCellRenderer *cell;
++
++	jcd->priv->spu_lang_list = gtk_list_store_new (3, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
++
++	gtk_cell_layout_clear (GTK_CELL_LAYOUT (jcd->priv->spu_lang_combobox));
++
++	cell = gtk_cell_renderer_text_new ();
++	g_object_set (cell, "xalign", (gdouble) 0.0, NULL);
++	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (jcd->priv->spu_lang_combobox), cell, TRUE);
++	gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (jcd->priv->spu_lang_combobox), cell, 
++	                               "text", COL_LANG_NAME);
++
++	gtk_combo_box_set_model (GTK_COMBO_BOX (jcd->priv->spu_lang_combobox), 
++	                         GTK_TREE_MODEL (jcd->priv->spu_lang_list));
++
++	jcd->priv->spu_lang_combobox_sigid = 
++		g_signal_connect_swapped (jcd->priv->spu_lang_combobox, "changed",
++		                          G_CALLBACK (job_config_dialog_spu_language_changed),
++		                          jcd);
++	jcd->priv->spu_lang_all_sigid = 
++		g_signal_connect_swapped (jcd->priv->spu_lang_all, "toggled",
++		                          G_CALLBACK (job_config_dialog_spu_language_all_toggled),
++		                          jcd);
++}
++
++/***************************************************************************
++ *
++ *   job_config_dialog_fill_spu_language_combobox
++ *
++ ***************************************************************************/
++
++static void
++job_config_dialog_fill_spu_language_combobox (ThJobConfigDialog *jcd)
++{
++	guint i, default_sid, num_spu_streams = 0;
++
++	/* Need to block 'changed' signal handler here, otherwise
++	 *  the active iter might change while the list is cleared,
++	 *  leading to a wrong default audio id to be selected. */
++	g_signal_handler_block (jcd->priv->spu_lang_combobox, 
++	                        jcd->priv->spu_lang_combobox_sigid);
++	
++	gtk_list_store_clear (jcd->priv->spu_lang_list);
++	
++	g_signal_handler_unblock (jcd->priv->spu_lang_combobox, 
++	                          jcd->priv->spu_lang_combobox_sigid);
++
++	g_object_get (jcd->priv->job, 
++	              "spu-stream-id", &default_sid,
++	              NULL);
++
++	th_log ("default_sid = %u\n", default_sid);
++
++        /* we want to be able to select no SPU stream at all, so add a "None" entry */
++        {
++		GtkTreeIter  iter;
++		gtk_list_store_append (jcd->priv->spu_lang_list, &iter);
++		gtk_list_store_set (jcd->priv->spu_lang_list, &iter, 
++				    COL_SPU_STREAM_ID, G_MAXUINT,
++				    COL_LANG_NAME, _("None"),
++				    -1);
++        }
++
++	num_spu_streams = jcd->priv->job->subpicture_streams->len;
++	for (i = 0;  i < num_spu_streams;  ++i)
++	{
++		const gchar *lang, *lang_name;
++		gchar        nolangstr[256] = { 0x00, };
++		guint        sid;
++	
++		if (th_job_get_subpicture_stream (jcd->priv->job, i, &sid, &lang))
++		{
++			GtkTreeIter  iter;
++
++			gtk_list_store_append (jcd->priv->spu_lang_list, &iter);
++
++			lang_name = th_utils_get_language_name (lang);
++			
++			if (lang_name == NULL)
++			{
++				g_snprintf (nolangstr, sizeof (nolangstr), "%s (subpicture_%02u)", _("Unknown Language"), sid);
++				lang_name = nolangstr;
++			}
++
++			gtk_list_store_set (jcd->priv->spu_lang_list, &iter, 
++			                    COL_SPU_STREAM_ID, sid,
++			                    COL_LANG_NAME, lang_name,
++			                    -1);
++		
++			if (sid == default_sid)
++			{
++				gtk_combo_box_set_active_iter (GTK_COMBO_BOX (jcd->priv->spu_lang_combobox), &iter);
++			}
++		}
++	}
++}
++
++/***************************************************************************
++ *
+  *   job_config_dialog_language_changed
+  *
+  ***************************************************************************/
+@@ -474,7 +636,7 @@
+   active = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (cbox));
+ 
+   /* Disable combobox, set all audio flag */
+-  gtk_widget_set_sensitive (jcd->priv->lang_combobox, !active);
++  gtk_widget_set_sensitive (jcd->priv->audio_lang_combobox, !active);
+   g_object_set (jcd->priv->job, "audio-all", active, NULL);
+ 
+   job_config_dialog_update_file_size_range (jcd);
+@@ -500,25 +662,25 @@
+ {
+ 	GtkCellRenderer *cell;
+ 
+-	jcd->priv->lang_list = gtk_list_store_new (3, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
++	jcd->priv->audio_lang_list = gtk_list_store_new (3, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING);
+ 
+-	gtk_cell_layout_clear (GTK_CELL_LAYOUT (jcd->priv->lang_combobox));
++	gtk_cell_layout_clear (GTK_CELL_LAYOUT (jcd->priv->audio_lang_combobox));
+ 
+ 	cell = gtk_cell_renderer_text_new ();
+ 	g_object_set (cell, "xalign", (gdouble) 0.0, NULL);
+-	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (jcd->priv->lang_combobox), cell, TRUE);
+-	gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (jcd->priv->lang_combobox), cell, 
++	gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (jcd->priv->audio_lang_combobox), cell, TRUE);
++	gtk_cell_layout_add_attribute (GTK_CELL_LAYOUT (jcd->priv->audio_lang_combobox), cell, 
+ 	                               "text", COL_LANG_NAME);
+ 
+-	gtk_combo_box_set_model (GTK_COMBO_BOX (jcd->priv->lang_combobox), 
+-	                         GTK_TREE_MODEL (jcd->priv->lang_list));
++	gtk_combo_box_set_model (GTK_COMBO_BOX (jcd->priv->audio_lang_combobox), 
++	                         GTK_TREE_MODEL (jcd->priv->audio_lang_list));
+ 
+-	jcd->priv->lang_combobox_sigid = 
+-		g_signal_connect_swapped (jcd->priv->lang_combobox, "changed",
++	jcd->priv->audio_lang_combobox_sigid = 
++		g_signal_connect_swapped (jcd->priv->audio_lang_combobox, "changed",
+ 		                          G_CALLBACK (job_config_dialog_language_changed),
+ 		                          jcd);
+-	jcd->priv->lang_all_sigid = 
+-		g_signal_connect_swapped (jcd->priv->lang_all, "toggled",
++	jcd->priv->audio_lang_all_sigid = 
++		g_signal_connect_swapped (jcd->priv->audio_lang_all, "toggled",
+ 		                          G_CALLBACK (job_config_dialog_language_all_toggled),
+ 		                          jcd);
+ }
+@@ -537,13 +699,13 @@
+ 	/* Need to block 'changed' signal handler here, otherwise
+ 	 *  the active iter might change while the list is cleared,
+ 	 *  leading to a wrong default audio id to be selected. */
+-	g_signal_handler_block (jcd->priv->lang_combobox, 
+-	                        jcd->priv->lang_combobox_sigid);
++	g_signal_handler_block (jcd->priv->audio_lang_combobox, 
++	                        jcd->priv->audio_lang_combobox_sigid);
+ 	
+-	gtk_list_store_clear (jcd->priv->lang_list);
++	gtk_list_store_clear (jcd->priv->audio_lang_list);
+ 	
+-	g_signal_handler_unblock (jcd->priv->lang_combobox, 
+-	                          jcd->priv->lang_combobox_sigid);
++	g_signal_handler_unblock (jcd->priv->audio_lang_combobox, 
++	                          jcd->priv->audio_lang_combobox_sigid);
+ 
+ 	g_object_get (jcd->priv->job, 
+ 	              "audio-stream-id", &default_aid,
+@@ -562,7 +724,7 @@
+ 		{
+ 			GtkTreeIter  iter;
+ 
+-			gtk_list_store_append (jcd->priv->lang_list, &iter);
++			gtk_list_store_append (jcd->priv->audio_lang_list, &iter);
+ 
+ 			lang_name = th_utils_get_language_name (lang);
+ 			
+@@ -572,14 +734,14 @@
+ 				lang_name = nolangstr;
+ 			}
+ 
+-			gtk_list_store_set (jcd->priv->lang_list, &iter, 
++			gtk_list_store_set (jcd->priv->audio_lang_list, &iter, 
+ 			                    COL_AUDIO_STREAM_ID, aid,
+ 			                    COL_LANG_NAME, lang_name,
+ 			                    -1);
+ 		
+ 			if (aid == default_aid)
+ 			{
+-				gtk_combo_box_set_active_iter (GTK_COMBO_BOX (jcd->priv->lang_combobox), &iter);
++				gtk_combo_box_set_active_iter (GTK_COMBO_BOX (jcd->priv->audio_lang_combobox), &iter);
+ 			}
+ 		}
+ 	}
+@@ -713,28 +875,30 @@
+ 	
+ 	if (!th_utils_ui_load_interface ("th-job-config-dialog.glade", 
+ 	                                 FALSE,
+-	                                 "th-job-config-dialog",   &glade_window,
+-	                                 "th-toplevel-vbox",       &toplevel_vbox,
+-	                                 "th-top-label",           &jcd->priv->top_label,
+-	                                 "th-filename-label",      &jcd->priv->fn_label,
+-	                                 "th-filename-button",     &jcd->priv->fn_button,
+-	                                 "th-language-combobox",   &jcd->priv->lang_combobox,
+-	                                 "th-language-all",        &jcd->priv->lang_all,
+-	                                 "th-picsize-combobox",    &jcd->priv->picsize_combobox,
+-	                                 "th-crop-top-label",      &jcd->priv->crop_top_label,
+-	                                 "th-crop-left-label",     &jcd->priv->crop_left_label,
+-	                                 "th-crop-right-label",    &jcd->priv->crop_right_label,
+-	                                 "th-crop-bottom-label",   &jcd->priv->crop_bottom_label,
+-	                                 "th-crop-button",         &jcd->priv->crop_button,
+-	                                 "th-vbox-video-size",     &jcd->priv->filesize_vbox,
+-	                                 "th-vbox-video-quality",  &jcd->priv->quality_vbox,
+-	                                 "th-filesize-spinbutton", &jcd->priv->filesize_spinbutton,
+-	                                 "th-quality-spinbutton",  &jcd->priv->quality_spinbutton,
+-	                                 "th-filesize-radiobutton", &jcd->priv->filesize_radiobutton,
+-	                                 "th-quality-radiobutton",  &jcd->priv->quality_radiobutton,
+-	                                 "th-info-expander",        &jcd->priv->info_expander,
+-	                                 "th-info-title-entry",     &jcd->priv->info_title_entry,
+-	                                 "th-info-comment-entry",   &jcd->priv->info_comment_entry,
++	                                 "th-job-config-dialog",     &glade_window,
++	                                 "th-toplevel-vbox",         &toplevel_vbox,
++	                                 "th-top-label",             &jcd->priv->top_label,
++	                                 "th-filename-label",        &jcd->priv->fn_label,
++	                                 "th-filename-button",       &jcd->priv->fn_button,
++	                                 "th-language-combobox",     &jcd->priv->audio_lang_combobox,
++	                                 "th-language-all",          &jcd->priv->audio_lang_all,
++	                                 "th-spu-language-combobox", &jcd->priv->spu_lang_combobox,
++	                                 "th-spu-language-all",      &jcd->priv->spu_lang_all,
++	                                 "th-picsize-combobox",      &jcd->priv->picsize_combobox,
++	                                 "th-crop-top-label",        &jcd->priv->crop_top_label,
++	                                 "th-crop-left-label",       &jcd->priv->crop_left_label,
++	                                 "th-crop-right-label",      &jcd->priv->crop_right_label,
++	                                 "th-crop-bottom-label",     &jcd->priv->crop_bottom_label,
++	                                 "th-crop-button",           &jcd->priv->crop_button,
++	                                 "th-vbox-video-size",       &jcd->priv->filesize_vbox,
++	                                 "th-vbox-video-quality",    &jcd->priv->quality_vbox,
++	                                 "th-filesize-spinbutton",   &jcd->priv->filesize_spinbutton,
++	                                 "th-quality-spinbutton",    &jcd->priv->quality_spinbutton,
++	                                 "th-filesize-radiobutton",  &jcd->priv->filesize_radiobutton,
++	                                 "th-quality-radiobutton",   &jcd->priv->quality_radiobutton,
++	                                 "th-info-expander",         &jcd->priv->info_expander,
++	                                 "th-info-title-entry",      &jcd->priv->info_title_entry,
++	                                 "th-info-comment-entry",    &jcd->priv->info_comment_entry,
+ 	                                 NULL))
+ 	{
+ 		g_warning ("th_utils_ui_load_interface (\"th-ui-job-config-dialog.glade\") failed.\n");
+@@ -784,6 +948,8 @@
+ 
+ 	job_config_dialog_setup_language_combobox (jcd);
+ 	
++	job_config_dialog_setup_spu_language_combobox (jcd);
++	
+ 	job_config_dialog_setup_picsize_combobox (jcd);
+ 
+ 	jcd->priv->close_button = th_fake_dialog_add_button (TH_FAKE_DIALOG (jcd),
+@@ -918,11 +1084,24 @@
+ 
+ 	/* no need to show the 'all languages' checkbox if there is only one */
+ 	if (job->audio_streams->len == 1) {
+-	  gtk_widget_hide (jcd->priv->lang_all);
++	  gtk_widget_hide (jcd->priv->audio_lang_all);
+ 	} else {
+-	  gtk_widget_show (jcd->priv->lang_all);
++	  gtk_widget_show (jcd->priv->audio_lang_all);
+ 	}
+-	
++
++	/* no need to show the 'all spu languages' checkbox if there is only one, or none at all */
++	if (job->subpicture_streams->len <= 1) {
++	  gtk_widget_hide (jcd->priv->spu_lang_all);
++	} else {
++	  gtk_widget_show (jcd->priv->spu_lang_all);
++	}
++	/* no need to show the spu languages list if there are no SPU tracks at all */
++        if (job->subpicture_streams->len == 0) {
++	  gtk_widget_hide (jcd->priv->spu_lang_combobox);
++        } else {
++	  gtk_widget_show (jcd->priv->spu_lang_combobox);
++        }
++
+ 	s = g_string_new (NULL);
+ 	g_string_append (s, "<b>");
+ 	g_string_append_printf (s, _("Configure DVD Title %u"), title_num + 1);
+@@ -936,6 +1115,8 @@
+ 
+ 	job_config_dialog_fill_language_combobox (jcd);
+ 
++	job_config_dialog_fill_spu_language_combobox (jcd);
++
+ 	response_id = th_fake_dialog_run (TH_FAKE_DIALOG (jcd));
+ 	if (response_id != GTK_RESPONSE_ACCEPT)
+ 	{
+diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.glade thoggen/src/th-job-config-dialog.glade
+--- /mnt/dvd/svn/thoggen/src/th-job-config-dialog.glade	2008-06-06 11:03:51.000000000 +0100
++++ thoggen/src/th-job-config-dialog.glade	2008-06-08 12:59:37.000000000 +0100
+@@ -36,6 +36,9 @@
+             <child>
+               <widget class="GtkVBox" id="vbox-all">
+                 <property name="visible">True</property>
++
++
++
+                 <child>
+                   <widget class="GtkVBox" id="vbox-language">
+                     <property name="visible">True</property>
+@@ -97,6 +100,75 @@
+                     <property name="padding">6</property>
+                   </packing>
+                 </child>
++
++
++
++                <child>
++                  <widget class="GtkVBox" id="vbox-spu-language">
++                    <property name="visible">True</property>
++                    <child>
++                      <widget class="GtkLabel" id="label132-spu">
++                        <property name="visible">True</property>
++                        <property name="xalign">0</property>
++                        <property name="label" translatable="yes">&lt;b&gt;SPU language&lt;/b&gt;</property>
++                        <property name="use_markup">True</property>
++                      </widget>
++                      <packing>
++                        <property name="expand">False</property>
++                        <property name="fill">False</property>
++                      </packing>
++                    </child>
++                    <child>
++                      <widget class="GtkAlignment" id="alignment15-spu">
++                        <property name="visible">True</property>
++                        <property name="top_padding">6</property>
++                        <property name="bottom_padding">6</property>
++                        <property name="left_padding">12</property>
++                        <property name="right_padding">12</property>
++                        <child>
++                          <widget class="GtkVBox" id="vbox1-spu">
++                            <property name="visible">True</property>
++                            <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
++                            <child>
++                              <widget class="GtkComboBox" id="th-spu-language-combobox">
++                                <property name="visible">True</property>
++                                <property name="items" translatable="yes">English</property>
++                              </widget>
++                            </child>
++                            <child>
++                              <widget class="GtkCheckButton" id="th-spu-language-all">
++                                <property name="visible">True</property>
++                                <property name="can_focus">True</property>
++                                <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
++                                <property name="label" translatable="yes">All languages</property>
++                                <property name="response_id">0</property>
++                                <property name="draw_indicator">True</property>
++                              </widget>
++                              <packing>
++                                <property name="position">1</property>
++                              </packing>
++                            </child>
++                          </widget>
++                        </child>
++                      </widget>
++                      <packing>
++                        <property name="expand">False</property>
++                        <property name="fill">False</property>
++                        <property name="position">1</property>
++                      </packing>
++                    </child>
++                  </widget>
++                  <packing>
++                    <property name="expand">False</property>
++                    <property name="fill">False</property>
++                    <property name="padding">6</property>
++                  </packing>
++                </child>
++
++
++
++
++
+                 <child>
+                   <widget class="GtkVBox" id="vbox-picture-size">
+                     <property name="visible">True</property>
+diff -ru /mnt/dvd/svn/thoggen/src/th-job.h thoggen/src/th-job.h
+--- /mnt/dvd/svn/thoggen/src/th-job.h	2008-06-06 11:03:52.000000000 +0100
++++ thoggen/src/th-job.h	2008-06-08 12:17:20.000000000 +0100
+@@ -62,6 +62,7 @@
+ 
+ 	ThJobVideoInfo         video_info;
+ 	GArray                *audio_streams;
++	GArray                *subpicture_streams;
+ 
+ 	ThJobPrivate          *priv;
+ };
+diff -ru /mnt/dvd/svn/thoggen/src/th-job-progress-dialog.c thoggen/src/th-job-progress-dialog.c
+--- /mnt/dvd/svn/thoggen/src/th-job-progress-dialog.c	2008-06-06 11:03:52.000000000 +0100
++++ thoggen/src/th-job-progress-dialog.c	2008-06-15 14:11:30.000000000 +0100
+@@ -569,7 +569,7 @@
+ 	
+ 	curpos = pos_msecs / 1000.0;
+ 	length = title_len_secs * 1.0;
+-	total_estimate = (bytes_written / curpos) * length;
++	total_estimate = curpos>0.0 ? (bytes_written / curpos) * length : 0.0;
+ 	
+ 	now_str = th_utils_get_human_size_str ((guint64) bytes_written);
+ 
+@@ -626,7 +626,7 @@
+ 	
+ 	curpos = pos_msecs / 1000.0;
+ 	length = title_len_secs * 1.0;
+-	secs_left = (elapsed / curpos) * (length - curpos);
++	secs_left = curpos==0.0 ? 0.0 : (elapsed / curpos) * (length - curpos);
+ 
+ 	/* note: secs_left might be negative, as length is not exact */
+ 	cstr = job_get_human_time_interval_str ((gint) secs_left);
+diff -ru /mnt/dvd/svn/thoggen/src/th-main.c thoggen/src/th-main.c
+--- /mnt/dvd/svn/thoggen/src/th-main.c	2008-06-06 11:03:52.000000000 +0100
++++ thoggen/src/th-main.c	2008-06-08 22:44:00.000000000 +0100
+@@ -77,6 +77,8 @@
+ 	 { "videobox", "videobox", TH_GST_PLUGINS_GOOD },
+ 	 { "videorate", "videorate", TH_GST_PLUGINS_BASE },
+ 	/* { "deinterlace", "deinterlace", TH_GST_PLUGINS_XYZ }, */
++	 /* { "kate", "kateenc", TH_GST_PLUGINS_BAD }, */
++	 /* { "dvdsub", "dvdsubparse", TH_GST_PLUGINS_UGLY }, */
+ 	 { "coreelements", "filesink", TH_GST_PLUGINS_CORE },
+ 	 { "coreelements", "identity", TH_GST_PLUGINS_CORE }
+ 	};
+@@ -278,12 +280,12 @@
+ install_missing_desirable_plugins (GtkWidget * appwindow)
+ {
+   const gchar *desirable_features[] = { "dtsdec", "dvdlpcmdec",
+-      "ffdeinterlace" };
++      "ffdeinterlace", "kateenc", "dvdsubparse" };
+   GstInstallPluginsContext *ctx = NULL;
+   GPtrArray *missing = NULL;
+   guint i, xid;
+ 
+-  /* must realize the applicatio window, so that widget->window is non-NULL */
++  /* must realize the application window, so that widget->window is non-NULL */
+   gtk_widget_realize (appwindow);
+ 
+   ctx = gst_install_plugins_context_new ();
