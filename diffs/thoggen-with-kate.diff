@@ -1,49 +1,6 @@
-diff -ru /mnt/dvd/svn/thoggen/configure.ac thoggen/configure.ac
---- /mnt/dvd/svn/thoggen/configure.ac	2008-06-06 11:03:40.000000000 +0100
-+++ thoggen/configure.ac	2008-06-08 00:43:43.000000000 +0100
-@@ -13,9 +13,11 @@
- AC_DEFINE([RELEASENAME],["Long Time No See"],[The Release Name])
- 
- AC_PROG_CC
-+AC_PROG_SED
-+AC_PROG_RANLIB
- AC_PROG_INSTALL
- AC_PROG_LIBTOOL
- AC_PROG_INTLTOOL([0.20])
- AC_LANG(C)
- 
- m4_pattern_allow(^AC)
-@@ -405,13 +407,20 @@
-   LIBS="-pg $LIBS"
- fi
- 
--AC_SUBST([GLIB_CFLAGS GLIB_LIBS])
--AC_SUBST([GTK_CFLAGS GTK_LIBS])
--AC_SUBST([GLADE_CFLAGS GLADE_LIBS])
--AC_SUBST([GSTREAMER_CFLAGS GSTREAMER_LIBS])
--AC_SUBST([DBUS_CFLAGS DBUS_LIBS])
--AC_SUBST([DBUS_GLIB_CFLAGS DBUS_GLIB_LIBS])
--AC_SUBST([HAL_CFLAGS HAL_LIBS])
-+AC_SUBST([GLIB_CFLAGS])
-+AC_SUBST([GLIB_LIBS])
-+AC_SUBST([GTK_CFLAGS])
-+AC_SUBST([GTK_LIBS])
-+AC_SUBST([GLADE_CFLAGS])
-+AC_SUBST([GLADE_LIBS])
-+AC_SUBST([GSTREAMER_CFLAGS])
-+AC_SUBST([GSTREAMER_LIBS])
-+AC_SUBST([DBUS_CFLAGS])
-+AC_SUBST([DBUS_LIBS])
-+AC_SUBST([DBUS_GLIB_CFLAGS])
-+AC_SUBST([DBUS_GLIB_LIBS])
-+AC_SUBST([HAL_CFLAGS])
-+AC_SUBST([HAL_LIBS])
- 
- 
- dnl ============================
-diff -ru /mnt/dvd/svn/thoggen/src/th-disc-drive.c thoggen/src/th-disc-drive.c
---- /mnt/dvd/svn/thoggen/src/th-disc-drive.c	2008-06-06 11:03:51.000000000 +0100
-+++ thoggen/src/th-disc-drive.c	2008-06-15 17:21:46.000000000 +0100
+diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
+--- thoggen/src/th-disc-drive.c	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-disc-drive.c	2008-06-16 19:08:10.000000000 +0100
 @@ -1156,10 +1156,10 @@
  		/* get stream ID (depending on aspect ratio) (FIXME?) */
  		if (tinfo->video_aspect == 0) {
@@ -77,9 +34,9 @@ diff -ru /mnt/dvd/svn/thoggen/src/th-disc-drive.c thoggen/src/th-disc-drive.c
  			
  		/* Don't have a stream in this language yet? add it */
  		if (j == tinfo->num_subpicture_streams) {
-diff -ru /mnt/dvd/svn/thoggen/src/th-job.c thoggen/src/th-job.c
---- /mnt/dvd/svn/thoggen/src/th-job.c	2008-06-06 11:03:52.000000000 +0100
-+++ thoggen/src/th-job.c	2008-06-15 20:17:45.000000000 +0100
+diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
+--- thoggen/src/th-job.c	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-job.c	2008-06-16 19:08:10.000000000 +0100
 @@ -57,6 +57,8 @@
  	PROP_AUDIO_BITRATE,         /* in kbps */
  	PROP_AUDIO_STREAM_ID,
@@ -509,9 +466,9 @@ diff -ru /mnt/dvd/svn/thoggen/src/th-job.c thoggen/src/th-job.c
  }
  
  /***************************************************************************
-diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.c thoggen/src/th-job-config-dialog.c
---- /mnt/dvd/svn/thoggen/src/th-job-config-dialog.c	2008-06-06 11:03:51.000000000 +0100
-+++ thoggen/src/th-job-config-dialog.c	2008-06-15 14:02:04.000000000 +0100
+diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-dialog.c
+--- thoggen/src/th-job-config-dialog.c	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-job-config-dialog.c	2008-06-16 19:08:10.000000000 +0100
 @@ -36,6 +36,7 @@
  enum
  {
@@ -894,9 +851,9 @@ diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.c thoggen/src/th-job-conf
  	response_id = th_fake_dialog_run (TH_FAKE_DIALOG (jcd));
  	if (response_id != GTK_RESPONSE_ACCEPT)
  	{
-diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.glade thoggen/src/th-job-config-dialog.glade
---- /mnt/dvd/svn/thoggen/src/th-job-config-dialog.glade	2008-06-06 11:03:51.000000000 +0100
-+++ thoggen/src/th-job-config-dialog.glade	2008-06-08 12:59:37.000000000 +0100
+diff -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-config-dialog.glade
+--- thoggen/src/th-job-config-dialog.glade	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-job-config-dialog.glade	2008-06-16 19:08:10.000000000 +0100
 @@ -36,6 +36,9 @@
              <child>
                <widget class="GtkVBox" id="vbox-all">
@@ -983,9 +940,9 @@ diff -ru /mnt/dvd/svn/thoggen/src/th-job-config-dialog.glade thoggen/src/th-job-
                  <child>
                    <widget class="GtkVBox" id="vbox-picture-size">
                      <property name="visible">True</property>
-diff -ru /mnt/dvd/svn/thoggen/src/th-job.h thoggen/src/th-job.h
---- /mnt/dvd/svn/thoggen/src/th-job.h	2008-06-06 11:03:52.000000000 +0100
-+++ thoggen/src/th-job.h	2008-06-08 12:17:20.000000000 +0100
+diff -ru thoggen/src/th-job.h thoggen-with-kate/src/th-job.h
+--- thoggen/src/th-job.h	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-job.h	2008-06-16 19:08:10.000000000 +0100
 @@ -62,6 +62,7 @@
  
  	ThJobVideoInfo         video_info;
@@ -994,30 +951,9 @@ diff -ru /mnt/dvd/svn/thoggen/src/th-job.h thoggen/src/th-job.h
  
  	ThJobPrivate          *priv;
  };
-diff -ru /mnt/dvd/svn/thoggen/src/th-job-progress-dialog.c thoggen/src/th-job-progress-dialog.c
---- /mnt/dvd/svn/thoggen/src/th-job-progress-dialog.c	2008-06-06 11:03:52.000000000 +0100
-+++ thoggen/src/th-job-progress-dialog.c	2008-06-15 14:11:30.000000000 +0100
-@@ -569,7 +569,7 @@
- 	
- 	curpos = pos_msecs / 1000.0;
- 	length = title_len_secs * 1.0;
--	total_estimate = (bytes_written / curpos) * length;
-+	total_estimate = curpos>0.0 ? (bytes_written / curpos) * length : 0.0;
- 	
- 	now_str = th_utils_get_human_size_str ((guint64) bytes_written);
- 
-@@ -626,7 +626,7 @@
- 	
- 	curpos = pos_msecs / 1000.0;
- 	length = title_len_secs * 1.0;
--	secs_left = (elapsed / curpos) * (length - curpos);
-+	secs_left = curpos==0.0 ? 0.0 : (elapsed / curpos) * (length - curpos);
- 
- 	/* note: secs_left might be negative, as length is not exact */
- 	cstr = job_get_human_time_interval_str ((gint) secs_left);
-diff -ru /mnt/dvd/svn/thoggen/src/th-main.c thoggen/src/th-main.c
---- /mnt/dvd/svn/thoggen/src/th-main.c	2008-06-06 11:03:52.000000000 +0100
-+++ thoggen/src/th-main.c	2008-06-08 22:44:00.000000000 +0100
+diff -ru thoggen/src/th-main.c thoggen-with-kate/src/th-main.c
+--- thoggen/src/th-main.c	2008-06-16 17:24:30.000000000 +0100
++++ thoggen-with-kate/src/th-main.c	2008-06-16 19:08:10.000000000 +0100
 @@ -77,6 +77,8 @@
  	 { "videobox", "videobox", TH_GST_PLUGINS_GOOD },
  	 { "videorate", "videorate", TH_GST_PLUGINS_BASE },
