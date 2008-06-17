@@ -904,6 +904,7 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
+  int ret;
 
   if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
@@ -914,6 +915,9 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
   k->kes->granulepos=granulepos;
+
+  ret=kate_encode_state_add_event(k->kes,t,t);
+  if (ret<0) return ret;
 
   kpb=&k->kes->kpb;
   kate_pack_write(kpb,0x01,8);
