@@ -1,420 +1,6 @@
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/cs/mplayer.1 mplayer-svn-with-kate/DOCS/man/cs/mplayer.1
---- mplayer-svn/DOCS/man/cs/mplayer.1	2008-03-14 13:26:39.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/cs/mplayer.1	2008-03-15 21:25:45.000000000 +0000
-@@ -171,7 +171,7 @@
- MPlayer mÃ¡ displej na obrazovce (OSD) pro stavovÃ© informace, krÃ¡snÃ© velkÃ©
- vyhlazenÃ© a stÃ­novanÃ© titulky a vizuÃ¡lnÃ­ odezvu na povely z\ klÃ¡vesnice.
- PodporovÃ¡ny jsou EvropskÃ©/\:ISO8859\-1,2 (BulharskÃ©, AnglickÃ©, ÄŒeskÃ©, atd),
--CyrilickÃ© a KorejskÃ© fonty spolu s 12 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, OGM,
-+CyrilickÃ© a KorejskÃ© fonty spolu s 13 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, Kate, OGM,
- SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS a nÃ¡Å¡ vlastnÃ­: MPsub) a
- takÃ© DVD titulky (SPU proudy, VOBsub a Closed Captions).
- .PP
-@@ -2068,6 +2068,12 @@
- VytvoÅ™Ã­ soubor dumpsub.smi v aktuÃ¡lnÃ­m adresÃ¡Å™i.
- .
- .TP
-+.B \-dumpoggkatesub (pouze MPlayer)
-+PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
-+Kate formÃ¡tu.
-+VytvoÅ™Ã­ soubor dumpsub.ogg v aktuÃ¡lnÃ­m adresÃ¡Å™i.
-+.
-+.TP
- .B \-dumpsrtsub (pouze MPlayer)
- PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
- SubViewer (SRT) formÃ¡tu.
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/de/mplayer.1 mplayer-svn-with-kate/DOCS/man/de/mplayer.1
---- mplayer-svn/DOCS/man/de/mplayer.1	2008-03-14 13:26:39.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/de/mplayer.1	2008-03-15 21:25:46.000000000 +0000
-@@ -2173,6 +2173,12 @@
- Erstellt eine Datei dumpsub.smi im aktuellen Verzeichnis.
- .
- .TP
-+.B \-dumpoggkatesub (MPlayer only)
-+Konvertiert den (mit der \-sub-Option angegebenen) Untertitel in das
-+zeitbasierende Kate-Untertitelformat.
-+Erstellt eine Datei dumpsub.ogg im aktuellen Verzeichnis.
-+.
-+.TP
- .B \-dumpsrtsub (nur bei MPlayer)
- Konvertiert den (mit der \-sub\-Option angegebenen) Untertitel in das
- zeitbasierende SubViewer-Untertitelformat (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/en/mplayer.1 mplayer-svn-with-kate/DOCS/man/en/mplayer.1
---- mplayer-svn/DOCS/man/en/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/en/mplayer.1	2008-03-15 21:25:47.000000000 +0000
-@@ -166,9 +166,9 @@
- MPlayer has an onscreen display (OSD) for status information, nice big
- antialiased shaded subtitles and visual feedback for keyboard controls.
- European/\:ISO8859-1,2 (Hungarian, English, Czech, etc), Cyrillic and Korean
--fonts are supported along with 12 subtitle formats (MicroDVD, SubRip, OGM,
--SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub) and
--DVD subtitles (SPU streams, VOBsub and Closed Captions).
-+fonts are supported along with 13 subtitle formats (MicroDVD, SubRip, Kate,
-+OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub)
-+and DVD subtitles (SPU streams, VOBsub and Closed Captions).
- .PP
- .B mencoder
- (MPlayer's Movie Encoder) is a simple movie encoder, designed to encode
-@@ -2140,6 +2140,12 @@
- Creates a dumpsub.smi file in the current directory.
- .
- .TP
-+.B \-dumpoggkatesub (MPlayer only)
-+Convert the given subtitle (specified with the \-sub option) to the time-based
-+Kate subtitle format.
-+Creates a dumpsub.ogg file in the current directory.
-+.
-+.TP
- .B \-dumpsrtsub (MPlayer only)
- Convert the given subtitle (specified with the \-sub option) to the time-based
- SubViewer (SRT) subtitle format.
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/es/mplayer.1 mplayer-svn-with-kate/DOCS/man/es/mplayer.1
---- mplayer-svn/DOCS/man/es/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/es/mplayer.1	2008-03-15 21:25:48.000000000 +0000
-@@ -183,8 +183,8 @@
- subtítulos grandes y bonitos con suavizado de bordes y realimentación visual de
- los controles con teclado.
- Tipos de letra Europeo/\:ISO8859\-1,2 (Húngaro, Inglés, Checoslovaco, etc),
--Cirílico y Koreano se soportan en 12 formatos de subtítulos (MicroDVD, SubRip,
--OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
-+Cirílico y Koreano se soportan en 13 formatos de subtítulos (MicroDVD, SubRip,
-+Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
- MPsub) así como subtítulos DVD (cadenas SPU, VOBsub y Closed Captions).
- .PP
- .B mencoder
-@@ -1901,6 +1901,12 @@
- Crea un archivo dumpsub.smi en el directorio actual.
- .
- .TP
-+.B \-dumpoggkatesub (MPlayer solamente)
-+Convierte el subtítulo dado (especificado con la opción \-sub) al formato
-+de subtítulo basado en tiempo Kate.
-+Crea un archivo dumpsub.ogg en el directorio actual.
-+.
-+.TP
- .B \-dumpsrtsub (MPlayer solamente)
- Convierte el subtítulo dado (especificado con la opción \-sub) al formato
- de subtítulo basado en tiempo SubViewer (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/fr/mplayer.1 mplayer-svn-with-kate/DOCS/man/fr/mplayer.1
---- mplayer-svn/DOCS/man/fr/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/fr/mplayer.1	2008-03-15 21:25:50.000000000 +0000
-@@ -171,9 +171,9 @@
- informations, de belles et grandes polices lissées et des effets
- visuels pour confirmer les contrôles au clavier. Les polices
- européennes/\:ISO8859\-1,2 (Hongroise, Anglaise, Tchèque, etc),
--Cyrillique et Coréenne sont gérés ainsi que 11 formats de
--sous-titres (MicroDVD, SubRip, OGM, SubViewer, Sami, VPlayer, RT,
--SSA, AQTitle, JACOsub, PJS et le nôtre: MPsub) et les sous-titres
-+Cyrillique et Coréenne sont gérés ainsi que 13 formats de
-+sous-titres (MicroDVD, SubRip, Kate, OGM, SubViewer, Sami, VPlayer,
-+RT, SSA, AQTitle, JACOsub, PJS et le nôtre: MPsub) et les sous-titres
- DVD (SPU streams, VobSub et Closed Captions).
- .PP
- .B mencoder
-@@ -2246,6 +2246,12 @@
- Crée un fichier dumpsub.smi dans le répertoire courant.
- .
- .TP
-+.B \-dumpoggkatesub (MPlayer uniquement)
-+Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
-+temps Kate.
-+Crée un fichier dumpsub.ogg dans le répertoire courant.
-+.
-+.TP
- .B \-dumpsrtsub (MPlayer uniquement)
- Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
- temps SubViewer (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/hu/mplayer.1 mplayer-svn-with-kate/DOCS/man/hu/mplayer.1
---- mplayer-svn/DOCS/man/hu/mplayer.1	2008-03-17 21:23:26.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/hu/mplayer.1	2008-03-17 21:24:02.000000000 +0000
-@@ -168,8 +168,8 @@
- Az MPlayernek van onscreen display (OSD) funkciója is a státuszinformációk
- és a szép, élsímított, árnyékolt feliratok megjelenítéséhez és a billentyûzetrõl
- érkezõ jelek visszajelzéséhez. Európai/\:ISO8859\-1,2 (magyar, angol, cseh, stb.),
--cirill és koreai betûtípusok mind támogatottak 12 felirat formátummal (MicroDVD,
--SubRip, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
-+cirill és koreai betûtípusok mind támogatottak 13 felirat formátummal (MicroDVD,
-+SubRip, Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
- sajátunk: MPsub) és DVD felirattal (SPU streams, VOBsub és Closed Captions)
- egyetemben.
- .PP
-@@ -2150,6 +2150,12 @@
- Az aktuális könyvtárban hoz létre egy dumpsub.smi fájlt.
- .
- .TP
-+.B \-dumpoggkatesub (csak MPlayer)
-+A használt felirat (amit a \-sub opció ad meg) idõ alapú Kate formátumba
-+konvertálása.
-+Az aktuális könyvtárban hoz létre egy dumpsub.ogg fájlt.
-+.
-+.TP
- .B \-dumpsrtsub (csak MPlayer)
- A használt felirat (amit a \-sub opció ad meg) idõ alapú SubViewer formátumba
- konvertálása.
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/it/mplayer.1 mplayer-svn-with-kate/DOCS/man/it/mplayer.1
---- mplayer-svn/DOCS/man/it/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/it/mplayer.1	2008-03-15 21:25:52.000000000 +0000
-@@ -173,7 +173,7 @@
- informazioni sullo stato, grandi e bei sottotitoli sfumati con antialias ed un
- riscontro visuale dei comandi da tastiera.
- Sono supportati font europei/\:ISO8859\-1,2 (Ungherese, Inglese, Ceco, etc),
--Cirillici e Coreani insieme a 12 formati di sottotitoli (MicroDVD, SubRip,
-+Cirillici e Coreani insieme a 13 formati di sottotitoli (MicroDVD, SubRip, Kate,
- OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS ed il nostro:
- MPsub) oltre ai sottotitoli dei DVD (flussi SPU, VOBsub e Closed Captions).
- .PP
-@@ -2228,6 +2228,12 @@
- Crea un file dumpsub.smi nella directory corrente.
- .
- .TP
-+.B \-dumpoggkatesub (solo MPlayer)
-+Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
-+dei sottotitoli basato sul tempo Kate.
-+Crea un file dumpsub.ogg nella directory corrente.
-+.
-+.TP
- .B \-dumpsrtsub (solo MPlayer)
- Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
- dei sottotitoli basato sul tempo SubViever (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/pl/mplayer.1 mplayer-svn-with-kate/DOCS/man/pl/mplayer.1
---- mplayer-svn/DOCS/man/pl/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/pl/mplayer.1	2008-03-15 21:25:53.000000000 +0000
-@@ -211,7 +211,7 @@
- przy pomocy klawiatury i wy¶wietla ³adne, du¿e, antyaliasowane i cieniowane
- napisy.
- Obs³ugiwane s± czcionki europejskie/\:ISO 8859\-1,2 (polskie, czeskie, angielskie
--itp.), koreañskie i cyrylica oraz 12 formatów napisów (MicroDVD, SubRip, OGM,
-+itp.), koreañskie i cyrylica oraz 13 formatów napisów (MicroDVD, SubRip, Kate, OGM,
- SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS i nasz w³asny: MPsub)
- i napisów DVD (strumienie SPU, VOBSub i Closed Captions).
- .PP
-@@ -1424,6 +1424,12 @@
- Tworzy w bie¿±cym katalogu zbiór dumpsub.smi
- .
- .TP
-+.B \-dumpoggkatesub (tylko MPlayer)
-+Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
-+Kate.
-+Tworzy w bie¿±cym katalogu zbiór dumpsub.ogg
-+.
-+.TP
- .B \-dumpsrtsub (tylko MPlayer)
- Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
- SubViewer (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/ru/mplayer.1 mplayer-svn-with-kate/DOCS/man/ru/mplayer.1
---- mplayer-svn/DOCS/man/ru/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/ru/mplayer.1	2008-03-15 21:25:57.000000000 +0000
-@@ -168,7 +168,7 @@
- MPlayer ÉÍÅÅÔ onscreen display (OSD) ÄÌÑ ÏÔÏÂÒÁÖÅÎÉÑ ÉÎÆÏÒÍÁÃÉÉ Ï ÓÏÓÔÏÑÎÉÉ ,
- ÂÏÌØÛÉÈ ÓÇÌÁÖÅÎÎÙÈ ÓÕÂÔÉÔÒÏ× Ó ÔÅÎØÀ É ×ÉÚÕÁÌØÎÏÇÏ ÏÔËÌÉËÁ ÎÁ ËÌÁ×ÉÁÔÕÒÎÙÅ ËÏÍÁÎÄÙ.
- å×ÒÏĞÅÊÓËÉÅ/\:ISO8859\-1,2 (÷ÅÎÇÅÒÓËÉÅ, áÎÇÌÉÊÓËÉÅ, şÅÛÓËÉÅ, É Ô.Ä.), ëÉÒÉÌÌÉŞÅÓËÉÅ É ëÏÒÅÊÓËÉÅ
--ÛÒÉÆÔÙ ×ËÕĞÅ Ó 12 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, OGM,
-+ÛÒÉÆÔÙ ×ËÕĞÅ Ó 13 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, Kate, OGM,
- SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS É ÎÁÛ ÓÏÂÓÔ×ÅÎÎÙÊ: MPsub) É 
- DVD ÓÕÂÔÉÔÒÙ (SPU streams, VOBsub É Closed Captions).
- .PP
-@@ -2034,6 +2034,11 @@
- óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.sm × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
- .
- .TP
-+.B \-dumpoggkatesub (ÔÏÌØËÏ MPlayer)
-+ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ Kate.
-+óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.ogg × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
-+.
-+.TP
- .B \-dumpsrtsub (ÔÏÌØËÏ MPlayer)
- ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ
- SubViewer (SRT).
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/man/zh/mplayer.1 mplayer-svn-with-kate/DOCS/man/zh/mplayer.1
---- mplayer-svn/DOCS/man/zh/mplayer.1	2008-03-14 13:26:40.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/man/zh/mplayer.1	2008-03-15 21:26:03.000000000 +0000
-@@ -175,7 +175,7 @@
- MPlayer å…·æœ‰ OSD(å±ä¸Šæ˜¾ç¤º) åŠŸèƒ½æ˜¾ç¤ºçŠ¶æ€ä¿¡æ¯, æœ‰
- æŠ—é”¯é½¿å¸¦é˜´å½±çš„æ¼‚äº®å¤§å­—å¹•å’Œé”®ç›˜æ§åˆ¶çš„å¯è§†åé¦ˆã€‚
- æ”¯æŒçš„å­—ä½“åŒ…æ‹¬æ¬§æ´²è¯­ç§/\:ISO8859\-1,2 (åŒˆç‰™åˆ©è¯­, è‹±è¯­, æ·å…‹è¯­ç­‰ç­‰), 
--è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 12 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, OGM,
-+è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 13 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, Kate OGM,
- SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS 
- åŠæˆ‘ä»¬è‡ªå·±çš„: MPsub) å’Œ DVD å­—å¹• (SPU æµ, VOBsub åŠéšè—å¼ CC å­—å¹•)ã€‚
- .PP
-@@ -1993,6 +1993,11 @@
- åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.smi æ–‡ä»¶ã€‚
- .
- .TP
-+.B \-dumpoggkatesub (ä»…ç”¨äº MPlayer)
-+è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ Kate å­—å¹•æ ¼å¼ã€‚
-+åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.ogg æ–‡ä»¶ã€‚
-+.
-+.TP
- .B \-dumpsrtsub (ä»…ç”¨äº MPlayer)
- è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ SubViewer (SRT) å­—å¹•æ ¼å¼ã€‚
- åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.srt æ–‡ä»¶ã€‚
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/cs/usage.xml mplayer-svn-with-kate/DOCS/xml/cs/usage.xml
---- mplayer-svn/DOCS/xml/cs/usage.xml	2008-03-14 13:26:41.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/cs/usage.xml	2008-03-15 21:32:50.000000000 +0000
-@@ -117,6 +117,7 @@
-   <listitem><para>CC (closed caption)</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -141,6 +142,7 @@
-   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/de/usage.xml mplayer-svn-with-kate/DOCS/xml/de/usage.xml
---- mplayer-svn/DOCS/xml/de/usage.xml	2008-03-14 13:26:41.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/de/usage.xml	2008-03-15 21:32:59.000000000 +0000
-@@ -117,6 +117,7 @@
-       <listitem><para>CC (closed caption)</para></listitem>
-       <listitem><para>MicroDVD</para></listitem>
-       <listitem><para>SubRip</para></listitem>
-+      <listitem><para>Kate</para></listitem>
-       <listitem><para>SubViewer</para></listitem>
-       <listitem><para>Sami</para></listitem>
-       <listitem><para>VPlayer</para></listitem>
-@@ -138,6 +139,7 @@
-       <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-       <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-       <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+      <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
-     </itemizedlist>
-   </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/en/usage.xml mplayer-svn-with-kate/DOCS/xml/en/usage.xml
---- mplayer-svn/DOCS/xml/en/usage.xml	2008-03-14 13:26:42.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/en/usage.xml	2008-03-15 21:33:02.000000000 +0000
-@@ -118,6 +118,7 @@
-   <listitem><para>CC (closed caption)</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -142,6 +143,7 @@
-   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/fr/usage.xml mplayer-svn-with-kate/DOCS/xml/fr/usage.xml
---- mplayer-svn/DOCS/xml/fr/usage.xml	2008-03-14 13:26:42.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/fr/usage.xml	2008-03-15 21:33:22.000000000 +0000
-@@ -117,6 +117,7 @@
- <listitem><para>CC (closed caption)</para></listitem>
- <listitem><para>MicroDVD</para></listitem>
- <listitem><para>SubRip</para></listitem>
-+<listitem><para>Kate</para></listitem>
- <listitem><para>SubViewer</para></listitem>
- <listitem><para>Sami</para></listitem>
- <listitem><para>VPlayer</para></listitem>
-@@ -139,6 +140,7 @@
- <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
- <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
- <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+<listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/hu/usage.xml mplayer-svn-with-kate/DOCS/xml/hu/usage.xml
---- mplayer-svn/DOCS/xml/hu/usage.xml	2008-03-14 13:26:42.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/hu/usage.xml	2008-03-15 21:33:24.000000000 +0000
-@@ -119,6 +119,7 @@
-   <listitem><para>CC (closed caption)</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -143,6 +144,7 @@
-   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/it/usage.xml mplayer-svn-with-kate/DOCS/xml/it/usage.xml
---- mplayer-svn/DOCS/xml/it/usage.xml	2008-03-14 13:26:43.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/it/usage.xml	2008-03-15 21:33:26.000000000 +0000
-@@ -120,6 +120,7 @@
-   <listitem><para>CC (closed caption)</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -144,6 +145,7 @@
-   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/pl/usage.xml mplayer-svn-with-kate/DOCS/xml/pl/usage.xml
---- mplayer-svn/DOCS/xml/pl/usage.xml	2008-03-14 13:26:43.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/pl/usage.xml	2008-03-15 21:33:28.000000000 +0000
-@@ -118,6 +118,7 @@
-   <listitem><para>CC (closed caption)</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -142,6 +143,7 @@
-   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
-  
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/DOCS/xml/ru/usage.xml mplayer-svn-with-kate/DOCS/xml/ru/usage.xml
---- mplayer-svn/DOCS/xml/ru/usage.xml	2008-03-14 13:26:43.000000000 +0000
-+++ mplayer-svn-with-kate/DOCS/xml/ru/usage.xml	2008-03-15 21:33:30.000000000 +0000
-@@ -121,6 +121,7 @@
-   <listitem><para>CC (closed caption[ÑĞºÑ€Ñ‹Ñ‚Ñ‹Ğµ Ñ‚Ğ¸Ñ‚Ñ€Ñ‹])</para></listitem>
-   <listitem><para>MicroDVD</para></listitem>
-   <listitem><para>SubRip</para></listitem>
-+  <listitem><para>Kate</para></listitem>
-   <listitem><para>SubViewer</para></listitem>
-   <listitem><para>Sami</para></listitem>
-   <listitem><para>VPlayer</para></listitem>
-@@ -143,6 +144,7 @@
-  <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
-  <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
-  <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
-+ <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
- </itemizedlist>
- </para>
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/Makefile mplayer-svn-with-kate/Makefile
---- mplayer-svn/Makefile	2008-03-14 13:27:00.000000000 +0000
-+++ mplayer-svn-with-kate/Makefile	2008-03-22 22:19:56.000000000 +0000
-@@ -33,6 +33,7 @@
-               subopt-helper.c \
-               subreader.c \
-               vobsub.c \
-+              katedec.c \
- 
- SRCS_COMMON-$(UNRAR_EXEC) += unrar_exec.c
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/cfg-mplayer.h mplayer-svn-with-kate/cfg-mplayer.h
---- mplayer-svn/cfg-mplayer.h	2008-03-14 13:26:39.000000000 +0000
-+++ mplayer-svn-with-kate/cfg-mplayer.h	2008-03-15 20:49:21.000000000 +0000
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/cfg-mplayer.h mplayer-with-kate/cfg-mplayer.h
+--- mplayer/cfg-mplayer.h	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/cfg-mplayer.h	2008-06-21 11:18:30.000000000 +0100
 @@ -299,6 +299,7 @@
  	{"dumpmicrodvdsub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 7, NULL},
  	{"dumpjacosub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 8, NULL},
@@ -423,10 +9,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
  #ifdef HAVE_LIRC
  	{"lircconf", &lirc_configfile, CONF_TYPE_STRING, CONF_GLOBAL, 0, 0, NULL},
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/command.c mplayer-svn-with-kate/command.c
---- mplayer-svn/command.c	2008-03-14 13:26:39.000000000 +0000
-+++ mplayer-svn-with-kate/command.c	2008-06-15 12:32:44.000000000 +0100
-@@ -28,6 +28,7 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/command.c mplayer-with-kate/command.c
+--- mplayer/command.c	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/command.c	2008-06-21 11:18:30.000000000 +0100
+@@ -27,6 +27,7 @@
  #include "libmpcodecs/dec_video.h"
  #include "vobsub.h"
  #include "spudec.h"
@@ -434,7 +20,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  #include "get_path.h"
  #ifdef USE_TV
  #include "stream/tv.h"
-@@ -1470,6 +1471,8 @@
+@@ -1469,6 +1470,8 @@
  		sh_sub_t *sh = d_sub->sh;
  		if (sh->type == 'v')
  		    init_vo_spudec();
@@ -443,10 +29,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  #ifdef USE_ASS
  		else if (ass_enabled)
  		    ass_track = sh->ass_track;
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/configure mplayer-svn-with-kate/configure
---- mplayer-svn/configure	2008-03-17 21:23:27.000000000 +0000
-+++ mplayer-svn-with-kate/configure	2008-06-15 13:36:08.000000000 +0100
-@@ -304,6 +304,7 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/configure mplayer-with-kate/configure
+--- mplayer/configure	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/configure	2008-06-21 11:19:48.000000000 +0100
+@@ -307,6 +307,7 @@
    --disable-libvorbis       disable libvorbis support [autodetect]
    --disable-speex           disable Speex support [autodetect]
    --enable-theora           enable OggTheora libraries [autodetect]
@@ -454,7 +40,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    --enable-faad-external    enable external FAAD2 (AAC) [autodetect]
    --disable-faad-internal   disable internal FAAD2 (AAC) [autodetect]
    --enable-faad-fixed       enable fixed-point mode in internal FAAD2 [disabled]
-@@ -565,6 +566,7 @@
+@@ -570,6 +571,7 @@
  _libvorbis=auto
  _speex=auto
  _theora=auto
@@ -462,7 +48,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  _mp3lib=yes
  _liba52=yes
  _libdca=auto
-@@ -913,6 +915,8 @@
+@@ -928,6 +930,8 @@
    --disable-tremor-external)	_tremor_external=no	;;
    --enable-theora)	_theora=yes	;;
    --disable-theora)	_theora=no	;;
@@ -471,7 +57,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    --enable-mp3lib)	_mp3lib=yes	;;
    --disable-mp3lib)	_mp3lib=no	;;
    --enable-liba52)	_liba52=yes	;;
-@@ -5991,6 +5995,61 @@
+@@ -5937,6 +5941,61 @@
  fi
  echores "$_theora"
  
@@ -533,15 +119,15 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  echocheck "internal mp3lib support"
  if test "$_mp3lib" = yes ; then
    _def_mp3lib='#define USE_MP3LIB 1'
-@@ -7790,6 +7849,7 @@
- LIBMAD = $_mad
- LIBVORBIS = $_vorbis
- LIBTHEORA = $_theora
-+LIBKATE = $_kate
- FAAD_INTERNAL = $_faad_internal
- FAAD_FIXED = $_faad_fixed
+@@ -7692,6 +7751,7 @@
  LIBSMBCLIENT = $_smbsupport
-@@ -8476,6 +8536,9 @@
+ LIBTHEORA = $_theora
+ LIBVORBIS = $_vorbis
++LIBKATE = $_kate
+ LIRC = $_lirc
+ MACOSX_BUNDLE = $_macosx_bundle
+ MACOSX_FINDER_SUPPORT = $_macosx_finder_support
+@@ -8414,6 +8474,9 @@
  /* enable OggTheora support */
  $_def_theora
  
@@ -551,10 +137,411 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  /* enable FAAD (AAC) support */
  $_def_faad
  $_def_faad_internal
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.c mplayer-svn-with-kate/katedec.c
---- mplayer-svn/katedec.c	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.c	2008-06-15 13:45:53.000000000 +0100
-@@ -0,0 +1,176 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/cs/mplayer.1 mplayer-with-kate/DOCS/man/cs/mplayer.1
+--- mplayer/DOCS/man/cs/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/cs/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -171,7 +171,7 @@
+ MPlayer mÃ¡ displej na obrazovce (OSD) pro stavovÃ© informace, krÃ¡snÃ© velkÃ©
+ vyhlazenÃ© a stÃ­novanÃ© titulky a vizuÃ¡lnÃ­ odezvu na povely z\ klÃ¡vesnice.
+ PodporovÃ¡ny jsou EvropskÃ©/\:ISO8859\-1,2 (BulharskÃ©, AnglickÃ©, ÄŒeskÃ©, atd),
+-CyrilickÃ© a KorejskÃ© fonty spolu s 12 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, OGM,
++CyrilickÃ© a KorejskÃ© fonty spolu s 13 formÃ¡ty titulkÅ¯ (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS a nÃ¡Å¡ vlastnÃ­: MPsub) a
+ takÃ© DVD titulky (SPU proudy, VOBsub a Closed Captions).
+ .PP
+@@ -2068,6 +2068,12 @@
+ VytvoÅ™Ã­ soubor dumpsub.smi v aktuÃ¡lnÃ­m adresÃ¡Å™i.
+ .
+ .TP
++.B \-dumpoggkatesub (pouze MPlayer)
++PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
++Kate formÃ¡tu.
++VytvoÅ™Ã­ soubor dumpsub.ogg v aktuÃ¡lnÃ­m adresÃ¡Å™i.
++.
++.TP
+ .B \-dumpsrtsub (pouze MPlayer)
+ PÅ™evede zvolenÃ© titulky (urÄenÃ© volbou \-sub) do ÄasovÄ› orientovanÃ©ho
+ SubViewer (SRT) formÃ¡tu.
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/de/mplayer.1 mplayer-with-kate/DOCS/man/de/mplayer.1
+--- mplayer/DOCS/man/de/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/de/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -2173,6 +2173,12 @@
+ Erstellt eine Datei dumpsub.smi im aktuellen Verzeichnis.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer only)
++Konvertiert den (mit der \-sub-Option angegebenen) Untertitel in das
++zeitbasierende Kate-Untertitelformat.
++Erstellt eine Datei dumpsub.ogg im aktuellen Verzeichnis.
++.
++.TP
+ .B \-dumpsrtsub (nur bei MPlayer)
+ Konvertiert den (mit der \-sub\-Option angegebenen) Untertitel in das
+ zeitbasierende SubViewer-Untertitelformat (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/en/mplayer.1 mplayer-with-kate/DOCS/man/en/mplayer.1
+--- mplayer/DOCS/man/en/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/en/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -166,9 +166,9 @@
+ MPlayer has an onscreen display (OSD) for status information, nice big
+ antialiased shaded subtitles and visual feedback for keyboard controls.
+ European/\:ISO8859-1,2 (Hungarian, English, Czech, etc), Cyrillic and Korean
+-fonts are supported along with 12 subtitle formats (MicroDVD, SubRip, OGM,
+-SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub) and
+-DVD subtitles (SPU streams, VOBsub and Closed Captions).
++fonts are supported along with 13 subtitle formats (MicroDVD, SubRip, Kate,
++OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS and our own: MPsub)
++and DVD subtitles (SPU streams, VOBsub and Closed Captions).
+ .PP
+ .B mencoder
+ (MPlayer's Movie Encoder) is a simple movie encoder, designed to encode
+@@ -2179,6 +2179,12 @@
+ Creates a dumpsub.smi file in the current directory.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer only)
++Convert the given subtitle (specified with the \-sub option) to the time-based
++Kate subtitle format.
++Creates a dumpsub.ogg file in the current directory.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer only)
+ Convert the given subtitle (specified with the \-sub option) to the time-based
+ SubViewer (SRT) subtitle format.
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/es/mplayer.1 mplayer-with-kate/DOCS/man/es/mplayer.1
+--- mplayer/DOCS/man/es/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/es/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -183,8 +183,8 @@
+ subtítulos grandes y bonitos con suavizado de bordes y realimentación visual de
+ los controles con teclado.
+ Tipos de letra Europeo/\:ISO8859\-1,2 (Húngaro, Inglés, Checoslovaco, etc),
+-Cirílico y Koreano se soportan en 12 formatos de subtítulos (MicroDVD, SubRip,
+-OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
++Cirílico y Koreano se soportan en 13 formatos de subtítulos (MicroDVD, SubRip,
++Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS y el nuestro:
+ MPsub) así como subtítulos DVD (cadenas SPU, VOBsub y Closed Captions).
+ .PP
+ .B mencoder
+@@ -1901,6 +1901,12 @@
+ Crea un archivo dumpsub.smi en el directorio actual.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer solamente)
++Convierte el subtítulo dado (especificado con la opción \-sub) al formato
++de subtítulo basado en tiempo Kate.
++Crea un archivo dumpsub.ogg en el directorio actual.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer solamente)
+ Convierte el subtítulo dado (especificado con la opción \-sub) al formato
+ de subtítulo basado en tiempo SubViewer (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/fr/mplayer.1 mplayer-with-kate/DOCS/man/fr/mplayer.1
+--- mplayer/DOCS/man/fr/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/fr/mplayer.1	2008-06-21 11:20:48.000000000 +0100
+@@ -171,8 +171,8 @@
+ informations, de belles et grandes polices lissées et des effets
+ visuels pour confirmer les contrôles au clavier. Les polices
+ européennes/\:ISO8859\-1,2 (Hongroise, Anglaise, Tchèque, etc),
+-Cyrillique et Coréenne sont gérées ainsi que 11 formats de
+-sous-titres (MicroDVD, SubRip, OGM, SubViewer, Sami, VPlayer, RT,
++Cyrillique et Coréenne sont gérées ainsi que 13 formats de
++sous-titres (MicroDVD, SubRip, Kate, OGM, SubViewer, Sami, VPlayer, RT,
+ SSA, AQTitle, JACOsub, PJS et le nôtre: MPsub) et les sous-titres
+ DVD (SPU streams, VobSub et Closed Captions).
+ .PP
+@@ -2284,6 +2284,12 @@
+ Crée un fichier dumpsub.smi dans le répertoire courant.
+ .
+ .TP
++.B \-dumpoggkatesub (MPlayer uniquement)
++Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
++temps Kate.
++Crée un fichier dumpsub.ogg dans le répertoire courant.
++.
++.TP
+ .B \-dumpsrtsub (MPlayer uniquement)
+ Convertit les sous-titres donnés (via l'option \-sub) au format basé sur le
+ temps SubViewer (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/hu/mplayer.1 mplayer-with-kate/DOCS/man/hu/mplayer.1
+--- mplayer/DOCS/man/hu/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/hu/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -168,8 +168,8 @@
+ Az MPlayernek van onscreen display (OSD) funkciója is a státuszinformációk
+ és a szép, élsímított, árnyékolt feliratok megjelenítéséhez és a billentyûzetrõl
+ érkezõ jelek visszajelzéséhez. Európai/\:ISO8859\-1,2 (magyar, angol, cseh, stb.),
+-cirill és koreai betûtípusok mind támogatottak 12 felirat formátummal (MicroDVD,
+-SubRip, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
++cirill és koreai betûtípusok mind támogatottak 13 felirat formátummal (MicroDVD,
++SubRip, Kate, OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS és a mi
+ sajátunk: MPsub) és DVD felirattal (SPU streams, VOBsub és Closed Captions)
+ egyetemben.
+ .PP
+@@ -2189,6 +2189,12 @@
+ Az aktuális könyvtárban hoz létre egy dumpsub.smi fájlt.
+ .
+ .TP
++.B \-dumpoggkatesub (csak MPlayer)
++A használt felirat (amit a \-sub opció ad meg) idõ alapú Kate formátumba
++konvertálása.
++Az aktuális könyvtárban hoz létre egy dumpsub.ogg fájlt.
++.
++.TP
+ .B \-dumpsrtsub (csak MPlayer)
+ A használt felirat (amit a \-sub opció ad meg) idõ alapú SubViewer formátumba
+ konvertálása.
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/it/mplayer.1 mplayer-with-kate/DOCS/man/it/mplayer.1
+--- mplayer/DOCS/man/it/mplayer.1	2008-06-21 11:15:51.000000000 +0100
++++ mplayer-with-kate/DOCS/man/it/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -173,7 +173,7 @@
+ informazioni sullo stato, grandi e bei sottotitoli sfumati con antialias ed un
+ riscontro visuale dei comandi da tastiera.
+ Sono supportati font europei/\:ISO8859\-1,2 (Ungherese, Inglese, Ceco, etc),
+-Cirillici e Coreani insieme a 12 formati di sottotitoli (MicroDVD, SubRip,
++Cirillici e Coreani insieme a 13 formati di sottotitoli (MicroDVD, SubRip, Kate,
+ OGM, SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS ed il nostro:
+ MPsub) oltre ai sottotitoli dei DVD (flussi SPU, VOBsub e Closed Captions).
+ .PP
+@@ -2259,6 +2259,12 @@
+ Crea un file dumpsub.smi nella directory corrente.
+ .
+ .TP
++.B \-dumpoggkatesub (solo MPlayer)
++Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
++dei sottotitoli basato sul tempo Kate.
++Crea un file dumpsub.ogg nella directory corrente.
++.
++.TP
+ .B \-dumpsrtsub (solo MPlayer)
+ Converti i sottotitoli (specificati con l'opzione \-sub) nel formato
+ dei sottotitoli basato sul tempo SubViever (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/pl/mplayer.1 mplayer-with-kate/DOCS/man/pl/mplayer.1
+--- mplayer/DOCS/man/pl/mplayer.1	2008-06-21 11:15:52.000000000 +0100
++++ mplayer-with-kate/DOCS/man/pl/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -211,7 +211,7 @@
+ przy pomocy klawiatury i wy¶wietla ³adne, du¿e, antyaliasowane i cieniowane
+ napisy.
+ Obs³ugiwane s± czcionki europejskie/\:ISO 8859\-1,2 (polskie, czeskie, angielskie
+-itp.), koreañskie i cyrylica oraz 12 formatów napisów (MicroDVD, SubRip, OGM,
++itp.), koreañskie i cyrylica oraz 13 formatów napisów (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS i nasz w³asny: MPsub)
+ i napisów DVD (strumienie SPU, VOBSub i Closed Captions).
+ .PP
+@@ -1424,6 +1424,12 @@
+ Tworzy w bie¿±cym katalogu zbiór dumpsub.smi
+ .
+ .TP
++.B \-dumpoggkatesub (tylko MPlayer)
++Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
++Kate.
++Tworzy w bie¿±cym katalogu zbiór dumpsub.ogg
++.
++.TP
+ .B \-dumpsrtsub (tylko MPlayer)
+ Konwertuje podane (przy pomocy opcji \-sub) napisy na oparty na czasie format
+ SubViewer (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/ru/mplayer.1 mplayer-with-kate/DOCS/man/ru/mplayer.1
+--- mplayer/DOCS/man/ru/mplayer.1	2008-06-21 11:15:53.000000000 +0100
++++ mplayer-with-kate/DOCS/man/ru/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -168,7 +168,7 @@
+ MPlayer ÉÍÅÅÔ onscreen display (OSD) ÄÌÑ ÏÔÏÂÒÁÖÅÎÉÑ ÉÎÆÏÒÍÁÃÉÉ Ï ÓÏÓÔÏÑÎÉÉ ,
+ ÂÏÌØÛÉÈ ÓÇÌÁÖÅÎÎÙÈ ÓÕÂÔÉÔÒÏ× Ó ÔÅÎØÀ É ×ÉÚÕÁÌØÎÏÇÏ ÏÔËÌÉËÁ ÎÁ ËÌÁ×ÉÁÔÕÒÎÙÅ ËÏÍÁÎÄÙ.
+ å×ÒÏĞÅÊÓËÉÅ/\:ISO8859\-1,2 (÷ÅÎÇÅÒÓËÉÅ, áÎÇÌÉÊÓËÉÅ, şÅÛÓËÉÅ, É Ô.Ä.), ëÉÒÉÌÌÉŞÅÓËÉÅ É ëÏÒÅÊÓËÉÅ
+-ÛÒÉÆÔÙ ×ËÕĞÅ Ó 12 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, OGM,
++ÛÒÉÆÔÙ ×ËÕĞÅ Ó 13 ÆÏÒÍÁÔÁÍÉ ÓÕÂÔÉÔÒÏ× (MicroDVD, SubRip, Kate, OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS É ÎÁÛ ÓÏÂÓÔ×ÅÎÎÙÊ: MPsub) É 
+ DVD ÓÕÂÔÉÔÒÙ (SPU streams, VOBsub É Closed Captions).
+ .PP
+@@ -2034,6 +2034,11 @@
+ óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.sm × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
+ .
+ .TP
++.B \-dumpoggkatesub (ÔÏÌØËÏ MPlayer)
++ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ Kate.
++óÏÚÄÁÅÔ ÆÁÊÌ dumpsub.ogg × ÔÅËÕİÅÍ ËÁÔÁÌÏÇÅ.
++.
++.TP
+ .B \-dumpsrtsub (ÔÏÌØËÏ MPlayer)
+ ğÒÅÏÂÒÁÚÕÅÔ ÓÕÂÔÉÔÒÙ (ÕËÁÚÁÎÎÙÅ ÏĞÃÉÅÊ \-sub) × ÏÓÎÏ×ÁÎÎÙÊ ÎÁ ×ÒÅÍÅÎÉ ÆÏÒÍÁÔ
+ SubViewer (SRT).
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/man/zh/mplayer.1 mplayer-with-kate/DOCS/man/zh/mplayer.1
+--- mplayer/DOCS/man/zh/mplayer.1	2008-06-21 11:15:55.000000000 +0100
++++ mplayer-with-kate/DOCS/man/zh/mplayer.1	2008-06-21 11:18:30.000000000 +0100
+@@ -175,7 +175,7 @@
+ MPlayer å…·æœ‰ OSD(å±ä¸Šæ˜¾ç¤º) åŠŸèƒ½æ˜¾ç¤ºçŠ¶æ€ä¿¡æ¯, æœ‰
+ æŠ—é”¯é½¿å¸¦é˜´å½±çš„æ¼‚äº®å¤§å­—å¹•å’Œé”®ç›˜æ§åˆ¶çš„å¯è§†åé¦ˆã€‚
+ æ”¯æŒçš„å­—ä½“åŒ…æ‹¬æ¬§æ´²è¯­ç§/\:ISO8859\-1,2 (åŒˆç‰™åˆ©è¯­, è‹±è¯­, æ·å…‹è¯­ç­‰ç­‰), 
+-è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 12 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, OGM,
++è¥¿é‡Œå°”è¯­å’ŒéŸ©è¯­, å¯ä»¥æ’­æ”¾ 13 ç§æ ¼å¼çš„å­—å¹•æ–‡ä»¶ (MicroDVD, SubRip, Kate OGM,
+ SubViewer, Sami, VPlayer, RT, SSA, AQTitle, JACOsub, PJS 
+ åŠæˆ‘ä»¬è‡ªå·±çš„: MPsub) å’Œ DVD å­—å¹• (SPU æµ, VOBsub åŠéšè—å¼ CC å­—å¹•)ã€‚
+ .PP
+@@ -2034,6 +2034,11 @@
+ åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.smi æ–‡ä»¶ã€‚
+ .
+ .TP
++.B \-dumpoggkatesub (ä»…ç”¨äº MPlayer)
++è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ Kate å­—å¹•æ ¼å¼ã€‚
++åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.ogg æ–‡ä»¶ã€‚
++.
++.TP
+ .B \-dumpsrtsub (ä»…ç”¨äº MPlayer)
+ è½¬æ¢ç»™å®šçš„(ç”± \-sub é€‰é¡¹æŒ‡å®šçš„)å­—å¹•æˆä¸ºåŸºäºæ—¶é—´çš„ SubViewer (SRT) å­—å¹•æ ¼å¼ã€‚
+ åœ¨å½“å‰çš„ç›®å½•ä¸­åˆ›å»º dumpsub.srt æ–‡ä»¶ã€‚
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/cs/usage.xml mplayer-with-kate/DOCS/xml/cs/usage.xml
+--- mplayer/DOCS/xml/cs/usage.xml	2008-06-21 11:16:01.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/cs/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -117,6 +117,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -141,6 +142,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/de/usage.xml mplayer-with-kate/DOCS/xml/de/usage.xml
+--- mplayer/DOCS/xml/de/usage.xml	2008-06-21 11:16:02.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/de/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -117,6 +117,7 @@
+       <listitem><para>CC (closed caption)</para></listitem>
+       <listitem><para>MicroDVD</para></listitem>
+       <listitem><para>SubRip</para></listitem>
++      <listitem><para>Kate</para></listitem>
+       <listitem><para>SubViewer</para></listitem>
+       <listitem><para>Sami</para></listitem>
+       <listitem><para>VPlayer</para></listitem>
+@@ -138,6 +139,7 @@
+       <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+       <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+       <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++      <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+     </itemizedlist>
+   </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/en/usage.xml mplayer-with-kate/DOCS/xml/en/usage.xml
+--- mplayer/DOCS/xml/en/usage.xml	2008-06-21 11:16:04.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/en/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -118,6 +118,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -142,6 +143,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/fr/usage.xml mplayer-with-kate/DOCS/xml/fr/usage.xml
+--- mplayer/DOCS/xml/fr/usage.xml	2008-06-21 11:16:06.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/fr/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -117,6 +117,7 @@
+ <listitem><para>CC (closed caption)</para></listitem>
+ <listitem><para>MicroDVD</para></listitem>
+ <listitem><para>SubRip</para></listitem>
++<listitem><para>Kate</para></listitem>
+ <listitem><para>SubViewer</para></listitem>
+ <listitem><para>Sami</para></listitem>
+ <listitem><para>VPlayer</para></listitem>
+@@ -139,6 +140,7 @@
+ <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+ <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+ <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++<listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/hu/usage.xml mplayer-with-kate/DOCS/xml/hu/usage.xml
+--- mplayer/DOCS/xml/hu/usage.xml	2008-06-21 11:16:08.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/hu/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -119,6 +119,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -143,6 +144,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/it/usage.xml mplayer-with-kate/DOCS/xml/it/usage.xml
+--- mplayer/DOCS/xml/it/usage.xml	2008-06-21 11:16:09.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/it/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -120,6 +120,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -144,6 +145,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/pl/usage.xml mplayer-with-kate/DOCS/xml/pl/usage.xml
+--- mplayer/DOCS/xml/pl/usage.xml	2008-06-21 11:16:10.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/pl/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -118,6 +118,7 @@
+   <listitem><para>CC (closed caption)</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -142,6 +143,7 @@
+   <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+   <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+   <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++  <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+  
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/DOCS/xml/ru/usage.xml mplayer-with-kate/DOCS/xml/ru/usage.xml
+--- mplayer/DOCS/xml/ru/usage.xml	2008-06-21 11:16:12.000000000 +0100
++++ mplayer-with-kate/DOCS/xml/ru/usage.xml	2008-06-21 11:18:30.000000000 +0100
+@@ -121,6 +121,7 @@
+   <listitem><para>CC (closed caption[ÑĞºÑ€Ñ‹Ñ‚Ñ‹Ğµ Ñ‚Ğ¸Ñ‚Ñ€Ñ‹])</para></listitem>
+   <listitem><para>MicroDVD</para></listitem>
+   <listitem><para>SubRip</para></listitem>
++  <listitem><para>Kate</para></listitem>
+   <listitem><para>SubViewer</para></listitem>
+   <listitem><para>Sami</para></listitem>
+   <listitem><para>VPlayer</para></listitem>
+@@ -143,6 +144,7 @@
+  <listitem><para>MicroDVD: <option>-dumpmicrodvdsub</option></para></listitem>
+  <listitem><para>JACOsub: <option>-dumpjacosub</option></para></listitem>
+  <listitem><para>Sami: <option>-dumpsami</option></para></listitem>
++ <listitem><para>Kate: <option>-dumpoggkatesub</option></para></listitem>
+ </itemizedlist>
+ </para>
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/katedec.c mplayer-with-kate/katedec.c
+--- mplayer/katedec.c	1970-01-01 01:00:00.000000000 +0100
++++ mplayer-with-kate/katedec.c	2008-06-21 13:07:33.000000000 +0100
+@@ -0,0 +1,200 @@
 +/* Katedec.c
 +
 +   ogg.k.ogg.k@googlemail.com
@@ -591,6 +578,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +static unsigned char *katedec_image=NULL;
 +static unsigned char *katedec_y=NULL;
 +static unsigned char *katedec_a=NULL;
++static unsigned char *katedec_scaled_y=NULL;
++static unsigned char *katedec_scaled_a=NULL;
++static size_t katedec_scaled_image_size=0;
 +
 +/* worked out the format mplayer expects, it's YA on 2 8 bit planes - UV aren't used */
 +static inline int katedec_color_to_y(kate_color kc)
@@ -621,6 +611,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    size_t w=kb->width;
 +    size_t h=kb->height;
 +    size_t stride = (w+7)&~7; /* seen a comment somewhere saying 8 alignment is needed */
++    unsigned int scaled_frame_width;
++    unsigned int scaled_frame_height;
 +
 +    if (!katedec_image) {
 +      size_t n,src,x,l;
@@ -629,7 +621,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +
 +      katedec_image = malloc(2*stride*h);
 +      if (!katedec_image) {
-+        mp_msg (MSGT_FIXME, MSGL_WARN, "kate: failed to allocate %u bytes\n", 2*stride*h);
++        mp_msg (MSGT_FIXME, MSGL_WARN, "kate: failed to allocate %lu bytes\n", 2ul*stride*h);
 +        return;
 +      }
 +      katedec_y=katedec_image;
@@ -642,11 +634,20 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +          kate_color kc=kp->colors[kb->pixels[src]];
 +          katedec_y[n]=katedec_color_to_y(kc);
 +
-+          /* odd, weird, and makes it work - for me at least */
++#if 1
++          /* odd, weird, and makes it work - for me at least - adapted from spudec.c */
 +          katedec_y[n] = kc.r;
 +          if (katedec_y[n] + kc.a <= 255) katedec_y[n] = 256 - katedec_y[n];
++#endif
 +
 +          katedec_a[n]=frob_alpha(kc.a);
++
++#if 0
++          // black rectangle - for testing
++          katedec_y[n] = 16;
++          katedec_a[n] = 1;
++#endif
++
 +          ++n;
 +          ++src;
 +        }
@@ -658,7 +659,17 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +      }
 +    }
 +
++#if 0
 +    draw_alpha(xpos,ypos,w,h,katedec_y,katedec_a,stride);
++#else
++    spudec_draw_scaled_image(dxs, dys,
++                             katedec_y, katedec_a,
++                             xpos, ypos, w, h, stride,
++                             720, 576, // TODO
++                             &scaled_frame_width, &scaled_frame_height,
++                             &katedec_scaled_y, &katedec_scaled_a, &katedec_scaled_image_size,
++                             draw_alpha);
++#endif
 +  }
 +#endif
 +}
@@ -731,9 +742,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +#endif
 +}
 +
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.h mplayer-svn-with-kate/katedec.h
---- mplayer-svn/katedec.h	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.h	2008-06-15 13:44:01.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/katedec.h mplayer-with-kate/katedec.h
+--- mplayer/katedec.h	1970-01-01 01:00:00.000000000 +0100
++++ mplayer-with-kate/katedec.h	2008-06-21 11:18:30.000000000 +0100
 @@ -0,0 +1,12 @@
 +#ifndef MPLAYER_KATEDEC_H
 +#define MPLAYER_KATEDEC_H
@@ -747,10 +758,143 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +extern void katedec_tick(sh_sub_t *sh, double pts);
 +
 +#endif /* MPLAYER_KATEDEC_H */
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/demux_mkv.c mplayer-svn-with-kate/libmpdemux/demux_mkv.c
---- mplayer-svn/libmpdemux/demux_mkv.c	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/demux_mkv.c	2008-06-14 20:17:40.000000000 +0100
-@@ -128,7 +128,7 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/demuxer.c mplayer-with-kate/libmpdemux/demuxer.c
+--- mplayer/libmpdemux/demuxer.c	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/demuxer.c	2008-06-21 13:07:42.000000000 +0100
+@@ -27,6 +27,10 @@
+ #include "libass/ass_mp.h"
+ #endif
+ 
++#ifdef HAVE_OGGKATE
++#include <kate/kate.h>
++#endif
++
+ extern void resync_video_stream(sh_video_t *sh_video);
+ extern void resync_audio_stream(sh_audio_t *sh_audio);
+ 
+@@ -261,6 +265,10 @@
+     if (sh->ass_track)
+         ass_free_track(sh->ass_track);
+ #endif
++#ifdef HAVE_OGGKATE
++    kate_high_decode_clear(sh->k);
++    free(sh->k);
++#endif
+     free(sh->lang);
+     free(sh);
+ }
+@@ -732,6 +740,55 @@
+     return -1;
+ }
+ 
++#ifdef HAVE_OGGKATE
++/*
++   Splits extra data from a single block into kate_packets and decode them.
++*/
++static int
++parse_kate_headers (kate_state *k, void *extradata, size_t extradata_len)
++{
++  int n,nlaces,offset,ret;
++  const unsigned char **header_data;
++  const unsigned char *priv;
++  size_t *header_size;
++
++  if ((extradata == NULL) || (extradata_len == 0))
++    return KATE_E_BAD_PACKET;
++
++  priv = (const unsigned char*)extradata;
++  nlaces = priv[0];
++  header_data=(const unsigned char**)alloca((nlaces+1)*sizeof(const unsigned char*));
++  header_size=(size_t*)alloca((nlaces+1)*sizeof(size_t));
++
++  offset=1;
++  for (n=0;n<nlaces;++n) {
++    header_size[n]=0;
++    do {
++      header_size[n]+=priv[offset];
++    } while (priv[offset++]==255);
++  }
++  header_size[nlaces]=extradata_len-offset;
++  for (n=0;n<nlaces;++n) header_size[nlaces]-=header_size[n];
++  header_data[0]=priv+offset;
++  for (n=1;n<=nlaces;++n) {
++    header_data[n]=header_data[n-1]+header_size[n-1];
++  }
++
++  for (n=0;n<nlaces+1;++n) {
++    kate_packet kp;
++    kate_packet_wrap(&kp,header_size[n],header_data[n]);
++    ret=kate_high_decode_packetin(k,&kp,NULL);
++    if (ret<0) {
++      mp_msg (MSGT_DEMUXER, MSGL_WARN, "kate_high_decode_packetin returned %d\n", ret);
++      kate_high_decode_clear(k);
++      return ret;
++    }
++  }
++
++  return 0;
++}
++#endif
++
+ int extension_parsing = 1; // 0=off 1=mixed (used only for unstable formats)
+ 
+ int correct_pts = 0;
+@@ -899,10 +956,10 @@
+                sh_video->fps, sh_video->i_bps * 0.008f,
+                sh_video->i_bps / 1024.0f);
+     }
++    for (i = 0; i < MAX_S_STREAMS; ++i) {
++        sh_sub_t *sh = demuxer->s_streams[i];
+ #ifdef USE_ASS
+-    if (ass_enabled && ass_library) {
+-        for (i = 0; i < MAX_S_STREAMS; ++i) {
+-            sh_sub_t *sh = demuxer->s_streams[i];
++        if (ass_enabled && ass_library) {
+             if (sh && sh->type == 'a') {
+                 sh->ass_track = ass_new_track(ass_library);
+                 if (sh->ass_track && sh->extradata)
+@@ -911,8 +968,36 @@
+             } else if (sh && sh->type != 'v')
+                 sh->ass_track = ass_default_track(ass_library);
+         }
+-    }
+ #endif
++#ifdef HAVE_OGGKATE
++        if (sh && sh->type == 'k' && !sh->k) {
++            sh->k = (kate_state*)malloc(sizeof(kate_state));
++            if (sh->k) {
++                int ret;
++                ret = kate_high_decode_init(sh->k);
++                if (ret >= 0) {
++                    ret = parse_kate_headers(sh->k, sh->extradata, sh->extradata_len);
++                    if (ret >= 0) {
++                        /* init success */
++                        mp_msg(MSGT_DEMUX,MSGL_V,"Kate init success, language %s, category %s\n",
++                               sh->k->ki->language, sh->k->ki->language);
++                        if (sh->lang) free(sh->lang);
++                        sh->lang = strdup(sh->k->ki->language);
++                    }
++                    else {
++                        mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to parse kate stream headers: %d\n", ret);
++                    }
++                }
++                else {
++                    mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to initialize kate_state: %d\n", ret);
++                }
++            }
++            else {
++                mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to allocate %u bytes for kate_state\n", sizeof(kate_state));
++            }
++        }
++#endif
++    }
+     return demuxer;
+ }
+ 
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/demux_mkv.c mplayer-with-kate/libmpdemux/demux_mkv.c
+--- mplayer/libmpdemux/demux_mkv.c	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/demux_mkv.c	2008-06-21 11:18:30.000000000 +0100
+@@ -130,7 +130,7 @@
    mkv_content_encoding_t *encodings;
    int num_encodings;
  
@@ -759,7 +903,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    sh_sub_t *sh_sub;
  } mkv_track_t;
  
-@@ -1016,7 +1016,9 @@
+@@ -1018,7 +1018,9 @@
              }
            else if (!strcmp (track->codec_id, MKV_S_TEXTASCII))
              track->subtitle_type = MATROSKA_SUBTYPE_TEXT;
@@ -770,7 +914,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
              {
                track->subtitle_type = MATROSKA_SUBTYPE_TEXT;
              }
-@@ -2203,6 +2205,8 @@
+@@ -2205,6 +2207,8 @@
          sh->type = 'v';
        if (track->subtitle_type == MATROSKA_SUBTYPE_SSA)
          sh->type = 'a';
@@ -779,9 +923,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        size = track->private_size;
        m = demux_mkv_decode (track,track->private_data,&buffer,&size,2);
        if (buffer && m)
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/demux_ogg.c mplayer-svn-with-kate/libmpdemux/demux_ogg.c
---- mplayer-svn/libmpdemux/demux_ogg.c	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/demux_ogg.c	2008-06-15 12:59:38.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/demux_ogg.c mplayer-with-kate/libmpdemux/demux_ogg.c
+--- mplayer/libmpdemux/demux_ogg.c	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/demux_ogg.c	2008-06-21 13:07:47.000000000 +0100
 @@ -32,6 +32,11 @@
  extern int _ilog (unsigned int); /* defined in many places in theora/lib/ */
  #endif
@@ -859,10 +1003,11 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
       (ds != d->audio || ((sh_audio_t*)ds->sh)->format != FOURCC_VORBIS || os->hdr_packets >= NUM_VORBIS_HDR_PACKETS ) &&
       (ds != d->video || (((sh_video_t*)ds->sh)->format != FOURCC_THEORA)))
      return 0;
-@@ -477,6 +497,29 @@
+@@ -477,6 +497,31 @@
    if (!data)
      return 0;
  
++#ifdef HAVE_OGGKATE
 +  // for Kate headers, we can't just ds_add_packet the packet because MPlayer will
 +  // helpfully clear the subtitles packet queue before starting polling it, so we
 +  // never get those, so we pass them to libakte now, apart from the first one,
@@ -885,11 +1030,12 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +      if (dvdsub_id != sh->sid) return 0;
 +    }
 +  }
++#endif
 +
    /// Clear subtitles if necessary (for broken files)
    if (sub_clear_text(&ogg_sub, pts)) {
      vo_sub = &ogg_sub;
-@@ -754,6 +797,7 @@
+@@ -754,6 +799,7 @@
    ogg_packet pack;
    sh_audio_t* sh_a;
    sh_video_t* sh_v;
@@ -897,7 +1043,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
  #ifdef USE_ICONV
    subcp_open(NULL);
-@@ -816,6 +860,7 @@
+@@ -816,6 +862,7 @@
      // Reset our vars
      sh_a = NULL;
      sh_v = NULL;
@@ -905,12 +1051,12 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
      ogg_d->subs[ogg_d->num_sub].ogg_d = ogg_d;
  
-@@ -895,6 +940,62 @@
+@@ -895,6 +942,64 @@
  	theora_comment_clear(&cc);
  	theora_info_clear(&inf);
  #   endif /* HAVE_OGGTHEORA */
-+#   ifdef HAVE_OGGKATE
 +    } else if (pack.bytes >= 8 && !strncmp (&pack.packet[1], "kate\0\0\0", 7)) {
++#   ifdef HAVE_OGGKATE
 +	int ret;
 +
 +        sh_s = new_sh_sub_sid(demuxer, ogg_d->num_sub, ogg_d->n_text);
@@ -964,11 +1110,13 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +            }
 +          }
 +	}
++#   else /* HAVE_OGGKATE */
++        mp_msg(MSGT_DEMUX, MSGL_INFO, "[Ogg] stream %d: Kate (support not compiled in)\n", ogg_d->num_sub);
 +#   endif /* HAVE_OGGKATE */
      } else if (pack.bytes >= 4 && !strncmp (&pack.packet[0], "fLaC", 4)) {
  	sh_a = new_sh_audio_aid(demuxer,ogg_d->num_sub, n_audio);
  	sh_a->format =  mmioFOURCC('f', 'L', 'a', 'C');
-@@ -1052,7 +1153,7 @@
+@@ -1052,7 +1157,7 @@
      } else
        mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg stream %d is of an unknown type\n",ogg_d->num_sub);
  
@@ -977,7 +1125,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        demux_stream_t* ds = NULL;
        if(sh_a) {
  	// If the audio stream is not defined we took the first one
-@@ -1081,6 +1182,18 @@
+@@ -1081,6 +1186,18 @@
            video_id = ogg_d->num_sub;
  	}
        }
@@ -996,7 +1144,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        /// Add the header packets if the stream isn't seekable
        if(ds && !s->end_pos) {
  	/// Finish the page, otherwise packets will be lost
-@@ -1209,7 +1322,7 @@
+@@ -1209,7 +1326,7 @@
        ds = d->audio;
      else if(id == d->video->id)
        ds = d->video;
@@ -1005,141 +1153,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        ds = d->sub;
  
      if(ds) {
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/demuxer.c mplayer-svn-with-kate/libmpdemux/demuxer.c
---- mplayer-svn/libmpdemux/demuxer.c	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/demuxer.c	2008-06-15 13:38:31.000000000 +0100
-@@ -27,6 +27,10 @@
- #include "libass/ass_mp.h"
- #endif
- 
-+#ifdef HAVE_OGGKATE
-+#include <kate/kate.h>
-+#endif
-+
- extern void resync_video_stream(sh_video_t *sh_video);
- extern void resync_audio_stream(sh_audio_t *sh_audio);
- 
-@@ -251,6 +255,10 @@
- #ifdef USE_ASS
-     if (sh->ass_track) ass_free_track(sh->ass_track);
- #endif
-+#ifdef HAVE_OGGKATE
-+    kate_high_decode_clear(sh->k);
-+    free(sh->k);
-+#endif
-     free(sh->lang);
-     free(sh);
- }
-@@ -687,6 +695,53 @@
-   return -1;
- }
- 
-+/*
-+   Splits extra data from a single block into kate_packets and decode them.
-+*/
-+static int
-+parse_kate_headers (kate_state *k, void *extradata, size_t extradata_len)
-+{
-+  int n,nlaces,offset,ret;
-+  const unsigned char **header_data;
-+  const unsigned char *priv;
-+  size_t *header_size;
-+
-+  if ((extradata == NULL) || (extradata_len == 0))
-+    return KATE_E_BAD_PACKET;
-+
-+  priv = (const unsigned char*)extradata;
-+  nlaces = priv[0];
-+  header_data=(const unsigned char**)alloca((nlaces+1)*sizeof(const unsigned char*));
-+  header_size=(size_t*)alloca((nlaces+1)*sizeof(size_t));
-+
-+  offset=1;
-+  for (n=0;n<nlaces;++n) {
-+    header_size[n]=0;
-+    do {
-+      header_size[n]+=priv[offset];
-+    } while (priv[offset++]==255);
-+  }
-+  header_size[nlaces]=extradata_len-offset;
-+  for (n=0;n<nlaces;++n) header_size[nlaces]-=header_size[n];
-+  header_data[0]=priv+offset;
-+  for (n=1;n<=nlaces;++n) {
-+    header_data[n]=header_data[n-1]+header_size[n-1];
-+  }
-+
-+  for (n=0;n<nlaces+1;++n) {
-+    kate_packet kp;
-+    kate_packet_wrap(&kp,header_size[n],header_data[n]);
-+    ret=kate_high_decode_packetin(k,&kp,NULL);
-+    if (ret<0) {
-+      mp_msg (MSGT_DEMUXER, MSGL_WARN, "kate_high_decode_packetin returned %d\n", ret);
-+      kate_high_decode_clear(k);
-+      return ret;
-+    }
-+  }
-+
-+  return 0;
-+}
-+
- int extension_parsing=1; // 0=off 1=mixed (used only for unstable formats)
- 
- int correct_pts=0;
-@@ -843,10 +898,11 @@
-     sh_video->i_bps*0.008f,
-     sh_video->i_bps/1024.0f );
- }
-+
-+ for (i = 0; i < MAX_S_STREAMS; ++i) {
-+   sh_sub_t* sh = demuxer->s_streams[i];
- #ifdef USE_ASS
-- if (ass_enabled && ass_library) {
--   for (i = 0; i < MAX_S_STREAMS; ++i) {
--     sh_sub_t* sh = demuxer->s_streams[i];
-+   if (ass_enabled && ass_library) {
-      if (sh && sh->type == 'a') {
-        sh->ass_track = ass_new_track(ass_library);
-        if (sh->ass_track && sh->extradata)
-@@ -854,8 +910,36 @@
-      } else if (sh && sh->type != 'v')
-        sh->ass_track = ass_default_track(ass_library);
-    }
-- }
- #endif
-+#ifdef HAVE_OGGKATE
-+   if (sh && sh->type == 'k' && !sh->k) {
-+     sh->k = (kate_state*)malloc(sizeof(kate_state));
-+     if (sh->k) {
-+       int ret;
-+       ret = kate_high_decode_init(sh->k);
-+       if (ret >= 0) {
-+         ret = parse_kate_headers(sh->k, sh->extradata, sh->extradata_len);
-+         if (ret >= 0) {
-+           /* init success */
-+           mp_msg(MSGT_DEMUX,MSGL_V,"Kate init success, language %s, category %s\n",
-+               sh->k->ki->language, sh->k->ki->language);
-+           if (sh->lang) free(sh->lang);
-+           sh->lang = strdup(sh->k->ki->language);
-+         }
-+         else {
-+           mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to parse kate stream headers: %d\n", ret);
-+         }
-+       }
-+       else {
-+         mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to initialize kate_state: %d\n", ret);
-+       }
-+     }
-+     else {
-+       mp_msg(MSGT_DEMUX,MSGL_WARN,"Failed to allocate %u bytes for kate_state\n", sizeof(kate_state));
-+     }
-+   }
-+#endif
-+ }
- return demuxer;
- }
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/ebml.h mplayer-svn-with-kate/libmpdemux/ebml.h
---- mplayer-svn/libmpdemux/ebml.h	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/ebml.h	2008-03-15 20:49:21.000000000 +0000
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/ebml.h mplayer-with-kate/libmpdemux/ebml.h
+--- mplayer/libmpdemux/ebml.h	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/ebml.h	2008-06-21 11:18:30.000000000 +0100
 @@ -162,6 +162,7 @@
  #define MATROSKA_SUBTYPE_TEXT      1
  #define MATROSKA_SUBTYPE_SSA       2
@@ -1148,10 +1164,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
  #ifndef UINT64_MAX
  #define UINT64_MAX 18446744073709551615ULL
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/matroska.h mplayer-svn-with-kate/libmpdemux/matroska.h
---- mplayer-svn/libmpdemux/matroska.h	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/matroska.h	2008-03-15 20:49:21.000000000 +0000
-@@ -60,6 +60,7 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/matroska.h mplayer-with-kate/libmpdemux/matroska.h
+--- mplayer/libmpdemux/matroska.h	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/matroska.h	2008-06-21 11:18:30.000000000 +0100
+@@ -58,6 +58,7 @@
  #define MKV_S_TEXTSSA    "S_TEXT/SSA"
  #define MKV_S_TEXTASS    "S_TEXT/ASS"
  #define MKV_S_VOBSUB     "S_VOBSUB"
@@ -1159,10 +1175,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  #define MKV_S_SSA        "S_SSA" // Deprecated
  #define MKV_S_ASS        "S_ASS" // Deprecated
  
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/stheader.h mplayer-svn-with-kate/libmpdemux/stheader.h
---- mplayer-svn/libmpdemux/stheader.h	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/stheader.h	2008-06-15 12:06:20.000000000 +0100
-@@ -95,7 +95,7 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libmpdemux/stheader.h mplayer-with-kate/libmpdemux/stheader.h
+--- mplayer/libmpdemux/stheader.h	2008-06-21 11:17:04.000000000 +0100
++++ mplayer-with-kate/libmpdemux/stheader.h	2008-06-21 11:18:30.000000000 +0100
+@@ -96,7 +96,7 @@
  
  typedef struct {
    int sid;
@@ -1171,7 +1187,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    int has_palette;              // If we have a valid palette
    unsigned int palette[16];     // for VobSubs
    int width, height;            // for VobSubs
-@@ -107,6 +107,9 @@
+@@ -108,6 +108,9 @@
  #ifdef USE_ASS
    ass_track_t* ass_track;  // for SSA/ASS streams (type == 'a')
  #endif
@@ -1179,11 +1195,11 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  struct kate_state *k;
 +#endif
    char* lang; // track language
+   int default_track;
  } sh_sub_t;
- 
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libvo/sub.c mplayer-svn-with-kate/libvo/sub.c
---- mplayer-svn/libvo/sub.c	2008-03-14 13:26:58.000000000 +0000
-+++ mplayer-svn-with-kate/libvo/sub.c	2008-06-15 13:43:35.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libvo/sub.c mplayer-with-kate/libvo/sub.c
+--- mplayer/libvo/sub.c	2008-06-21 11:17:09.000000000 +0100
++++ mplayer-with-kate/libvo/sub.c	2008-06-21 13:07:54.000000000 +0100
 @@ -26,6 +26,7 @@
  #include "font_load.h"
  #include "sub.h"
@@ -1249,9 +1265,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  	}
  	obj->old_bbox=obj->bbox;
  	obj->flags|=OSDFLAG_OLD_BBOX;
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libvo/sub.h mplayer-svn-with-kate/libvo/sub.h
---- mplayer-svn/libvo/sub.h	2008-03-14 13:26:58.000000000 +0000
-+++ mplayer-svn-with-kate/libvo/sub.h	2008-06-15 13:43:37.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/libvo/sub.h mplayer-with-kate/libvo/sub.h
+--- mplayer/libvo/sub.h	2008-06-21 11:17:09.000000000 +0100
++++ mplayer-with-kate/libvo/sub.h	2008-06-21 11:18:30.000000000 +0100
 @@ -12,6 +12,7 @@
  #define OSDTYPE_SPU 4
  #define OSDTYPE_DVDNAV 5
@@ -1260,10 +1276,21 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
  #define OSDFLAG_VISIBLE 1
  #define OSDFLAG_CHANGED 2
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/mpcommon.c mplayer-svn-with-kate/mpcommon.c
---- mplayer-svn/mpcommon.c	2008-03-14 13:27:00.000000000 +0000
-+++ mplayer-svn-with-kate/mpcommon.c	2008-06-15 12:23:40.000000000 +0100
-@@ -20,6 +20,10 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/Makefile mplayer-with-kate/Makefile
+--- mplayer/Makefile	2008-06-21 11:17:19.000000000 +0100
++++ mplayer-with-kate/Makefile	2008-06-21 11:19:15.000000000 +0100
+@@ -51,6 +51,7 @@
+               subopt-helper.c \
+               subreader.c \
+               vobsub.c \
++              katedec.c \
+               libaf/af.c \
+               libaf/af_center.c \
+               libaf/af_channels.c \
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/mpcommon.c mplayer-with-kate/mpcommon.c
+--- mplayer/mpcommon.c	2008-06-21 11:17:20.000000000 +0100
++++ mplayer-with-kate/mpcommon.c	2008-06-21 13:07:33.000000000 +0100
+@@ -21,6 +21,10 @@
  ass_track_t* ass_track = 0; // current track to render
  #endif
  
@@ -1274,7 +1301,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  sub_data* subdata = NULL;
  subtitle* vo_sub_last = NULL;
  
-@@ -39,6 +43,7 @@
+@@ -40,6 +44,7 @@
              spudec_reset(vo_spudec);
              vo_osd_changed(OSDTYPE_SPU);
          }
@@ -1282,7 +1309,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      }
      // find sub
      if (subdata) {
-@@ -100,6 +105,24 @@
+@@ -101,6 +106,24 @@
  
          if (spudec_changed(vo_spudec))
              vo_osd_changed(OSDTYPE_SPU);
@@ -1307,10 +1334,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      } else if (dvdsub_id >= 0 && (type == 't' || type == 'm' || type == 'a')) {
          double curpts = sh_video->pts + sub_delay;
          double endpts;
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/mplayer.c mplayer-svn-with-kate/mplayer.c
---- mplayer-svn/mplayer.c	2008-03-14 13:27:00.000000000 +0000
-+++ mplayer-svn-with-kate/mplayer.c	2008-06-15 13:41:09.000000000 +0100
-@@ -1115,6 +1115,15 @@
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/mplayer.c mplayer-with-kate/mplayer.c
+--- mplayer/mplayer.c	2008-06-21 11:17:20.000000000 +0100
++++ mplayer-with-kate/mplayer.c	2008-06-21 13:07:33.000000000 +0100
+@@ -1118,6 +1118,15 @@
      forced_subs_only = mkv_sh_sub->forced_subs_only;
    }
  
@@ -1326,7 +1353,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    if (vo_spudec==NULL) {
      sh_sub_t *sh = (sh_sub_t *)mpctx->d_sub->sh;
      unsigned int *palette = NULL;
-@@ -3475,6 +3484,9 @@
+@@ -3501,6 +3510,9 @@
          case 7: dump_microdvd(subdata, mpctx->sh_video->fps); break;
          case 8: dump_jacosub(subdata, mpctx->sh_video->fps); break;
          case 9: dump_sami(subdata, mpctx->sh_video->fps); break;
@@ -1336,9 +1363,510 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      }
  }
  
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/subreader.c mplayer-svn-with-kate/subreader.c
---- mplayer-svn/subreader.c	2008-03-14 13:27:01.000000000 +0000
-+++ mplayer-svn-with-kate/subreader.c	2008-06-14 21:03:52.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/spudec.c mplayer-with-kate/spudec.c
+--- mplayer/spudec.c	2008-06-21 11:17:23.000000000 +0100
++++ mplayer-with-kate/spudec.c	2008-06-21 11:18:30.000000000 +0100
+@@ -79,8 +79,8 @@
+   unsigned char *image;		/* Grayscale value */
+   unsigned char *aimage;	/* Alpha value */
+   unsigned int scaled_frame_width, scaled_frame_height;
+-  unsigned int scaled_start_col, scaled_start_row;
+-  unsigned int scaled_width, scaled_height, scaled_stride;
++  //unsigned int scaled_start_col, scaled_start_row;
++  //unsigned int scaled_width, scaled_height, scaled_stride;
+   size_t scaled_image_size;
+   unsigned char *scaled_image;
+   unsigned char *scaled_aimage;
+@@ -711,33 +711,33 @@
+ }
+ 
+ /* bilinear scale, similar to vobsub's code */
+-static void scale_image(int x, int y, scale_pixel* table_x, scale_pixel* table_y, spudec_handle_t * spu)
++static void scale_image(int x, int y, scale_pixel* table_x, scale_pixel* table_y, const unsigned char *image, const unsigned char *aimage, unsigned int width, unsigned int height, unsigned int stride, unsigned int scaled_stride, unsigned char *scaled_image, unsigned char *scaled_aimage)
+ {
+   int alpha[4];
+   int color[4];
+   unsigned int scale[4];
+-  int base = table_y[y].position * spu->stride + table_x[x].position;
+-  int scaled = y * spu->scaled_stride + x;
+-  alpha[0] = canon_alpha(spu->aimage[base]);
+-  alpha[1] = canon_alpha(spu->aimage[base + 1]);
+-  alpha[2] = canon_alpha(spu->aimage[base + spu->stride]);
+-  alpha[3] = canon_alpha(spu->aimage[base + spu->stride + 1]);
+-  color[0] = spu->image[base];
+-  color[1] = spu->image[base + 1];
+-  color[2] = spu->image[base + spu->stride];
+-  color[3] = spu->image[base + spu->stride + 1];
++  int base = table_y[y].position * stride + table_x[x].position;
++  int scaled = y * scaled_stride + x;
++  alpha[0] = canon_alpha(aimage[base]);
++  alpha[1] = canon_alpha(aimage[base + 1]);
++  alpha[2] = canon_alpha(aimage[base + stride]);
++  alpha[3] = canon_alpha(aimage[base + stride + 1]);
++  color[0] = image[base];
++  color[1] = image[base + 1];
++  color[2] = image[base + stride];
++  color[3] = image[base + stride + 1];
+   scale[0] = (table_x[x].left_up * table_y[y].left_up >> 16) * alpha[0];
+   if (table_y[y].left_up == 0x10000) // necessary to avoid overflow-case
+     scale[0] = table_x[x].left_up * alpha[0];
+   scale[1] = (table_x[x].right_down * table_y[y].left_up >>16) * alpha[1];
+   scale[2] = (table_x[x].left_up * table_y[y].right_down >> 16) * alpha[2];
+   scale[3] = (table_x[x].right_down * table_y[y].right_down >> 16) * alpha[3];
+-  spu->scaled_image[scaled] = (color[0] * scale[0] + color[1] * scale[1] + color[2] * scale[2] + color[3] * scale[3])>>24;
+-  spu->scaled_aimage[scaled] = (scale[0] + scale[1] + scale[2] + scale[3]) >> 16;
+-  if (spu->scaled_aimage[scaled]){
+-    spu->scaled_aimage[scaled] = 256 - spu->scaled_aimage[scaled];
+-    if(spu->scaled_aimage[scaled] + spu->scaled_image[scaled] > 255)
+-      spu->scaled_image[scaled] = 256 - spu->scaled_aimage[scaled];
++  scaled_image[scaled] = (color[0] * scale[0] + color[1] * scale[1] + color[2] * scale[2] + color[3] * scale[3])>>24;
++  scaled_aimage[scaled] = (scale[0] + scale[1] + scale[2] + scale[3]) >> 16;
++  if (scaled_aimage[scaled]){
++    scaled_aimage[scaled] = 256 - scaled_aimage[scaled];
++    if(scaled_aimage[scaled] + scaled_image[scaled] > 255)
++      scaled_image[scaled] = 256 - scaled_aimage[scaled];
+   }
+ }
+ 
+@@ -767,124 +767,122 @@
+ 	sws_freeContext(ctx);
+ }
+ 
+-void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
++int spudec_draw_scaled_image(unsigned int dxs, unsigned int dys,
++                             /*const*/ unsigned char *image, /*const*/ unsigned char *aimage,
++                             unsigned int start_col, unsigned int start_row, unsigned int width, unsigned int height, unsigned int stride,
++                             unsigned int orig_frame_width, unsigned int orig_frame_height,
++                             unsigned int *scaled_frame_width, unsigned int *scaled_frame_height,
++                             unsigned char **scaled_image, unsigned char **scaled_aimage, size_t *scaled_image_size,
++                             void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
+ {
+-  spudec_handle_t *spu = (spudec_handle_t *)me;
+   scale_pixel *table_x;
+   scale_pixel *table_y;
++  int drawn = 0;
+ 
+-  if (spu->start_pts <= spu->now_pts && spu->now_pts < spu->end_pts) {
+-
+-    // check if only forced subtitles are requested 
+-    if( (spu->forced_subs_only) && !(spu->is_forced_sub) ){ 
+-	return;
+-    }
+-
+-    if (!(spu_aamode&16) && (spu->orig_frame_width == 0 || spu->orig_frame_height == 0
+-	|| (spu->orig_frame_width == dxs && spu->orig_frame_height == dys))) {
+-      if (spu->image)
++    if (!(spu_aamode&16) && (orig_frame_width == 0 || orig_frame_height == 0
++	|| (orig_frame_width == dxs && orig_frame_height == dys))) {
++      if (image)
+       {
+-	draw_alpha(spu->start_col, spu->start_row, spu->width, spu->height,
+-		   spu->image, spu->aimage, spu->stride);
+-	spu->spu_changed = 0;
++	draw_alpha(start_col, start_row, width, height, image, aimage, stride);
++        drawn = 1;
+       }
+     }
+     else {
+-      if (spu->scaled_frame_width != dxs || spu->scaled_frame_height != dys) {	/* Resizing is needed */
++	unsigned int scalex = 0x100 * dxs / orig_frame_width;
++	unsigned int scaley = 0x100 * dys / orig_frame_height;
++	unsigned int scaled_width = width * scalex / 0x100;
++	unsigned int scaled_height = height * scaley / 0x100;
++	unsigned int scaled_stride = (scaled_width + 7) & ~7;
++	unsigned int scaled_start_col = start_col * scalex / 0x100;
++	unsigned int scaled_start_row = start_row * scaley / 0x100;
++      if (*scaled_frame_width != dxs || *scaled_frame_height != dys) {	/* Resizing is needed */
+ 	/* scaled_x = scalex * x / 0x100
+ 	   scaled_y = scaley * y / 0x100
+ 	   order of operations is important because of rounding. */
+-	unsigned int scalex = 0x100 * dxs / spu->orig_frame_width;
+-	unsigned int scaley = 0x100 * dys / spu->orig_frame_height;
+-	spu->scaled_start_col = spu->start_col * scalex / 0x100;
+-	spu->scaled_start_row = spu->start_row * scaley / 0x100;
+-	spu->scaled_width = spu->width * scalex / 0x100;
+-	spu->scaled_height = spu->height * scaley / 0x100;
+ 	/* Kludge: draw_alpha needs width multiple of 8 */
+-	spu->scaled_stride = (spu->scaled_width + 7) & ~7;
+-	if (spu->scaled_image_size < spu->scaled_stride * spu->scaled_height) {
+-	  if (spu->scaled_image) {
+-	    free(spu->scaled_image);
+-	    spu->scaled_image_size = 0;
++	if (*scaled_image_size < scaled_stride * scaled_height) {
++	  if (*scaled_image) {
++	    free(*scaled_image);
++	    *scaled_image_size = 0;
+ 	  }
+-	  spu->scaled_image = malloc(2 * spu->scaled_stride * spu->scaled_height);
+-	  if (spu->scaled_image) {
+-	    spu->scaled_image_size = spu->scaled_stride * spu->scaled_height;
+-	    spu->scaled_aimage = spu->scaled_image + spu->scaled_image_size;
++	  *scaled_image = malloc(2 * scaled_stride * scaled_height);
++	  if (*scaled_image) {
++	    *scaled_image_size = scaled_stride * scaled_height;
++	    *scaled_aimage = *scaled_image + *scaled_image_size;
+ 	  }
+ 	}
+-	if (spu->scaled_image) {
++	if (*scaled_image) {
+ 	  unsigned int x, y;
+-	  if (spu->scaled_width <= 1 || spu->scaled_height <= 1) {
++	  if (scaled_width <= 1 || scaled_height <= 1) {
+ 	    goto nothing_to_do;
+ 	  }
+ 	  switch(spu_aamode&15) {
+ 	  case 4:
+-	  sws_spu_image(spu->scaled_image, spu->scaled_aimage,
+-		  spu->scaled_width, spu->scaled_height, spu->scaled_stride,
+-		  spu->image, spu->aimage, spu->width, spu->height, spu->stride);
++	  sws_spu_image(*scaled_image, *scaled_aimage,
++		  scaled_width, scaled_height, scaled_stride,
++		  image, aimage, width, height, stride);
+ 	  break;
+ 	  case 3:
+-	  table_x = calloc(spu->scaled_width, sizeof(scale_pixel));
+-	  table_y = calloc(spu->scaled_height, sizeof(scale_pixel));
++	  table_x = calloc(scaled_width, sizeof(scale_pixel));
++	  table_y = calloc(scaled_height, sizeof(scale_pixel));
+ 	  if (!table_x || !table_y) {
+ 	    mp_msg(MSGT_SPUDEC, MSGL_FATAL, "Fatal: spudec_draw_scaled: calloc failed\n");
+ 	  }
+-	  scale_table(0, 0, spu->width - 1, spu->scaled_width - 1, table_x);
+-	  scale_table(0, 0, spu->height - 1, spu->scaled_height - 1, table_y);
+-	  for (y = 0; y < spu->scaled_height; y++)
+-	    for (x = 0; x < spu->scaled_width; x++)
+-	      scale_image(x, y, table_x, table_y, spu);
++	  scale_table(0, 0, width - 1, scaled_width - 1, table_x);
++	  scale_table(0, 0, height - 1, scaled_height - 1, table_y);
++	  for (y = 0; y < scaled_height; y++)
++	    for (x = 0; x < scaled_width; x++)
++	      scale_image(x, y, table_x, table_y, image, aimage, width, height, stride, scaled_stride, *scaled_image, *scaled_aimage);
+ 	  free(table_x);
+ 	  free(table_y);
+ 	  break;
+ 	  case 0:
+ 	  /* no antialiasing */
+-	  for (y = 0; y < spu->scaled_height; ++y) {
++	  for (y = 0; y < scaled_height; ++y) {
+ 	    int unscaled_y = y * 0x100 / scaley;
+-	    int strides = spu->stride * unscaled_y;
+-	    int scaled_strides = spu->scaled_stride * y;
+-	    for (x = 0; x < spu->scaled_width; ++x) {
++	    int strides = stride * unscaled_y;
++	    int scaled_strides = scaled_stride * y;
++	    for (x = 0; x < scaled_width; ++x) {
+ 	      int unscaled_x = x * 0x100 / scalex;
+-	      spu->scaled_image[scaled_strides + x] = spu->image[strides + unscaled_x];
+-	      spu->scaled_aimage[scaled_strides + x] = spu->aimage[strides + unscaled_x];
++	      (*scaled_image)[scaled_strides + x] = image[strides + unscaled_x];
++	      (*scaled_aimage)[scaled_strides + x] = aimage[strides + unscaled_x];
+ 	    }
+ 	  }
+ 	  break;
+ 	  case 1:
+ 	  {
+ 	    /* Intermediate antialiasing. */
+-	    for (y = 0; y < spu->scaled_height; ++y) {
+-	      const unsigned int unscaled_top = y * spu->orig_frame_height / dys;
+-	      unsigned int unscaled_bottom = (y + 1) * spu->orig_frame_height / dys;
+-	      if (unscaled_bottom >= spu->height)
+-		unscaled_bottom = spu->height - 1;
+-	      for (x = 0; x < spu->scaled_width; ++x) {
+-		const unsigned int unscaled_left = x * spu->orig_frame_width / dxs;
+-		unsigned int unscaled_right = (x + 1) * spu->orig_frame_width / dxs;
++	    for (y = 0; y < scaled_height; ++y) {
++	      const unsigned int unscaled_top = y * orig_frame_height / dys;
++	      unsigned int unscaled_bottom = (y + 1) * orig_frame_height / dys;
++	      if (unscaled_bottom >= height)
++		unscaled_bottom = height - 1;
++	      for (x = 0; x < scaled_width; ++x) {
++		const unsigned int unscaled_left = x * orig_frame_width / dxs;
++		unsigned int unscaled_right = (x + 1) * orig_frame_width / dxs;
+ 		unsigned int color = 0;
+ 		unsigned int alpha = 0;
+ 		unsigned int walkx, walky;
+ 		unsigned int base, tmp;
+-		if (unscaled_right >= spu->width)
+-		  unscaled_right = spu->width - 1;
++		if (unscaled_right >= width)
++		  unscaled_right = width - 1;
+ 		for (walky = unscaled_top; walky <= unscaled_bottom; ++walky)
+ 		  for (walkx = unscaled_left; walkx <= unscaled_right; ++walkx) {
+-		    base = walky * spu->stride + walkx;
+-		    tmp = canon_alpha(spu->aimage[base]);
++		    base = walky * stride + walkx;
++		    tmp = canon_alpha(aimage[base]);
+ 		    alpha += tmp;
+-		    color += tmp * spu->image[base];
++		    color += tmp * image[base];
+ 		  }
+-		base = y * spu->scaled_stride + x;
+-		spu->scaled_image[base] = alpha ? color / alpha : 0;
+-		spu->scaled_aimage[base] =
++		base = y * scaled_stride + x;
++		(*scaled_image)[base] = alpha ? color / alpha : 0;
++		(*scaled_aimage)[base] =
+ 		  alpha * (1 + unscaled_bottom - unscaled_top) * (1 + unscaled_right - unscaled_left);
+-		/* spu->scaled_aimage[base] =
+-		  alpha * dxs * dys / spu->orig_frame_width / spu->orig_frame_height; */
+-		if (spu->scaled_aimage[base]) {
+-		  spu->scaled_aimage[base] = 256 - spu->scaled_aimage[base];
+-		  if (spu->scaled_aimage[base] + spu->scaled_image[base] > 255)
+-		    spu->scaled_image[base] = 256 - spu->scaled_aimage[base];
++		/* (*scaled_aimage)[base] =
++		  alpha * dxs * dys / orig_frame_width / orig_frame_height; */
++		if ((*scaled_aimage)[base]) {
++		  (*scaled_aimage)[base] = 256 - (*scaled_aimage)[base];
++		  if ((*scaled_aimage)[base] + (*scaled_image)[base] > 255)
++		    (*scaled_image)[base] = 256 - (*scaled_aimage)[base];
+ 		}
+ 	      }
+ 	    }
+@@ -933,7 +931,7 @@
+ 	       unscaled_x_right. */
+ 	    const double inv_scalex = (double) 0x100 / scalex;
+ 	    const double inv_scaley = (double) 0x100 / scaley;
+-	    for (y = 0; y < spu->scaled_height; ++y) {
++	    for (y = 0; y < scaled_height; ++y) {
+ 	      const double unscaled_y = y * inv_scaley;
+ 	      const double unscaled_y_bottom = unscaled_y + inv_scaley;
+ 	      const unsigned int top_low_row = FFMIN(unscaled_y_bottom, unscaled_y + 1.0);
+@@ -944,7 +942,7 @@
+ 	      const double bottom = unscaled_y_bottom > top_low_row
+ 		? unscaled_y_bottom - floor(unscaled_y_bottom)
+ 		: 0.0;
+-	      for (x = 0; x < spu->scaled_width; ++x) {
++	      for (x = 0; x < scaled_width; ++x) {
+ 		const double unscaled_x = x * inv_scalex;
+ 		const double unscaled_x_right = unscaled_x + inv_scalex;
+ 		const unsigned int left_right_column = FFMIN(unscaled_x_right, unscaled_x + 1.0);
+@@ -967,35 +965,35 @@
+ 		  transformed color = sum(surface * alpha * color) / sum(surface * alpha)
+ 		*/
+ 		/* 1: top left part */
+-		base = spu->stride * (unsigned int) unscaled_y;
+-		tmp = left * top * canon_alpha(spu->aimage[base + (unsigned int) unscaled_x]);
++		base = stride * (unsigned int) unscaled_y;
++		tmp = left * top * canon_alpha(aimage[base + (unsigned int) unscaled_x]);
+ 		alpha += tmp;
+-		color += tmp * spu->image[base + (unsigned int) unscaled_x];
++		color += tmp * image[base + (unsigned int) unscaled_x];
+ 		/* 2: top center part */
+ 		if (width > 0) {
+ 		  unsigned int walkx;
+ 		  for (walkx = left_right_column; walkx < (unsigned int) unscaled_x_right; ++walkx) {
+-		    base = spu->stride * (unsigned int) unscaled_y + walkx;
+-		    tmp = /* 1.0 * */ top * canon_alpha(spu->aimage[base]);
++		    base = stride * (unsigned int) unscaled_y + walkx;
++		    tmp = /* 1.0 * */ top * canon_alpha(aimage[base]);
+ 		    alpha += tmp;
+-		    color += tmp * spu->image[base];
++		    color += tmp * image[base];
+ 		  }
+ 		}
+ 		/* 3: top right part */
+ 		if (right > 0.0) {
+-		  base = spu->stride * (unsigned int) unscaled_y + (unsigned int) unscaled_x_right;
+-		  tmp = right * top * canon_alpha(spu->aimage[base]);
++		  base = stride * (unsigned int) unscaled_y + (unsigned int) unscaled_x_right;
++		  tmp = right * top * canon_alpha(aimage[base]);
+ 		  alpha += tmp;
+-		  color += tmp * spu->image[base];
++		  color += tmp * image[base];
+ 		}
+ 		/* 4: center left part */
+ 		if (height > 0) {
+ 		  unsigned int walky;
+ 		  for (walky = top_low_row; walky < (unsigned int) unscaled_y_bottom; ++walky) {
+-		    base = spu->stride * walky + (unsigned int) unscaled_x;
+-		    tmp = left /* * 1.0 */ * canon_alpha(spu->aimage[base]);
++		    base = stride * walky + (unsigned int) unscaled_x;
++		    tmp = left /* * 1.0 */ * canon_alpha(aimage[base]);
+ 		    alpha += tmp;
+-		    color += tmp * spu->image[base];
++		    color += tmp * image[base];
+ 		  }
+ 		}
+ 		/* 5: center part */
+@@ -1003,11 +1001,11 @@
+ 		  unsigned int walky;
+ 		  for (walky = top_low_row; walky < (unsigned int) unscaled_y_bottom; ++walky) {
+ 		    unsigned int walkx;
+-		    base = spu->stride * walky;
++		    base = stride * walky;
+ 		    for (walkx = left_right_column; walkx < (unsigned int) unscaled_x_right; ++walkx) {
+-		      tmp = /* 1.0 * 1.0 * */ canon_alpha(spu->aimage[base + walkx]);
++		      tmp = /* 1.0 * 1.0 * */ canon_alpha(aimage[base + walkx]);
+ 		      alpha += tmp;
+-		      color += tmp * spu->image[base + walkx];
++		      color += tmp * image[base + walkx];
+ 		    }
+ 		  }		    
+ 		}
+@@ -1015,44 +1013,44 @@
+ 		if (right > 0.0 && height > 0) {
+ 		  unsigned int walky;
+ 		  for (walky = top_low_row; walky < (unsigned int) unscaled_y_bottom; ++walky) {
+-		    base = spu->stride * walky + (unsigned int) unscaled_x_right;
+-		    tmp = right /* * 1.0 */ * canon_alpha(spu->aimage[base]);
++		    base = stride * walky + (unsigned int) unscaled_x_right;
++		    tmp = right /* * 1.0 */ * canon_alpha(aimage[base]);
+ 		    alpha += tmp;
+-		    color += tmp * spu->image[base];
++		    color += tmp * image[base];
+ 		  }
+ 		}
+ 		/* 7: bottom left part */
+ 		if (bottom > 0.0) {
+-		  base = spu->stride * (unsigned int) unscaled_y_bottom + (unsigned int) unscaled_x;
+-		  tmp = left * bottom * canon_alpha(spu->aimage[base]);
++		  base = stride * (unsigned int) unscaled_y_bottom + (unsigned int) unscaled_x;
++		  tmp = left * bottom * canon_alpha(aimage[base]);
+ 		  alpha += tmp;
+-		  color += tmp * spu->image[base];
++		  color += tmp * image[base];
+ 		}
+ 		/* 8: bottom center part */
+ 		if (width > 0 && bottom > 0.0) {
+ 		  unsigned int walkx;
+-		  base = spu->stride * (unsigned int) unscaled_y_bottom;
++		  base = stride * (unsigned int) unscaled_y_bottom;
+ 		  for (walkx = left_right_column; walkx < (unsigned int) unscaled_x_right; ++walkx) {
+-		    tmp = /* 1.0 * */ bottom * canon_alpha(spu->aimage[base + walkx]);
++		    tmp = /* 1.0 * */ bottom * canon_alpha(aimage[base + walkx]);
+ 		    alpha += tmp;
+-		    color += tmp * spu->image[base + walkx];
++		    color += tmp * image[base + walkx];
+ 		  }
+ 		}
+ 		/* 9: bottom right part */
+ 		if (right > 0.0 && bottom > 0.0) {
+-		  base = spu->stride * (unsigned int) unscaled_y_bottom + (unsigned int) unscaled_x_right;
+-		  tmp = right * bottom * canon_alpha(spu->aimage[base]);
++		  base = stride * (unsigned int) unscaled_y_bottom + (unsigned int) unscaled_x_right;
++		  tmp = right * bottom * canon_alpha(aimage[base]);
+ 		  alpha += tmp;
+-		  color += tmp * spu->image[base];
++		  color += tmp * image[base];
+ 		}
+ 		/* Finally mix these transparency and brightness information suitably */
+-		base = spu->scaled_stride * y + x;
+-		spu->scaled_image[base] = alpha > 0 ? color / alpha : 0;
+-		spu->scaled_aimage[base] = alpha * scalex * scaley / 0x10000;
+-		if (spu->scaled_aimage[base]) {
+-		  spu->scaled_aimage[base] = 256 - spu->scaled_aimage[base];
+-		  if (spu->scaled_aimage[base] + spu->scaled_image[base] > 255)
+-		    spu->scaled_image[base] = 256 - spu->scaled_aimage[base];
++		base = scaled_stride * y + x;
++		(*scaled_image)[base] = alpha > 0 ? color / alpha : 0;
++		(*scaled_aimage)[base] = alpha * scalex * scaley / 0x10000;
++		if ((*scaled_aimage)[base]) {
++		  (*scaled_aimage)[base] = 256 - (*scaled_aimage)[base];
++		  if ((*scaled_aimage)[base] + (*scaled_image)[base] > 255)
++		    (*scaled_image)[base] = 256 - (*scaled_aimage)[base];
+ 		}
+ 	      }
+ 	    }
+@@ -1060,36 +1058,63 @@
+ 	  }
+ nothing_to_do:
+ 	  /* Kludge: draw_alpha needs width multiple of 8. */
+-	  if (spu->scaled_width < spu->scaled_stride)
+-	    for (y = 0; y < spu->scaled_height; ++y) {
+-	      memset(spu->scaled_aimage + y * spu->scaled_stride + spu->scaled_width, 0,
+-		     spu->scaled_stride - spu->scaled_width);
++	  if (scaled_width < scaled_stride)
++	    for (y = 0; y < scaled_height; ++y) {
++	      memset((*scaled_aimage) + y * scaled_stride + scaled_width, 0,
++		     scaled_stride - scaled_width);
+ 	    }
+-	  spu->scaled_frame_width = dxs;
+-	  spu->scaled_frame_height = dys;
++	  *scaled_frame_width = dxs;
++	  *scaled_frame_height = dys;
+ 	}
++	//spu->scaled_width = scaled_width;
++	//spu->scaled_height = scaled_height;
++        //spu->scaled_stride = scaled_stride;
+       }
+-      if (spu->scaled_image){
++      if (*scaled_image){
+         switch (spu_alignment) {
+         case 0:
+-          spu->scaled_start_row = dys*sub_pos/100;
+-	  if (spu->scaled_start_row + spu->scaled_height > dys)
+-	    spu->scaled_start_row = dys - spu->scaled_height;
++          scaled_start_row = dys*sub_pos/100;
++	  if (scaled_start_row + scaled_height > dys)
++	    scaled_start_row = dys - scaled_height;
+ 	  break;
+ 	case 1:
+-          spu->scaled_start_row = dys*sub_pos/100 - spu->scaled_height/2;
+-	  if (sub_pos >= 50 && spu->scaled_start_row + spu->scaled_height > dys)
+-	      spu->scaled_start_row = dys - spu->scaled_height;
++          scaled_start_row = dys*sub_pos/100 - scaled_height/2;
++	  if (sub_pos >= 50 && scaled_start_row + scaled_height > dys)
++	      scaled_start_row = dys - scaled_height;
+ 	  break;
+         case 2:
+-          spu->scaled_start_row = dys*sub_pos/100 - spu->scaled_height;
++          scaled_start_row = dys*sub_pos/100 - scaled_height;
+ 	  break;
+ 	}
+-	draw_alpha(spu->scaled_start_col, spu->scaled_start_row, spu->scaled_width, spu->scaled_height,
+-		   spu->scaled_image, spu->scaled_aimage, spu->scaled_stride);
+-	spu->spu_changed = 0;
++	draw_alpha(scaled_start_col, scaled_start_row, scaled_width, scaled_height,
++		   *scaled_image, *scaled_aimage, scaled_stride);
++        drawn = 1;
+       }
+     }
++    return drawn;
++}
++
++void spudec_draw_scaled(void *me, unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
++{
++  spudec_handle_t *spu = (spudec_handle_t *)me;
++  int drawn;
++
++  if (spu->start_pts <= spu->now_pts && spu->now_pts < spu->end_pts) {
++
++    // check if only forced subtitles are requested 
++    if( (spu->forced_subs_only) && !(spu->is_forced_sub) ){ 
++	return;
++    }
++
++    drawn = spudec_draw_scaled_image(dxs, dys,
++                                     spu->image, spu->aimage,
++                                     spu->start_col, spu->start_row, spu->width, spu->height, spu->stride,
++                                     spu->orig_frame_width, spu->orig_frame_height,
++                                     &spu->scaled_frame_width, &spu->scaled_frame_height,
++                                     &spu->scaled_image, &spu->scaled_aimage, &spu->scaled_image_size,
++                                     draw_alpha);
++    if (drawn)
++      spu->spu_changed = 0;
+   }
+   else
+   {
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/spudec.h mplayer-with-kate/spudec.h
+--- mplayer/spudec.h	2008-06-21 11:17:23.000000000 +0100
++++ mplayer-with-kate/spudec.h	2008-06-21 11:44:05.000000000 +0100
+@@ -19,5 +19,12 @@
+ int spudec_changed(void *this);
+ void spudec_calc_bbox(void *me, unsigned int dxs, unsigned int dys, unsigned int* bbox);
+ void spudec_set_forced_subs_only(void * const this, const unsigned int flag);
++int spudec_draw_scaled_image(unsigned int dxs, unsigned int dys,
++                             /*const*/ unsigned char *image, /*const*/ unsigned char *aimage,
++                             unsigned int start_col, unsigned int start_row, unsigned int width, unsigned int height, unsigned int stride,
++                             unsigned int orig_frame_width, unsigned int orig_frame_height,
++                             unsigned int *scaled_frame_width, unsigned int *scaled_frame_height,
++                             unsigned char **scaled_image, unsigned char **scaled_aimage, size_t *scaled_image_size,
++                             void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
+ 
+ #endif /* MPLAYER_SPUDEC_H */
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/subreader.c mplayer-with-kate/subreader.c
+--- mplayer/subreader.c	2008-06-21 11:17:28.000000000 +0100
++++ mplayer-with-kate/subreader.c	2008-06-21 13:07:33.000000000 +0100
 @@ -24,6 +24,12 @@
  #include <enca.h>
  #endif
@@ -1401,11 +1929,12 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      int i;
  
      do {
-@@ -312,6 +322,118 @@
+@@ -312,6 +322,122 @@
      return current;
  }
  
 +static subtitle *sub_read_line_oggkate(stream_t *st,subtitle *current) {
++#ifdef HAVE_OGGKATE
 +    int ret;
 +    char *buffer;
 +    size_t bytes;
@@ -1515,12 +2044,15 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    }
 +
 +    return current;
++#else
++    return NULL;
++#endif
 +}
 +
  static subtitle *sub_read_line_subrip(stream_t* st, subtitle *current) {
      char line[LINE_LEN+1];
      int a1,a2,a3,a4,b1,b2,b3,b4;
-@@ -430,7 +552,8 @@
+@@ -430,7 +556,8 @@
  static subtitle *sub_read_line_vplayer(stream_t *st,subtitle *current) {
  	char line[LINE_LEN+1];
  	int a1,a2,a3;
@@ -1530,7 +2062,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  	int i,len,plen;
  
  	while (!current->text[0]) {
-@@ -479,7 +602,7 @@
+@@ -479,7 +606,7 @@
  	// WARNING: full XML parses can be required for proper parsing 
      char line[LINE_LEN+1];
      int a1,a2,a3,a4,b1,b2,b3,b4;
@@ -1539,7 +2071,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      int i,len,plen;
      
      while (!current->text[0]) {
-@@ -709,7 +832,7 @@
+@@ -709,7 +836,7 @@
  
  static subtitle *sub_read_line_aqt(stream_t *st,subtitle *current) {
      char line[LINE_LEN+1];
@@ -1548,7 +2080,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      int i;
  
      while (1) {
-@@ -767,7 +890,7 @@
+@@ -767,7 +894,7 @@
  static subtitle *sub_read_line_subrip09(stream_t *st,subtitle *current) {
      char line[LINE_LEN+1];
      int a1,a2,a3;
@@ -1557,7 +2089,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      int i,len;
     
      while (1) {
-@@ -1060,6 +1183,17 @@
+@@ -1060,6 +1187,17 @@
  		{*uses_time=0; return SUB_AQTITLE;}
  	if (sscanf (line, "[%d:%d:%d]", &i, &i, &i)==3)
  		{*uses_time=1;return SUB_SUBRIP09;}
@@ -1575,7 +2107,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      }
  
      return SUB_INVALID;  // too many bad lines
-@@ -1351,7 +1485,8 @@
+@@ -1352,7 +1490,8 @@
  	    { sub_read_line_subviewer2, NULL, "subviewer 2.0" },
  	    { sub_read_line_subrip09, NULL, "subrip 0.9" },
  	    { sub_read_line_jacosub, NULL, "jacosub" },
@@ -1585,7 +2117,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      };
      struct subreader *srp;
      
-@@ -1381,6 +1516,11 @@
+@@ -1382,6 +1521,11 @@
  			    break;
  			}
  	    }
@@ -1597,7 +2129,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  	    if (k<0) subcp_open(fd);
      }
  #endif
-@@ -1488,9 +1628,13 @@
+@@ -1489,9 +1633,13 @@
      }
  
      // we do overlap if the user forced it (suboverlap_enable == 2) or
@@ -1612,7 +2144,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  if ((suboverlap_enabled == 2) ||
      ((suboverlap_enabled) && ((sub_format == SUB_JACOSUB) || (sub_format == SUB_SSA)))) {
      adjust_subs_time(first, 6.0, fps, 0, sub_num, uses_time);/*~6 secs AST*/
-@@ -2003,6 +2147,129 @@
+@@ -2004,6 +2152,144 @@
      mp_msg(MSGT_SUBREADER,MSGL_INFO,"Read %i subtitles, %i errors.\n", subd->sub_num, subd->sub_errs);
  }
  
@@ -1651,7 +2183,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  kate_comment_clear(&kc);
 +}
 +
-+static void add_to_text(char **text,int *text_size,const char *new_text)
++static void add_to_text(char **text,size_t *text_size,const char *new_text)
 +{
 +  size_t current_len=*text?strlen(*text):0;
 +  size_t new_text_len=strlen(new_text);
@@ -1673,6 +2205,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    subtitle *subs = subd->subtitles;
 +    char *text=NULL;
 +    size_t allocated=0;
++    int ret;
 +
 +    kate_state k;
 +    kate_info ki;
@@ -1693,6 +2226,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    ki.gps_numerator = 1000;
 +    ki.gps_denominator = 1;
 +    ki.granule_shift = 32;
++    if (dvdsub_lang && !whiteonly(dvdsub_lang)) {
++      kate_info_set_language(&ki, dvdsub_lang);
++    }
++    kate_info_set_category(&ki, "subtitles");
 +    kate_encode_init(&k,&ki);
 +    ogg_stream_init(&os,rand());
 +
@@ -1719,16 +2256,26 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +          add_to_text(&text,&allocated,onesub->text[j]);
 +        }
 +
-+        kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
-+        ogg_stream_packetin(&os,&op);
-+
-+        flush_page(fd,&os);
++        ret = kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
++        if (ret < 0) {
++            mp_msg(MSGT_SUBREADER,MSGL_ERR,"SUB: error encoding subtitle: %d\n", ret);
++        }
++        else {
++            ogg_stream_packetin(&os,&op);
++            flush_page(fd,&os);
++        }
 +        if (text) *text=0;
 +    }
 +
-+    kate_ogg_encode_finish(&k,-1,&op);
-+    ogg_stream_packetin(&os,&op);
-+    flush_page(fd,&os);
++    ret = kate_ogg_encode_finish(&k,-1,&op);
++    if (ret < 0) {
++        mp_msg(MSGT_SUBREADER,MSGL_ERR,"SUB: error encoding EOS packet: %d\n", ret);
++    }
++    else {
++        ogg_stream_packetin(&os,&op);
++        flush_page(fd,&os);
++    }
++
 +    ogg_stream_clear(&os);
 +    kate_clear(&k);
 +
@@ -1742,9 +2289,9 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  void dump_srt(sub_data* subd, float fps){
      int i,j;
      int h,m,s,ms;
-diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/subreader.h mplayer-svn-with-kate/subreader.h
---- mplayer-svn/subreader.h	2008-03-14 13:27:01.000000000 +0000
-+++ mplayer-svn-with-kate/subreader.h	2008-06-14 21:03:10.000000000 +0100
+diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h -x '*.d' mplayer/subreader.h mplayer-with-kate/subreader.h
+--- mplayer/subreader.h	2008-06-21 11:17:28.000000000 +0100
++++ mplayer-with-kate/subreader.h	2008-06-21 11:18:30.000000000 +0100
 @@ -23,6 +23,7 @@
  #define SUB_SUBRIP09 11
  #define SUB_JACOSUB  12
