@@ -1,7 +1,7 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/configure.ac gst-plugins-bad/configure.ac
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/configure.ac	2008-05-30 13:18:04.000000000 +0100
-+++ gst-plugins-bad/configure.ac	2008-06-04 20:27:37.000000000 +0100
-@@ -608,6 +608,17 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac gst-plugins-bad/configure.ac
+--- ORG/gst-plugins-bad/configure.ac	2008-06-17 18:16:13.000000000 +0100
++++ gst-plugins-bad/configure.ac	2008-06-19 21:51:21.000000000 +0100
+@@ -642,6 +642,17 @@
    AC_SUBST(JACK_LIBS)
  ])
  
@@ -19,7 +19,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  dnl *** ladspa ***
  translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
  AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-@@ -1083,6 +1094,7 @@
+@@ -1117,6 +1128,7 @@
  AM_CONDITIONAL(USE_X264, false)
  AM_CONDITIONAL(USE_XVID, false)
  AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -27,7 +27,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  AM_CONDITIONAL(USE_WININET, false)
  
  fi dnl of EXT plugins
-@@ -1213,6 +1225,7 @@
+@@ -1248,6 +1260,7 @@
  ext/gsm/Makefile
  ext/ivorbis/Makefile
  ext/jack/Makefile
@@ -35,10 +35,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/ladspa/Makefile
  ext/libmms/Makefile
  ext/Makefile
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/ext/Makefile.am gst-plugins-bad/ext/Makefile.am
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/ext/Makefile.am	2008-04-15 13:53:48.000000000 +0100
-+++ gst-plugins-bad/ext/Makefile.am	2008-06-01 17:57:18.000000000 +0100
-@@ -118,6 +118,12 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/ext/Makefile.am gst-plugins-bad/ext/Makefile.am
+--- ORG/gst-plugins-bad/ext/Makefile.am	2008-06-17 18:16:14.000000000 +0100
++++ gst-plugins-bad/ext/Makefile.am	2008-06-19 21:51:21.000000000 +0100
+@@ -124,6 +124,12 @@
  JACK_DIR=
  endif
  
@@ -51,7 +51,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  if USE_LADSPA
  LADSPA_DIR = ladspa
  else
-@@ -309,6 +315,7 @@
+@@ -315,6 +321,7 @@
  	$(HERMES_DIR) \
  	$(IVORBIS_DIR) \
  	$(JACK_DIR) \
@@ -59,7 +59,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(LADSPA_DIR) \
  	$(LCS_DIR) \
  	$(LIBFAME_DIR) \
-@@ -351,6 +358,7 @@
+@@ -357,6 +364,7 @@
  	ivorbis \
  	ladspa \
  	jack \
@@ -67,9 +67,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	libmms \
  	dts \
  	divx \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/gst-plugins-bad.spec.in gst-plugins-bad/gst-plugins-bad.spec.in
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/gst-plugins-bad.spec.in	2008-05-02 16:57:42.000000000 +0100
-+++ gst-plugins-bad/gst-plugins-bad.spec.in	2008-06-01 17:58:40.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/gst-plugins-bad.spec.in gst-plugins-bad/gst-plugins-bad.spec.in
+--- ORG/gst-plugins-bad/gst-plugins-bad.spec.in	2008-05-02 16:57:42.000000000 +0100
++++ gst-plugins-bad/gst-plugins-bad.spec.in	2008-06-19 21:51:21.000000000 +0100
 @@ -146,6 +146,7 @@
  @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
  @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
@@ -78,9 +78,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  %changelog
  * Fri May 2 2008 Christian Schaller <christian.schaller at collabora dot co uk>
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/LICENSE_readme gst-plugins-bad/LICENSE_readme
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/LICENSE_readme	2004-11-09 10:18:19.000000000 +0000
-+++ gst-plugins-bad/LICENSE_readme	2008-06-01 18:29:46.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/LICENSE_readme gst-plugins-bad/LICENSE_readme
+--- ORG/gst-plugins-bad/LICENSE_readme	2004-11-09 10:18:19.000000000 +0000
++++ gst-plugins-bad/LICENSE_readme	2008-06-19 21:51:21.000000000 +0100
 @@ -93,6 +93,7 @@
  gsttheora        libtheora        (http://www.theora.org/)
  speex                             (http://www.speex.org/)
@@ -89,9 +89,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  Plugins based on libraries with other free licenses:
  
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/REQUIREMENTS gst-plugins-bad/REQUIREMENTS
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/REQUIREMENTS	2007-07-09 07:05:45.000000000 +0100
-+++ gst-plugins-bad/REQUIREMENTS	2008-06-01 17:57:18.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/REQUIREMENTS gst-plugins-bad/REQUIREMENTS
+--- ORG/gst-plugins-bad/REQUIREMENTS	2007-07-09 07:05:45.000000000 +0100
++++ gst-plugins-bad/REQUIREMENTS	2008-06-19 21:51:21.000000000 +0100
 @@ -118,9 +118,11 @@
  libmms		(for MMS protocol support)
  			(http://www.sf.net/projects/libmms)
@@ -106,9 +106,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  
  Optional (debian) packages:
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/tests/check/Makefile.am gst-plugins-bad/tests/check/Makefile.am
---- /mnt/dvd/svn/gstreamer-cvs/gst-plugins-bad/tests/check/Makefile.am	2008-05-30 13:18:06.000000000 +0100
-+++ gst-plugins-bad/tests/check/Makefile.am	2008-06-02 21:16:51.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/tests/check/Makefile.am gst-plugins-bad/tests/check/Makefile.am
+--- ORG/gst-plugins-bad/tests/check/Makefile.am	2008-06-06 10:32:36.000000000 +0100
++++ gst-plugins-bad/tests/check/Makefile.am	2008-06-19 21:51:21.000000000 +0100
 @@ -57,6 +57,12 @@
  check_timidity=
  endif
@@ -130,7 +130,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	elements/deinterleave \
  	elements/interleave \
  	elements/rganalysis \
-@@ -94,3 +101,6 @@
+@@ -96,3 +103,6 @@
  elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
  elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
  
@@ -138,7 +138,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.c	2008-06-14 07:02:01.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkate.c	2008-06-19 21:51:21.000000000 +0100
 @@ -0,0 +1,127 @@
 +/*
 + * GStreamer
@@ -268,7 +268,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-06-08 06:18:36.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-06-22 08:12:19.000000000 +0100
 @@ -0,0 +1,493 @@
 +/*
 + * GStreamer
@@ -404,7 +404,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +{
 +  static GstElementDetails element_details = {
 +    "Kate bitstream decoder",
-+    "Codec/Decoder/Text",
++    "Codec/Decoder/Subtitle",
 +    "Decodes Kate text bitstreams",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
 +  };
@@ -588,7 +588,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GstBuffer *buffer;
 +    size_t len;
 +
-+    if (kd->remove_markup && ev->text_markup_type!=kate_markup_none) {
++    if (kd->remove_markup && ev->text_markup_type != kate_markup_none) {
 +      size_t len0 = ev->len+1;
 +      escaped = g_strdup (ev->text);
 +      kate_text_remove_markup (ev->text_encoding, escaped, &len0);
@@ -764,7 +764,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-06-02 22:36:42.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-06-19 21:51:21.000000000 +0100
 @@ -0,0 +1,92 @@
 +/*
 + * GStreamer
@@ -859,8 +859,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-06-15 20:34:32.000000000 +0100
-@@ -0,0 +1,1338 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-06-22 08:12:26.000000000 +0100
+@@ -0,0 +1,1500 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -938,6 +938,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#include <string.h>
 +
 +#include <gst/gst.h>
++#include <gst/gsttagsetter.h>
++#include <gst/tag/tag.h>
 +
 +#include "gstkate.h"
 +#include "gstkateenc.h"
@@ -992,9 +994,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
 +    );
 +
-+GST_BOILERPLATE (GstKateEnc, gst_kate_enc, GstElement,
-+    GST_TYPE_ELEMENT);
-+
 +static void gst_kate_enc_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec);
 +static void gst_kate_enc_get_property (GObject * object, guint prop_id,
@@ -1005,13 +1004,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GstStateChange transition);
 +static gboolean gst_kate_enc_sink_event(GstPad * pad, GstEvent * event);
 +static gboolean gst_kate_enc_source_query(GstPad * pad, GstQuery * query);
++static void gst_kate_enc_add_interfaces (GType kateenc_type);
++
++GST_BOILERPLATE_FULL (GstKateEnc, gst_kate_enc, GstElement,
++    GST_TYPE_ELEMENT, gst_kate_enc_add_interfaces);
 +
 +static void
 +gst_kate_enc_base_init (gpointer gclass)
 +{
 +  static GstElementDetails element_details = {
 +    "Kate bitstream encoder",
-+    "Codec/Encoder/Text",
++    "Codec/Encoder/Subtitle",
 +    "Encodes Kate text bitstreams",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
 +  };
@@ -1068,6 +1071,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME, G_PARAM_READWRITE));
 +
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_enc_change_state);
++}
++
++static void
++gst_kate_enc_add_interfaces (GType kateenc_type)
++{
++  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
++
++  g_type_add_interface_static (kateenc_type, GST_TYPE_TAG_SETTER,
++      &tag_setter_info);
 +}
 +
 +/* initialize the new element
@@ -1279,11 +1291,60 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return caps;
 +}
 +
++static void
++gst_kate_enc_metadata_set1 (const GstTagList * list, const gchar * tag,
++    gpointer kateenc)
++{
++  GstKateEnc *ke = GST_KATE_ENC (kateenc);
++  GList *vc_list, *l;
++
++  vc_list = gst_tag_to_vorbis_comments (list, tag);
++
++  for (l = vc_list; l != NULL; l = l->next) {
++    const gchar *vc_string = (const gchar *) l->data;
++    gchar *key = NULL, *val = NULL;
++
++    GST_LOG_OBJECT (ke, "Kate comment: %s", vc_string);
++    if (gst_tag_parse_extended_comment (vc_string, &key, NULL, &val, TRUE)) {
++      kate_comment_add_tag (&ke->kc, key, val);
++      g_free (key);
++      g_free (val);
++    }
++  }
++
++  g_list_foreach (vc_list, (GFunc) g_free, NULL);
++  g_list_free (vc_list);
++}
++
++static void
++gst_kate_enc_set_metadata (GstKateEnc *ke)
++{
++  GstTagList *merged_tags;
++  const GstTagList *user_tags;
++
++  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (ke));
++
++  GST_DEBUG_OBJECT (ke, "upstream tags = %" GST_PTR_FORMAT, ke->tags);
++  GST_DEBUG_OBJECT (ke, "user-set tags = %" GST_PTR_FORMAT, user_tags);
++
++  /* gst_tag_list_merge() will handle NULL for either or both lists fine */
++  merged_tags = gst_tag_list_merge (user_tags, ke->tags,
++      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (ke)));
++
++  if (merged_tags) {
++    GST_DEBUG_OBJECT (ke, "merged   tags = %" GST_PTR_FORMAT, merged_tags);
++    gst_tag_list_foreach (merged_tags, gst_kate_enc_metadata_set1, ke);
++    gst_tag_list_free (merged_tags);
++  }
++}
++
 +static GstFlowReturn gst_kate_send_headers (GstKateEnc *ke)
 +{
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +  GstCaps *caps;
 +  GList *headers = NULL, *item;
++
++  gst_kate_enc_set_metadata (ke);
 +
 +  /* encode headers and store them in a list */
 +  while (1) {
@@ -1403,6 +1464,51 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +{
 +  ke->spu_pix_data[0] = GST_KATE_UINT16_BE (ptr + 0);
 +  ke->spu_pix_data[1] = GST_KATE_UINT16_BE (ptr + 2);
++}
++
++/* heavily inspired from dvdspudec */
++static guint16
++gst_kate_decode_colcon (GstKateEnc *ke, const guint8 *ptr)
++{
++  guint16 nbytes = GST_KATE_UINT16_BE (ptr + 0);
++  guint16 nbytes_left = nbytes;
++
++  GST_LOG_OBJECT (ke, "Number of bytes in color/contrast change command is %u", nbytes);
++  if (nbytes < 2) {
++    GST_WARNING_OBJECT (ke, "Number of bytes in color/contrast change command is %u, should be at least 2", nbytes);
++    return 0;
++  }
++
++  ptr += 2;
++  nbytes_left -= 2;
++
++  /* we will just skip that data for now */
++  while (nbytes_left > 0) {
++    guint32 entry, nchanges, sz;
++    GST_LOG_OBJECT (ke, "Reading a color/contrast change entry, %u bytes left", nbytes_left);
++    if (nbytes_left < 4) {
++      GST_WARNING_OBJECT (ke, "Not enough bytes to read a full color/contrast entry header");
++      break;
++    }
++    entry = GST_READ_UINT32_BE (ptr);
++    GST_LOG_OBJECT (ke, "Color/contrast change entry header is %08x", entry);
++    nchanges = CLAMP((ptr[2] >> 4), 1, 8);
++    ptr += 4;
++    nbytes_left -= 4;
++    if (entry == 0x0fffffff) {
++      GST_LOG_OBJECT (ke, "Encountered color/contrast change termination code, breaking, %u bytes left", nbytes_left);
++      break;
++    }
++    GST_LOG_OBJECT (ke, "Color/contrast change entry has %u changes", nchanges);
++    sz = 6*nchanges;
++    if (sz > nbytes_left) {
++      GST_WARNING_OBJECT (ke, "Not enough bytes to read a full color/contrast entry");
++      break;
++    }
++    ptr += sz;
++    nbytes_left -= sz;
++  }
++  return nbytes-nbytes_left;
 +}
 +
 +static inline guint8
@@ -1552,48 +1658,49 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  while (sz) {
 +    guint8 cmd = *ptr++;
 +    switch (cmd) {
-+      case SPU_CMD_FSTA_DSP:
++      case SPU_CMD_FSTA_DSP: /* 0x00 */
 +        GST_DEBUG_OBJECT (ke, "[0] DISPLAY");
 +        break;
-+      case SPU_CMD_DSP:
++      case SPU_CMD_DSP: /* 0x01 */
 +        GST_DEBUG_OBJECT (ke, "[1] SHOW");
 +        ke->show_time = date;
 +        break;
-+      case SPU_CMD_STP_DSP:
++      case SPU_CMD_STP_DSP: /* 0x02 */
 +        GST_DEBUG_OBJECT (ke, "[2] HIDE");
 +        ke->hide_time = date;
 +        break;
-+      case SPU_CMD_SET_COLOR:
++      case SPU_CMD_SET_COLOR: /* 0x03 */
 +        GST_DEBUG_OBJECT (ke, "[3] SET COLOR");
 +        CHECK(2);
 +        gst_kate_decode_colormap (ke, ptr);
 +        ADVANCE(2);
 +        break;
-+      case SPU_CMD_SET_ALPHA:
++      case SPU_CMD_SET_ALPHA: /* 0x04 */
 +        GST_DEBUG_OBJECT (ke, "[4] SET ALPHA");
 +        CHECK(2);
 +        gst_kate_decode_alpha (ke, ptr);
 +        ADVANCE(2);
 +        break;
-+      case SPU_CMD_SET_DAREA:
++      case SPU_CMD_SET_DAREA: /* 0x05 */
 +        GST_DEBUG_OBJECT (ke, "[5] SET DISPLAY AREA");
 +        CHECK(6);
 +        gst_kate_decode_area (ke, ptr);
 +        ADVANCE(6);
 +        break;
-+      case SPU_CMD_DSPXA:
++      case SPU_CMD_DSPXA: /* 0x06 */
 +        GST_DEBUG_OBJECT (ke, "[6] SET PIXEL ADDRESSES");
 +        CHECK(4);
 +        gst_kate_decode_pixaddr (ke, ptr);
 +        GST_DEBUG_OBJECT (ke, "  -> first pixel address %u", ke->spu_pix_data[0]);
++        GST_DEBUG_OBJECT (ke, "  -> second pixel address %u", ke->spu_pix_data[1]);
 +        ADVANCE(4);
 +        break;
-+      case SPU_CMD_CHG_COLCON:
++      case SPU_CMD_CHG_COLCON: /* 0x07 */
 +        GST_DEBUG_OBJECT (ke, "[7] CHANGE COLOR/CONTRAST");
-+        IGNORE(2);
-+        IGNORE(GST_KATE_UINT16_BE(ptr));
++        CHECK(2);
++        ADVANCE(gst_kate_decode_colcon (ke, ptr));
 +        break;
-+      case SPU_CMD_END:
++      case SPU_CMD_END: /* 0xff */
 +        GST_DEBUG_OBJECT (ke, "[0xff] END");
 +        if (next_command_sequence != command_sequence_offset) {
 +          GST_DEBUG_OBJECT (ke, "Jumping to next sequence at offset %u", next_command_sequence);
@@ -1699,7 +1806,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  /* before decoding anything, initialize to sensible defaults */
 +  memset (ke->spu_colormap, 0, sizeof (ke->spu_colormap));
 +  memset (ke->spu_alpha, 0, sizeof (ke->spu_alpha));
-+  ke->spu_top = ke->spu_left = ke->spu_bottom = ke->spu_right = 0xffff;
++  ke->spu_top = ke->spu_left = 1;
++  ke->spu_bottom = ke->spu_right = 0;
 +  ke->spu_pix_data[0] = ke->spu_pix_data[1] = 0;
 +  ke->show_time = ke->hide_time = 0;
 +
@@ -1718,6 +1826,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  rflow = gst_kate_decode_command_sequence (ke, buf, next_command_sequence);
 +  if (rflow != GST_FLOW_OK) return rflow;
++
++  /* if no addresses or sizes were given, or if they define an empty SPU, nothing more to do */
++  if (ke->spu_right-ke->spu_left<0 || ke->spu_bottom-ke->spu_top<0 ||
++      ke->spu_pix_data[0]==0 || ke->spu_pix_data[1]==0) {
++    GST_WARNING_OBJECT (ke, "SPU area is empty, nothing to encode");
++    return GST_FLOW_ERROR;
++  }
 +
 +  /* create the palette */
 +  rflow = gst_kate_create_spu_palette (ke, kp);
@@ -1803,8 +1918,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstClockTime duration = GST_BUFFER_DURATION(buf);
 +  GstClockTime stop = GST_BUFFER_TIMESTAMP(buf)+duration;
 +  GstCaps *caps;
-+  int ret;
 +  const gchar *mime_type = NULL;
++  int ret;
++  gboolean packet_ready = FALSE;
 +
 +  GST_DEBUG_OBJECT (ke, "got packet, %u bytes", GST_BUFFER_SIZE(buf));
 +
@@ -1817,7 +1933,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  else {
 +    const GstStructure *structure = gst_caps_get_structure (caps, 0);
 +    mime_type = gst_structure_get_name (structure);
-+    GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type);
++    GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type ? mime_type : "<no type>");
 +
 +    /* first push headers if we haven't done that yet */
 +    rflow = gst_kate_flush_headers (ke);
@@ -1834,6 +1950,21 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        rflow = gst_kate_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
 +        if (rflow != GST_FLOW_OK) {
 +          GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
++#if 1
++          {
++            FILE *f=fopen("/tmp/bad-spu","w");
++            if (f) {
++              fwrite(GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
++              fclose(f);
++            }
++          }
++#endif
++        }
++        else if (kbitmap.width==0 || kbitmap.height==0) {
++          /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
++          GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
++          ret = 0;
++          packet_ready = FALSE;
 +        }
 +        else {
 +          /* timestamp offsets are hidden in the SPU packets */
@@ -1842,7 +1973,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          t0 = start/(double)GST_SECOND;
 +          t1 = stop/(double)GST_SECOND;
 +
-+          GST_WARNING_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE(buf), t0, t1);
++          GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE(buf), t0, t1);
 +          ret = kate_encode_set_region(&ke->k, &kregion);
 +          if (ret < 0) {
 +            GST_WARNING_OBJECT (ke, "Failed to set event region (%d)", ret);
@@ -1859,12 +1990,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +              }
 +              else {
 +                ret = kate_encode_text(&ke->k, t0, t1, "", 0, &kp);
++                if (ret >= 0)
++                  packet_ready = TRUE;
 +              }
 +            }
 +          }
 +          g_free (kpalette.colors);
 +          g_free (kbitmap.pixels);
-+       }
++        }
 +      }
 +      else {
 +        /* encode text */
@@ -1872,6 +2005,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        size_t text_len = GST_BUFFER_SIZE(buf);
 +        GST_LOG_OBJECT (ke, "Encoding text: %s (%u bytes) from %f to %f", GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf), t0, t1);
 +        ret = kate_encode_text(&ke->k, t0, t1, text, text_len, &kp);
++        if (ret >= 0)
++          packet_ready = TRUE;
 +      }
 +
 +      if (rflow == GST_FLOW_OK) {
@@ -1879,7 +2014,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          GST_WARNING_OBJECT (ke, "Failed to encode buffer (%d)", ret);
 +          rflow = GST_FLOW_ERROR;
 +        }
-+        else {
++        else if (packet_ready) {
 +          rflow = gst_kate_push_and_free_kate_packet (ke, &kp, start, duration, FALSE);
 +        }
 +      }
@@ -1906,6 +2041,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  switch (transition) {
 +    case GST_STATE_CHANGE_NULL_TO_READY:
++      ke->tags = gst_tag_list_new ();
 +      break;
 +    case GST_STATE_CHANGE_READY_TO_PAUSED:
 +      GST_DEBUG_OBJECT (ke, "READY -> PAUSED, initializing kate state");
@@ -1944,6 +2080,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      ke->latest_end_time = 0;
 +      break;
 +    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
++      break;
++    case GST_STATE_CHANGE_READY_TO_NULL:
++      gst_tag_list_free (ke->tags);
++      ke->tags = NULL;
 +      break;
 +    default:
 +      break;
@@ -2142,27 +2282,49 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          }
 +          else {
 +            const gchar *event_name = gst_structure_get_string (structure, "event");
-+            if (event_name && !strcmp (event_name, "dvd-spu-clut-change")) {
-+              gchar name[16];
-+              int idx;
-+              gboolean found;
-+              gint value;
-+              GST_INFO_OBJECT (ke, "New CLUT received");
-+              for (idx=0; idx<16; ++idx) {
-+                g_snprintf (name, sizeof (name), "clut%02d", idx);
-+                found = gst_structure_get_int (structure, name, &value);
-+                if (found) {
-+                  ke->spu_clut[idx] = value;
-+                }
-+                else {
-+                  GST_WARNING_OBJECT (ke, "DVD CLUT event did not contain %s field", name);
++            if (event_name) {
++              if (!strcmp (event_name, "dvd-spu-clut-change")) {
++                gchar name[16];
++                int idx;
++                gboolean found;
++                gint value;
++                GST_INFO_OBJECT (ke, "New CLUT received");
++                for (idx=0; idx<16; ++idx) {
++                  g_snprintf (name, sizeof (name), "clut%02d", idx);
++                  found = gst_structure_get_int (structure, name, &value);
++                  if (found) {
++                    ke->spu_clut[idx] = value;
++                  }
++                  else {
++                    GST_WARNING_OBJECT (ke, "DVD CLUT event did not contain %s field", name);
++                  }
 +                }
 +              }
++              else if (!strcmp (event_name, "dvd-lang-codes")) {
++                /* we can't know which stream corresponds to us */
++              }
++            }
++            else {
++              GST_WARNING_OBJECT (ke, "custom downstream event with no name");
 +            }
 +          }
 +        }
 +      }
 +      ret = gst_pad_push_event (ke->srcpad, event);
++      break;
++
++    case GST_EVENT_TAG:
++      GST_LOG_OBJECT (ke, "Got tag event");
++      if (ke->tags) {
++        GstTagList *list;
++
++        gst_event_parse_tag (event, &list);
++        gst_tag_list_insert (ke->tags, list, gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (ke)));
++      }
++      else {
++        g_assert_not_reached ();
++      }
++      ret = gst_pad_event_default (pad, event);
 +      break;
 +
 +    case GST_EVENT_EOS:
@@ -2200,8 +2362,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-06-12 12:53:46.000000000 +0100
-@@ -0,0 +1,115 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-06-19 21:51:21.000000000 +0100
+@@ -0,0 +1,117 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -2280,6 +2442,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  kate_comment kc;
 +  kate_state k;
 +
++  GstTagList *tags;
++
 +  GstClockTime last_timestamp;
 +  GstClockTime latest_end_time;
 +
@@ -2318,7 +2482,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_ENC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.h	2008-06-01 17:57:18.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkate.h	2008-06-19 21:51:21.000000000 +0100
 @@ -0,0 +1,55 @@
 +/*
 + * GStreamer
@@ -2376,8 +2540,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-06-01 18:04:50.000000000 +0100
-@@ -0,0 +1,595 @@
++++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-06-22 16:02:13.000000000 +0100
+@@ -0,0 +1,592 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
 + * Copyright (C) 2006 Andy Wingo <wingo@pobox.com>
@@ -2449,8 +2613,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#define GST_CAT_DEFAULT gst_kateparse_debug
 +
 +static const GstElementDetails gst_kate_parse_details = {
-+  "KateParse",
-+  "Codec/Parser/Text",
++  "Kate parser",
++  "Codec/Parser/Subtitle",
 +  "parse raw kate streams",
 +  "ogg.k.ogg.k <ogg.k.ogg.k at googlemail dot com>"
 +};
@@ -2710,10 +2874,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  buf = gst_buffer_make_metadata_writable (buf);
 +
-+  /* oggdemux stores the granule pos in the offset end, assuming all streams are
-+     end pos timed as vorbis and theora are, and I can't fix it because there is
-+     no way to determine whether a codec times by start or end time unless you
-+     know which codec - and kate is in bad so oggdemux can't know about it */
++  /* oggdemux stores the granule pos in the offset end */
 +  granpos = GST_BUFFER_OFFSET_END(buf);
 +  GST_LOG_OBJECT(parse, "granpos %16llx", granpos);
 +  g_queue_push_tail (parse->buffer_queue, buf);
@@ -2974,7 +3135,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return ret;
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.h	2008-06-01 17:57:18.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkateparse.h	2008-06-19 21:51:21.000000000 +0100
 @@ -0,0 +1,79 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -3056,7 +3217,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/Makefile.am	2008-06-02 23:02:56.000000000 +0100
++++ gst-plugins-bad/ext/kate/Makefile.am	2008-06-19 21:51:21.000000000 +0100
 @@ -0,0 +1,14 @@
 +# plugindir is set in configure
 +
@@ -3073,8 +3234,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +# headers we need but don't want installed
 +noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-06-15 20:40:18.000000000 +0100
-@@ -0,0 +1,375 @@
++++ gst-plugins-bad/tests/check/elements/kate.c	2008-06-21 22:55:32.000000000 +0100
+@@ -0,0 +1,490 @@
 +/* GStreamer
 + *
 + * unit test for kate
@@ -3118,6 +3279,19 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    0x54, 0x69, 0x67, 0x65, 0x72,                                                                   /* Tiger            */
 +};
 +
++static const unsigned char kate_spu[] = {
++  0x00, 0x1b,                                   /* size */
++  0x00, 0x06,                                   /* commands at offset 6 */
++  0x45,                                         /* first line data - 2 pixels of colors 0 and 1 */
++  0x76,                                         /* first line data - 2 pixels of colors 3 and 2 */
++  0x00, 0x00,                                   /* timestamp */
++  0x00, 0x06,                                   /* link to next command sequence - points back to the current one to mark no more */
++  0x06, 0x00, 0x04, 0x00, 0x05,                 /* pointers to data */
++  0x05, 0x00, 0x30, 0x04, 0x00, 0x10, 0x02,     /* area: 3x1 -> 4x2 */
++  0x04, 0x0f, 0xff,                             /* alpha: color 0 transparent, all others opaque */
++  0x01,                                         /* show */
++  0xff                                          /* end */
++};
 +
 +/* A lot of these taken from the vorbisdec test */
 +
@@ -3312,11 +3486,28 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +GST_END_TEST;
 +
++GST_START_TEST (test_kate_encode_nothing)
++{
++  GstElement *kateenc;
++
++  kateenc = setup_kateenc ();
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to playing");
++
++  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
++
++  /* cleanup */
++  cleanup_kateenc (kateenc);
++}
++GST_END_TEST;
++
 +GST_START_TEST (test_kate_encode_empty)
 +{
 +  GstElement *kateenc;
 +  GstBuffer *inbuffer;
 +  GstBus *bus;
++  GstCaps *caps;
 +
 +  kateenc = setup_kateenc ();
 +  fail_unless (gst_element_set_state (kateenc,
@@ -3329,11 +3520,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GST_BUFFER_DURATION (inbuffer) = 5*GST_SECOND;
 +  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 +  gst_buffer_ref (inbuffer);
-+  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
++
++  caps = gst_caps_from_string ("text/plain");
++  fail_unless (caps != NULL);
++  gst_buffer_set_caps (inbuffer, caps);
++  gst_caps_unref (caps);
 +
 +  gst_element_set_bus (kateenc, bus);
 +  /* pushing gives away my reference ... */
 +  fail_unless (gst_pad_push (myencsrcpad, inbuffer) == GST_FLOW_ERROR);
++
++  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
 +  gst_element_set_bus (kateenc, NULL);
 +
@@ -3390,13 +3587,87 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      /* different headers packets */
 +      packet_type = (0x80 | i);
 +    }
-+    else if (i == num_buffers-2) {
++    else if (i == num_buffers-1) {
++      /* eos data packet */
++      packet_type = 0x7f;
++    }
++    else {
 +      /* text data packet */
 +      packet_type = 0;
 +    }
-+    else {
++
++    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
++    fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
++
++    buffers = g_list_remove (buffers, outbuffer);
++
++    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
++    gst_buffer_unref (outbuffer);
++    outbuffer = NULL;
++  }
++
++  /* cleanup */
++  gst_bus_set_flushing (bus, TRUE);
++  gst_element_set_bus (kateenc, NULL);
++  gst_object_unref (GST_OBJECT (bus));
++  cleanup_kateenc (kateenc);
++  g_list_free (buffers);
++}
++GST_END_TEST;
++
++GST_START_TEST (test_kate_encode_spu)
++{
++  GstElement *kateenc;
++  GstBuffer *inbuffer, *outbuffer;
++  GstBus *bus;
++  int i, num_buffers;
++  unsigned char packet_type;
++  GstCaps *caps;
++
++  kateenc = setup_kateenc ();
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to playing");
++  bus = gst_bus_new ();
++
++  inbuffer = gst_buffer_new_and_alloc (sizeof (kate_spu));
++  memcpy (GST_BUFFER_DATA (inbuffer), kate_spu, sizeof (kate_spu));
++  GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) = 1*GST_SECOND;
++  GST_BUFFER_DURATION (inbuffer) = 5*GST_SECOND;
++  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
++  gst_buffer_ref (inbuffer);
++
++  caps = gst_caps_from_string ("video/x-dvd-subpicture");
++  fail_unless (caps != NULL);
++  gst_buffer_set_caps (inbuffer, caps);
++  gst_caps_unref (caps);
++
++  gst_element_set_bus (kateenc, bus);
++  /* pushing gives away my reference ... */
++  fail_unless_equals_int (gst_pad_push (myencsrcpad, inbuffer), GST_FLOW_OK);
++  /* ... and nothing ends up on the global buffer list */
++  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
++  gst_buffer_unref (inbuffer);
++  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
++
++  /* check buffers are the type we expect */
++  num_buffers = g_list_length (buffers);
++  fail_unless (num_buffers >= 9+1+1); /* at least 9 headers, 1 data, 1 eos */
++  for (i = 0; i < num_buffers; ++i) {
++    outbuffer = GST_BUFFER (buffers->data);
++    fail_if (outbuffer == NULL);
++
++    if (i < num_buffers-2) {
++      /* different headers packets */
++      packet_type = (0x80 | i);
++    }
++    else if (i == num_buffers-1) {
 +      /* eos data packet */
 +      packet_type = 0x7f;
++    }
++    else {
++      /* text data packet */
++      packet_type = 0;
 +    }
 +
 +    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
@@ -3425,11 +3696,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  TCase *tc_chain = tcase_create ("general");
 +
 +  suite_add_tcase (s, tc_chain);
++
++#define X if (0)
 +  tcase_add_test (tc_chain, test_kate_typefind);
 +  tcase_add_test (tc_chain, test_kate_empty_identification_header);
 +  tcase_add_test (tc_chain, test_kate_identification_header);
++  tcase_add_test (tc_chain, test_kate_encode_nothing);
 +  tcase_add_test (tc_chain, test_kate_encode_empty);
 +  tcase_add_test (tc_chain, test_kate_encode_simple);
++  tcase_add_test (tc_chain, test_kate_encode_spu);
++#undef X
 +
 +  return s;
 +}
