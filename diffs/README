@@ -33,12 +33,6 @@ encoding, language, and category.
 
 
 
- * ffmpeg2theora (ffmpeg2theora-svn-kate.diff)
-
-This allows creating Kate streams with bitmaps from DVD style SPU subtitles.
-
-
-
  * libshout (libshout-svn-with-kate.diff)
 
 This adds support for Kate bitstreams.
@@ -54,14 +48,14 @@ This allows Kate streams to be muxed in Matroska streams.
  * GStreamer (gst-plugins-bad-with-kate.diff, gst-plugins-good-with-kate.diff)
 
 This adds text only Kate decoding and encoding support (eg, no styles, regions,
-or motions support).
+or motions support). Encoding supports DVD SPU subtitles.
 
 
 
  * Annodex Mozilla browser plugin (browser_plugin-with-kate.diff)
 
-This adds support for Kate streams as subtitles, and a simple Javascript API
-to manipulate those (Linux only implementation)
+This adds support for text Kate streams as subtitles, and a simple Javascript
+API to manipulate those (Linux only implementation).
 
 
 
