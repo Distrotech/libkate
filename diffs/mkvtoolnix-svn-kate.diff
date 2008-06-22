@@ -199,8 +199,8 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
  SSA/ASS subtitles from SSA/ASS files
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/common/kate_common.cpp mkvtoolnix-svn/src/common/kate_common.cpp
 --- ../svn/mkvtoolnix/src/common/kate_common.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ mkvtoolnix-svn/src/common/kate_common.cpp	2008-03-17 20:13:01.000000000 +0000
-@@ -0,0 +1,87 @@
++++ mkvtoolnix-svn/src/common/kate_common.cpp	2008-06-22 18:40:11.000000000 +0100
+@@ -0,0 +1,90 @@
 +/*
 +   mkvmerge -- utility for splicing together matroska files
 +   from component media subtypes
@@ -250,11 +250,14 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +                            header.headertype,
 +                            KATE_HEADERTYPE_IDENTIFICATION));
 +
-+  for (i = 0; 8 > i; ++i)
++  for (i = 0; 7 > i; ++i)
 +    header.kate_string[i] = bc.get_bits(8);
-+  if (memcmp(header.kate_string, "kate\0\0\0\0", 8))
-+    throw error_c(mxsprintf("Wrong identifaction string: '%8s' != 'kate\\0\\0\\0\\0'",
++  if (memcmp(header.kate_string, "kate\0\0\0", 7))
++    throw error_c(mxsprintf("Wrong identification string: '%7s' != 'kate\\0\\0\\0'",
 +                            header.kate_string)); /* won't print NULs well, but hey */
++
++  if (0 != bc.get_bits(8))
++      throw error_c("Reserved bits are not 0");
 +
 +  header.vmaj = bc.get_bits(8);
 +  header.vmin = bc.get_bits(8);
@@ -597,7 +600,7 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
  
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/input/r_ogm.cpp mkvtoolnix-svn/src/input/r_ogm.cpp
 --- ../svn/mkvtoolnix/src/input/r_ogm.cpp	2008-03-17 18:34:57.000000000 +0000
-+++ mkvtoolnix-svn/src/input/r_ogm.cpp	2008-03-17 22:08:40.000000000 +0000
++++ mkvtoolnix-svn/src/input/r_ogm.cpp	2008-06-22 18:38:41.000000000 +0100
 @@ -48,6 +48,7 @@
  #include "p_textsubs.h"
  #include "p_video.h"
@@ -638,7 +641,7 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
    else if ((op.bytes >= 7) && !strncmp((char *)&op.packet[1], "theora", 6))
      dmx = new ogm_v_theora_demuxer_c(this);
  
-+  else if ((op.bytes >= 9) && !strncmp((char *)&op.packet[1], "kate\0\0\0\0", 8))
++  else if ((op.bytes >= 8) && !strncmp((char *)&op.packet[1], "kate\0\0\0", 7))
 +    dmx = new ogm_s_kate_demuxer_c(this);
 +
    // FLAC
