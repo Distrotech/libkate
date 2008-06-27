@@ -180,6 +180,9 @@ kate {
     define curve "l2r scroller" { linear 2 points { -1.0 0.0    1.0 0.0 } } # left to right scroller
 
     define motion "r2l_scroll_motion" {  semantics external text alignment  curve "r2l scroller"  }
+
+    define style "karaoke1" { text color 100 200 100 200 }
+    define style "karaoke2" { text color 100 100 100 200 }
   }
 
   /* scrolling text with varying speed */
@@ -361,6 +364,26 @@ kate {
   event { $centerbox_text_prologue { vtop hcenter } text "T/C" }
   event { $centerbox_text_prologue { vbottom hcenter } text "B/C" }
   event { $centerbox_text_prologue { vcenter hcenter } text "C/C" }
+
+  event {
+    // 10 seconds
+    0:15.0 --> 0:20.00
+    region { percent position 20 10 size 60 20 }
+    simple_timed_glyph_style_morph {
+      from style "karaoke1" to style "karaoke2"
+      //pause for 0:1.0
+      "Il "      at 1.3
+      "n'a "     at 1.5
+      "ja"       at 1.9
+      "mais, "   at 2.3
+      "ja"       at 2.5
+      "mais\n"   at 2.7
+      "co"       at 2.9
+      "nnu "     at 3.1
+      "de "      at 3.5
+      "loi"      at 3.9
+    }
+  }
 
   event {
     00:20.00 --> 00:22.50
