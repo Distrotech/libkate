@@ -1338,3 +1338,18 @@ int kate_encode_set_markup_type(kate_state *k,int text_markup_type)
   return 0;
 }
 
+/**
+  \ingroup encoding
+  Retrieves the current granulepos
+  \param k the kate_state to encode to
+  \returns >=0 the current granulepos (the one of the last encoded packet)
+  \returns KATE_E_* error
+  */
+kate_int64_t kate_encode_get_granule(const kate_state *k)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  return k->kes->granulepos;
+}
+

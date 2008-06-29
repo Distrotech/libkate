@@ -584,6 +584,7 @@ extern int kate_encode_set_palette(kate_state *k,const kate_palette *kp);
 extern int kate_encode_set_bitmap_index(kate_state *k,size_t bitmap);
 extern int kate_encode_set_bitmap(kate_state *k,const kate_bitmap *kb);
 extern int kate_encode_set_markup_type(kate_state *k,int markup_type);
+extern kate_int64_t kate_encode_get_granule(const kate_state *k);
 
 /** \defgroup decoding Decoding */
 extern int kate_decode_is_idheader(const kate_packet *kp);
