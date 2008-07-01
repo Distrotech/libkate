@@ -1,6 +1,6 @@
 diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac gst-plugins-bad/configure.ac
 --- ORG/gst-plugins-bad/configure.ac	2008-06-17 18:16:13.000000000 +0100
-+++ gst-plugins-bad/configure.ac	2008-06-19 21:51:21.000000000 +0100
++++ gst-plugins-bad/configure.ac	2008-06-29 18:59:31.000000000 +0100
 @@ -642,6 +642,17 @@
    AC_SUBST(JACK_LIBS)
  ])
@@ -8,7 +8,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +dnl *** kate ***
 +translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 +AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
-+  PKG_CHECK_MODULES(KATE, kate >= 0.1.3, HAVE_KATE="yes", [
++  PKG_CHECK_MODULES(KATE, kate >= 0.1.5, HAVE_KATE="yes", [
 +    HAVE_KATE="no"
 +    AC_MSG_RESULT(no)
 +  ])
@@ -138,8 +138,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.c	2008-06-19 21:51:21.000000000 +0100
-@@ -0,0 +1,127 @@
++++ gst-plugins-bad/ext/kate/gstkate.c	2008-06-24 20:32:52.000000000 +0100
+@@ -0,0 +1,135 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -197,10 +197,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#include "gstkatedec.h"
 +#include "gstkateenc.h"
 +#include "gstkateparse.h"
++#include "gstkatetag.h"
 +
 +GST_DEBUG_CATEGORY (gst_katedec_debug);
 +GST_DEBUG_CATEGORY (gst_kateenc_debug);
 +GST_DEBUG_CATEGORY (gst_kateparse_debug);
++GST_DEBUG_CATEGORY (gst_katetag_debug);
 +
 +
 +static GstStaticCaps kate_caps = GST_STATIC_CAPS (GST_KATE_MIME_TYPE);
@@ -244,6 +246,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      0, "Kate encoder");
 +  GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse",
 +      0, "Kate parser");
++  GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "katetag",
++      0, "Kate tagger");
 +
 +  if (!gst_element_register (plugin, "katedec",
 +      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
@@ -257,6 +261,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      GST_RANK_NONE, GST_TYPE_KATE_PARSE))
 +    return FALSE;
 +
++  if (!gst_element_register (plugin, "katetag",
++      GST_RANK_NONE, GST_TYPE_KATE_TAG))
++    return FALSE;
++
 +  return TRUE;
 +}
 +
@@ -268,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-06-22 08:12:19.000000000 +0100
-@@ -0,0 +1,493 @@
++++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-06-29 23:01:48.000000000 +0100
+@@ -0,0 +1,522 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -371,7 +379,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +enum
 +{
 +  ARG_0,
-+  ARG_REMOVE_MARKUP
++  ARG_REMOVE_MARKUP,
++  ARG_LANGUAGE,
++  ARG_CATEGORY,
 +};
 +
 +static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -427,12 +437,20 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gobject_class = (GObjectClass *) klass;
 +  gstelement_class = (GstElementClass *) klass;
 +
-+  gobject_class->set_property = gst_kate_dec_set_property;
-+  gobject_class->get_property = gst_kate_dec_get_property;
++  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_dec_set_property);
++  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_dec_get_property);
 +
 +  g_object_class_install_property (gobject_class, ARG_REMOVE_MARKUP,
 +      g_param_spec_boolean ("remove-markup", "Remove markup", "Remove markup from decoded text ?",
 +          FALSE, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
++      g_param_spec_string ("language", "Language", "The language of the stream",
++          "", G_PARAM_READABLE));
++
++  g_object_class_install_property (gobject_class, ARG_CATEGORY,
++      g_param_spec_string ("category", "Category", "The category of the stream",
++          "", G_PARAM_READABLE));
 +
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
 +}
@@ -459,6 +477,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 +
 +  dec->remove_markup = FALSE;
++  dec->language = NULL;
++  dec->category = NULL;
 +  dec->initialized = FALSE;
 +
 +  dec->tags = NULL;
@@ -468,11 +488,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec)
 +{
-+  GstKateDec *filter = GST_KATE_DEC (object);
++  GstKateDec *kd = GST_KATE_DEC (object);
 +
 +  switch (prop_id) {
 +    case ARG_REMOVE_MARKUP:
-+      filter->remove_markup = g_value_get_boolean (value);
++      kd->remove_markup = g_value_get_boolean (value);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -484,11 +504,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_get_property (GObject * object, guint prop_id,
 +    GValue * value, GParamSpec * pspec)
 +{
-+  GstKateDec *filter = GST_KATE_DEC (object);
++  GstKateDec *kd = GST_KATE_DEC (object);
 +
 +  switch (prop_id) {
 +    case ARG_REMOVE_MARKUP:
-+      g_value_set_boolean (value, filter->remove_markup);
++      g_value_set_boolean (value, kd->remove_markup);
++      break;
++    case ARG_LANGUAGE:
++      g_value_set_string (value, kd->language);
++      break;
++    case ARG_CATEGORY:
++      g_value_set_string (value, kd->category);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -523,6 +549,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +  else if (ret>0) {
 +    GST_DEBUG_OBJECT (kd, "kate_high_decode_packetin has received EOS packet");
++    // gst_pad_push_event (kd->srcpad, gst_event_new_eos ());
 +    gst_object_unref (kd);
 +    gst_buffer_unref (buf);
 +    return GST_FLOW_OK;
@@ -545,6 +572,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          gst_tag_list_free (tags);
 +        }
 +      }
++
++      /* update properties */
++      if (kd->language) g_free (kd->language);
++      kd->language = g_strdup (kd->k.ki->language);
++      if (kd->category) g_free (kd->category);
++      kd->category = g_strdup (kd->k.ki->category);
++
 +      break;
 +    case 0x81: /* Vorbis comments header */
 +      GST_INFO_OBJECT (kd, "Parsed comments header");
@@ -593,10 +627,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      escaped = g_strdup (ev->text);
 +      kate_text_remove_markup (ev->text_encoding, escaped, &len0);
 +    }
-+    else {
++    else if (ev->text_markup_type == kate_markup_none) {
 +      /* no pango markup yet, escape text */
 +      /* TODO: actually do the pango thing */
 +      escaped = g_markup_printf_escaped ("%s", ev->text);
++    }
++    else {
++      escaped = g_strdup (ev->text);
 +    }
 +
 +    len = strlen (escaped);
@@ -764,8 +801,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-06-19 21:51:21.000000000 +0100
-@@ -0,0 +1,92 @@
++++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-06-25 21:09:15.000000000 +0100
+@@ -0,0 +1,96 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -838,9 +875,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +{
 +  GstElement element;
 +
-+  GstPad *sinkpad, *srcpad;
++  GstPad *sinkpad;
++  GstPad *srcpad;
 +
 +  kate_state k;
++
++  gchar *language;
++  gchar *category;
 +
 +  GstTagList *tags;
 +
@@ -859,8 +900,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-06-22 08:12:26.000000000 +0100
-@@ -0,0 +1,1500 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-06-30 07:38:05.000000000 +0100
+@@ -0,0 +1,1529 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -1003,6 +1044,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static GstStateChangeReturn gst_kate_enc_change_state (GstElement * element,
 +    GstStateChange transition);
 +static gboolean gst_kate_enc_sink_event(GstPad * pad, GstEvent * event);
++static const GstQueryType * gst_kate_enc_source_query_type (GstPad * pad);
 +static gboolean gst_kate_enc_source_query(GstPad * pad, GstQuery * query);
 +static void gst_kate_enc_add_interfaces (GType kateenc_type);
 +
@@ -1012,7 +1054,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static void
 +gst_kate_enc_base_init (gpointer gclass)
 +{
-+  static GstElementDetails element_details = {
++  static const GstElementDetails element_details = {
 +    "Kate bitstream encoder",
 +    "Codec/Encoder/Subtitle",
 +    "Encodes Kate text bitstreams",
@@ -1039,15 +1081,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  parent_class = g_type_class_peek_parent (klass);
 +
-+  gobject_class->set_property = gst_kate_enc_set_property;
-+  gobject_class->get_property = gst_kate_enc_get_property;
++  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_enc_set_property);
++  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_enc_get_property);
 +
 +  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
-+      g_param_spec_string ("language", "Language", "Set the language of the encoded text",
++      g_param_spec_string ("language", "Language", "Set the language of the stream",
 +          "", G_PARAM_READWRITE));
 +
 +  g_object_class_install_property (gobject_class, ARG_CATEGORY,
-+      g_param_spec_string ("category", "Category", "Set the category of the encoded text",
++      g_param_spec_string ("category", "Category", "Set the category of the stream",
 +          "", G_PARAM_READWRITE));
 +
 +  g_object_class_install_property (gobject_class, ARG_GRANULE_RATE_NUM,
@@ -1067,7 +1109,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  g_object_class_install_property (gobject_class, ARG_KEEPALIVE_MIN_TIME,
 +      g_param_spec_float ("keepalive-min-time", "Keepalive mimimum time",
-+          "Set minimum time to emit keepalive packets",
++          "Set minimum time to emit keepalive packets (0 disables keepalive packets)",
 +          0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME, G_PARAM_READWRITE));
 +
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_enc_change_state);
@@ -1096,9 +1138,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke->sinkpad = gst_pad_new_from_static_template ( &sink_factory, "sink");
 +  gst_pad_set_chain_function (ke->sinkpad, GST_DEBUG_FUNCPTR(gst_kate_enc_chain));
 +  gst_pad_set_event_function (ke->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_enc_sink_event));
++// temp
++gst_pad_set_query_type_function (ke->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_enc_source_query_type));
++gst_pad_set_query_function (ke->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_enc_source_query));
 +  gst_element_add_pad (GST_ELEMENT (ke), ke->sinkpad);
 +
 +  ke->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
++  gst_pad_set_query_type_function (ke->srcpad, GST_DEBUG_FUNCPTR (gst_kate_enc_source_query_type));
 +  gst_pad_set_query_function (ke->srcpad, GST_DEBUG_FUNCPTR (gst_kate_enc_source_query));
 +  gst_element_add_pad (GST_ELEMENT (ke), ke->srcpad);
 +
@@ -1191,7 +1237,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* GstElement vmethod implementations */
 +
-+static GstBuffer *gst_kate_create_buffer(GstKateEnc *ke, kate_packet *kp, GstClockTime timestamp, GstClockTime duration, gboolean header)
++static GstBuffer *gst_kate_create_buffer(GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
 +{
 +  GstBuffer *buffer;
 +
@@ -1207,9 +1253,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +     OFFSET_END is the granulepos
 +     OFFSET is its time representation
 +     */
-+  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-+    GST_BUFFER_OFFSET_END (buffer) = kate_duration_granule (&ke->ki, timestamp/(double)GST_SECOND);
-+  }
++  GST_BUFFER_OFFSET_END (buffer) = granpos;
 +  GST_BUFFER_OFFSET (buffer) = timestamp;
 +  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
 +  GST_BUFFER_DURATION (buffer) = duration;
@@ -1242,12 +1286,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return rflow;
 +}
 +
-+static GstFlowReturn gst_kate_push_and_free_kate_packet (GstKateEnc *ke, kate_packet *kp, GstClockTime timestamp, GstClockTime duration, gboolean header)
++static GstFlowReturn gst_kate_push_and_free_kate_packet (GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
 +{
 +  GstBuffer *buffer;
 + 
 +  GST_LOG_OBJECT (ke, "Creating buffer, %u bytes", kp->nbytes);
-+  buffer = gst_kate_create_buffer (ke, kp, timestamp, duration, header);
++  buffer = gst_kate_create_buffer (ke, kp, granpos, timestamp, duration, header);
 +  if (!buffer) {
 +    GST_WARNING_OBJECT (ke, "Failed to create buffer, %u bytes", kp->nbytes);
 +    kate_packet_clear (kp);
@@ -1351,7 +1395,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    kate_packet kp;
 +    int ret = kate_encode_headers (&ke->k, &ke->kc, &kp);
 +    if (ret==0) {
-+      GstBuffer *buffer = gst_kate_create_buffer (ke, &kp, 0ll, 0ll, TRUE);
++      GstBuffer *buffer = gst_kate_create_buffer (ke, &kp, 0ll, 0ll, 0ll, TRUE);
 +      if (!buffer) {
 +        rflow = GST_FLOW_ERROR;
 +        break;
@@ -1950,7 +1994,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        rflow = gst_kate_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
 +        if (rflow != GST_FLOW_OK) {
 +          GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
-+#if 1
++#if 0
 +          {
 +            FILE *f=fopen("/tmp/bad-spu","w");
 +            if (f) {
@@ -2001,12 +2045,23 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      }
 +      else {
 +        /* encode text */
-+        const char *text = (const char*) GST_BUFFER_DATA(buf);
-+        size_t text_len = GST_BUFFER_SIZE(buf);
-+        GST_LOG_OBJECT (ke, "Encoding text: %s (%u bytes) from %f to %f", GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf), t0, t1);
-+        ret = kate_encode_text(&ke->k, t0, t1, text, text_len, &kp);
-+        if (ret >= 0)
-+          packet_ready = TRUE;
++        if (!strcmp (mime_type, "text/x-pango-markup")) {
++            ret = kate_encode_set_markup_type (&ke->k, kate_markup_simple);
++        }
++        else {
++            ret = kate_encode_set_markup_type (&ke->k, kate_markup_none);
++        }
++        if (ret < 0) {
++          GST_WARNING_OBJECT (ke, "Failed to set markup type (%d)", ret);
++        }
++        else {
++          const char *text = (const char*) GST_BUFFER_DATA(buf);
++          size_t text_len = GST_BUFFER_SIZE(buf);
++          GST_LOG_OBJECT (ke, "Encoding text: %s (%u bytes) from %f to %f", GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf), t0, t1);
++          ret = kate_encode_text(&ke->k, t0, t1, text, text_len, &kp);
++          if (ret >= 0)
++            packet_ready = TRUE;
++        }
 +      }
 +
 +      if (rflow == GST_FLOW_OK) {
@@ -2015,7 +2070,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          rflow = GST_FLOW_ERROR;
 +        }
 +        else if (packet_ready) {
-+          rflow = gst_kate_push_and_free_kate_packet (ke, &kp, start, duration, FALSE);
++          kate_int64_t granpos = kate_encode_get_granule (&ke->k);
++          rflow = gst_kate_push_and_free_kate_packet (ke, &kp, granpos, start, duration, FALSE);
 +        }
 +      }
 +    }
@@ -2192,9 +2248,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return res;
 +}
 +
-+#if 0
++#if 1
 +static const GstQueryType *
-+gst_kate_enc_query_type (GstPad * pad)
++gst_kate_enc_source_query_type (GstPad * pad)
 +{
 +  static const GstQueryType types[] = {
 +    GST_QUERY_CONVERT,
@@ -2207,23 +2263,35 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +static gboolean gst_kate_enc_source_query(GstPad * pad, GstQuery * query)
 +{
-+  switch (GST_QUERY_TYPE(query)) {
++  GstKateEnc *ke;
++  gboolean res = FALSE;
++
++  ke = GST_KATE_ENC (gst_pad_get_parent (pad));
++
++  GST_DEBUG ("source query %d", GST_QUERY_TYPE (query));
++
++  switch (GST_QUERY_TYPE (query)) {
 +    case GST_QUERY_CONVERT:
 +      {
 +        GstFormat src_fmt, dest_fmt;
 +        gint64 src_val, dest_val;
-+  GST_INFO ("kate convert query");
 +
-+        gst_query_parse_convert(query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-+        if (!gst_kate_enc_convert(pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
-+          return gst_pad_query_default(pad, query);
++        gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
++        if (!gst_kate_enc_convert (pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
++          return gst_pad_query_default (pad, query);
 +        }
-+        gst_query_set_convert(query, src_fmt, src_val, dest_fmt, dest_val);
-+        return TRUE;
++        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
++        res = TRUE;
 +      }
++      break;
 +    default:
-+      return gst_pad_query_default(pad, query);
++      res = gst_pad_query_default (pad, query);
++      break;
 +  }
++
++  gst_object_unref(ke);
++
++  return res;
 +}
 +
 +static gboolean gst_kate_enc_sink_event(GstPad * pad, GstEvent * event)
@@ -2250,7 +2318,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          } else {
 +            float t = timestamp/(double)GST_SECOND;
 +            GST_DEBUG_OBJECT (ke, "ts %f, last %f (min %f)", t, ke->last_timestamp/(double)GST_SECOND, ke->keepalive_min_time);
-+            if (t-ke->last_timestamp/(double)GST_SECOND >= ke->keepalive_min_time) {
++            if (ke->keepalive_min_time > 0.0f && t-ke->last_timestamp/(double)GST_SECOND >= ke->keepalive_min_time) {
 +              kate_packet kp;
 +              GST_DEBUG_OBJECT (ke, "keepalive at %f", t);
 +              int ret = kate_encode_keepalive (&ke->k, t, &kp);
@@ -2258,8 +2326,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +                GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %d", ret);
 +              }
 +              else {
++                kate_int64_t granpos = kate_encode_get_granule (&ke->k);
 +                GST_LOG_OBJECT (ke, "Keepalive packet encoded");
-+                if (gst_kate_push_and_free_kate_packet (ke, &kp, timestamp, 0, FALSE)) {
++                if (gst_kate_push_and_free_kate_packet (ke, &kp, granpos, timestamp, 0, FALSE)) {
 +                  GST_WARNING_OBJECT (ke, "Failed to push keepalive packet");
 +                }
 +              }
@@ -2341,8 +2410,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +            GST_WARNING_OBJECT (ke, "Failed to encode EOS packet: %d", ret);
 +          }
 +          else {
++            kate_int64_t granpos = kate_encode_get_granule (&ke->k);
 +            GST_LOG_OBJECT (ke, "EOS packet encoded");
-+            if (gst_kate_push_and_free_kate_packet (ke, &kp, ke->latest_end_time, 0, FALSE)) {
++            if (gst_kate_push_and_free_kate_packet (ke, &kp, granpos, ke->latest_end_time, 0, FALSE)) {
 +              GST_WARNING_OBJECT (ke, "Failed to push EOS packet");
 +            }
 +          }
@@ -2362,7 +2432,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-06-19 21:51:21.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-06-29 14:57:12.000000000 +0100
 @@ -0,0 +1,117 @@
 +/*
 + * GStreamer
@@ -2540,8 +2610,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-06-22 16:02:13.000000000 +0100
-@@ -0,0 +1,592 @@
++++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-06-29 19:16:44.000000000 +0100
+@@ -0,0 +1,594 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
 + * Copyright (C) 2006 Andy Wingo <wingo@pobox.com>
@@ -2800,14 +2870,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_parse_push_buffer (GstKateParse * parse, GstBuffer * buf,
 +    gint64 granulepos)
 +{
-+  /* oggmux uses the offset end as a granpos, and offset/timestamp as
-+     the actual time - humor it */
 +  GST_LOG_OBJECT(parse, "granulepos %16llx", granulepos);
 +  GST_WARNING_OBJECT(parse, "gst_kate_parse_push_buffer");
 +  GST_BUFFER_OFFSET (buf) = kate_granule_time(&parse->ki, granulepos)*GST_SECOND;
 +  GST_BUFFER_OFFSET_END (buf) = granulepos;
 +  GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_OFFSET (buf);
-+  //GST_BUFFER_FLAG_SET(buf, GST_BUFFER_FLAG_DISCONT);
++
++  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
++  GST_BUFFER_DURATION (buf) = G_MAXINT64;
 +
 +  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
 +
@@ -2891,6 +2961,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstFlowReturn ret;
 +
 +  parse->packetno++;
++
++  GST_LOG_OBJECT(parse, "Got packet %02x, %u bytes", GST_BUFFER_SIZE (buf) ? GST_BUFFER_DATA(buf)[0] : -1, GST_BUFFER_SIZE (buf));
 +
 +  if (GST_BUFFER_SIZE(buf)>0 && GST_BUFFER_DATA(buf)[0] & 0x80) {
 +    GST_DEBUG_OBJECT(parse, "Found header %02x", GST_BUFFER_DATA(buf)[0]);
@@ -3217,14 +3289,348 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/Makefile.am	2008-06-19 21:51:21.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-06-24 21:11:25.000000000 +0100
+@@ -0,0 +1,262 @@
++/*
++ * GStreamer
++ * Copyright (C) 2006 James Livingston <doclivingston@gmail.com>
++ * Copyright (C) 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/**
++ * SECTION:element-katetag
++ * @see_also: #oggdemux, #oggmux, #kateparse, #GstTagSetter
++ * @short_description: retags kate streams 
++ *
++ * <refsect2>
++ * <para>
++ * The katetag element can change the tag contained within a raw
++ * kate stream. Specifically, it modifies the comments header packet
++ * of the kate stream, as well as the language and category of the
++ * kate stream.
++ * </para>
++ * <para>
++ * The element will also process the stream as the #kateparse element does
++ * so it can be used when remuxing an Ogg Kate stream, without additional
++ * elements.
++ * </para>
++ * <para>
++ * Applications can set the tags to write using the #GstTagSetter interface.
++ * Tags contained within the kate bitstream will be picked up
++ * automatically (and merged according to the merge mode set via the tag
++ * setter interface).
++ * </para>
++ * <title>Example pipelines</title>
++ * <para>
++ * This element is only useful with gst-launch for modifying the language
++ * and/or category (which are properties of the stream located in the kate
++ * beginning of stream header), because it does not support setting the tags
++ * on a #GstTagSetter interface. Conceptually, the element will usually be
++ * used like:
++ * <programlisting>
++ * gst-launch -v filesrc location=foo.ogg ! oggdemux ! katetag ! oggmux ! filesink location=bar.ogg
++ * </programlisting>
++ * </para>
++ * <para>
++ * This pipeline will set the language and category of the stream to the
++ * given values:
++ * <programlisting>
++ * gst-launch -v filesrc location=foo.ogg ! oggdemux ! katetag language=pt_BR category=subtitles ! oggmux ! filesink location=bar.ogg
++ * </programlisting>
++ * </para>
++ * </refsect2>
++ */
++
++#ifdef HAVE_CONFIG_H
++#  include "config.h"
++#endif
++
++#include <string.h>
++#include <glib.h>
++#include <gst/tag/tag.h>
++#include <gst/gsttagsetter.h>
++
++#include <kate/kate.h>
++
++#include "gstkatetag.h"
++
++
++GST_DEBUG_CATEGORY_EXTERN (gst_katetag_debug);
++#define GST_CAT_DEFAULT gst_katetag_debug
++
++enum
++{
++  ARG_0,
++  ARG_LANGUAGE,
++  ARG_CATEGORY,
++};
++
++static void gst_kate_tag_base_init (gpointer g_class);
++static void gst_kate_tag_class_init (GstKateTagClass * klass);
++static void gst_kate_tag_init (GstKateTag * kt,
++    GstKateTagClass * g_class);
++static GstFlowReturn gst_kate_tag_parse_packet (GstKateParse * parse,
++    GstBuffer * buffer);
++static void gst_kate_tag_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec);
++static void gst_kate_tag_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec);
++
++
++#define _do_init(type)                                                          \
++  G_STMT_START{                                                                 \
++    static const GInterfaceInfo tag_setter_info = {                             \
++      NULL,                                                                     \
++      NULL,                                                                     \
++      NULL                                                                      \
++    };                                                                          \
++    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,                     \
++                                 &tag_setter_info);                             \
++  }G_STMT_END
++
++GST_BOILERPLATE_FULL (GstKateTag, gst_kate_tag, GstKateParse,
++    GST_TYPE_KATE_PARSE, _do_init);
++
++static GstElementDetails kate_tag_details = {
++  "Kate stream tagger",
++  "Formatter/Metadata",
++  "Retags kate streams",
++  "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
++};
++
++
++static void
++gst_kate_tag_base_init (gpointer g_class)
++{
++  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
++
++  gst_element_class_set_details (element_class, &kate_tag_details);
++}
++
++static void
++gst_kate_tag_class_init (GstKateTagClass * klass)
++{
++  GObjectClass *gobject_class;
++  GstKateParseClass *gstkateparse_class;
++
++  gobject_class = (GObjectClass *) klass;
++  gstkateparse_class = GST_KATE_PARSE_CLASS (klass);
++
++  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_tag_set_property);
++  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_tag_get_property);
++
++  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
++      g_param_spec_string ("language", "Language", "Set the language of the stream",
++          "", G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_CATEGORY,
++      g_param_spec_string ("category", "Category", "Set the category of the stream",
++          "", G_PARAM_READWRITE));
++
++  gstkateparse_class->parse_packet = GST_DEBUG_FUNCPTR (gst_kate_tag_parse_packet);
++}
++
++static void
++gst_kate_tag_init (GstKateTag * kt, GstKateTagClass * g_class)
++{
++  kt->language = NULL;
++  kt->category = NULL;
++}
++
++static void
++gst_kate_tag_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec)
++{
++  GstKateTag *kt = GST_KATE_TAG (object);
++  const char *str;
++
++  switch (prop_id) {
++    case ARG_LANGUAGE:
++      if (kt->language) {
++        g_free(kt->language);
++        kt->language = NULL;
++      }
++      str = g_value_get_string (value);
++      if (str) kt->language = g_strdup(str);
++      break;
++    case ARG_CATEGORY:
++      if (kt->category) {
++        g_free(kt->category);
++        kt->category = NULL;
++      }
++      str = g_value_get_string (value);
++      if (str) kt->category = g_strdup(str);
++      break;
++    default:
++      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      break;
++  }
++}
++
++static void
++gst_kate_tag_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec)
++{
++  GstKateTag *kt = GST_KATE_TAG (object);
++
++  switch (prop_id) {
++    case ARG_LANGUAGE:
++      g_value_set_string (value, kt->language ? kt->language : "");
++      break;
++    case ARG_CATEGORY:
++      g_value_set_string (value, kt->category ? kt->category : "");
++      break;
++    default:
++      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      break;
++  }
++}
++
++
++static GstFlowReturn
++gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
++{
++  GstTagList *old_tags, *new_tags;
++  const GstTagList *user_tags;
++  GstKateTag *kt;
++  gchar *encoder = NULL;
++  GstBuffer *new_buf;
++
++  kt = GST_KATE_TAG (parse);
++
++  /* rewrite the language and category if required */
++  if (GST_BUFFER_SIZE (buffer) >= 64 && GST_BUFFER_DATA (buffer)[0] == 0x80) {
++    /* language is at offset 32, 16 bytes, zero terminated */
++    if (kt->language) {
++      strncpy((char*)GST_BUFFER_DATA (buffer)+32, kt->language, 15);
++      GST_BUFFER_DATA (buffer)[47] = 0;
++    }
++    /* category is at offset 48, 16 bytes, zero terminated */
++    if (kt->category) {
++      strncpy((char*)GST_BUFFER_DATA (buffer)+48, kt->category, 15);
++      GST_BUFFER_DATA (buffer)[63] = 0;
++    }
++  }
++
++  /* just pass everything except the comments packet */
++  if (GST_BUFFER_SIZE (buffer) >= 1 && GST_BUFFER_DATA (buffer)[0] != 0x81) {
++    return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
++  }
++
++  old_tags =
++      gst_tag_list_from_vorbiscomment_buffer (buffer, (guint8 *) "\201kate\0\0\0\0",
++      9, &encoder);
++  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (kt));
++
++  /* build new tag list */
++  new_tags = gst_tag_list_merge (user_tags, old_tags,
++      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (kt)));
++  gst_tag_list_free (old_tags);
++
++  new_buf =
++      gst_tag_list_to_vorbiscomment_buffer (new_tags, (guint8 *) "\201kate\0\0\0\0",
++      9, encoder);
++  gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
++
++  gst_tag_list_free (new_tags);
++  g_free (encoder);
++  gst_buffer_unref (buffer);
++
++  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, new_buf);
++}
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkatetag.h	2008-06-24 20:44:24.000000000 +0100
+@@ -0,0 +1,66 @@
++/* -*- c-basic-offset: 2 -*-
++ * GStreamer
++ * Copyright (C) <2006> James Livingston <doclivingston@gmail.com>
++ * Copyright (C) <2008> ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++
++#ifndef __GST_KATE_TAG_H__
++#define __GST_KATE_TAG_H__
++
++#include "gstkateparse.h"
++
++G_BEGIN_DECLS
++
++
++#define GST_TYPE_KATE_TAG \
++  (gst_kate_tag_get_type())
++#define GST_KATE_TAG(obj) \
++  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_KATE_TAG,GstKateTag))
++#define GST_KATE_TAG_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_KATE_TAG,GstKateTagClass))
++#define GST_IS_KATE_TAG(obj) \
++  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_KATE_TAG))
++#define GST_IS_KATE_TAG_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_KATE_TAG))
++
++
++typedef struct _GstKateTag GstKateTag;
++typedef struct _GstKateTagClass GstKateTagClass;
++
++/**
++ * GstKateTag:
++ *
++ * Opaque data structure.
++ */
++struct _GstKateTag {
++  GstKateParse parse;
++
++  gchar *language;
++  gchar *category;
++};
++
++struct _GstKateTagClass {
++  GstKateParseClass parent_class;
++};
++
++GType gst_kate_tag_get_type(void);
++
++G_END_DECLS
++
++#endif /* __GST_KATE_TAG_H__ */
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ gst-plugins-bad/ext/kate/Makefile.am	2008-06-24 20:32:31.000000000 +0100
 @@ -0,0 +1,14 @@
 +# plugindir is set in configure
 +
 +plugin_LTLIBRARIES = libgstkate.la
 +
 +# sources used to compile this plug-in
-+libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c
++libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c
 +
 +# flags used to compile this plugin
 +libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
@@ -3232,10 +3638,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 +
 +# headers we need but don't want installed
-+noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h
++noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-06-21 22:55:32.000000000 +0100
-@@ -0,0 +1,490 @@
++++ gst-plugins-bad/tests/check/elements/kate.c	2008-06-24 17:52:33.000000000 +0100
+@@ -0,0 +1,641 @@
 +/* GStreamer
 + *
 + * unit test for kate
@@ -3278,6 +3684,23 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    0x72, 0x29, 0x01, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x3d, /* r)........title= */
 +    0x54, 0x69, 0x67, 0x65, 0x72,                                                                   /* Tiger            */
 +};
++static const guint8 kate_header_0x8x[10] = {
++    0x80, 0x6b, 0x61, 0x74, 0x65, 0x00, 0x00, 0x00, 0x00
++};
++static const guint8 kate_header_0x88[11] = {
++    0x88, 0x6b, 0x61, 0x74, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00
++};
++static const guint8 kate_header_0x00[45] = {
++    0x00, 0xe8, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd0, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00,  /* ................ */
++    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x00, 0x70, 0x6c, 0x61,  /* .............pla */
++    0x69, 0x6e, 0x20, 0x6f, 0x6c, 0x64, 0x20, 0x74, 0x65, 0x78, 0x74, 0x08, 0x00                     /* in old text..    */
++};
++static const guint8 kate_header_0x01[1] = {
++    0x01
++};
++static const guint8 kate_header_0x7f[1] = {
++    0x7f
++};
 +
 +static const unsigned char kate_spu[] = {
 +  0x00, 0x1b,                                   /* size */
@@ -3300,6 +3723,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * get_peer, and then remove references in every test function */
 +static GstPad *mydecsrcpad, *mydecsinkpad;
 +static GstPad *myencsrcpad, *myencsinkpad;
++static GstPad *myparsesrcpad, *myparsesinkpad;
 +
 +static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 +    GST_PAD_SINK,
@@ -3364,6 +3788,75 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_check_teardown_src_pad (kateenc);
 +  gst_check_teardown_sink_pad (kateenc);
 +  gst_check_teardown_element (kateenc);
++}
++
++static GstElement *
++setup_kateparse (void)
++{
++  GstElement *kateparse;
++
++  GST_DEBUG ("setup_kateparse");
++  kateparse = gst_check_setup_element ("kateparse");
++  myparsesrcpad = gst_check_setup_src_pad (kateparse, &srctemplate, NULL);
++  myparsesinkpad = gst_check_setup_sink_pad (kateparse, &sinktemplate, NULL);
++  gst_pad_set_active (myparsesrcpad, TRUE);
++  gst_pad_set_active (myparsesinkpad, TRUE);
++
++  return kateparse;
++}
++
++static void
++cleanup_kateparse (GstElement * kateparse)
++{
++  GST_DEBUG ("cleanup_kateparse");
++  gst_element_set_state (kateparse, GST_STATE_NULL);
++
++  gst_pad_set_active (myparsesrcpad, FALSE);
++  gst_pad_set_active (myparsesinkpad, FALSE);
++  gst_check_teardown_src_pad (kateparse);
++  gst_check_teardown_sink_pad (kateparse);
++  gst_check_teardown_element (kateparse);
++}
++
++static void
++check_kateenc_buffers (guint expected)
++{
++  GstBuffer *outbuffer;
++  guint i, num_buffers;
++  const int num_headers = 9;
++  unsigned char packet_type;
++
++  /* check buffers are the type we expect */
++  num_buffers = g_list_length (buffers);
++printf("%u buffers\n", num_buffers);
++  fail_unless (num_buffers >= num_headers+expected+1); /* at least 9 headers, n data, 1 eos */
++  for (i = 0; i < num_buffers; ++i) {
++    outbuffer = GST_BUFFER (buffers->data);
++    fail_if (outbuffer == NULL);
++    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
++
++    if (i < num_headers) {
++      /* different headers packets */
++      packet_type = (0x80 | i);
++      fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
++    }
++    else if (i == num_buffers-1) {
++      /* eos data packet */
++      packet_type = 0x7f;
++      fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
++    }
++    else {
++      /* data packet */
++      packet_type = 0;
++      fail_unless (GST_BUFFER_DATA (outbuffer)[0] >= 0 && GST_BUFFER_DATA (outbuffer)[0] < 0x7f);
++    }
++
++    buffers = g_list_remove (buffers, outbuffer);
++
++    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
++    gst_buffer_unref (outbuffer);
++    outbuffer = NULL;
++  }
 +}
 +
 +GST_START_TEST (test_kate_typefind)
@@ -3543,11 +4036,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +GST_START_TEST (test_kate_encode_simple)
 +{
 +  GstElement *kateenc;
-+  GstBuffer *inbuffer, *outbuffer;
++  GstBuffer *inbuffer;
 +  GstBus *bus;
 +  const gchar *test_string="";
-+  int i, num_buffers;
-+  unsigned char packet_type;
 +  GstCaps *caps;
 +
 +  kateenc = setup_kateenc ();
@@ -3576,35 +4067,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_buffer_unref (inbuffer);
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
-+  /* check buffers are the type we expect */
-+  num_buffers = g_list_length (buffers);
-+  fail_unless (num_buffers >= 9+1+1); /* at least 9 headers, 1 data, 1 eos */
-+  for (i = 0; i < num_buffers; ++i) {
-+    outbuffer = GST_BUFFER (buffers->data);
-+    fail_if (outbuffer == NULL);
-+
-+    if (i < num_buffers-2) {
-+      /* different headers packets */
-+      packet_type = (0x80 | i);
-+    }
-+    else if (i == num_buffers-1) {
-+      /* eos data packet */
-+      packet_type = 0x7f;
-+    }
-+    else {
-+      /* text data packet */
-+      packet_type = 0;
-+    }
-+
-+    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
-+    fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
-+
-+    buffers = g_list_remove (buffers, outbuffer);
-+
-+    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
-+    gst_buffer_unref (outbuffer);
-+    outbuffer = NULL;
-+  }
++  /* at least one data packet should have been emitted */
++  check_kateenc_buffers (1);
 +
 +  /* cleanup */
 +  gst_bus_set_flushing (bus, TRUE);
@@ -3618,10 +4082,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +GST_START_TEST (test_kate_encode_spu)
 +{
 +  GstElement *kateenc;
-+  GstBuffer *inbuffer, *outbuffer;
++  GstBuffer *inbuffer;
 +  GstBus *bus;
-+  int i, num_buffers;
-+  unsigned char packet_type;
 +  GstCaps *caps;
 +
 +  kateenc = setup_kateenc ();
@@ -3650,41 +4112,134 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_buffer_unref (inbuffer);
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
-+  /* check buffers are the type we expect */
-+  num_buffers = g_list_length (buffers);
-+  fail_unless (num_buffers >= 9+1+1); /* at least 9 headers, 1 data, 1 eos */
-+  for (i = 0; i < num_buffers; ++i) {
-+    outbuffer = GST_BUFFER (buffers->data);
-+    fail_if (outbuffer == NULL);
-+
-+    if (i < num_buffers-2) {
-+      /* different headers packets */
-+      packet_type = (0x80 | i);
-+    }
-+    else if (i == num_buffers-1) {
-+      /* eos data packet */
-+      packet_type = 0x7f;
-+    }
-+    else {
-+      /* text data packet */
-+      packet_type = 0;
-+    }
-+
-+    fail_if (GST_BUFFER_SIZE (outbuffer) == 0);
-+    fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
-+
-+    buffers = g_list_remove (buffers, outbuffer);
-+
-+    ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);
-+    gst_buffer_unref (outbuffer);
-+    outbuffer = NULL;
-+  }
++  /* at least one data packet should have been emitted */
++  check_kateenc_buffers(1);
 +
 +  /* cleanup */
 +  gst_bus_set_flushing (bus, TRUE);
 +  gst_element_set_bus (kateenc, NULL);
 +  gst_object_unref (GST_OBJECT (bus));
 +  cleanup_kateenc (kateenc);
++  g_list_free (buffers);
++}
++GST_END_TEST;
++
++GST_START_TEST (test_kate_encode_keepalives)
++{
++  GstElement *kateenc;
++  GstBus *bus;
++  guint i, round;
++  enum { n_keepalives=1000 };
++  static const struct { gdouble keepalive_min_time; gint packets; } cfg[3] = {
++    { 0.5, n_keepalives },
++    { 2.0, n_keepalives/2 },
++    { 5.0, n_keepalives/5 },
++  };
++
++  for (round=0; round<3; ++round) {
++    kateenc = setup_kateenc ();
++    fail_unless (gst_element_set_state (kateenc,
++            GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++        "could not set to playing");
++    bus = gst_bus_new ();
++
++    gst_element_set_bus (kateenc, bus);
++
++    g_object_set (kateenc, "keepalive-min-time", cfg[round].keepalive_min_time, NULL);
++
++    /* the second one here should not emit a keepalive since the time since last packet
++       is less than the keepalive delay */
++    for (i=1; i<=n_keepalives; ++i) {
++      gint64 t = i*GST_SECOND;
++      fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, t, -1, 0)) == TRUE);
++    }
++
++    fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
++
++    /* at least one data packet should have been emitted */
++    check_kateenc_buffers(cfg[round].packets);
++
++    /* cleanup */
++    gst_bus_set_flushing (bus, TRUE);
++    gst_element_set_bus (kateenc, NULL);
++    gst_object_unref (GST_OBJECT (bus));
++    cleanup_kateenc (kateenc);
++    g_list_free (buffers);
++  }
++}
++GST_END_TEST;
++
++GST_START_TEST (test_kate_parse)
++{
++  GstElement *kateparse;
++  GstBuffer *inbuffer;
++  GstBus *bus;
++  int i;
++
++  kateparse = setup_kateparse ();
++  fail_unless (gst_element_set_state (kateparse,
++          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to playing");
++  bus = gst_bus_new ();
++
++  gst_element_set_bus (kateparse, bus);
++
++  /* push headers */
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x80;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x80);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x81;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x81);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++
++  for (i=2; i<8; ++i) {
++    inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x8x));
++    memcpy (GST_BUFFER_DATA (inbuffer), (guint8 *) kate_header_0x8x, sizeof (kate_header_0x8x));
++    GST_BUFFER_DATA (inbuffer) [0] = 0x80 | i;
++    GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++    fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++  }
++
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x88;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x88);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++
++  /* push a text packet */
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x00;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x00);
++  GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) = 1*GST_SECOND;
++  GST_BUFFER_DURATION (inbuffer) = 5*GST_SECOND;
++  GST_BUFFER_OFFSET_END (inbuffer) = (GST_BUFFER_TIMESTAMP (inbuffer) << 32); /* granpos */
++  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++
++  /* push a eos packet */
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x7f;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x7f);
++  GST_BUFFER_TIMESTAMP (inbuffer) = GST_BUFFER_OFFSET (inbuffer) = 6*GST_SECOND;
++  GST_BUFFER_DURATION (inbuffer) = 0;
++  GST_BUFFER_OFFSET_END (inbuffer) = (GST_BUFFER_TIMESTAMP (inbuffer) << 32); /* granpos */
++  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++
++  /* signal eos */
++  fail_unless (gst_pad_push_event (myparsesrcpad, gst_event_new_eos ()) == TRUE);
++
++  /* at least one data packet should have been emitted */
++  check_kateenc_buffers(0);
++
++  /* cleanup */
++  gst_bus_set_flushing (bus, TRUE);
++  gst_element_set_bus (kateparse, NULL);
++  gst_object_unref (GST_OBJECT (bus));
++  cleanup_kateparse (kateparse);
 +  g_list_free (buffers);
 +}
 +GST_END_TEST;
@@ -3705,6 +4260,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  tcase_add_test (tc_chain, test_kate_encode_empty);
 +  tcase_add_test (tc_chain, test_kate_encode_simple);
 +  tcase_add_test (tc_chain, test_kate_encode_spu);
++  tcase_add_test (tc_chain, test_kate_encode_keepalives);
++  tcase_add_test (tc_chain, test_kate_parse);
 +#undef X
 +
 +  return s;
