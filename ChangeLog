@@ -1,3 +1,6 @@
+0.1.5
+  new kate_encode_get_granule api function
+
 0.1.4
   Kate magic is now 8 bytes (though the bitstream is unchanged)
   fix an EOS packet encoding bug when using keepalive packets
