@@ -5,7 +5,7 @@
  # non-Vorbis content: Theora
  >>28		string		\x80theora	\b, Theora video
 +# non-Vorbis content: Kate
-+>>28		string		\x80kate\0\0\0\0	\b, Kate
++>>28		string		\x80kate\0\0\0	\b, Kate
 +>>>37		ubyte		x		v%hu
 +>>>38		ubyte		x		\b.%hu,
 +>>>40		byte		0		utf8 encoding,
