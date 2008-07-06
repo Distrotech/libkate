@@ -207,6 +207,7 @@ pixels                       {lvalp->number=kate_pixel;return METRIC;}
 pixel                        {lvalp->number=kate_pixel;return METRIC;}
 percentage                   {lvalp->number=kate_percentage;return METRIC;}
 percent                      {lvalp->number=kate_percentage;return METRIC;}
+millionths                   {lvalp->number=kate_millionths;return METRIC;}
 
 static                       {return STATIC;}
 linear                       {return LINEAR;}

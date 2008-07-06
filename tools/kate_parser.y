@@ -1839,6 +1839,7 @@ kd_style_def: HALIGN float { kstyle.halign=$2; }
             ;
 
 kd_opt_space_metric: '%' { $$=kate_percentage; }
+                   | 'm' { $$=kate_millionths; }
                    | { $$=kate_pixel; }
                    ;
 
@@ -2082,6 +2083,7 @@ kd_motion_def: MAPPING kd_motion_mapping { set_motion_mapping(kmotion,$2,$2); }
 
 kd_optional_curve_duration: FOR float { $$=$2; }
                           | FOR float '%' { $$=-$2/(kate_float)100.0; }
+                          | FOR float 'm' { $$=-$2/(kate_float)1000000.0; }
                           | { $$=(kate_float)-1.0; }
                           ;
 

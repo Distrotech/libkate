@@ -56,16 +56,22 @@ static const char *valign2text(kate_float d)
 
 static const char *metric2text(kate_space_metric d)
 {
-  if (d==kate_pixel) return "pixel";
-  if (d==kate_percentage) return "percent";
-  return "invalid";
+  switch (d) {
+    case kate_pixel: return "pixel";
+    case kate_percentage: return "percent";
+    case kate_millionths: return "millionths";
+    default: return "invalid";
+  }
 }
 
 static const char *metric2suffix(kate_space_metric d)
 {
-  if (d==kate_pixel) return "";
-  if (d==kate_percentage) return "%";
-  return "invalid";
+  switch (d) {
+    case kate_pixel: return "";
+    case kate_percentage: return "%";
+    case kate_millionths: return "m";
+    default: return "invalid";
+  }
 }
 
 static const char *curve2text(kate_curve_type d)

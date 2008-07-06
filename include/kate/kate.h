@@ -37,7 +37,7 @@ typedef float kate_float;
 /** \name Bitstream version */
 /** @{ */
 #define KATE_BITSTREAM_VERSION_MAJOR 0   /**< major version number of the highest bitstream version this version of libkate supports */
-#define KATE_BITSTREAM_VERSION_MINOR 2   /**< minor version number of the highest bitstream version this version of libkate supports */
+#define KATE_BITSTREAM_VERSION_MINOR 3   /**< minor version number of the highest bitstream version this version of libkate supports */
 /** @} */
 
 #ifndef kate_malloc
@@ -64,7 +64,8 @@ typedef enum {
 /** defines how to interpret spatial dimension values */
 typedef enum {
   kate_pixel,                    /**< dimensions are in pixels */
-  kate_percentage                /**< dimensions are in percentage of total size */
+  kate_percentage,               /**< dimensions are in percentage of total size */
+  kate_millionths                /**< dimensions are in millionths of total size */
 } kate_space_metric;
 
 /** defines an area where to draw */
@@ -97,7 +98,7 @@ typedef struct kate_style {
   kate_color background_color;       /**< background RGBA color of the whole region, regardless of what extent any text has */
   kate_color draw_color;             /**< RGBA color for drawn shapes */
 
-  kate_space_metric font_metric;     /**< whether font size are in pixels or percentage */
+  kate_space_metric font_metric;     /**< whether font size are in pixels, percentage, etc */
   kate_float font_width;             /**< horizontal size of the glyphs */
   kate_float font_height;            /**< vertical size of the glyphs */
 
