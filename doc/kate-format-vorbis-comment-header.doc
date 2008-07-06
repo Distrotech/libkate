@@ -11,15 +11,17 @@
 
 \page format_0x81 Format - header packet type 0x81 - Vorbis comments header
 
-The second header in a Kate stream holds Vorbis comments in the
-same format as a Vorbis or Theora stream, apart from the Kate
-signature at the start of the packet.
+The second header in a Kate stream holds Vorbis comments in the same
+format as a Vorbis or Theora stream, apart from the 0x81 packet type
+byte, the Kate signature, and a zero byte at the start of the packet.
 
-As for Vorbis, note that the comments are not necessarily NUL
+As for Vorbis, note that the user comments are not necessarily NUL
 terminated.
 
 Note that, as Theora, Kate does not add a framing bit to the packet.
 
+Refer to the documentation for Vorbis for detailed information about
+the format of Vorbis comments.
 
 */
 
