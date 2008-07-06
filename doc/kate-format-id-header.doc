@@ -13,7 +13,7 @@
 
 \verbatim
 
- * Kate bitstream version 0.1
+ * Kate bitstream version 0.2
  *
  * Default field type: LITTLE ENDIAN unsigned integer
 
@@ -25,7 +25,7 @@
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | kate magic continued                                          | 4-7
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-| kate magic    | version major | version minor | num headers   | 8-11
+| reserved - 0  | version major | version minor | num headers   | 8-11
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 | text encoding | directionality| reserved - 0  | granule shift | 12-15
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
