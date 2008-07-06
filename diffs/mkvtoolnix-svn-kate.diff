@@ -199,8 +199,8 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
  SSA/ASS subtitles from SSA/ASS files
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/common/kate_common.cpp mkvtoolnix-svn/src/common/kate_common.cpp
 --- ../svn/mkvtoolnix/src/common/kate_common.cpp	1970-01-01 01:00:00.000000000 +0100
-+++ mkvtoolnix-svn/src/common/kate_common.cpp	2008-06-22 18:40:11.000000000 +0100
-@@ -0,0 +1,90 @@
++++ mkvtoolnix-svn/src/common/kate_common.cpp	2008-07-06 19:58:00.000000000 +0100
+@@ -0,0 +1,88 @@
 +/*
 +   mkvmerge -- utility for splicing together matroska files
 +   from component media subtypes
@@ -211,9 +211,10 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +
 +   $Id: kate_common.cpp 3134 2005-10-23 18:21:13Z mosu $
 +
-+   Ogg Kate helper functions
++   Kate helper functions
 +
-+   Written by Moritz Bunkus <moritz@bunkus.org>.
++   Written by ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>.
++   Adapted from code by Moritz Bunkus <moritz@bunkus.org>.
 +*/
 +
 +#include "os.h"
@@ -256,8 +257,7 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +    throw error_c(mxsprintf("Wrong identification string: '%7s' != 'kate\\0\\0\\0'",
 +                            header.kate_string)); /* won't print NULs well, but hey */
 +
-+  if (0 != bc.get_bits(8))
-+      throw error_c("Reserved bits are not 0");
++  bc.get_bits(8); // we don't need those - they are reserved
 +
 +  header.vmaj = bc.get_bits(8);
 +  header.vmin = bc.get_bits(8);
@@ -271,14 +271,12 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +  header.nheaders = bc.get_bits(8);
 +  header.tenc = bc.get_bits(8);
 +  header.tdir = bc.get_bits(8);
-+  if (0 != bc.get_bits(8))
-+      throw error_c("Reserved bits are not 0");
++  bc.get_bits(8); // we don't need those - they are reserved
 +  header.kfgshift = bc.get_bits(8);
 +
-+  if (0 != read32(bc))
-+      throw error_c("Reserved bits are not 0");
-+  if (0 != read32(bc))
-+      throw error_c("Reserved bits are not 0");
++  read32(bc); // from bitstream 0.3, these 32 bits are allocated
++  read32(bc); // we don't need those - they are reserved
++
 +  header.gnum = read32(bc);
 +  header.gden = read32(bc);
 +
@@ -293,8 +291,8 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +}
 diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2 -x autom4te.cache -x Makefile -x config.h -x mkvmerge-gui.hhk -urN ../svn/mkvtoolnix/src/common/kate_common.h mkvtoolnix-svn/src/common/kate_common.h
 --- ../svn/mkvtoolnix/src/common/kate_common.h	1970-01-01 01:00:00.000000000 +0100
-+++ mkvtoolnix-svn/src/common/kate_common.h	2008-03-17 20:13:01.000000000 +0000
-@@ -0,0 +1,52 @@
++++ mkvtoolnix-svn/src/common/kate_common.h	2008-07-06 20:00:25.000000000 +0100
+@@ -0,0 +1,53 @@
 +/*
 +   mkvmerge -- utility for splicing together matroska files
 +   from component media subtypes
@@ -305,9 +303,10 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +
 +   $Id: kate_common.h 3134 2005-10-23 18:21:13Z mosu $
 +
-+   Ogg Kate helper functions
++   Kate helper functions
 +
-+   Written by Moritz Bunkus <moritz@bunkus.org>.
++   Written by ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>.
++   Adapted from code by Moritz Bunkus <moritz@bunkus.org>.
 +*/
 +
 +#ifndef __KATE_COMMON_H
@@ -321,7 +320,7 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +
 +struct MTX_DLL_API kate_identification_header_t {
 +  uint8_t headertype;
-+  char kate_string[8];
++  char kate_string[7];
 +
 +  uint8_t vmaj;
 +  uint8_t vmin;
@@ -330,10 +329,10 @@ diff -x config.log -x config.status -x configure -x t1 -x t2 -x dump.1 -x dump.2
 +  uint8_t tenc;
 +  uint8_t tdir;
 +
++  uint8_t kfgshift;
++
 +  int32_t gnum;
 +  int32_t gden;
-+
-+  uint8_t kfgshift;
 +
 +  uint8_t language[16];
 +  uint8_t category[16];
