@@ -9,7 +9,7 @@
 
 /* All the libkate API is available from the main kate header file: */
 
-#include <kate/kate.h>
+#include <kate/oggkate.h>
 
 /*
   We want to control when Ogg pages are output, as Kate is a discontinuous
