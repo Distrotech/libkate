@@ -3715,8 +3715,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +# headers we need but don't want installed
 +noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-05 16:30:22.000000000 +0100
-@@ -0,0 +1,748 @@
++++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-06 21:09:14.000000000 +0100
+@@ -0,0 +1,803 @@
 +/* GStreamer
 + *
 + * unit test for kate
@@ -3756,7 +3756,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static const guint8 kate_header_0x81[53] = {
 +    0x81, 0x6b, 0x61, 0x74, 0x65, 0x00, 0x00, 0x00, 0x00, 0x15, 0x00, 0x00, 0x00, 0x6c, 0x69, 0x62, /* .kate........lib */
 +    0x6b, 0x61, 0x74, 0x65, 0x20, 0x30, 0x2e, 0x31, 0x2e, 0x30, 0x20, 0x28, 0x54, 0x69, 0x67, 0x65, /* kate 0.1.0 (Tige */
-+    0x72, 0x29, 0x01, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x74, 0x69, 0x74, 0x6c, 0x65, 0x3d, /* r)........title= */
++    0x72, 0x29, 0x01, 0x00, 0x00, 0x00, 0x0b, 0x00, 0x00, 0x00, 0x54, 0x49, 0x54, 0x4c, 0x45, 0x3d, /* r)........TITLE= */
 +    0x54, 0x69, 0x67, 0x65, 0x72,                                                                   /* Tiger            */
 +};
 +static const guint8 kate_header_0x8x[10] = {
@@ -4379,6 +4379,61 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +GST_END_TEST;
 +
++GST_START_TEST (test_kate_tag_passthrough)
++{
++  GstElement *katetag;
++  GstBus *bus;
++  GstBuffer *outbuffer;
++  GList *list;
++
++  katetag = setup_katetag ();
++  fail_unless (gst_element_set_state (katetag,
++          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to playing");
++  bus = gst_bus_new ();
++
++  gst_element_set_bus (katetag, bus);
++
++  test_kate_send_headers (mytagsrcpad);
++
++  /* signal eos */
++  fail_unless (gst_pad_push_event (mytagsrcpad, gst_event_new_eos ()) == TRUE);
++
++  fail_unless (gst_element_set_state (katetag,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
++  /* get the first buffer and check language/category */
++  fail_unless (g_list_length (buffers) >= 2); /* ID header, Vorbis comments header */
++  outbuffer = GST_BUFFER (buffers->data);
++  fail_if (outbuffer == NULL);
++
++  /* check identification header is unchanged */
++  list = g_list_nth (buffers, 0);
++  fail_unless (list != NULL);
++  outbuffer = list->data;
++  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), sizeof (kate_header_0x80));
++  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer), kate_header_0x80, sizeof (kate_header_0x80)), 0);
++
++  /* check comment header is unchanged */
++  list = g_list_nth (buffers, 1);
++  fail_unless (list != NULL);
++  outbuffer = list->data;
++  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), sizeof (kate_header_0x81));
++  fail_unless_equals_int (memcmp (GST_BUFFER_DATA (outbuffer), kate_header_0x81, sizeof (kate_header_0x81)), 0);
++
++  /* all headers should have been emitted, but no particular packets */
++  check_buffers(0, TRUE);
++
++  /* cleanup */
++  gst_bus_set_flushing (bus, TRUE);
++  gst_element_set_bus (katetag, NULL);
++  gst_object_unref (GST_OBJECT (bus));
++  cleanup_katetag (katetag);
++  g_list_free (buffers);
++}
++GST_END_TEST;
++
 +GST_START_TEST (test_kate_tag)
 +{
 +  GstElement *katetag;
@@ -4424,7 +4479,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  g_list_free (buffers);
 +}
 +GST_END_TEST;
-+
 +Suite *
 +kate_suite (void)
 +{
@@ -4443,6 +4497,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  tcase_add_test (tc_chain, test_kate_encode_spu);
 +  tcase_add_test (tc_chain, test_kate_encode_keepalives);
 +  tcase_add_test (tc_chain, test_kate_parse);
++  tcase_add_test (tc_chain, test_kate_tag_passthrough);
 +  tcase_add_test (tc_chain, test_kate_tag);
 +#undef X
 +
