@@ -18,8 +18,16 @@ It is suggested that applications recognizing well known categories such
 as the ones described below may display to the user a localized version
 of them (eg, when a stream has a category of "subtitles", an application
 set up for the French locale might display the category as "sous-titres".
+If a particular category is not recognized, it may still be displayed as
+a string, albeit non localized.
 
-\li \c subtitles Movie (or other) subtitles, either as (possibly formatted) text, or SPU style images.
+\li \c subtitles Movie (or other) subtitles, as (possibly formatted) text.
+
+For instance, ffmpeg2theora can create such streams.
+
+\li \c spu-subtitles Movie (or other) subtitles, as DVD style images.
+
+For instance, Thoggen (if patched) can create such streams.
 
 \li \c lyrics Song lyrics (typically in the language they are sung in)
 
