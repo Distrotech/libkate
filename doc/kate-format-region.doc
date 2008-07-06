@@ -1,0 +1,32 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_region Format - region
+
+A region definition consists of:
+
+\li 8 bits for the kate_space_metric used by the x, y, w, and h values.
+\li a \ref format_32v "variable length integer" for the x position.
+\li a \ref format_32v "variable length integer" for the y position.
+\li a \ref format_32v "variable length integer" for the width.
+\li a \ref format_32v "variable length integer" for the height.
+\li a \ref format_32v "variable length integer" for the default style (-1 if none).
+
+Next, we have a \ref format_warp "warp".
+
+Kate bitstream 0.2 makes use of this warp to add:
+
+\li 1 bit for the clip flag.
+
+Next, the data ends.
+
+*/
+

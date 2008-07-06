@@ -1,0 +1,30 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_warp Format - warp
+
+A warp is a stream of bits along with its length, allowing to jump
+over it without regard to its actual contents. Its use allows older
+decoders to ignore additions to the bitstream format without having
+to know about them. Warps are the main mechanism used to allow Kate
+streams to maintain forward compatibility with new streams.
+
+A warp consists of a \ref format_32v "variable length integer" representing
+the number of data bits present in the warp, followed by that number of
+bits. The actual semantics of those data bits is irrelevant to the warp,
+as it acts as a container for those bits.
+
+Jumping over a warp is simple: read the \ref format_32v "variable length integer",
+and read that number of bits, discarding them.
+
+
+*/
+

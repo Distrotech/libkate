@@ -1,0 +1,58 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_32v Format - variable length integer
+
+Small integers are often needed, and the Kate bitstream format has
+a way to store them using a fraction of a byte to save space.
+This format is simple on purpose, and is not optimal. However, it
+allows easy compression of bitstreams using lots of small integers.
+All 32 bit integers may be represented by this encoding.
+
+A variable length integer is stored in the following way:
+
+- if the integer is between 0 and 14, it is stored as 4 bits
+  directly representing the integer's value.
+- otherwise, it is stored as a first 4 bit value of 15, followed
+  by a single bit for its sign (1 if negative, 0 if positive),
+  then a 5 bit number representing one less than the number of bits
+  needed to represent the absolute value of that number, followed by
+  the absolute value of the number itself on the number of bits needed
+  to represent it.
+
+A few examples:
+
+- 0 is stored as 0000 (4 bits)
+
+- -1 is stored as 1111 1 00001 1 (11 bits)
+
+- 7 is stored as 0111 (4 bits)
+
+- 17 is stored as 1111 0 00100 10001 (15 bits)
+
+- -3 is stored as 1111 1 00010 11 (12 bits)
+
+- 1000 is stored as 1111 0 01001 11 1110 1000 (20 bits)
+
+- 842389532 is stored as 1111 0 11101 0011 0010 0011 0101 1101 1000 0001 1100 (42 bits)
+
+
+Simple alterations would allow even more compression for typical
+numbers (eg, offsetting the numbers to allow -1 (a common occurence)
+to be stored on 4 bits, and noticing that the first bit of the
+bitstream stored last for large numbers is always 1), but are left
+for a possible future bitstream change as this would mean either an
+incompatible change, or a use for very few values, making the change
+almost pointless.
+
+
+*/
+
