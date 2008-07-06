@@ -11,6 +11,11 @@
 
 \page format_0x80 Format - header packet type 0x80 - ID header
 
+The ID header must be the first packet in a Kate stream.
+It carries information about the stream.
+
+Here is a table description of the format of the ID header:
+
 \verbatim
 
  * Kate bitstream version 0.3
@@ -56,14 +61,52 @@
 
 \endverbatim
 
-All Kate bitstream packets start with a packet identifier,
-a one byte unsigned integer that identifies the type of the packet.
-All header packets have the first bit set (eg, header packets have
-a type byte between 0x80 and 0xff).
-All data packets have the first bit cleared (eg, data packets have
-a type byte between 0x00 and 0x7f).
-The data following this byte is dependent on the packet type.
 
+and for a description of those fields:
+
+\li \c packtype the packet type for this header - always 0x80
+
+\li \c kate \c magic the 7 byte string "kate\0\0\0", as all other Kate headers
+
+\li \c version \c major the major version number of the bitstream
+
+\li \c version \c minor the minor version number of the bitstream
+
+\li \c num \c headers the number of header packets present in this stream
+
+\li \c text \c encoding the default encoding used by text (usually 0, UTF-8)
+
+\li \c directionality the default directionality of the text
+
+\li \c granule \c shift the number of bits in the granule positions reserved for storing the offset part
+
+\li \c cw \c sh (from bitstream 0.2) the number of bits to left shift the \c canvas \c width field to compute the original canvas width
+\li \c canvas width (from bitstream 0.2) the number to shift left by \c cw \c sh to compute the original canvas width
+
+zero is a valid width, and represents an unset width
+
+\li \c ch \c sh (from bitstream 0.2) the number of bits to left shift the \c canvas \c height field to compute the original canvas height
+\li \c canvas height (from bitstream 0.2) the number to shift left by \c ch \c sh to compute the original canvas height
+
+zero is a valid height, and represents an unset height
+
+\li \c granule \c rate \c numerator the numerator of the fraction representing how many granule units represent a second (from bitstream 0.2)
+
+\li \c granule \c rate \c denominator the denominator of the fraction representing how many granule units represent a second
+
+\li \c language the default language of the text in this stream (will be NUL terminated)
+
+an empty string is a valid language, and represents an unset language
+
+\li \c category the category of the text in this stream (will be NUL terminated)
+
+an empty string is a valid category, and represents an unset category
+
+All fields marked as "reserved - 0" should be set to zero when encoding a stream with
+this version of the bitstream format. However, if decoding a stream encoded with a
+version of the bitstream format with the same bitstream major version but a higher
+bitstream minor version, those fields may be non zero, if they were subsequently
+allocated to carry additional information.
 
 */
 
