@@ -26,11 +26,11 @@ Each Kate packet starts with a one byte type. A type with the MSB set
 (eg, between 0x80 and 0xff) indicates a header packet, while a type with
 the MSB cleared (eg, between 0x00 and 0x7f) indicates a data packet.
 All header packets then have the Kate magic, from byte offset 1 to byte
-offset 8 ("kate\0\0\0\0").
+offset 7 ("kate\0\0\0").
 
 Since the ID header must appear first, a Kate stream can be recognized
-by comparing the first nine bytes of the first packet with the signature
-string "\200kate\0\0\0\0".
+by comparing the first eight bytes of the first packet with the signature
+string "\200kate\0\0\0".
 
 \section format-ogg-mapping Ogg mapping
 
