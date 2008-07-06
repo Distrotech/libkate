@@ -11,8 +11,6 @@
 
 \page format_0x01 Format - data packet type 0x01 - keepalive
 
-\verbatim
-
 Keepalive packets may be inserted at any point in a Kate stream
 where a data packet may be inserted (eg, after all headers, and
 before the end packet).
@@ -27,8 +25,6 @@ is multiplexed with high bandwidth streams.
 
 This packet is exactly one byte long, and consists of its packet
 type, 0x01.
-
-\endverbatim
 
 
 */
