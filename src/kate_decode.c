@@ -147,12 +147,30 @@ static int kate_check_eop(kate_pack_buffer *kpb)
   return 0;
 }
 
+static int kate_decode_read_canvas_size(kate_pack_buffer *kpb)
+{
+  size_t value;
+  size_t base,shift;
+
+  if (!kpb) return KATE_E_INVALID_PARAMETER;
+
+  value=kate_pack_read(kpb,8);
+  value|=(kate_pack_read(kpb,8)<<8);
+  base=value>>4;
+  shift=value&15;
+
+  return base<<shift;
+}
+
+#define KATE_IS_BITSTREAM_LOE(major,minor) (major)
+
 static int kate_decode_info_header(kate_info *ki,kate_pack_buffer *kpb)
 {
   KMG_GUARD();
   int len;
   int ret;
   char *language,*category;
+  int reserved;
 
   if (!ki || !kpb) return KMG_ERROR(KATE_E_INVALID_PARAMETER);
 
@@ -163,11 +181,24 @@ static int kate_decode_info_header(kate_info *ki,kate_pack_buffer *kpb)
   ki->num_headers=kate_pack_read(kpb,8);
   ki->text_encoding=kate_pack_read(kpb,8);
   ki->text_directionality=kate_pack_read(kpb,8);
-  if (kate_pack_read(kpb,8)!=0) return KMG_ERROR(KATE_E_BAD_PACKET); /* reserved - 0 */
+  reserved=kate_pack_read(kpb,8);
+  if (ki->bitstream_version_major==0 && ki->bitstream_version_minor<3) {
+    if (reserved!=0) return KMG_ERROR(KATE_E_BAD_PACKET); /* reserved - 0 */
+  }
   ki->granule_shift=kate_pack_read(kpb,8);
 
-  if (kate_read32(kpb)!=0) return KMG_ERROR(KATE_E_BAD_PACKET); /* reserved - 0 */
-  if (kate_read32(kpb)!=0) return KMG_ERROR(KATE_E_BAD_PACKET); /* reserved - 0 */
+  ret=kate_decode_read_canvas_size(kpb);
+  if (ret<0) return KMG_ERROR(KATE_E_BAD_PACKET);
+  ki->original_canvas_width=ret;
+  ret=kate_decode_read_canvas_size(kpb);
+  if (ret<0) return KMG_ERROR(KATE_E_BAD_PACKET);
+  ki->original_canvas_height=ret;
+
+  reserved=kate_read32(kpb);
+  if (ki->bitstream_version_major==0 && ki->bitstream_version_minor<3) {
+    if (reserved!=0) return KMG_ERROR(KATE_E_BAD_PACKET); /* reserved - 0 */
+  }
+
   ki->gps_numerator=kate_read32(kpb);
   ki->gps_denominator=kate_read32(kpb);
 

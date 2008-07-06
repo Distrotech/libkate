@@ -159,6 +159,31 @@ static int kate_encode_start_header(kate_pack_buffer *kpb,int headerid)
   return 0;
 }
 
+static int kate_encode_write_canvas_size(kate_pack_buffer *kpb,size_t size)
+{
+  size_t base=size;
+  size_t shift=0;
+  int value;
+
+  if (!kpb) return KATE_E_INVALID_PARAMETER;
+
+  while (base&~((1<<12)-1)) {
+    /* we have a high bit we can't fit, increase shift if we wouldn't lose low bits */
+    if ((size>>shift)&1) return KATE_E_LIMIT;
+    ++shift;
+    base>>=1;
+  }
+  if (shift>=16) return KATE_E_LIMIT;
+
+  /* the size can be represented in our encoding */
+  value=(base<<4)|shift;
+
+  kate_pack_write(kpb,value&0xff,8);
+  kate_pack_write(kpb,(value>>8)&0xff,8);
+
+  return 0;
+}
+
 static int kate_encode_info(kate_state *k,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
@@ -182,7 +207,10 @@ static int kate_encode_info(kate_state *k,kate_packet *kp)
   kate_pack_write(kpb,ki->text_directionality,8);
   kate_pack_write(kpb,0,8); /* reserved - 0 */
   kate_pack_write(kpb,kate_granule_shift(k->ki),8);
-  kate_write32(kpb,0); /* reserved - 0 */
+  ret=kate_encode_write_canvas_size(kpb,ki->original_canvas_width);
+  if (ret<0) return ret;
+  ret=kate_encode_write_canvas_size(kpb,ki->original_canvas_height);
+  if (ret<0) return ret;
   kate_write32(kpb,0); /* reserved - 0 */
   kate_write32(kpb,ki->gps_numerator);
   kate_write32(kpb,ki->gps_denominator);

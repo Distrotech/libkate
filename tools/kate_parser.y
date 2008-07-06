@@ -1666,6 +1666,12 @@ static void set_granule_shift(int granule_shift)
   ki.granule_shift=granule_shift;
 }
 
+static void set_canvas_size(int width,int height)
+{
+  if (width<0 || height<0) yyerror("canvas size cannot be negative\n");
+  kate_info_set_original_canvas_size(&ki,width,height);
+}
+
 static void cleanup_names(char **names,size_t count)
 {
   size_t n;
@@ -1727,7 +1733,7 @@ static void cleanup_memory(void)
 %token <number> FONT RANGE FIRST LAST CODE POINT
 %token <number> USER SOURCE PNG DRAW VISIBLE
 %token <number> ID BOLD ITALICS UNDERLINE STRIKE JUSTIFY
-%token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT
+%token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT CANVAS
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
 %token <number> HORIZONTAL VERTICAL CLIP PRE MARKUP
 
@@ -1804,6 +1810,7 @@ kd_def: LANGUAGE STRING { kate_info_set_language(&ki,$2); }
       | TIMEBASE timespec { timebase=$2; }
       | GRANULE RATE UNUMBER '/' UNUMBER {set_granule_rate($3,$5);}
       | GRANULE SHIFT UNUMBER {set_granule_shift($3);}
+      | CANVAS SIZE UNUMBER UNUMBER {set_canvas_size($3,$4);}
       ;
 
 kd_style_defs: kd_style_defs kd_style_def

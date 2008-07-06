@@ -309,7 +309,10 @@ typedef struct kate_info {
 
   kate_markup_type text_markup_type;             /**< how to interpret any markup found in the text */
 
-  uintptr_t pad2[13];
+  size_t original_canvas_width;                  /**< width of the canvas this stream was authored for */
+  size_t original_canvas_height;                 /**< height of the canvas this stream was authored for */
+
+  uintptr_t pad2[11];
 
   /* internal */
   int remove_markup;
@@ -517,6 +520,7 @@ extern int kate_info_set_language(kate_info *ki,const char *language);
 extern int kate_info_set_text_directionality(kate_info *ki,kate_text_directionality text_directionality);
 extern int kate_info_set_markup_type(kate_info *ki,kate_markup_type text_markup_type);
 extern int kate_info_set_category(kate_info *ki,const char *category);
+extern int kate_info_set_original_canvas_size(kate_info *ki,size_t width,size_t height);
 extern int kate_info_add_region(kate_info *ki,kate_region *kr);
 extern int kate_info_add_style(kate_info *ki,kate_style *ks);
 extern int kate_info_add_curve(kate_info *ki,kate_curve *kc);

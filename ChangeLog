@@ -1,6 +1,8 @@
 0.1.5
   new kate_encode_get_granule api function
   space metrics can now be expressed in millionths
+  the info header can now hold the original canvas size
+  fix misguided error throwing if a reserved area is not 0
 
 0.1.4
   Kate magic is now 8 bytes (though the bitstream is unchanged)

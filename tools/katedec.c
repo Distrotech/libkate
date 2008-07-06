@@ -453,6 +453,20 @@ static void write_granule_encoding(FILE *f,const kate_info *ki,size_t indent)
   kate_free(sindent);
 }
 
+static void write_canvas_size(FILE *f,const kate_info *ki,size_t indent)
+{
+  char *sindent=(char*)kate_malloc(1+indent);
+  size_t n;
+  for (n=0;n<indent;++n) sindent[n]=' ';
+  sindent[indent]=0;
+
+  if (ki->original_canvas_width>0 || ki->original_canvas_height>0) {
+    fprintf(f,"%scanvas size %u/%u\n",sindent,ki->original_canvas_width,ki->original_canvas_height);
+  }
+
+  kate_free(sindent);
+}
+
 static void write_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
 {
   size_t n;
@@ -464,6 +478,7 @@ static void write_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
   fprintf(f,"    category \"%s\"\n",ki->category);
   fprintf(f,"    language \"%s\"\n",ki->language);
   fprintf(f,"    directionality %s\n",directionality2text(ki->text_directionality));
+  write_canvas_size(f,ki,4);
 
   if (kc && kc->comments) {
     fprintf(f,"\n");

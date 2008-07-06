@@ -60,6 +60,9 @@ int kate_info_init(kate_info *ki)
   ki->nfont_mappings=0;
   ki->font_mappings=NULL;
 
+  ki->original_canvas_width=0;
+  ki->original_canvas_height=0;
+
   ki->remove_markup=0;
   ki->no_limits=0;
   ki->probe=0;
@@ -201,6 +204,23 @@ int kate_info_set_markup_type(kate_info *ki,kate_markup_type text_markup_type)
 {
   if (!ki) return KATE_E_INVALID_PARAMETER;
   ki->text_markup_type=text_markup_type;
+  return 0;
+}
+
+/**
+  \ingroup info
+  Sets the size of the canvas this stream is being authored for
+  \param ki the kate_info structure for the stream
+  \param width the width of the canvas
+  \param height the height of the canvas
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_info_set_original_canvas_size(kate_info *ki,size_t width,size_t height)
+{
+  if (!ki) return KATE_E_INVALID_PARAMETER;
+  ki->original_canvas_width=width;
+  ki->original_canvas_height=height;
   return 0;
 }
 
