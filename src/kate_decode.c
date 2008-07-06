@@ -376,7 +376,7 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
   ks->strike=kate_pack_read1(kpb);
 
   if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0002) {
-    /* 0.2 adds a warp for justify */
+    /* 0.2 adds a warp for justify and font */
     kate_read32v(kpb); /* the size of the warp */
     ks->justify=kate_pack_read1(kpb);
     len=kate_read32v(kpb);
