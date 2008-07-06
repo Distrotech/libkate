@@ -138,7 +138,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.c	2008-06-24 20:32:52.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkate.c	2008-07-05 16:10:40.000000000 +0100
 @@ -0,0 +1,135 @@
 +/*
 + * GStreamer
@@ -246,7 +246,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      0, "Kate encoder");
 +  GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "kateparse",
 +      0, "Kate parser");
-+  GST_DEBUG_CATEGORY_INIT (gst_kateparse_debug, "katetag",
++  GST_DEBUG_CATEGORY_INIT (gst_katetag_debug, "katetag",
 +      0, "Kate tagger");
 +
 +  if (!gst_element_register (plugin, "katedec",
@@ -276,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-06-29 23:01:48.000000000 +0100
-@@ -0,0 +1,522 @@
++++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-07-05 17:20:41.000000000 +0100
+@@ -0,0 +1,525 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -558,6 +558,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  /* headers may be interesting to retrieve information from */
 +  if (GST_BUFFER_SIZE (buf) > 0) switch (GST_BUFFER_DATA (buf)[0]) {
 +    GstCaps *caps;
++
 +    case 0x80: /* ID header */
 +      GST_INFO_OBJECT (kd, "Parsed ID header: language %s, category %s", kd->k.ki->language, kd->k.ki->category);
 +      caps = gst_caps_new_simple (kd->remove_markup ? "text/plain" : "text/x-pango-markup", NULL);
@@ -580,11 +581,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      kd->category = g_strdup (kd->k.ki->category);
 +
 +      break;
++
 +    case 0x81: /* Vorbis comments header */
 +      GST_INFO_OBJECT (kd, "Parsed comments header");
 +      {
 +        gchar *encoder = NULL;
-+        GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, (guint8*)"\201kate\0\0\0\0", 9, &encoder);
++        GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, (const guint8*)"\201kate\0\0\0\0", 9, &encoder);
 +        if (list) {
 +          kd->tags = gst_tag_list_merge (kd->tags, list, GST_TAG_MERGE_REPLACE);
 +          gst_tag_list_free (list);
@@ -613,6 +615,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        }
 +      }
 +      break;
++
 +    default:
 +      break;
 +  }
@@ -900,8 +903,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-02 22:05:40.000000000 +0100
-@@ -0,0 +1,1526 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-05 17:09:22.000000000 +0100
+@@ -0,0 +1,1499 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -983,6 +986,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#include <gst/tag/tag.h>
 +
 +#include "gstkate.h"
++#include "gstkateutil.h"
 +#include "gstkateenc.h"
 +
 +GST_DEBUG_CATEGORY_EXTERN (gst_kateenc_debug);
@@ -1007,7 +1011,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +};
 +
 +/* taken off the dvdsubdec element */
-+static const guint32 gst_kate_default_clut[16] = {
++static const guint32 gst_kate_enc_default_clut[16] = {
 +  0xb48080, 0x248080, 0x628080, 0xd78080,
 +  0x808080, 0x808080, 0x808080, 0x808080,
 +  0x808080, 0x808080, 0x808080, 0x808080,
@@ -1156,7 +1160,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke->granule_rate_denominator = 1;
 +  ke->granule_shift = 32;
 +  ke->keepalive_min_time = DEFAULT_KEEPALIVE_MIN_TIME;
-+  memcpy (ke->spu_clut, gst_kate_default_clut, sizeof (gst_kate_default_clut));
++  memcpy (ke->spu_clut, gst_kate_enc_default_clut, sizeof (gst_kate_enc_default_clut));
 +}
 +
 +static void
@@ -1234,7 +1238,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* GstElement vmethod implementations */
 +
-+static GstBuffer *gst_kate_create_buffer(GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
++static GstBuffer *gst_kate_enc_create_buffer(GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
 +{
 +  GstBuffer *buffer;
 +
@@ -1262,7 +1266,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return buffer;
 +}
 +
-+static GstFlowReturn gst_kate_push_buffer(GstKateEnc *ke, GstBuffer *buffer)
++static GstFlowReturn gst_kate_enc_push_buffer(GstKateEnc *ke, GstBuffer *buffer)
 +{
 +  GstFlowReturn rflow;
 +
@@ -1274,7 +1278,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
 +  GST_BUFFER_DURATION (buffer) = G_MAXINT64;
 +
-+GST_DEBUG_OBJECT (ke, "Pushing buffer to pad");
 +  rflow = gst_pad_push (ke->srcpad, buffer);
 +  if (rflow != GST_FLOW_OK) {
 +    GST_ERROR_OBJECT (ke, "Failed to push buffer: %d", rflow);
@@ -1283,12 +1286,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return rflow;
 +}
 +
-+static GstFlowReturn gst_kate_push_and_free_kate_packet (GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
++static GstFlowReturn gst_kate_enc_push_and_free_kate_packet (GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
 +{
 +  GstBuffer *buffer;
 + 
 +  GST_LOG_OBJECT (ke, "Creating buffer, %u bytes", kp->nbytes);
-+  buffer = gst_kate_create_buffer (ke, kp, granpos, timestamp, duration, header);
++  buffer = gst_kate_enc_create_buffer (ke, kp, granpos, timestamp, duration, header);
 +  if (!buffer) {
 +    GST_WARNING_OBJECT (ke, "Failed to create buffer, %u bytes", kp->nbytes);
 +    kate_packet_clear (kp);
@@ -1297,39 +1300,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  kate_packet_clear (kp);
 +
-+  return gst_kate_push_buffer (ke, buffer);
-+}
-+
-+static GstCaps *gst_kate_set_header_on_caps (GstKateEnc *ke, GstCaps *caps, GList *headers)
-+{
-+  GstStructure *structure;
-+  GValue array = { 0 };
-+
-+  caps = gst_caps_make_writable (caps);
-+  structure = gst_caps_get_structure (caps, 0);
-+
-+  g_value_init (&array, GST_TYPE_ARRAY);
-+
-+  while (headers) {
-+    GValue value = { 0 };
-+    GstBuffer *buffer = headers->data;
-+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
-+    g_value_init (&value, GST_TYPE_BUFFER);
-+    /* as in theoraenc, we need to copy to avoid circular references */
-+    buffer = gst_buffer_copy (buffer);
-+    gst_value_set_buffer (&value, buffer);
-+    gst_buffer_unref (buffer);
-+    gst_value_array_append_value (&array, &value);
-+    g_value_unset (&value);
-+
-+    headers = headers->next;
-+  }
-+
-+  gst_structure_set_value (structure, "streamheader", &array);
-+  g_value_unset (&array);
-+  GST_LOG_OBJECT (ke, "here are the newly set caps: %" GST_PTR_FORMAT, caps);
-+
-+  return caps;
++  return gst_kate_enc_push_buffer (ke, buffer);
 +}
 +
 +static void
@@ -1379,7 +1350,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +}
 +
-+static GstFlowReturn gst_kate_send_headers (GstKateEnc *ke)
++static GstFlowReturn gst_kate_enc_send_headers (GstKateEnc *ke)
 +{
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +  GstCaps *caps;
@@ -1392,7 +1363,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    kate_packet kp;
 +    int ret = kate_encode_headers (&ke->k, &ke->kc, &kp);
 +    if (ret==0) {
-+      GstBuffer *buffer = gst_kate_create_buffer (ke, &kp, 0ll, 0ll, 0ll, TRUE);
++      GstBuffer *buffer = gst_kate_enc_create_buffer (ke, &kp, 0ll, 0ll, 0ll, TRUE);
 +      if (!buffer) {
 +        rflow = GST_FLOW_ERROR;
 +        break;
@@ -1412,43 +1383,48 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    }
 +  }
 +
-+  caps = gst_kate_set_header_on_caps (ke, gst_pad_get_caps (ke->srcpad), headers);
-+  GST_DEBUG_OBJECT (ke, "here are the caps: %" GST_PTR_FORMAT, caps);
-+  gst_pad_set_caps (ke->srcpad, caps);
++  if (rflow == GST_FLOW_OK) {
++    caps = gst_kate_util_set_header_on_caps (&ke->element, gst_pad_get_caps (ke->srcpad), headers);
++    if (caps) {
++      GST_DEBUG_OBJECT (ke, "here are the caps: %" GST_PTR_FORMAT, caps);
++      gst_pad_set_caps (ke->srcpad, caps);
 +
-+  GST_LOG_OBJECT (ke, "setting caps on headers");
-+  item = headers;
-+  while (item) {
-+    GstBuffer *buffer = item->data;
-+    GST_LOG_OBJECT (ke, "settings caps on header %p", buffer);
-+    gst_buffer_set_caps (buffer, caps);
-+    item = item->next;
-+  }
++      GST_LOG_OBJECT (ke, "setting caps on headers");
++      item = headers;
++      while (item) {
++        GstBuffer *buffer = item->data;
++        GST_LOG_OBJECT (ke, "settings caps on header %p", buffer);
++        gst_buffer_set_caps (buffer, caps);
++        item = item->next;
++      }
 +
-+  gst_caps_unref (caps);
++      gst_caps_unref (caps);
 +
-+  GST_LOG_OBJECT (ke, "pushing headers");
-+  item = headers;
-+  while (item) {
-+    GstBuffer *buffer = item->data;
-+    GST_LOG_OBJECT (ke, "pushing header %p", buffer);
-+    gst_kate_push_buffer (ke, buffer);
-+    item = item->next;
++      GST_LOG_OBJECT (ke, "pushing headers");
++      item = headers;
++      while (item) {
++        GstBuffer *buffer = item->data;
++        GST_LOG_OBJECT (ke, "pushing header %p", buffer);
++        gst_kate_enc_push_buffer (ke, buffer);
++        item = item->next;
++      }
++    }
++    else {
++      GST_ERROR_OBJECT (ke, "Failed to set headers on caps");
++    }
 +  }
 +
 +  g_list_free(headers);
 +
-+  GST_LOG_OBJECT (ke, "headers pushed");
-+
 +  return rflow;
 +}
 +
-+static GstFlowReturn gst_kate_flush_headers (GstKateEnc *ke)
++static GstFlowReturn gst_kate_enc_flush_headers (GstKateEnc *ke)
 +{
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +  if (!ke->headers_sent) {
 +    GST_INFO_OBJECT (ke, "headers not yet sent, flushing");
-+    rflow = gst_kate_send_headers (ke);
++    rflow = gst_kate_enc_send_headers (ke);
 +    if (rflow == GST_FLOW_OK) {
 +      ke->headers_sent = TRUE;
 +      GST_INFO_OBJECT (ke, "headers flushed");
@@ -1473,7 +1449,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +};
 +
 +static void
-+gst_kate_decode_colormap (GstKateEnc *ke, const guint8 *ptr)
++gst_kate_enc_decode_colormap (GstKateEnc *ke, const guint8 *ptr)
 +{
 +  ke->spu_colormap[3] = ptr[0] >> 4;
 +  ke->spu_colormap[2] = ptr[0] & 0x0f;
@@ -1482,7 +1458,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_decode_alpha (GstKateEnc *ke, const guint8 *ptr)
++gst_kate_enc_decode_alpha (GstKateEnc *ke, const guint8 *ptr)
 +{
 +  ke->spu_alpha[3] = ptr[0] >> 4;
 +  ke->spu_alpha[2] = ptr[0] & 0x0f;
@@ -1491,7 +1467,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_decode_area (GstKateEnc *ke, const guint8 *ptr)
++gst_kate_enc_decode_area (GstKateEnc *ke, const guint8 *ptr)
 +{
 +  ke->spu_left = ((((guint16)ptr[0]) & 0x3f) << 4) | (ptr[1] >> 4);
 +  ke->spu_top = ((((guint16)ptr[3]) & 0x3f) << 4) | (ptr[4] >> 4);
@@ -1501,7 +1477,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_decode_pixaddr (GstKateEnc *ke, const guint8 *ptr)
++gst_kate_enc_decode_pixaddr (GstKateEnc *ke, const guint8 *ptr)
 +{
 +  ke->spu_pix_data[0] = GST_KATE_UINT16_BE (ptr + 0);
 +  ke->spu_pix_data[1] = GST_KATE_UINT16_BE (ptr + 2);
@@ -1509,7 +1485,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* heavily inspired from dvdspudec */
 +static guint16
-+gst_kate_decode_colcon (GstKateEnc *ke, const guint8 *ptr)
++gst_kate_enc_decode_colcon (GstKateEnc *ke, const guint8 *ptr)
 +{
 +  guint16 nbytes = GST_KATE_UINT16_BE (ptr + 0);
 +  guint16 nbytes_left = nbytes;
@@ -1553,7 +1529,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static inline guint8
-+gst_kate_get_nybble (const guint8 *nybbles, size_t *nybble_offset)
++gst_kate_enc_get_nybble (const guint8 *nybbles, size_t *nybble_offset)
 +{
 +  guint8 ret;
 +
@@ -1571,17 +1547,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static guint16
-+gst_kate_get_rle_code (const guint8 *nybbles, size_t *nybble_offset)
++gst_kate_enc_get_rle_code (const guint8 *nybbles, size_t *nybble_offset)
 +{
 +  guint16 code;
 +
-+  code = gst_kate_get_nybble (nybbles, nybble_offset);
++  code = gst_kate_enc_get_nybble (nybbles, nybble_offset);
 +  if (code < 0x4) {             /* 4 .. f */
-+    code = (code << 4) | gst_kate_get_nybble (nybbles, nybble_offset);
++    code = (code << 4) | gst_kate_enc_get_nybble (nybbles, nybble_offset);
 +    if (code < 0x10) {          /* 1x .. 3x */
-+      code = (code << 4) | gst_kate_get_nybble (nybbles, nybble_offset);
++      code = (code << 4) | gst_kate_enc_get_nybble (nybbles, nybble_offset);
 +      if (code < 0x40) {        /* 04x .. 0fx */
-+        code = (code << 4) | gst_kate_get_nybble (nybbles, nybble_offset);
++        code = (code << 4) | gst_kate_enc_get_nybble (nybbles, nybble_offset);
 +      }
 +    }
 +  }
@@ -1589,7 +1565,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_crop_bitmap(GstKateEnc *ke, kate_bitmap *kb,guint16 *dx,guint16 *dy)
++gst_kate_enc_crop_bitmap(GstKateEnc *ke, kate_bitmap *kb,guint16 *dx,guint16 *dy)
 +{
 +  int top, bottom, left, right;
 +  guint8 zero = 0;
@@ -1674,7 +1650,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#define IGNORE(x) do { guint16 __=(x); CHECK(__); ADVANCE(__); } while (0)
 +
 +static GstFlowReturn
-+gst_kate_decode_command_sequence (GstKateEnc *ke, GstBuffer *buf, guint16 command_sequence_offset)
++gst_kate_enc_decode_command_sequence (GstKateEnc *ke, GstBuffer *buf, guint16 command_sequence_offset)
 +{
 +  guint16 date;
 +  guint16 next_command_sequence;
@@ -1713,25 +1689,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      case SPU_CMD_SET_COLOR: /* 0x03 */
 +        GST_DEBUG_OBJECT (ke, "[3] SET COLOR");
 +        CHECK(2);
-+        gst_kate_decode_colormap (ke, ptr);
++        gst_kate_enc_decode_colormap (ke, ptr);
 +        ADVANCE(2);
 +        break;
 +      case SPU_CMD_SET_ALPHA: /* 0x04 */
 +        GST_DEBUG_OBJECT (ke, "[4] SET ALPHA");
 +        CHECK(2);
-+        gst_kate_decode_alpha (ke, ptr);
++        gst_kate_enc_decode_alpha (ke, ptr);
 +        ADVANCE(2);
 +        break;
 +      case SPU_CMD_SET_DAREA: /* 0x05 */
 +        GST_DEBUG_OBJECT (ke, "[5] SET DISPLAY AREA");
 +        CHECK(6);
-+        gst_kate_decode_area (ke, ptr);
++        gst_kate_enc_decode_area (ke, ptr);
 +        ADVANCE(6);
 +        break;
 +      case SPU_CMD_DSPXA: /* 0x06 */
 +        GST_DEBUG_OBJECT (ke, "[6] SET PIXEL ADDRESSES");
 +        CHECK(4);
-+        gst_kate_decode_pixaddr (ke, ptr);
++        gst_kate_enc_decode_pixaddr (ke, ptr);
 +        GST_DEBUG_OBJECT (ke, "  -> first pixel address %u", ke->spu_pix_data[0]);
 +        GST_DEBUG_OBJECT (ke, "  -> second pixel address %u", ke->spu_pix_data[1]);
 +        ADVANCE(4);
@@ -1739,13 +1715,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      case SPU_CMD_CHG_COLCON: /* 0x07 */
 +        GST_DEBUG_OBJECT (ke, "[7] CHANGE COLOR/CONTRAST");
 +        CHECK(2);
-+        ADVANCE(gst_kate_decode_colcon (ke, ptr));
++        ADVANCE(gst_kate_enc_decode_colcon (ke, ptr));
 +        break;
 +      case SPU_CMD_END: /* 0xff */
 +        GST_DEBUG_OBJECT (ke, "[0xff] END");
 +        if (next_command_sequence != command_sequence_offset) {
 +          GST_DEBUG_OBJECT (ke, "Jumping to next sequence at offset %u", next_command_sequence);
-+          return gst_kate_decode_command_sequence (ke, buf, next_command_sequence);
++          return gst_kate_enc_decode_command_sequence (ke, buf, next_command_sequence);
 +        }
 +        else {
 +          GST_DEBUG_OBJECT (ke, "No more sequences to decode");
@@ -1761,7 +1737,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static inline int
-+gst_kate_clamp(int value)
++gst_kate_enc_clamp(int value)
 +{
 +  if (value<0) return 0;
 +  if (value>255) return 255;
@@ -1769,29 +1745,29 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_yuv2rgb(int y,int u,int v,int *r,int *g,int *b)
++gst_kate_enc_yuv2rgb(int y,int u,int v,int *r,int *g,int *b)
 +{
 +#if 0
-+    *r = gst_kate_clamp (y + 1.371 * v);
-+    *g = gst_kate_clamp (y - 0.698 * v - 0.336 * u);
-+    *b = gst_kate_clamp (y + 1.732 * u);
++    *r = gst_kate_enc_clamp (y + 1.371 * v);
++    *g = gst_kate_enc_clamp (y - 0.698 * v - 0.336 * u);
++    *b = gst_kate_enc_clamp (y + 1.732 * u);
 +#elif 0
-+    *r = gst_kate_clamp (y + u);
-+    *g = gst_kate_clamp (y - (76*u - 26*v) / 256);
-+    *b = gst_kate_clamp (y + v);
++    *r = gst_kate_enc_clamp (y + u);
++    *g = gst_kate_enc_clamp (y - (76*u - 26*v) / 256);
++    *b = gst_kate_enc_clamp (y + v);
 +#else
 +    y = (y-16)*255/219;
 +    u -= 128;
 +    v -= 128;
 +
-+    *r = gst_kate_clamp (y + 1.402*255/224 * v);
-+    *g = gst_kate_clamp (y + 0.34414*255/224 * v - 0.71414*255/224*u);
-+    *b = gst_kate_clamp (y + 1.772*244/224 * u);
++    *r = gst_kate_enc_clamp (y + 1.402*255/224 * v);
++    *g = gst_kate_enc_clamp (y + 0.34414*255/224 * v - 0.71414*255/224*u);
++    *b = gst_kate_enc_clamp (y + 1.772*244/224 * u);
 +#endif
 +}
 +
 +static GstFlowReturn
-+gst_kate_create_spu_palette (GstKateEnc *ke, kate_palette *kp)
++gst_kate_enc_create_spu_palette (GstKateEnc *ke, kate_palette *kp)
 +{
 +  size_t n;
 +
@@ -1808,7 +1784,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    int v = (color>>8)&0xff;
 +    int u = color&0xff;
 +    int r, g, b;
-+    gst_kate_yuv2rgb (y, u, v, &r, &g, &b);
++    gst_kate_enc_yuv2rgb (y, u, v, &r, &g, &b);
 +    kp->colors[n].r = r;
 +    kp->colors[n].g = g;
 +    kp->colors[n].b = b;
@@ -1831,7 +1807,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static GstFlowReturn
-+gst_kate_decode_spu (GstKateEnc *ke, GstBuffer *buf, kate_region *kr,kate_bitmap *kb, kate_palette *kp)
++gst_kate_enc_decode_spu (GstKateEnc *ke, GstBuffer *buf, kate_region *kr,kate_bitmap *kb, kate_palette *kp)
 +{
 +  const guint8 *ptr = GST_BUFFER_DATA (buf);
 +  size_t sz = GST_BUFFER_SIZE (buf);
@@ -1865,7 +1841,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  sz = GST_BUFFER_SIZE (buf) - next_command_sequence;
 +  GST_DEBUG_OBJECT (ke, "next command sequence at %u for %u", next_command_sequence, sz);
 +
-+  rflow = gst_kate_decode_command_sequence (ke, buf, next_command_sequence);
++  rflow = gst_kate_enc_decode_command_sequence (ke, buf, next_command_sequence);
 +  if (rflow != GST_FLOW_OK) return rflow;
 +
 +  /* if no addresses or sizes were given, or if they define an empty SPU, nothing more to do */
@@ -1876,7 +1852,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +
 +  /* create the palette */
-+  rflow = gst_kate_create_spu_palette (ke, kp);
++  rflow = gst_kate_enc_create_spu_palette (ke, kp);
 +  if (rflow != GST_FLOW_OK) return rflow;
 +
 +  /* create the bitmap */
@@ -1903,7 +1879,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        n += kb->width-x;
 +        break;
 +      }
-+      guint16 code = gst_kate_get_rle_code (pixptr[y&1], &nybble_offset[y&1]);
++      guint16 code = gst_kate_enc_get_rle_code (pixptr[y&1], &nybble_offset[y&1]);
 +      if (code == 0) {
 +        memset (kb->pixels+n, 0, kb->width-x);
 +        n += kb->width-x;
@@ -1929,7 +1905,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  /* some streams seem to have huge uncropped SPUs, fix those up */
 +  x = ke->spu_left;
 +  y = ke->spu_top;
-+  gst_kate_crop_bitmap (ke, kb, &x, &y);
++  gst_kate_enc_crop_bitmap (ke, kb, &x, &y);
 +
 +  /* create the region */
 +  kate_region_init (kr);
@@ -1977,7 +1953,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type ? mime_type : "<no type>");
 +
 +    /* first push headers if we haven't done that yet */
-+    rflow = gst_kate_flush_headers (ke);
++    rflow = gst_kate_enc_flush_headers (ke);
 +
 +    if (rflow == GST_FLOW_OK) {
 +      kate_float t0 = start/(double)GST_SECOND;
@@ -1988,7 +1964,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        kate_region kregion;
 +        kate_bitmap kbitmap;
 +        kate_palette kpalette;
-+        rflow = gst_kate_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
++        rflow = gst_kate_enc_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
 +        if (rflow != GST_FLOW_OK) {
 +          GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
 +#if 0
@@ -2068,7 +2044,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        }
 +        else if (packet_ready) {
 +          kate_int64_t granpos = kate_encode_get_granule (&ke->k);
-+          rflow = gst_kate_push_and_free_kate_packet (ke, &kp, granpos, start, duration, FALSE);
++          rflow = gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, start, duration, FALSE);
 +        }
 +      }
 +    }
@@ -2302,7 +2278,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      GST_LOG_OBJECT (ke, "Got newsegment event");
 +      if (ke->initialized) {
 +        GST_LOG_OBJECT (ke, "ensuring all headers are in");
-+        if (gst_kate_flush_headers (ke) != GST_FLOW_OK) {
++        if (gst_kate_enc_flush_headers (ke) != GST_FLOW_OK) {
 +          GST_WARNING_OBJECT (ke, "Failed to flush headers");
 +        }
 +        else {
@@ -2325,7 +2301,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +              else {
 +                kate_int64_t granpos = kate_encode_get_granule (&ke->k);
 +                GST_LOG_OBJECT (ke, "Keepalive packet encoded");
-+                if (gst_kate_push_and_free_kate_packet (ke, &kp, granpos, timestamp, 0, FALSE)) {
++                if (gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, timestamp, 0, FALSE)) {
 +                  GST_WARNING_OBJECT (ke, "Failed to push keepalive packet");
 +                }
 +              }
@@ -2343,7 +2319,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      if (structure != NULL && gst_structure_has_name (structure, "application/x-gst-dvd")) {
 +        if (ke->initialized) {
 +          GST_LOG_OBJECT (ke, "ensuring all headers are in");
-+          if (gst_kate_flush_headers (ke) != GST_FLOW_OK) {
++          if (gst_kate_enc_flush_headers (ke) != GST_FLOW_OK) {
 +            GST_WARNING_OBJECT (ke, "Failed to flush headers");
 +          }
 +          else {
@@ -2397,7 +2373,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      GST_LOG_OBJECT (ke, "Got EOS event");
 +      if (ke->initialized) {
 +        GST_LOG_OBJECT (ke, "ensuring all headers are in");
-+        if (gst_kate_flush_headers (ke) != GST_FLOW_OK) {
++        if (gst_kate_enc_flush_headers (ke) != GST_FLOW_OK) {
 +          GST_WARNING_OBJECT (ke, "Failed to flush headers");
 +        }
 +        else {
@@ -2409,7 +2385,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          else {
 +            kate_int64_t granpos = kate_encode_get_granule (&ke->k);
 +            GST_LOG_OBJECT (ke, "EOS packet encoded");
-+            if (gst_kate_push_and_free_kate_packet (ke, &kp, granpos, ke->latest_end_time, 0, FALSE)) {
++            if (gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, ke->latest_end_time, 0, FALSE)) {
 +              GST_WARNING_OBJECT (ke, "Failed to push EOS packet");
 +            }
 +          }
@@ -2607,8 +2583,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-07-02 19:55:51.000000000 +0100
-@@ -0,0 +1,613 @@
++++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-07-05 17:03:46.000000000 +0100
+@@ -0,0 +1,590 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
 + * Copyright (C) 2006 Andy Wingo <wingo@pobox.com>
@@ -2674,6 +2650,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#endif
 +
 +#include "gstkate.h"
++#include "gstkateutil.h"
 +#include "gstkateparse.h"
 +
 +GST_DEBUG_CATEGORY_EXTERN (gst_kateparse_debug);
@@ -2756,42 +2733,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 +}
 +
-+static GstFlowReturn
-+gst_kate_parse_set_header_on_caps (GstKateParse * parse, GstCaps * caps)
-+{
-+  GstBuffer *buf;
-+  GstStructure *structure;
-+  GList *headers;
-+  GValue array = { 0 };
-+  GValue value = { 0 };
-+
-+  g_assert (parse);
-+
-+  if (!caps) return GST_FLOW_ERROR;
-+  if (!parse->streamheader) return GST_FLOW_ERROR;
-+
-+  structure = gst_caps_get_structure (caps, 0);
-+
-+  headers = parse->streamheader;
-+  g_value_init (&array, GST_TYPE_ARRAY);
-+  while (headers) {
-+    g_assert(headers->data);
-+    buf = headers->data;
-+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
-+    g_value_init (&value, GST_TYPE_BUFFER);
-+    gst_value_set_buffer (&value, buf);
-+    gst_value_array_append_value (&array, &value);
-+    if (!headers->next) {
-+      gst_structure_set_value (structure, "streamheader", &array);
-+    }
-+    g_value_unset (&value);
-+    headers = headers->next;
-+  }
-+  g_value_unset (&array);
-+
-+  return GST_FLOW_OK;
-+}
-+
 +static void
 +gst_kate_parse_drain_event_queue (GstKateParse * parse)
 +{
@@ -2812,20 +2753,21 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  kate_packet packet;
 +  GList *headers, *outbuf_list = NULL;
 +  int ret;
-+  GstFlowReturn rflow;
++  gboolean res;
 +
 +  /* get the headers into the caps, passing them to kate as we go */
-+  caps = gst_caps_make_writable (gst_pad_get_caps (parse->srcpad));
-+  rflow = gst_kate_parse_set_header_on_caps (parse, caps);
-+
-+  if (rflow == GST_FLOW_OK) {
-+    GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
-+    gst_pad_set_caps (parse->srcpad, caps);
-+  }
-+  gst_caps_unref (caps);
-+  if (rflow != GST_FLOW_OK) {
++  caps = gst_kate_util_set_header_on_caps (&parse->element, gst_pad_get_caps (parse->srcpad), parse->streamheader);
++  if (!caps) {
 +    GST_ERROR_OBJECT (parse, "Failed to set headers on caps");
-+    return rflow;
++    return GST_FLOW_ERROR;
++  }
++
++  GST_DEBUG_OBJECT (parse, "here are the caps: %" GST_PTR_FORMAT, caps);
++  res = gst_pad_set_caps (parse->srcpad, caps);
++  gst_caps_unref (caps);
++  if (!res) {
++    GST_WARNING_OBJECT (parse, "Failed to set pad caps");
++    return GST_FLOW_ERROR;
 +  }
 +
 +  headers = parse->streamheader;
@@ -2853,8 +2795,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +
 +  g_list_free(outbuf_list);
-+  g_list_free (parse->streamheader);
-+  parse->streamheader = NULL;
 +
 +  parse->streamheader_sent = TRUE;
 +
@@ -2864,6 +2804,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static void
 +gst_kate_parse_clear_queue (GstKateParse * parse)
 +{
++  GST_DEBUG_OBJECT (parse, "Clearing queue");
 +  while (parse->buffer_queue->length) {
 +    GstBuffer *buf;
 +
@@ -2883,7 +2824,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    gint64 granulepos)
 +{
 +  GST_LOG_OBJECT(parse, "granulepos %16llx", granulepos);
-+  GST_WARNING_OBJECT(parse, "gst_kate_parse_push_buffer");
 +  GST_BUFFER_OFFSET (buf) = kate_granule_time(&parse->ki, granulepos)*GST_SECOND;
 +  GST_BUFFER_OFFSET_END (buf) = granulepos;
 +  GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_OFFSET (buf);
@@ -2961,8 +2901,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GST_LOG_OBJECT(parse, "granpos %16llx", granpos);
 +  g_queue_push_tail (parse->buffer_queue, buf);
 +
-+  g_assert (granpos >= 0);
-+  ret = gst_kate_parse_drain_queue (parse, granpos);
++  if (granpos >= 0) {
++    ret = gst_kate_parse_drain_queue (parse, granpos);
++  }
++  else { 
++    GST_WARNING_OBJECT (parse, "granulepos < 0 (%lld)", granpos);
++    ret = GST_FLOW_ERROR;
++  }
 +
 +  return ret;
 +}
@@ -3036,6 +2981,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      ret = gst_pad_event_default (pad, event);
 +      break;
 +    case GST_EVENT_EOS:
++      if (!parse->streamheader_sent) {
++        GST_DEBUG_OBJECT(parse, "Got EOS, pushing headers seen so far");
++        ret = gst_kate_parse_push_headers (parse);
++        if (ret != GST_FLOW_OK) goto done;
++      }
 +      gst_kate_parse_drain_queue_prematurely (parse);
 +      ret = gst_pad_event_default (pad, event);
 +      break;
@@ -3047,6 +2997,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +  }
 +
++done:
 +  gst_object_unref (parse);
 +
 +  return ret;
@@ -3210,12 +3161,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case GST_STATE_CHANGE_PAUSED_TO_READY:
 +      kate_info_clear (&parse->ki);
 +      kate_comment_clear (&parse->kc);
++
 +      gst_kate_parse_clear_queue (parse);
 +      g_queue_free (parse->buffer_queue);
 +      parse->buffer_queue = NULL;
 +      g_queue_free (parse->event_queue);
 +      parse->event_queue = NULL;
 +      break;
++
 +    default:
 +      break;
 +  }
@@ -3305,8 +3258,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-06-24 21:11:25.000000000 +0100
-@@ -0,0 +1,262 @@
++++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-07-05 16:21:10.000000000 +0100
+@@ -0,0 +1,267 @@
 +/*
 + * GStreamer
 + * Copyright (C) 2006 James Livingston <doclivingston@gmail.com>
@@ -3529,8 +3482,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  kt = GST_KATE_TAG (parse);
 +
-+  /* rewrite the language and category if required */
++  /* rewrite the language and category */
 +  if (GST_BUFFER_SIZE (buffer) >= 64 && GST_BUFFER_DATA (buffer)[0] == 0x80) {
++    buffer = gst_buffer_copy (buffer);
++
 +    /* language is at offset 32, 16 bytes, zero terminated */
 +    if (kt->language) {
 +      strncpy((char*)GST_BUFFER_DATA (buffer)+32, kt->language, 15);
@@ -3543,31 +3498,34 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    }
 +  }
 +
-+  /* just pass everything except the comments packet */
-+  if (GST_BUFFER_SIZE (buffer) >= 1 && GST_BUFFER_DATA (buffer)[0] != 0x81) {
-+    return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
++  /*  rewrite the comments packet */
++  if (GST_BUFFER_SIZE (buffer) >= 9 && GST_BUFFER_DATA (buffer)[0] == 0x81) {
++    old_tags =
++        gst_tag_list_from_vorbiscomment_buffer (buffer, (const guint8 *) "\201kate\0\0\0\0",
++        9, &encoder);
++    user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (kt));
++
++    /* build new tag list */
++    new_tags = gst_tag_list_merge (user_tags, old_tags,
++        gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (kt)));
++    gst_tag_list_free (old_tags);
++
++    new_buf =
++        gst_tag_list_to_vorbiscomment_buffer (new_tags, (const guint8 *) "\201kate\0\0\0\0",
++        9, encoder);
++    gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
++
++    gst_tag_list_free (new_tags);
++    g_free (encoder);
++    gst_buffer_unref (buffer);
++
++    /* the buffer will have the framing bit used by Vorbis, but we don't use it */
++    --GST_BUFFER_SIZE (new_buf);
++
++    buffer = new_buf;
 +  }
 +
-+  old_tags =
-+      gst_tag_list_from_vorbiscomment_buffer (buffer, (guint8 *) "\201kate\0\0\0\0",
-+      9, &encoder);
-+  user_tags = gst_tag_setter_get_tag_list (GST_TAG_SETTER (kt));
-+
-+  /* build new tag list */
-+  new_tags = gst_tag_list_merge (user_tags, old_tags,
-+      gst_tag_setter_get_tag_merge_mode (GST_TAG_SETTER (kt)));
-+  gst_tag_list_free (old_tags);
-+
-+  new_buf =
-+      gst_tag_list_to_vorbiscomment_buffer (new_tags, (guint8 *) "\201kate\0\0\0\0",
-+      9, encoder);
-+  gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
-+
-+  gst_tag_list_free (new_tags);
-+  g_free (encoder);
-+  gst_buffer_unref (buffer);
-+
-+  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, new_buf);
++  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
 +++ gst-plugins-bad/ext/kate/gstkatetag.h	2008-06-24 20:44:24.000000000 +0100
@@ -3639,14 +3597,115 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TAG_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/Makefile.am	2008-06-24 20:32:31.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkateutil.c	2008-07-05 17:01:59.000000000 +0100
+@@ -0,0 +1,62 @@
++/* GStreamer
++ * Copyright (C) 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifdef HAVE_CONFIG_H
++#  include "config.h"
++#endif
++
++#include "gstkate.h"
++#include "gstkateparse.h"
++
++
++GstCaps *gst_kate_util_set_header_on_caps (GstElement *element, GstCaps *caps, GList *headers)
++{
++  GstStructure *structure;
++  GValue array = { 0 };
++
++  if (!caps) return NULL;
++  if (!headers) return NULL;
++
++  caps = gst_caps_make_writable (caps);
++  structure = gst_caps_get_structure (caps, 0);
++
++  g_value_init (&array, GST_TYPE_ARRAY);
++
++  while (headers) {
++    GValue value = { 0 };
++    GstBuffer *buffer = headers->data;
++    g_assert(buffer);
++    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
++    g_value_init (&value, GST_TYPE_BUFFER);
++    /* as in theoraenc, we need to copy to avoid circular references */
++    buffer = gst_buffer_copy (buffer);
++    gst_value_set_buffer (&value, buffer);
++    gst_buffer_unref (buffer);
++    gst_value_array_append_value (&array, &value);
++    g_value_unset (&value);
++    headers = headers->next;
++  }
++
++  gst_structure_set_value (structure, "streamheader", &array);
++  g_value_unset (&array);
++  GST_LOG_OBJECT (element, "here are the newly set caps: %" GST_PTR_FORMAT, caps);
++
++  return caps;
++}
++
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ gst-plugins-bad/ext/kate/gstkateutil.h	2008-07-05 17:02:07.000000000 +0100
+@@ -0,0 +1,33 @@
++/* -*- c-basic-offset: 2 -*-
++ * GStreamer
++ * Copyright (C) <2008> ogg.k.ogg.k <ogg.k.ogg.k at googlemail dot com>
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++
++#ifndef __GST_KATE_UTIL_H__
++#define __GST_KATE_UTIL_H__
++
++#include <gst/gst.h>
++
++G_BEGIN_DECLS
++
++extern GstCaps *gst_kate_util_set_header_on_caps (GstElement *element, GstCaps *caps, GList *headers);
++
++G_END_DECLS
++
++#endif /* __GST_KATE_UTIL_H__ */
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ gst-plugins-bad/ext/kate/Makefile.am	2008-07-05 16:59:08.000000000 +0100
 @@ -0,0 +1,14 @@
 +# plugindir is set in configure
 +
 +plugin_LTLIBRARIES = libgstkate.la
 +
 +# sources used to compile this plug-in
-+libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c
++libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c gstkateutil.c
 +
 +# flags used to compile this plugin
 +libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
@@ -3654,10 +3713,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 +
 +# headers we need but don't want installed
-+noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h
++noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-06-24 17:52:33.000000000 +0100
-@@ -0,0 +1,641 @@
++++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-05 16:30:22.000000000 +0100
+@@ -0,0 +1,748 @@
 +/* GStreamer
 + *
 + * unit test for kate
@@ -3740,6 +3799,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static GstPad *mydecsrcpad, *mydecsinkpad;
 +static GstPad *myencsrcpad, *myencsinkpad;
 +static GstPad *myparsesrcpad, *myparsesinkpad;
++static GstPad *mytagsrcpad, *mytagsinkpad;
 +
 +static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 +    GST_PAD_SINK,
@@ -3834,8 +3894,36 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_check_teardown_element (kateparse);
 +}
 +
++static GstElement *
++setup_katetag (void)
++{
++  GstElement *katetag;
++
++  GST_DEBUG ("setup_katetag");
++  katetag = gst_check_setup_element ("katetag");
++  mytagsrcpad = gst_check_setup_src_pad (katetag, &srctemplate, NULL);
++  mytagsinkpad = gst_check_setup_sink_pad (katetag, &sinktemplate, NULL);
++  gst_pad_set_active (mytagsrcpad, TRUE);
++  gst_pad_set_active (mytagsinkpad, TRUE);
++
++  return katetag;
++}
++
 +static void
-+check_kateenc_buffers (guint expected)
++cleanup_katetag (GstElement * katetag)
++{
++  GST_DEBUG ("cleanup_katetag");
++  gst_element_set_state (katetag, GST_STATE_NULL);
++
++  gst_pad_set_active (mytagsrcpad, FALSE);
++  gst_pad_set_active (mytagsinkpad, FALSE);
++  gst_check_teardown_src_pad (katetag);
++  gst_check_teardown_sink_pad (katetag);
++  gst_check_teardown_element (katetag);
++}
++
++static void
++check_buffers (guint expected, gboolean headers_in_caps)
 +{
 +  GstBuffer *outbuffer;
 +  guint i, num_buffers;
@@ -3844,8 +3932,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  /* check buffers are the type we expect */
 +  num_buffers = g_list_length (buffers);
-+printf("%u buffers\n", num_buffers);
-+  fail_unless (num_buffers >= num_headers+expected+1); /* at least 9 headers, n data, 1 eos */
++  fail_unless (num_buffers >= num_headers+expected); /* at least 9 headers, plus a variable number of data packets */
 +  for (i = 0; i < num_buffers; ++i) {
 +    outbuffer = GST_BUFFER (buffers->data);
 +    fail_if (outbuffer == NULL);
@@ -3855,6 +3942,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      /* different headers packets */
 +      packet_type = (0x80 | i);
 +      fail_unless (GST_BUFFER_DATA (outbuffer)[0] == packet_type);
++      /* headers could be in caps, so would have an extra ref */
 +    }
 +    else if (i == num_buffers-1) {
 +      /* eos data packet */
@@ -4006,6 +4094,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
 +  /* cleanup */
 +  cleanup_kateenc (kateenc);
 +}
@@ -4040,6 +4132,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  fail_unless (gst_pad_push (myencsrcpad, inbuffer) == GST_FLOW_ERROR);
 +
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
++
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
 +
 +  gst_element_set_bus (kateenc, NULL);
 +
@@ -4083,8 +4179,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_buffer_unref (inbuffer);
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
-+  /* at least one data packet should have been emitted */
-+  check_kateenc_buffers (1);
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
++  /* at least one data packet and one EOS packet should have been emitted */
++  check_buffers (1+1, FALSE);
 +
 +  /* cleanup */
 +  gst_bus_set_flushing (bus, TRUE);
@@ -4128,8 +4228,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_buffer_unref (inbuffer);
 +  fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
-+  /* at least one data packet should have been emitted */
-+  check_kateenc_buffers(1);
++  fail_unless (gst_element_set_state (kateenc,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
++  /* at least one data packet and one EOS packet should have been emitted */
++  check_buffers(2, FALSE);
 +
 +  /* cleanup */
 +  gst_bus_set_flushing (bus, TRUE);
@@ -4172,8 +4276,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +    fail_unless (gst_pad_push_event (myencsrcpad, gst_event_new_eos ()) == TRUE);
 +
-+    /* at least one data packet should have been emitted */
-+    check_kateenc_buffers(cfg[round].packets);
++    fail_unless (gst_element_set_state (kateenc,
++            GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++        "could not set to ready");
++
++    /* at least a number data packet and an EOS packet should have been emitted */
++    check_buffers(cfg[round].packets+1, FALSE);
 +
 +    /* cleanup */
 +    gst_bus_set_flushing (bus, TRUE);
@@ -4185,12 +4293,44 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +GST_END_TEST;
 +
++static void test_kate_send_headers(GstPad *pad)
++{
++  GstBuffer *inbuffer;
++  int i;
++
++  /* push headers */
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x80;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x80);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
++
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x81;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x81);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
++
++  for (i=2; i<8; ++i) {
++    inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x8x));
++    memcpy (GST_BUFFER_DATA (inbuffer), (guint8 *) kate_header_0x8x, sizeof (kate_header_0x8x));
++    GST_BUFFER_DATA (inbuffer) [0] = 0x80 | i;
++    GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++    fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
++  }
++
++  inbuffer = gst_buffer_new ();
++  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x88;
++  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x88);
++  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
++  fail_unless_equals_int (gst_pad_push (pad, inbuffer), GST_FLOW_OK);
++}
++
 +GST_START_TEST (test_kate_parse)
 +{
 +  GstElement *kateparse;
 +  GstBuffer *inbuffer;
 +  GstBus *bus;
-+  int i;
 +
 +  kateparse = setup_kateparse ();
 +  fail_unless (gst_element_set_state (kateparse,
@@ -4200,32 +4340,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gst_element_set_bus (kateparse, bus);
 +
-+  /* push headers */
-+  inbuffer = gst_buffer_new ();
-+  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x80;
-+  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x80);
-+  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
-+  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
-+
-+  inbuffer = gst_buffer_new ();
-+  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x81;
-+  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x81);
-+  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
-+  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
-+
-+  for (i=2; i<8; ++i) {
-+    inbuffer = gst_buffer_new_and_alloc (sizeof (kate_header_0x8x));
-+    memcpy (GST_BUFFER_DATA (inbuffer), (guint8 *) kate_header_0x8x, sizeof (kate_header_0x8x));
-+    GST_BUFFER_DATA (inbuffer) [0] = 0x80 | i;
-+    GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
-+    fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
-+  }
-+
-+  inbuffer = gst_buffer_new ();
-+  GST_BUFFER_DATA (inbuffer) = (guint8 *) kate_header_0x88;
-+  GST_BUFFER_SIZE (inbuffer) = sizeof (kate_header_0x88);
-+  GST_BUFFER_OFFSET (inbuffer) = GST_BUFFER_OFFSET_END (inbuffer) = 0;
-+  fail_unless_equals_int (gst_pad_push (myparsesrcpad, inbuffer), GST_FLOW_OK);
++  test_kate_send_headers (myparsesrcpad);
 +
 +  /* push a text packet */
 +  inbuffer = gst_buffer_new ();
@@ -4248,14 +4363,64 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  /* signal eos */
 +  fail_unless (gst_pad_push_event (myparsesrcpad, gst_event_new_eos ()) == TRUE);
 +
-+  /* at least one data packet should have been emitted */
-+  check_kateenc_buffers(0);
++  fail_unless (gst_element_set_state (kateparse,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
++  /* at least one data packet and one EOS packet should have been emitted */
++  check_buffers(2, TRUE);
 +
 +  /* cleanup */
 +  gst_bus_set_flushing (bus, TRUE);
 +  gst_element_set_bus (kateparse, NULL);
 +  gst_object_unref (GST_OBJECT (bus));
 +  cleanup_kateparse (kateparse);
++  g_list_free (buffers);
++}
++GST_END_TEST;
++
++GST_START_TEST (test_kate_tag)
++{
++  GstElement *katetag;
++  GstBus *bus;
++  GstBuffer *outbuffer;
++
++  katetag = setup_katetag ();
++  fail_unless (gst_element_set_state (katetag,
++          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to playing");
++  bus = gst_bus_new ();
++
++  gst_element_set_bus (katetag, bus);
++
++  g_object_set (katetag, "language", "cy", NULL);
++  g_object_set (katetag, "category", "subtitles", NULL);
++
++  test_kate_send_headers (mytagsrcpad);
++
++  /* signal eos */
++  fail_unless (gst_pad_push_event (mytagsrcpad, gst_event_new_eos ()) == TRUE);
++
++  fail_unless (gst_element_set_state (katetag,
++          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS,
++      "could not set to ready");
++
++  /* get the first buffer and check language/category */
++  fail_unless (g_list_length (buffers) >= 1);
++  outbuffer = GST_BUFFER (buffers->data);
++  fail_if (outbuffer == NULL);
++  fail_if (GST_BUFFER_SIZE (outbuffer) != 64);
++  fail_if (strcmp((const char*)GST_BUFFER_DATA (outbuffer)+32, "cy"));
++  fail_if (strcmp((const char*)GST_BUFFER_DATA (outbuffer)+48, "subtitles"));
++
++  /* all headers should have been emitted, but no particular packets */
++  check_buffers(0, TRUE);
++
++  /* cleanup */
++  gst_bus_set_flushing (bus, TRUE);
++  gst_element_set_bus (katetag, NULL);
++  gst_object_unref (GST_OBJECT (bus));
++  cleanup_katetag (katetag);
 +  g_list_free (buffers);
 +}
 +GST_END_TEST;
@@ -4278,6 +4443,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  tcase_add_test (tc_chain, test_kate_encode_spu);
 +  tcase_add_test (tc_chain, test_kate_encode_keepalives);
 +  tcase_add_test (tc_chain, test_kate_parse);
++  tcase_add_test (tc_chain, test_kate_tag);
 +#undef X
 +
 +  return s;
