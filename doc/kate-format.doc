@@ -59,6 +59,7 @@ Header packets:
 \li \ref format_0x80 "0x80 (ID header)"
 \li \ref format_0x81 "0x81 (Vorbis comments)"
 \li \ref format_0x82 "0x82 (regions)"
+\li \ref format_0x83 "0x83 (styles)"
 
 Data packets:
 

@@ -1,0 +1,24 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_color Format - color
+
+Colors are a set of red, green, blue, and alpha values. In the Kate
+bitstream, these are represented as 4 8 bit values, in this order:
+
+\li 8 bit for red (0 is black, 255 is full intensity)
+\li 8 bit for green (0 is black, 255 is full intensity)
+\li 8 bit for blue (0 is black, 255 is full intensity)
+\li 8 bit for alpha (0 is fully transparent, 255 is fully opaque)
+
+
+*/
+

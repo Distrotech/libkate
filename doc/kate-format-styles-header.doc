@@ -1,0 +1,32 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_0x83 Format - header packet type 0x83 - styles
+
+This header contains a (possibly empty) list of predefined styles
+that may be referred to by data packets.
+This header is mandatory, even if no styles are predefined.
+
+As with all headers, the first 8 bytes are composed of the header
+type (0x83) and the 7 byte kate signature ("kate\0\0\0").
+
+Next, we find a \ref format_32v "variable length integer", holding the number
+of predefined styles this header contains. A negative value is an error.
+
+Next, we find a list of \ref format_style "style" definitions, as many as defined
+int the previously read number.
+
+Next, we find a \ref format_warp "warp".
+
+Next, the data ends.
+
+*/
+

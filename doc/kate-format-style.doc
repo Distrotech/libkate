@@ -1,0 +1,45 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_style Format - style
+
+A style definition consists of:
+
+\li a \ref format_fp "floating point value" for the horizontal alignment.
+\li a \ref format_fp "floating point value" for the vertical alignment.
+\li a \ref format_fp "floating point value" for the font width.
+\li a \ref format_fp "floating point value" for the font height.
+\li a \ref format_fp "floating point value" for the left margin.
+\li a \ref format_fp "floating point value" for the top margin.
+\li a \ref format_fp "floating point value" for the right margin.
+\li a \ref format_fp "floating point value" for the bottom margin.
+\li a \ref format_color "color", being the text color.
+\li a \ref format_color "color", being the background color.
+\li a \ref format_color "color", being the draw color.
+\li 8 bits being the metric for the font width and height.
+\li 8 bits being the metric for the margin sizes.
+\li 1 bit for the bold flag.
+\li 1 bit for the italics flag.
+\li 1 bit for the underline flag.
+\li 1 bit for the strike flag.
+
+Next, we have a \ref format_warp "warp".
+
+Kate bitstream 0.2 makes use of this warp to add:
+
+\li 1 bit for the justify flag.
+\li a \ref format_32v "variable length integer", followed by this number of bytes being
+    a name of a font to use for text using this style.
+
+Next, the data ends.
+
+*/
+

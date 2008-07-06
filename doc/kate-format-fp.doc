@@ -1,0 +1,44 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_fp Format - floating point value
+
+Floating point values are stored as a series of digitized fixed point
+values in the Kate bitstream format. Several distinct streams of
+floating point values may be saved at the same time. A stream has a
+constant format (number of bits saved per value). Streams may be
+merged together (eg, merging 2 streams of V values yields a single
+stream of 2*V values).
+
+When loading N streams, the bitstream format is as follows:
+
+\li 1 bit, being 1 if the streams are merged.
+
+If the streams to load are merged, the different streams are stored
+as a single stream, and N is 1.
+
+Then, for each stream:
+
+\li 4bits being the number of zero bits in the high bits of the integer part of a number (`head').
+\li 4bits being the number of bits in the low bits of the fractional part of a number (`tail').
+
+Then, for each value:
+
+\li if head is strictly positive, a bit representing the sign of the number.
+\li 32-(head+tail) bits, representing the middle bits of the absolute value of the number.
+
+Each number may then be reconstructed by concatenating the given number of high zero bits (`head'),
+the middle bits, the given number of low zero bits (`tail'), and negating the number if the sign
+bit was 1.
+
+
+*/
+
