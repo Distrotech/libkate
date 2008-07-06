@@ -20,11 +20,11 @@ at regular intervals so a seeking program can keep track of the
 granulepos without having to seek too much.
 
 It is not mandatory to use keepalive packets, but their use may
-improve seeking performance when a Kate stream with few events
-is multiplexed with high bandwidth streams.
+improve seeking performance on a Kate stream with few events
+when it is multiplexed with high bandwidth streams.
 
 This packet is exactly one byte long, and consists of its packet
-type, 0x01.
+type byte, 0x01.
 
 
 */
