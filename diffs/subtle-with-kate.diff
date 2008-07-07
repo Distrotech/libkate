@@ -1,0 +1,800 @@
+diff -ru subtle/MediaInfo.py subtle-new-with-kate/MediaInfo.py
+--- subtle/MediaInfo.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/MediaInfo.py	2008-07-01 07:28:07.000000000 +0100
+@@ -26,6 +26,7 @@
+ class Media:
+     has_audio = None
+     has_video = None 
++    sub_count = None
+     framerate = None
+     sourceURI = None
+     MIME = None
+@@ -37,12 +38,13 @@
+ 
+ class MediaInfo:
+ 
+-    def __init__(self, file, uri):
++    def __init__(self, file, uri, sub_count):
+         self.media = Media()
+         self.media.source = file
+         self.media.sourceURI = uri
+         self.discover(file)
+         self.notDone = True
++        self.sub_count = sub_count
+ 
+     def discover(self,path):
+         d = discoverer.Discoverer(path)
+diff -ru subtle/Subtitles/Discoverer.py subtle-new-with-kate/Subtitles/Discoverer.py
+--- subtle/Subtitles/Discoverer.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtitles/Discoverer.py	2008-06-30 20:59:45.000000000 +0100
+@@ -21,6 +21,7 @@
+ 
+ import os
+ from SubRip import SubRip
++from Kate import KateLoader
+ 
+ def discoverer(file):
+     """
+@@ -32,5 +33,12 @@
+     # TODO: For text based files we should check using
+     ## regex , not extensions
+     if extension == ".srt":
+-        return SubRip(file)
++        return { 'lone': SubRip(file) }
++
++    # Try Kate streams
++    kate = KateLoader(file)
++    subs = kate.get_subs()
++    if subs:
++        return subs
++
+     return None
+diff -ru subtle/Subtitles/__init__.py subtle-new-with-kate/Subtitles/__init__.py
+--- subtle/Subtitles/__init__.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtitles/__init__.py	2008-06-30 21:16:12.000000000 +0100
+@@ -18,5 +18,5 @@
+ #       along with this program; if not, write to the Free Software
+ #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
+ #       MA 02110-1301, USA.
+-__all__=["Subtitles", "SubRip","Discoverer","Line"]
++__all__=["Subtitles", "SubRip", "Kate", "Discoverer","Line"]
+ 
+diff -ru subtle/Subtitles/Sub.py subtle-new-with-kate/Subtitles/Sub.py
+--- subtle/Subtitles/Sub.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtitles/Sub.py	2008-06-30 21:25:37.000000000 +0100
+@@ -78,3 +78,9 @@
+             structure of lines as well as all other attributes.
+         """
+         pass
++
++    def getSubStartTime(self):
++        return self.start_time
++
++    def getSubEndTime(self):
++        return self.end_time
+diff -ru subtle/Subtitles/SubRip.py subtle-new-with-kate/Subtitles/SubRip.py
+--- subtle/Subtitles/SubRip.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtitles/SubRip.py	2008-07-01 07:21:47.000000000 +0100
+@@ -47,8 +47,8 @@
+     ## Save subtitles.
+     # Save subtitles to the file.
+     # \param FN - file name.
+-    # \param format - the store format of subtitles. (NOT USED YET)
+-    def subSave(self, FN, format):
++    # \param subs - the list of subtitles - for SRT, consists only of self
++    def subSave(self, FN, subs):
+         FUN=os.open(FN,os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
+         N=1
+         for i in self.subKeys:
+diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.py
+--- subtle/Subtitles/Subtitles.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtitles/Subtitles.py	2008-06-30 20:33:30.000000000 +0100
+@@ -41,6 +41,8 @@
+         self.filename = FN
+         # TODO: Support more subtitles types
+         self.subType = None
++        self.subLanguage = ""
++        self.subCategory = ""
+         return
+ 
+     ## Delete subtitle.
+@@ -57,7 +59,7 @@
+     # \param Attrs - attributes of the subtitle.
+     # \param isUpdate - to update (or not) keys array of "subs" list.
+     def subAdd(self, STime, ETime, Text, Attrs, isUpdate=0):
+-        TS=Sub()
++        TS=Sub(Text)
+         TS.text=Text
+         TS.start_time=STime
+         TS.end_time=ETime
+@@ -103,6 +105,39 @@
+         return None
+ 
+ 
++    ## Get subtitle by index.
++    # Get subtitle with given index.
++    # \param index - index of requested subtitle.
++    # \return subtitle or "None".
++    def getSubByIndex(self, index):
++        for i in self.subKeys:
++            index -= 1
++            if index == 0:
++                return self.subs[int(i)]
++        return None
++
++
++    ## Get subtitle type.
++    # Get subtitle type.
++    # \return type string
++    def getType(self):
++        return self.subType
++
++
++    ## Get subtitle language.
++    # Get subtitle language.
++    # \return language (may be empty)
++    def getLanguage(self):
++        return self.subLanguage
++
++
++    ## Get subtitle category.
++    # Get subtitle category.
++    # \return category (may be empty)
++    def getCategory(self):
++        return self.subCategory
++
++
+     ## Get subtitle supported types.
+     # Get subtitle supported types
+     # \return supported subtitle types 
+diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
+--- subtle/Subtle.py	2008-06-30 11:32:29.000000000 +0100
++++ subtle-new-with-kate/Subtle.py	2008-07-01 07:44:24.000000000 +0100
+@@ -371,7 +371,39 @@
+         return None
+ 
+ 
++    def filter_sources(self,sources):
++        filtered = {}
++        for source in sources:
++            filtered[source] = True
++        return filtered.keys()
++
+     def cb_saveStream(self, widget):
++        # HACK - save all streams
++        print 'HACK - save code saves every stream'
++
++        # Gather all sources
++        sources = [ mInfo.source for mInfo in self.media ]
++        sources += [ mInfo.filename for mInfo in self.Subtitles ]
++        sources = self.filter_sources(sources)
++
++        # Save each source that contains subtitles
++        for source in sources:
++            print 'Media to save: %s' % source
++            # find all subtitles from this source
++            subs = {}
++            subcount = 0
++            for mInfo in self.Subtitles:
++                if mInfo.filename == source:
++                    subcount += 1
++                    subs[mInfo] = mInfo
++            if subcount > 0:
++                print '%d subtitles found in %s, saving' % (subcount, source)
++                mInfo.subSave(source, subs)
++            else:
++                print 'No subtitles found in %s, skipping' % source
++        return
++        # HACK - ends here
++
+         """
+             Save a stream. This will be renamed to cb_saveSub
+             since we don't offer video editting (yet)
+@@ -447,8 +479,15 @@
+             iter = self.streamsTreeStore.append(None)
+             self.streamsTreeStore.set(iter, 0, "Subtitle: "+ sub.filename, 1, self.Subtitles.index(sub))
+             child = self.streamsTreeStore.append(iter)
+-            self.streamsTreeStore.set(child, 0, "Type: " + sub.subType, \
++            self.streamsTreeStore.set(child, 0, "Type: " + sub.getType(), \
+                     1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
++	    self.streamsTreeStore.set(child, 0, "Language: " + sub.getLanguage(), \
++		    1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
++	    self.streamsTreeStore.set(child, 0, "Category: " + sub.getCategory(), \
++		    1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
+         for mInfo in self.media:
+             iter = self.streamsTreeStore.append(None)
+             self.streamsTreeStore.set(iter, 0, mInfo.source, 1, self.media.index(mInfo))
+@@ -509,15 +548,19 @@
+         self.TEST_SUB_URI = URI
+         WND.hide()
+ 
+-        tmpSub = Discoverer.discoverer(FN)
+-        if tmpSub:
+-            self.Subtitle = tmpSub
+-            self.Subtitles.append(tmpSub)
+-            self.updateStreamWindow()
+-        else:
+-            MI = MediaInfo(FN, URI)
+-            # Lets poll for information
+-            gobject.timeout_add(30, self.addMedia, MI)
++        sub_count = 0
++        tmpSubs = Discoverer.discoverer(FN)
++        if tmpSubs:
++            for idx in tmpSubs:
++                sub_count += 1
++                tmpSub = tmpSubs[idx]
++                self.Subtitle = tmpSub
++                self.Subtitles.append(tmpSub)
++                self.updateStreamWindow()
++
++        MI = MediaInfo(FN, URI, sub_count)
++        # Lets poll for information
++        gobject.timeout_add(30, self.addMedia, MI)
+     
+     def addMedia(self, mInfo):
+         """
+@@ -535,8 +578,9 @@
+             self.media.append(mInfo)
+             self.updateStreamWindow()
+             #Set videoWidget sizes according to media standards
+-            self.videoWidget.set_size_request(mInfo.videoWidth, \
+-                                                mInfo.videoHeight)
++            if mInfo.videoWidth!=None and mInfo.videoHeight!=None:
++                self.videoWidget.set_size_request(mInfo.videoWidth, \
++                                                    mInfo.videoHeight)
+             self.videoWidgetGst=VideoWidget(self.videoWidget)
+             self.player=GstPlayer(self.videoWidgetGst)
+             self.player.set_location("file://"+mInfo.source)
+@@ -546,14 +590,15 @@
+                 self.videoWidget.connect_after('realize',
+                                            lambda *x: self.play_toggled())
+         else:
+-            errorDialog = gtk.MessageDialog(self.windowMainWindow, \
+-                                            gtk.DIALOG_MODAL, \
+-                                            gtk.MESSAGE_ERROR, \
+-                                            gtk.BUTTONS_CLOSE, \
+-                                            "This file format is not supported.")
+-            result = errorDialog.run()
+-            if (result == gtk.RESPONSE_CLOSE):
+-                errorDialog.destroy()
++            if mInfo.sub_count == 0:
++                errorDialog = gtk.MessageDialog(self.windowMainWindow, \
++                                                gtk.DIALOG_MODAL, \
++                                                gtk.MESSAGE_ERROR, \
++                                                gtk.BUTTONS_CLOSE, \
++                                                "This file format is not supported.")
++                result = errorDialog.run()
++                if (result == gtk.RESPONSE_CLOSE):
++                    errorDialog.destroy()
+         return
+ 
+ 
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ subtle-new-with-kate/Subtitles/Kate.py	2008-07-01 07:59:22.000000000 +0100
+@@ -0,0 +1,523 @@
++#!/usr/bin/env python
++#
++#       Kate.py
++#       
++#       Copyright 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++#       
++#       This program is free software; you can redistribute it and/or modify
++#       it under the terms of the GNU General Public License as published by
++#       the Free Software Foundation; either version 3 of the License, or
++#       (at your option) any later version.
++#       
++#       This program is distributed in the hope that it will be useful,
++#       but WITHOUT ANY WARRANTY; without even the implied warranty of
++#       MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++#       GNU General Public License for more details.
++#       
++#       You should have received a copy of the GNU General Public License
++#       along with this program; if not, write to the Free Software
++#       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
++#       MA 02110-1301, USA.
++
++import pygtk
++pygtk.require('2.0')
++
++import gobject
++gobject.threads_init()
++
++import pygst
++pygst.require('0.10')
++import gst
++import gst.interfaces
++import gtk
++import os
++import time
++from UserString import UserString
++import string
++from Subtitles import Subtitles
++
++## \file Kate.py
++# Documentation for Kate module of Subtle project.
++#
++# Information about the Kate codec may be found at:
++# http://wiki.xiph.org/index.php/OggKate
++#
++# This module requires the GStreamer Kate plugin. At the time of this writing,
++# the Kate plugin is not included within GStreamer yet. A patch to gst-plugins-bad
++# is included in the libkate distribution (which is also needed), available at:
++# http://libkate.googlecode.com/
++#
++# This module only handles text and timing, so any other information that may
++# be present in a Kate stream (such as graphics, motions, etc) will be lost when
++# saving it.
++#
++# Any number of Kate streams (eg, one for each of a set of languages) may be
++# muxed in an Ogg container. This module supports loading and saving those, but
++# Subtle does not yet support switching between those for edition. Nevertheless,
++# all Kate streams will be saved back.
++#
++
++
++## KateBase class.
++# Class for loading/saving Kate streams.
++class KateBase:
++    ## Constructor
++    # \param filename - the ogg stream to load kate streams from
++    # \param save - True if saving, False if loading
++    # \param subs - the list of subtitles we're saving, if saving, unused if loading
++    # \param on_pad_added - the function to call when a new pad is added by the demuxer
++    def __init__(self, filename, save=False, subs=None, on_pad_added=None):
++        self.filename = filename
++        self.ready = False
++        self.error = False
++        if save:
++            self.subs = subs
++        else:
++            self.subs = {}
++        self.padmap = {}
++        self.katedec = {}
++        self.num_kate_streams = 0
++
++        self.pipeline = gst.Pipeline()
++
++        # make sure we get the messages we need
++        bus = self.pipeline.get_bus()
++        bus.add_signal_watch()
++        bus.connect('message::eos', self.__on_eos)
++        bus.connect('message::error', self.__on_error)
++        bus.connect('message', self.__on_msg)
++        #bus.connect('sync-message', self.__on_sync_msg)
++
++        # add filesrc and oggdemux, which will dynamically branch into as many katedec as we need
++        self.filesrc = gst.element_factory_make('filesrc')
++        self.filesrc.set_property('location', filename)
++        self.pipeline.add(self.filesrc)
++        self.oggdemux = gst.element_factory_make('oggdemux')
++        self.pipeline.add(self.oggdemux)
++        gst.element_link_many(self.filesrc, self.oggdemux)
++
++        # if saving, we mux and save too
++        if save:
++            self.parsefactories = self.find_parsers()
++            self.parsers = []
++
++            self.oggmux = gst.element_factory_make('oggmux')
++            self.pipeline.add(self.oggmux)
++            self.filesink = gst.element_factory_make('filesink')
++            self.filesink.set_property('location', filename + '.subtle')
++            self.pipeline.add(self.filesink)
++            gst.element_link_many(self.oggmux, self.filesink)
++
++        # we will create katedec dynamically for each Kate stream encountered
++        self.oggdemux.connect('pad-added', on_pad_added)
++        self.oggdemux.connect('no-more-pads', self.__on_no_more_pads)
++
++        # start reading
++        self.pipeline.set_state(gst.STATE_PAUSED)
++        probe_time = 0
++        while not self.ready:
++                if probe_time > 2:
++                    print 'Failed to detect contents within 2 seconds'
++                    break
++                probe_time += 0.1
++                time.sleep(0.1)
++
++        # if we have Kate streams, stream the entire file
++        if not self.error and self.get_num_kate_streams()>0:
++            self.play()
++
++        # we're done, stop the pipeline
++        self.close()
++
++        # swap the files or remove failed write
++        if save:
++            if not self.error:
++                os.unlink(filename)
++                os.rename(filename+'.subtle', filename)
++            else:
++                os.unlink(filename+'.subtle')
++
++#==============================================================================
++    def play(self):
++        print 'Preparing to play'
++        bus = self.pipeline.get_bus()
++        ret = self.pipeline.set_state(gst.STATE_PLAYING)
++        if ret != gst.STATE_CHANGE_ASYNC and ret != gst.STATE_CHANGE_SUCCESS:
++            print 'Failed to set pipeline to playing'
++            return False
++        print 'Playing...'
++        while 1:
++            msg = bus.poll(gst.MESSAGE_EOS | gst.MESSAGE_ERROR, gst.SECOND)
++            if msg:
++                break
++        print 'Playing done'
++        return True
++
++
++#==============================================================================
++    def close(self):
++        self.pipeline.set_state(gst.STATE_NULL)
++
++
++#==============================================================================
++    def get_subs(self):
++        return self.subs
++
++
++#==============================================================================
++    def find_parsers(self):
++        registry = gst.registry_get_default()
++        ret = {}
++        for f in registry.get_feature_list(gst.ElementFactory):
++            if f.get_klass().find('Parser') >= 0:
++                for t in f.get_static_pad_templates():
++                    if t.direction == gst.PAD_SINK:
++                        for s in t.get_caps():
++                            ret[s.get_name()] = f.get_name()
++                        break
++        return ret
++
++
++#==============================================================================
++    def check_kate_plugin(self, pad_name):
++        if not 'kate' in map(lambda p: p.get_name(), gst.registry_get_default().get_plugin_list()):
++            msg = 'The Kate GStreamer plugin was not found\ncannot use Kate stream %s\n'
++            print msg % pad_name
++            m = gtk.MessageDialog(gtk.Window(gtk.WINDOW_TOPLEVEL),
++                                  gtk.DIALOG_DESTROY_WITH_PARENT,
++                                  gtk.MESSAGE_ERROR,
++                                  gtk.BUTTONS_CLOSE,
++                                  msg % pad_name)
++            m.set_title('Kate plugin not found')
++            m.connect("response", lambda dlg, resp: dlg.destroy())
++            m.show()
++            return False
++        else:
++            return True
++
++
++#==============================================================================
++    def __on_no_more_pads(self, element):
++        print 'No more pads'
++        self.ready = True
++
++
++#==============================================================================
++    def get_num_kate_streams(self):
++        return self.num_kate_streams
++
++
++#==============================================================================
++    def __on_eos(self, bus, msg):
++        print 'EOS'
++        self.eos = True
++        self.ready = True
++
++
++#==============================================================================
++    def __on_error(self, bus, msg):
++        err, debug = msg.parse_error()
++        print 'Error: %s' %err, debug
++        m = gtk.MessageDialog(gtk.Window(gtk.WINDOW_TOPLEVEL),
++                              gtk.DIALOG_DESTROY_WITH_PARENT,
++                              gtk.MESSAGE_ERROR,
++                              gtk.BUTTONS_CLOSE,
++                              'Error: %s' %err)
++        m.set_title('Error')
++        m.connect("response", lambda dlg, resp: dlg.destroy())
++        m.show()
++
++        self.error = True
++        self.ready = True
++
++
++#==============================================================================
++    def __on_msg(self, bus, msg):
++        if msg.structure is None:
++            return
++        name = msg.structure.get_name()
++        print 'msg: %s' % name
++        #if msg.type == gst.MESSAGE_STATE_CHANGED:
++        #    old, new, pen = msg.parse_state_changed()
++        #    print '%r: state change: %r -> %r, %r pending' % (msg.src.get_path_string(), old, new, pen)
++
++
++#==============================================================================
++    def __on_sync_msg(self, bus, msg):
++        if msg.structure is None:
++            return
++        name = msg.structure.get_name()
++        #print 'sync: %s' % name
++
++
++
++
++#==============================================================================
++## KateSaver class.
++# Class for saving Kate streams.
++class KateSaver(KateBase):
++    ## Constructor
++    # \param filename - the ogg stream to load kate streams from
++    # \param subs - the subtitles objects to save as Kate streams
++    def __init__(self, filename, subs):
++        KateBase.__init__(self, filename, True, subs, self.__on_pad_added)
++
++
++#==============================================================================
++    def __on_pad_added(self, element, pad):
++        parse_only = True
++        caps = pad.get_caps()
++        mime = caps[0].get_name()
++        print 'New pad, caps %s' % mime
++        if mime == 'application/x-kate':
++            pad_name = pad.get_name()
++            print 'Found Kate stream: %s' % pad_name
++            self.num_kate_streams += 1
++
++            # Check if the Kate plugin is available
++            if self.check_kate_plugin(pad_name):
++                serial = int(string.replace(pad_name, 'serial_', '', 1),16)
++                # get next subtitles object
++                sub = None
++                for tmp in self.subs:
++                    if tmp.getUserdata() == serial:
++                        sub = tmp
++                        break
++
++                if sub != None:
++                    parse_only = False
++
++                    # intercept the stream by piping it to a fakesink
++                    fakesink = gst.element_factory_make('fakesink')
++                    fakesink.set_name('fakesink_'+pad_name)
++                    self.pipeline.add(fakesink)
++                    pad.link(fakesink.get_pad('sink'))
++
++                    # add a katesrc and kate encoder to replace it
++                    katesrc = KateSource(sub, 'katesrc_'+pad_name)
++                    self.pipeline.add(katesrc)
++                    kateenc = gst.element_factory_make('kateenc')
++                    kateenc.set_name('kateenc_'+pad_name)
++                    kateenc.set_property('language', sub.getLanguage())
++                    kateenc.set_property('category', sub.getCategory())
++                    self.pipeline.add(kateenc)
++                    queue = gst.element_factory_make('queue')
++                    queue.set_property('max-size-buffers', 1000)
++                    self.pipeline.add(queue)
++                    qpad = queue.get_compatible_pad(kateenc.get_pad('src'))
++                    gst.element_link_many(katesrc, kateenc)
++                    kateenc.get_pad('src').link(qpad)
++                    gst.element_link_many(queue, self.oggmux)
++
++                    # the serial number will have been randomized, so reset it as userdata so we can save again
++                    userdata = queue.get_pad('src').get_peer().get_name()
++                    userdata = int(string.replace(userdata, 'sink_', '', 1))
++                    print 'userdata: %d -> %d' % (sub.getUserdata(), userdata)
++                    sub.setUserdata(userdata)
++
++                    queue.set_state(gst.STATE_PLAYING)
++                    kateenc.set_state(gst.STATE_PLAYING)
++                    katesrc.set_state(gst.STATE_PLAYING)
++                    fakesink.set_state(gst.STATE_PLAYING)
++
++                else:
++                    # we don't have a replacement for this one, so let it through as is
++                    print 'Kate stream %s has no replacement, parsing and letting it through' % pad_name
++
++        if parse_only:
++            # TODO: buggy theoraparse it seems, it also fails with gst-launch
++            if mime == 'video/x-theora':
++                print 'cannot handle theora for now - it asserts in GStreamer'
++                m = gtk.MessageDialog(gtk.Window(gtk.WINDOW_TOPLEVEL),
++                                      gtk.DIALOG_DESTROY_WITH_PARENT,
++                                      gtk.MESSAGE_WARNING,
++                                      gtk.BUTTONS_CLOSE,
++                                      'The stream contains a Theora stream, and the GStreamer Theora parser is broken\n' +
++                                      'The Theora stream will be lost\n')
++                m.set_title('Warning')
++                m.connect("response", lambda dlg, resp: dlg.destroy())
++                m.show()
++
++                # intercept the stream by piping it to a fakesink
++                fakesink = gst.element_factory_make('fakesink')
++                self.pipeline.add(fakesink)
++                pad.link(fakesink.get_pad('sink'))
++                fakesink.set_state(gst.STATE_PLAYING)
++                return
++
++            # let the stream flow to the ogg muxer: link pad to a new pad from oggmux
++            if mime not in self.parsefactories:
++                print 'cannot handle %s' %mime
++                return
++
++            queue = gst.element_factory_make('queue')
++            queue.set_property('max-size-buffers', 1000)
++            self.pipeline.add(queue)
++
++            parser = gst.element_factory_make(self.parsefactories[mime])
++            self.pipeline.add(parser)
++
++            qpad = queue.get_compatible_pad(pad)
++            pad.link(qpad)
++            queue.link(parser)
++            parser.link(self.oggmux)
++            self.parsers.append(parser)
++
++            parser.set_state(gst.STATE_PLAYING)
++            queue.set_state(gst.STATE_PLAYING)
++
++
++
++
++
++## Kate class.
++# A class representing a Kate subtitles stream.
++class Kate(Subtitles):
++    """
++        This class handles the Kate subtitle format
++    """
++
++    ## Load subtitles.
++    # Load subtitles from file.
++    def __init__(self, filename):
++        Subtitles.__init__(self, filename)
++        self.subType = "Kate"
++        self.subUserdata = None
++
++    def subSave(self, filename, subs):
++        print 'TODO: save'
++        kate = KateSaver(filename, subs)
++
++    def subInit(self, language, category, serial):
++        self.subLanguage = language
++        self.subCategory = category
++        self.subUserdata = serial
++
++    def setUserdata(self, userdata):
++        self.subUserdata = userdata
++
++    def getUserdata(self):
++        return self.subUserdata
++
++
++
++## KateSource class.
++# A source element that send subtitles to the kateenc element.
++class KateSource(gst.BaseSrc):
++    __gsttemplates__ = (gst.PadTemplate("src", gst.PAD_SRC, gst.PAD_ALWAYS, gst.caps_from_string('text/x-pango-markup')))
++
++    def __init__(self, sub, name=None):
++        self.__gobject_init__()
++        if name != None:
++            self.set_name(name)
++        self.sub=sub
++        self.next_index=1
++
++    def do_create(self, offset, size):
++        print 'do_create called with offset %d' % offset
++        sub = self.sub.getSubByIndex(self.next_index)
++        if sub != None:
++            text = sub.getSubText()
++            start_time = sub.getSubStartTime()
++            end_time = sub.getSubEndTime()
++            print 'Found sub at %d till %d: %s' % (start_time, end_time, text)
++            self.next_index += 1
++            self.buffer = gst.Buffer(text)
++            self.buffer.timestamp = start_time * gst.MSECOND
++            self.buffer.duration = (end_time-start_time) * gst.MSECOND
++            self.buffer.set_caps(gst.caps_from_string('text/x-pango-markup'))
++            return gst.FLOW_OK, self.buffer
++        else:
++            print 'No sub found, EOS'
++            return gst.FLOW_UNEXPECTED, None
++
++gobject.type_register(KateSource)
++
++
++
++
++
++#==============================================================================
++## KateLoader class.
++# Class for loading Kate streams.
++class KateLoader(KateBase):
++    ## Constructor
++    # \param filename - the ogg stream to load kate streams from
++    def __init__(self, filename):
++        KateBase.__init__(self, filename, False, None, self.__on_pad_added)
++
++        # update the subtitles keys once they're all loaded
++        for sub in self.subs:
++            self.subs[sub].updateKeys()
++
++
++#==============================================================================
++    def __on_pad_added(self, element, pad):
++        caps = pad.get_caps()
++        mime = caps[0].get_name()
++        if mime == 'application/x-kate':
++                pad_name = pad.get_name()
++                print 'Found Kate stream: %s' % pad_name
++                self.num_kate_streams += 1
++
++                # Check if the Kate plugin is available
++                if not self.check_kate_plugin(pad_name):
++                    return
++
++                # add a kate decoder and a fakesink
++                katedec = gst.element_factory_make('katedec')
++                self.pipeline.add(katedec)
++                fakesink = gst.element_factory_make('fakesink')
++                self.pipeline.add(fakesink)
++                gst.element_link_many(katedec, fakesink)
++
++                # create subtitles - initialized later as we don't know language/category yet
++                subs = Kate(self.filename)
++                self.subs[pad_name] = subs
++
++                __kpad0 = katedec.get_pad('sink')
++                pad.link(__kpad0)
++                event_pad = fakesink.get_pad('sink')
++                event_pad.set_chain_function(self.__on_kate_event)
++
++                self.padmap[event_pad] = pad_name
++                self.katedec[pad_name] = katedec
++
++                katedec.set_state(gst.STATE_PLAYING)
++                fakesink.set_state(gst.STATE_PLAYING)
++
++        if mime == 'video/x-theora':
++            print 'cannot handle theora for now - it asserts in GStreamer'
++            m = gtk.MessageDialog(gtk.Window(gtk.WINDOW_TOPLEVEL),
++                                  gtk.DIALOG_DESTROY_WITH_PARENT,
++                                  gtk.MESSAGE_WARNING,
++                                  gtk.BUTTONS_CLOSE,
++                                  'The stream contains a Theora stream, and the GStreamer Theora parser is broken\n' +
++                                  'If you save the stream, the Theora stream will be lost\n')
++            m.set_title('Warning')
++            m.connect("response", lambda dlg, resp: dlg.destroy())
++            m.show()
++
++
++#==============================================================================
++    def __on_kate_event(self, pad, buffer):
++        pad_name = self.padmap[pad]
++        #print 'Kate event: %s on pad %s' % ( buffer, pad_name)
++        subs = self.subs[pad_name]
++        start_time_ms = (buffer.timestamp+gst.MSECOND/2) / gst.MSECOND
++        end_time_ms = (buffer.timestamp+buffer.duration+gst.MSECOND/2) / gst.MSECOND
++
++        # initialize the subs list if this is the first event
++        if subs.getUserdata() == None:
++            serial = int(string.replace(pad_name, 'serial_', '', 1),16)
++            language = self.katedec[pad_name].get_property('language')
++            category = self.katedec[pad_name].get_property('category')
++            subs.subInit(language, category, serial)
++
++        subs.subAdd(start_time_ms, end_time_ms, UserString(buffer), None)
++
++        return gst.FLOW_OK
++
++
++
++__all__=["Kate", "KateLoader", "KateSaver"]

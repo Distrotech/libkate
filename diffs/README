@@ -61,6 +61,13 @@ API to manipulate those (Linux only implementation for the renderer).
 
  * Thoggen (thoggen-with-kate.diff)
 
-Adds support for encoding DVD SPU subtitles as Kate streams. This patches needs
-the GStreamer patch above to be applied.
+Adds support for encoding DVD SPU subtitles as Kate streams.
+This patch needs the GStreamer patch above to be applied.
+
+
+
+ * Subtle (subtle-with-kate.diff)
+
+Adds support for text only Kate streams embedded in Ogg.
+This patch needs the GStreamer patch above to be applied.
 
