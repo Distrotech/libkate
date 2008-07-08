@@ -225,7 +225,10 @@ dist:
 	tar cvfz $(distname).tar.gz --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore $(distname)
 	rm -fr $(distname)
 
-ogg_merger:=$(shell which oggzmerge 2> /dev/null | sed -e 's,oggzmerge$$,oggzmerge,')
+ogg_merger:=$(shell which oggz-merge 2> /dev/null | sed -e 's,oggz-merge$$,oggz-merge,')
+ifeq ($(ogg_merger),)
+ogg_merger:=$(shell which oggz-merge 2> /dev/null | sed -e 's,oggzmerge$$,oggzmerge,')
+endif
 ifeq ($(ogg_merger),)
 ogg_merger:=$(shell which oggmerge 2> /dev/null | sed -e 's,oggmerge$$,oggmerge -q,')
 endif
@@ -247,7 +250,7 @@ ifneq ($(ogg_merger),)
 	@echo " Merging video with Kate stream from $<"
 	@$(ogg_merger) -o $@ $(OGGDIR)/$(notdir $<) $(video_theora_ogg)
 else
-	echo "Building $@ needs either oggmerge or oggzmerge"
+	echo "Building $@ needs either oggmerge or oggz-merge"
 endif
 
 $(video_theora_ogg):
