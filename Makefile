@@ -272,7 +272,10 @@ tmp_ogg2:="kate-check-2.kate.ogg"
 tmp_kate1:="kate-check-1.kate"
 tmp_kate2:="kate-check-2.kate"
 valgrind:=$(shell which valgrind 2> /dev/null | sed -e 's,valgrind$$,valgrind -q --leak-check=full --show-reachable=yes,')
+oggzdiff:=$(shell which oggz-diff 2> /dev/null | sed -e 's,oggz-diff$$,oggz-diff -U 16,')
+ifeq ($(oggzdiff),)
 oggzdiff:=$(shell which oggzdiff 2> /dev/null | sed -e 's,oggzdiff$$,oggzdiff -U 16,')
+endif
 ifeq ($(oggzdiff),)
 oggzdiff=cmp
 endif
