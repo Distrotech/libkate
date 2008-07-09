@@ -23,7 +23,9 @@ bits. The actual semantics of those data bits is irrelevant to the warp,
 as it acts as a container for those bits.
 
 Jumping over a warp is simple: read the \ref format_32v "variable length integer",
-and read that number of bits, discarding them.
+and read that number of bits, discarding them. If the number of bits was zero,
+this is the end of the warp. If not, there is another warp to read. This allows
+the warp to be used multiple times.
 
 
 */
