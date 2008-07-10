@@ -1,0 +1,44 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_motion Format - motion
+
+A motion definition consists of:
+
+\li a \ref format_32v "variable length integer" for the number of curves in this motion.
+
+Then, for each of those curves:
+
+\li 1 bit indicating if the curve is predefined (1) or not (0).
+
+Then, if the bit is 1:
+
+\li a \ref format_32v "variable length integer" representing the index of the curve.
+
+If the bit is 0:
+
+\li a \ref format_curve "curve definition".
+
+Then, in all cases:
+
+\li a stream of \ref format_fp "floating point values" representing the lengths of those curves.
+\li 8 bits for the mapping for the x coordinates.
+\li 8 bits for the mapping for the y coordinates.
+\li 8 bits for the semantics of this motion.
+\li 1 bit for a flag representing whether this motion is periodic or not.
+
+Next, a \ref format_warp "warp".
+
+Next, the data ends.
+
+
+*/
+

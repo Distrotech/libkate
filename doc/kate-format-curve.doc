@@ -1,0 +1,27 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_curve Format - curve
+
+A curve definition consists of:
+
+\li 8 bits for the curve type.
+\li a \ref format_32v "variable length integer" for the number of points in this curve.
+\li a \ref format_warp "warp".
+\li 2 streams of \ref format_fp "floating point values" representing the curve.
+
+Next, the data ends.
+
+The points are interpreted differently for each curve type. Segments interpret these
+points as segment end points, while splines interpret them as control points.
+
+*/
+
