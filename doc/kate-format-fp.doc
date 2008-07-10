@@ -16,14 +16,17 @@ values in the Kate bitstream format. Several distinct streams of
 floating point values may be saved at the same time. A stream has a
 constant format (number of bits saved per value). Streams may be
 merged together (eg, merging 2 streams of V values yields a single
-stream of 2*V values).
+stream of 2*V values). Streams stored together always have the same
+number of values.
 
 When loading N streams, the bitstream format is as follows:
 
 \li 1 bit, being 1 if the streams are merged.
 
 If the streams to load are merged, the different streams are stored
-as a single stream, and N is 1.
+as a single stream. In this case, N is set to 1, and the number of values
+is equal to the total number of values in all streams (eg, the original
+N times the number of values in a single stream).
 
 Then, for each stream:
 
