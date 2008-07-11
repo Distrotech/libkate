@@ -1,0 +1,27 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_palette Format - palette
+
+A palette definition consists of:
+
+\li 8 bits for the number of colors in this palette minus 1 (eg, 0 means 1 color, 255 means 256 colors).
+
+Then, for each color in the palette:
+
+\li a \ref format_color "color".
+
+Next, we have a \ref format_warp "warp".
+
+Next, the data ends.
+
+*/
+

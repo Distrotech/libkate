@@ -62,6 +62,7 @@ Header packets:
 \li \ref format_0x83 "0x83 (styles)"
 \li \ref format_0x84 "0x84 (curves)"
 \li \ref format_0x85 "0x85 (motions)"
+\li \ref format_0x86 "0x86 (palettes)"
 
 Data packets:
 
