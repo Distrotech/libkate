@@ -1,0 +1,54 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_bitmap Format - bitmap
+
+A bitmap definition consists of:
+
+\li a \ref format_32v "variable length integer" representing the width of the bitmap in pixels.
+\li a \ref format_32v "variable length integer" representing the height of the bitmap in pixels.
+\li 8 bits representing the number of bits per pixel for this bitmap (values not in the 0-7 range are an error).
+
+Then, if the number of bits per pixel is zero:
+
+\li 8 bits representing the type of the bitmap.
+
+For type 0 (paletted bitmap):
+
+\li 8 bits for the encoding of this bitmap
+
+For encoding 1 (RLE encoding):
+
+\li a \ref format_32v "variable length integer" for the number of bits per pixel.
+\li a \ref format_32v "variable length integer" for the index of the default palette to use for this bitmap (-1 if none)
+\li a \ref format_rle "RLE encoded bitmap".
+
+All other encodings are reserved. If one is encountered, the bitmap cannot be decoded.
+
+For type 1 (PNG bitmap):
+
+\li 32 bits for the number of bytes used for this bitmap's data.
+\li That number of bytes, interpreted as a raw PNG stream.
+
+All other types are reserved. If one is encountered, the bitmap cannot be decoded.
+
+If the number of bits per pixel is greater than zero (deprecated):
+
+\li a \ref format_32v "variable length integer" representing the index of the default palette to use for this bitmap (-1 for no default palette).
+\li a stream of bits representing the pixel indices for this bitmap, rows first, packed (eg, N bits for the first pixel, N bits for the second one, etc, N being the number of bits per pixel specified above)
+
+
+Next, we have a \ref format_warp "warp".
+
+Next, the data ends.
+
+*/
+

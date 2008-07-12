@@ -1,0 +1,98 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_rle Format - RLE bitmap
+
+RLE bitmaps are stored line per line, each line encoded with a particular algorithm,
+usually a variation of RLE.
+
+Let \b N be the number of bits per pixel of this bitmap.
+
+\li \b N bits being the "zero" color (it doesn't really matter what this color is, but the
+    compression is best if this is the background color)
+
+Then, for each row in the bitmap:
+
+\li 3 bits representing the type of encoding used for this line.
+
+
+\par For encoding 0 (empty):
+There is no more data for this line, it consists of a single line of pixels of the "zero" color.
+
+\par For encoding 1 (basic):
+While there are still pixels to decode in this line:
+  \li 4 bits representing the number \b P of pixels of an identical color, minus 1 (eg, 0 means a single pixel).
+  \li \b N bits representing the color \b C.
+
+Then the next \b P pixels are filled with color \b C.
+
+
+\par For encoding 2 (delta):
+While there are still pixels to decode in this line:
+  \li 1 bit being 1 if the pixel run is encoded as delta, 0 if not
+
+If the bit is 1:
+  \li 6 bits representing the number \b P of pixels in this run, minus 1
+The next \b P pixels are filled from a copy of the pixels in the previous line, starting at the same horizontal offset,
+or, if this is the first line of the bitmap, they are filled with the "zero" color.
+
+If the bit is 0:
+  \li 3 bits representing the number \b P of pixels in this run, minus 1
+  \li \b N bits representing the color \b C.
+Then the next \b P pixels are filled with color \b C.
+
+
+\par For encoding 3 (basic/stop):
+  \li 8 bits representing a number \b P of pixels in an initial run - if \b P is greater than zero, \b P pixels are filled with the "zero" color.
+
+Then, while there are still pixels to decode in this line:
+  \li 6 bits representing the number \b P of pixels in this run, or 0
+  \li if \b P is greater than zero, \b N bits being the color to fill the next \b P pixels with.
+  \li if \b P is zero, the remainder of the line is filled with the zero color.
+
+\par For encoding 4 (basic/startend):
+  \li 9 bits representing the number \b P of pixels in a run of color "zero" at the start of the line (0 for an empty run)
+  \li 9 bits representing the number \b P of pixels in a run of color "zero" at the end of the line (0 for an empty run)
+
+Then, while there are still pixels to decode in this line:
+  \li 3 bits representing the number \b P of pixels in this run, minus 1
+  \li \b N bits representing the color \b C.
+Then the next \b P pixels are filled with color \b C.
+
+\par For encoding 5 (delta/stop):
+While there are still pixels to decode in this line:
+  \li 1 bit being 1 if the next run is delta encoded, and 0 otherwise.
+
+If the bit is 1:
+  \li 5 bits representing the number \b P of pixels in this run, minus 1
+The next \b P pixels are filled from a copy of the pixels in the previous line, starting at the same horizontal offset,
+or, if this is the first line of the bitmap, they are filled with the "zero" color.
+
+If the bit is 0:
+  \li 3 bits representing the number \b P of pixels in this run, or 0.
+  \li if \b P is greater than zero, \b N bits representing the color of the pixels in this run.
+  \li if \b P is zero, the remainder of the line is filled with the zero color.
+
+\par For encoding 6 (basic/zero):
+While there are still pixels to decode in this line:
+  \li \b N bits representing the color \b C of this run.
+  \li if \b C is the "zero" color, 8 bits representing the length \b P of this run, minus 1.
+  \li if \b C is not the "zero" color, 3 bits representing the length \b P of this run, minus 1.
+Then, the next \b P pixels are filled with color \b C.
+
+
+\par For encoding 7:
+Encoding 7 is reserved for future use. A decoder encountering encoding 7 will not be able
+to decode the line, and thus the bitmap.
+
+
+*/
+
