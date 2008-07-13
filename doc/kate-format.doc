@@ -68,6 +68,7 @@ Header packets:
 
 Data packets:
 
+\li \ref format_0x00 "0x00 (text packet)"
 \li \ref format_0x01 "0x01 (keepalive packet)"
 \li \ref format_0x7f "0x7f (end packet)"
 

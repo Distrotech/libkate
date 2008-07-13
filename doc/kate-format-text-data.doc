@@ -1,0 +1,66 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_0x00 Format - data packet type 0x00 - text
+
+Text packets are the main payload packet.
+
+\li a 64 bit value representing the start of the event, at the granule rate.
+\li a 64 bit value representing the duration of the event, at the granule rate.
+\li a 64 bit value representing the start of the earliest event still active when this event starts, at the granule rate.
+\li a 32 bit value representing the number of bytes in the text to follow.
+\li that same number of bytes representing the text.
+\li 1 bit being 1 if the event is assigned an ID, 0 if not.
+\li if the event is assigned an ID, a \ref format_32v "variable length integer" representing the ID assigned to this event.
+\li 1 bit being 1 if there are motions attached to this event.
+
+Next, if there are motions attached to this event:
+\li a \ref format_32v "variable length integer" representing the number of motions attached to this event.
+
+For each motion:
+\li a bit being 1 if the next motion is predefined, 0 if not
+\li if the next motion is predefined, a \ref format_32v "variable length integer" representing the index of this motion
+in the list of predefined motions
+\li if the next motion is not predefined, a \ref format_motion "motion" definition.
+
+Next, a bit being 1 if there are overrides for this event. If there are:
+\li if the next bit is set, 8 bits for the \ref #kate_text_encoding "text encoding" used by the text in this packet.
+\li if the next bit is set, 8 bits for the \ref #kate_text_directionality "text directionality" used by the text in this packet.
+\li if the next bit is set, a ref format_32v "variable length integer" representing the number of characters in the following language string,
+followed by this number of bytes for a (non NUL terminated) string representing the language used by the text in this event.
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of a predefined region to use for this event.
+\li if the next bit is set, a \ref format_region "region" definition to use for this event.
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of a predefined style to use for this event.
+\li if the next bit is set, a \ref format_style "style" definition to use for this event.
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of a predefined style to use as secondary style for this event.
+\li if the next bit is set, a \ref format_style "style" definition to use as secondary style for this event.
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of the font mapping to use for the text in this event.
+
+
+Next, there is a \ref format_warp "warp".
+
+Bitstream version 0.2 starts making use of this warp:
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of the palette to use for the bitmap in this event.
+\li if the next bit is set, a \ref format_palette "palette" definition to use for the bitmap in this event.
+\li if the next bit is set, a \ref format_32v "variable length integer" representing the index of the bitmap to use for this event.
+\li if the next bit is set, a \ref format_bitmap "bitmap" definition to use for this event.
+\li if the next bit is set, 8 bits representing the type of \ref #kate_markup_type "markup" to use to interpret the text in this event.
+
+\note
+Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that bitstream 0.2
+will contain a second warp after the one used above. Similarly, if this second warp becomes used in future revisions
+of the bitstream, a third one will automatically be used.
+
+Next, the data ends.
+
+
+*/
+
