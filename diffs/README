@@ -71,3 +71,10 @@ This patch needs the GStreamer patch above to be applied.
 Adds support for text only Kate streams embedded in Ogg.
 This patch needs the GStreamer patch above to be applied.
 
+
+
+ * oggenc (oggenc-with-kate-lyrics.diff)
+
+Adds support for encoding lyrics as text Kate streams from .srt files.
+There is no player that can read those yet though.
+

@@ -1,0 +1,490 @@
+diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
+--- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.c	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/encode.c	2008-07-13 13:21:51.000000000 +0100
+@@ -25,6 +25,11 @@
+ #include "i18n.h"
+ #include "skeleton.h"
+ 
++#ifdef HAVE_KATE
++#include "srt.h"
++#include <kate/oggkate.h>
++#endif
++
+ #define READSIZE 1024
+ 
+ 
+@@ -116,7 +121,7 @@
+ #endif
+ }
+ 
+-void add_fishead_packet (ogg_stream_state *os) {
++static void add_fishead_packet (ogg_stream_state *os) {
+ 
+    fishead_packet fp;
+ 
+@@ -130,9 +135,9 @@
+ }
+ 
+ /*
+- * Adds the fishead packets in the skeleton output stream along with the e_o_s packet
++ * Adds the fishead packets in the skeleton output stream
+  */
+-void add_fisbone_packet (ogg_stream_state *os, oe_enc_opt *opt) {
++static void add_vorbis_fisbone_packet (ogg_stream_state *os, oe_enc_opt *opt) {
+ 
+    fisbone_packet fp;
+ 
+@@ -150,11 +155,32 @@
+    add_fisbone_to_stream(os, &fp);
+ }
+ 
++#ifdef HAVE_KATE
++static void add_kate_fisbone_packet (ogg_stream_state *os, oe_enc_opt *opt, kate_info *ki) {
++
++   fisbone_packet fp;
++
++   memset(&fp, 0, sizeof(fp));
++   fp.serial_no = opt->kate_serialno;
++   fp.nr_header_packet = ki->num_headers;
++   fp.granule_rate_n = ki->gps_numerator;
++   fp.granule_rate_d = ki->gps_denominator;
++   fp.start_granule = 0;
++   fp.preroll = 0;
++   fp.granule_shift = ki->granule_shift;
++
++   add_message_header_field(&fp, "Content-Type", "application/x-kate");
++
++   add_fisbone_to_stream(os, &fp);
++}
++#endif
++
+ int oe_encode(oe_enc_opt *opt)
+ {
+ 
+     ogg_stream_state os;
+     ogg_stream_state so; /* stream for skeleton bitstream */
++    ogg_stream_state ko; /* stream for kate bitstream */
+     ogg_page         og;
+     ogg_packet       op;
+ 
+@@ -162,6 +188,15 @@
+     vorbis_block     vb;
+     vorbis_info      vi;
+ 
++#ifdef HAVE_KATE
++    kate_info        ki;
++    kate_comment     kc;
++    kate_state       k;
++    oe_lyrics        *lyrics=NULL;
++    size_t           lyrics_index=0;
++    double           vorbis_time = 0.0;
++#endif
++
+     long samplesdone=0;
+     int eos;
+     long bytes_written = 0, packetsdone=0;
+@@ -293,9 +328,28 @@
+     vorbis_analysis_init(&vd,&vi);
+     vorbis_block_init(&vd,&vb);
+ 
++#ifdef HAVE_KATE
++    if (opt->lyrics) {
++        /* load lyrics */
++        lyrics=load_lyrics(opt->lyrics, oe_encoding_unset);
++        /* if it fails, don't do anything else for lyrics */
++        if (!lyrics) {
++            opt->lyrics = NULL;
++        } else {
++            /* init kate for encoding */
++            kate_info_init(&ki);
++            kate_info_set_category(&ki, "lyrics");
++            kate_comment_init(&kc);
++            kate_encode_init(&k,&ki);
++        }
++    }
++#endif
++
+     ogg_stream_init(&os, opt->serialno);
+-    if (opt->with_skeleton) 
++    if (opt->with_skeleton)
+         ogg_stream_init(&so, opt->skeleton_serialno);
++    if (opt->lyrics)
++        ogg_stream_init(&ko, opt->kate_serialno);
+ 
+     /* create the skeleton fishead packet and output it */ 
+     if (opt->with_skeleton) { 
+@@ -319,7 +373,7 @@
+                 &header_main,&header_comments,&header_codebooks);
+ 
+         /* And stream them out */
+-        /* output the vorbis bos first, then the fisbone packets */
++        /* output the vorbis bos first, then the kate bos, then the fisbone packets */
+         ogg_stream_packetin(&os,&header_main);
+ 	while((result = ogg_stream_flush(&os, &og)))
+         {
+@@ -333,13 +387,48 @@
+             }
+         }
+ 
++#ifdef HAVE_KATE
++        if (opt->lyrics) {
++            ogg_packet kate_op;
++            ret = kate_ogg_encode_headers(&k, &kc, &kate_op);
++            if (ret < 0) {
++                opt->error("Failed encoding Kate header\n");
++                goto cleanup; 
++            }
++            ogg_stream_packetin(&ko,&kate_op);
++	    while((result = ogg_stream_flush(&ko, &og)))
++            {
++                if(!result) break;
++                ret = oe_write_page(&og, opt->out);
++                if(ret != og.header_len + og.body_len)
++                {
++                    opt->error(_("Failed writing header to output stream\n"));
++                    ret = 1;
++                    goto cleanup; /* Bail and try to clean up stuff */
++                }
++            }
++            ogg_packet_clear(&kate_op);
++        }
++#endif
++
+         if (opt->with_skeleton) {
+-            add_fisbone_packet(&so, opt);
++            add_vorbis_fisbone_packet(&so, opt);
+             if ((ret = flush_ogg_stream_to_file(&so, opt->out))) {
+                 opt->error("Failed writing fisbone header packet to output stream\n");
+                 goto cleanup; 
+-           }
++            }
++#ifdef HAVE_KATE
++            if (opt->lyrics) {
++                add_kate_fisbone_packet(&so, opt, &ki);
++                if ((ret = flush_ogg_stream_to_file(&so, opt->out))) {
++                    opt->error("Failed writing fisbone header packet to output stream\n");
++                    goto cleanup; 
++                }
++            }
++#endif
+         }
++
++        /* write the next Vorbis headers */
+         ogg_stream_packetin(&os,&header_comments);
+         ogg_stream_packetin(&os,&header_codebooks);
+ 
+@@ -356,6 +445,27 @@
+         }
+     }
+ 
++    /* build kate headers if requested */
++#ifdef HAVE_KATE
++    if (opt->lyrics) {
++        while (kate_ogg_encode_headers(&k,&kc,&op)==0) {
++          ogg_stream_packetin(&ko,&op);
++          ogg_packet_clear(&op);
++        }
++        while((result = ogg_stream_flush(&ko, &og)))
++        {
++            if(!result) break;
++            ret = oe_write_page(&og, opt->out);
++            if(ret != og.header_len + og.body_len)
++            {
++                opt->error(_("Failed writing header to output stream\n"));
++                ret = 1;
++                goto cleanup; /* Bail and try to clean up stuff */
++            }
++        }
++    }
++#endif
++
+     if (opt->with_skeleton) { 
+         add_eos_packet_to_stream(&so); 
+         if ((ret = flush_ogg_stream_to_file(&so, opt->out))) { 
+@@ -420,6 +530,39 @@
+                     int result = ogg_stream_pageout(&os,&og);
+                     if(!result) break;
+ 
++                    /* now that we have a new Vorbis page, we scan lyrics for any that is due */
++#ifdef HAVE_KATE
++                    if (opt->lyrics && ogg_page_granulepos(&og)>=0) {
++                        vorbis_time = vorbis_granule_time(&vd, ogg_page_granulepos(&og));
++                        const oe_lyrics_item *item;
++                        while ((item = get_lyrics(lyrics, vorbis_time, &lyrics_index))) {
++                            ogg_packet kate_op;
++                            ret = kate_ogg_encode_text(&k, item->t0, item->t1, item->text, strlen(item->text)+1, &kate_op);
++                            if (ret < 0) {
++                                opt->error(_("Failed encoding lyrics - continuing anyway\n"));
++                            }
++                            else {
++                                ogg_stream_packetin(&ko, &kate_op);
++                                ogg_packet_clear(&kate_op);
++                                while (1) {
++                                    ogg_page ogk;
++                                    int result=ogg_stream_flush(&ko,&ogk);
++                                    if (!result) break;
++                                    ret = oe_write_page(&ogk, opt->out);
++                                    if(ret != ogk.header_len + ogk.body_len)
++                                    {
++                                        opt->error(_("Failed writing data to output stream\n"));
++                                        ret = 1;
++                                        goto cleanup; /* Bail */
++                                    }
++                                    else
++                                        bytes_written += ret; 
++                                }
++                            }
++                        }
++                    }
++#endif
++
+                     ret = oe_write_page(&og, opt->out);
+                     if(ret != og.header_len + og.body_len)
+                     {
+@@ -437,6 +580,47 @@
+         }
+     }
+ 
++    /* if encoding lyrics, signal EOS and cleanup the kate state */
++#ifdef HAVE_KATE
++    if (opt->lyrics) {
++        ogg_packet kate_op;
++        ret = kate_ogg_encode_finish(&k, vorbis_time, &kate_op);
++        if (ret < 0) {
++            opt->error(_("Failed encoding Kate EOS packet\n"));
++        }
++        else {
++            ogg_stream_packetin(&ko,&kate_op);
++            packetsdone++;
++            ogg_packet_clear(&kate_op);
++
++            eos = 0;
++            while(!eos)
++            {
++                int result = ogg_stream_pageout(&ko,&og);
++                if(!result) break;
++
++                ret = oe_write_page(&og, opt->out);
++                if(ret != og.header_len + og.body_len)
++                {
++                    opt->error(_("Failed writing data to output stream\n"));
++                    ret = 1;
++                    goto cleanup; /* Bail */
++                }
++                else
++                    bytes_written += ret; 
++
++                if(ogg_page_eos(&og))
++                    eos = 1;
++            }
++        }
++        ogg_stream_clear(&ko);
++        kate_clear(&k);
++        kate_info_clear(&ki);
++        kate_comment_clear(&kc);
++        free_lyrics(lyrics);
++    }
++#endif
++
+     ret = 0; /* Success, set return value to 0 since other things reuse it
+               * for nefarious purposes. */
+ 
+diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
+--- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.h	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/encode.h	2008-07-13 11:08:01.000000000 +0100
+@@ -54,6 +54,8 @@
+     int date_count;
+     char **genre;
+     int genre_count;
++    char **lyrics;
++    int lyrics_count;
+     adv_opt *advopt;
+     int advopt_count;
+     int copy_comments;
+@@ -88,6 +90,7 @@
+ 
+     unsigned int serial;
+     unsigned int skeleton_serial;
++    unsigned int kate_serial;
+         int fixedserial;
+ } oe_options;
+ 
+@@ -96,6 +99,7 @@
+     vorbis_comment *comments;
+     unsigned int serialno;
+     unsigned int skeleton_serialno;
++    unsigned int kate_serialno;
+ 
+     audio_read_func read_samples;
+     progress_func progress_update;
+@@ -127,6 +131,8 @@
+     FILE *out;
+     char *filename;
+     char *infilename;
++
++    char *lyrics;
+ } oe_enc_opt;
+ 
+ 
+diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.am
+--- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/Makefile.am	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/Makefile.am	2008-07-13 11:50:05.000000000 +0100
+@@ -13,16 +13,16 @@
+ 
+ bin_PROGRAMS = oggenc
+ 
+-INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @I18N_CFLAGS@
++INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @KATE_CFLAGS@ @I18N_CFLAGS@
+ 
+ oggenc_LDADD = @SHARE_LIBS@ \
+-	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @OGG_LIBS@ \
++	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @KATE_LIBS@ @OGG_LIBS@ \
+ 	       @LIBICONV@ @I18N_LIBS@ @FLAC_LIBS@
+ 
+ oggenc_DEPENDENCIES = @SHARE_LIBS@
+ 
+ oggenc_SOURCES = $(flac_sources) \
+-                 oggenc.c audio.c encode.c platform.c \
++                 oggenc.c audio.c encode.c platform.c srt.c \
+                  audio.h encode.h platform.h resample.c resample.h skeleton.c skeleton.h
+ 
+ 
+diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
+--- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/oggenc.c	2008-07-13 13:48:38.000000000 +0100
+@@ -66,6 +66,7 @@
+     {"scale", 1, 0, 0}, 
+     {"advanced-encode-option", 1, 0, 0},
+     {"discard-comments", 0, 0, 0},
++    {"lyrics",1,0,'L'},
+     {NULL,0,0,0}
+ };
+ 
+@@ -81,10 +82,10 @@
+ int main(int argc, char **argv)
+ {
+     /* Default values */
+-    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
++    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
+               0, NULL, 0, NULL, 0, NULL, 0, 1, 0, 0, 0,16,44100,2, 0, NULL,
+               DEFAULT_NAMEFMT_REMOVE, DEFAULT_NAMEFMT_REPLACE,
+-              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0};
++              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0, 0};
+ 
+     int i;
+ 
+@@ -132,6 +133,7 @@
+         srand(time(NULL));
+         opt.serial = rand();
+         opt.skeleton_serial = opt.serial + numfiles;
++        opt.kate_serial = opt.skeleton_serial + numfiles;
+     }
+ 
+     for(i = 0; i < numfiles; i++)
+@@ -146,6 +148,7 @@
+         int closeout = 0, closein = 0;
+         char *artist=NULL, *album=NULL, *title=NULL, *track=NULL;
+         char *date=NULL, *genre=NULL;
++        char *lyrics=NULL;
+         input_format *format;
+         int resampled = 0;
+ 
+@@ -153,6 +156,7 @@
+ 
+         enc_opts.serialno = opt.serial++;
+         enc_opts.skeleton_serialno = opt.skeleton_serial++;
++        enc_opts.kate_serialno = opt.kate_serial++;
+         enc_opts.progress_update = update_statistics_full;
+         enc_opts.start_encode = start_encode_full;
+         enc_opts.end_encode = final_statistics;
+@@ -165,6 +169,19 @@
+         build_comments(&vc, &opt, i, &artist, &album, &title, &track,
+                 &date, &genre);
+ 
++        if(opt.lyrics_count)
++        {
++            if(i >= opt.lyrics_count)
++            {
++                /* TODO: I think it'd be better to default to *none*, but it would be inconsistent with the rest */
++                if(!opt.quiet)
++                    fprintf(stderr, _("WARNING: Insufficient lyrics specified, defaulting to final lyrics.\n"));
++                lyrics = opt.lyrics[opt.lyrics_count-1];
++            }
++            else
++                lyrics = opt.lyrics[i];
++        }
++
+         if(!strcmp(infiles[i], "-"))
+         {
+             setbinmode(stdin);
+@@ -269,15 +286,20 @@
+                 end = strrchr(infiles[i], '.');
+                 end = end?end:(start + strlen(infiles[i])+1);
+ 
+-                extension = (opt.with_skeleton) ? ".oga" : ".ogg";
++                /* if adding skeleton or kate, we're not Vorbis I anymore */
++                extension = (opt.with_skeleton || opt.lyrics_count>0) ? ".oga" : ".ogg";
+                 out_fn = malloc(end - start + 5);
+                 strncpy(out_fn, start, end-start);
+                 out_fn[end-start] = 0;
+                 strcat(out_fn, extension);
+             }
+             else {
+-                fprintf(stderr, _("WARNING: No filename, defaulting to \"default.ogg\"\n"));
+-                out_fn = strdup("default.ogg");
++                /* if adding skeleton or kate, we're not Vorbis I anymore */
++                if (opt.with_skeleton || opt.lyrics_count>0)
++                    out_fn = strdup("default.oga");
++                else
++                    out_fn = strdup("default.ogg");
++                fprintf(stderr, _("WARNING: No filename, defaulting to \"%s\"\n"), out_fn);
+             }
+ 
+             /* Create any missing subdirectories, if possible */
+@@ -323,6 +345,7 @@
+         enc_opts.quality_set = opt.quality_set;
+         enc_opts.advopt = opt.advopt;
+         enc_opts.advopt_count = opt.advopt_count;
++        enc_opts.lyrics = lyrics;
+ 
+         if(opt.resamplefreq && opt.resamplefreq != enc_opts.rate) {
+             int fromrate = enc_opts.rate;
+@@ -470,6 +493,7 @@
+         " -l, --album          Name of album\n"
+         " -a, --artist         Name of artist\n"
+         " -G, --genre          Genre of track\n"
++        " -L, --lyrics         Lyrics for track (in .srt format)\n"
+         "                      If multiple input files are given, then multiple\n"
+         "                      instances of the previous five arguments will be used,\n"
+         "                      in the order they are given. If fewer titles are\n"
+@@ -601,13 +625,13 @@
+     int ret;
+     int option_index = 1;
+ 
+-    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkl:m:M:n:N:o:P:q:QrR:s:t:vX:",
++    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkL:l:m:M:n:N:o:P:q:QrR:s:t:vX:",
+                     long_options, &option_index)) != -1)
+     {
+         switch(ret)
+         {
+             case 0:
+-                if(!strcmp(long_options[option_index].name, "skleton")) {
++                if(!strcmp(long_options[option_index].name, "skeleton")) {
+                     opt->with_skeleton = 1;
+                 }
+                 else if(!strcmp(long_options[option_index].name, "managed")) {
+@@ -857,6 +881,14 @@
+             case 'k':
+                 opt->with_skeleton = 1;
+                 break;
++            case 'L':
++#ifdef HAVE_KATE
++                opt->lyrics = realloc(opt->lyrics, (++opt->lyrics_count)*sizeof(char *));
++                opt->lyrics[opt->lyrics_count - 1] = strdup(optarg);
++#else
++                fprintf(stderr, _("WARNING: Kate support not compiled in, lyrics will not be included.\n"));
++#endif
++                break;
+             case '?':
+                 fprintf(stderr, _("WARNING: Unknown option specified, ignoring->\n"));
+                 break;
