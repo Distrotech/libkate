@@ -10,7 +10,7 @@ OGGDIR=built-streams
 
 SPAMMY_WARNINGS=0
 
-CWARNFLAGS_LIGHT:=-W -Wall -Wwrite-strings -Wdeclaration-after-statement -Wcast-qual -Wcast-align \
+CWARNFLAGS_LIGHT:=-W -Wall -Wdeclaration-after-statement -Wcast-qual -Wcast-align \
                   -Winit-self -Wcast-align -pedantic -Wformat=2 -Wunused \
                   -Wstrict-aliasing=2 -Wpointer-arith -Wbad-function-cast -Waggregate-return
 
@@ -22,7 +22,14 @@ CWARNFLAGS_FULL+=-Wconversion
 CWARNFLAGS_LIGHT:=$(CWARNFLAGS_FULL)
 endif
 
-CFLAGS=-std=c99 -Iinclude -Isrc
+CFLAGS=-Iinclude -Isrc
+
+ifeq ($(C89),1)
+CFLAGS+=-std=c89
+CWARNFLAGS_LIGHT+=-Wwrite-strings
+else
+CFLAGS+=-std=c99
+endif
 
 ifeq ($(DEBUG),1)
 CFLAGS+=-g -O0 -DDEBUG
