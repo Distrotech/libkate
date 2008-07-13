@@ -58,6 +58,8 @@ LDFLAGS+=-L$(LIBDIR)
 VERSION=0.1.6
 SONAME_MAJOR=0
 
+all: staticlib sharedlib tools #doc
+
 MODULES=kate kate_info kate_comment kate_granule kate_event \
         kate_motion kate_text kate_tracker kate_fp kate_font \
         kate_encode_state kate_encode \
@@ -71,18 +73,17 @@ OBJS_SHARED=$(foreach module, $(MODULES),$(OBJDIR)/shared/$(module).o)
 LIBOGGKATE_OBJS_STATIC=$(OBJDIR)/static/kate_ogg.o
 LIBOGGKATE_OBJS_SHARED=$(OBJDIR)/shared/kate_ogg.o
 
-STATICLIBS=$(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
-SHAREDLIBS=$(LIBDIR)/liboggkate.$(VERSION).so $(LIBDIR)/libkate.$(VERSION).so
-
-all: staticlib sharedlib tools #doc
-staticlib: $(STATICLIBS)
-sharedlib: $(SHAREDLIBS)
-
 LEX=$(shell which flex 2> /dev/null)
 YACC=$(shell which bison 2> /dev/null)
 DOXYGEN=$(shell which doxygen 2> /dev/null)
 
+OGGERR:=$(shell echo -e "\#include <ogg/ogg.h>\nint main() { ogg_page og; return ogg_page_serialno(&og); }" | $(CC) -xc -o /dev/null - -logg -lm -lc 2>&1)
+
 .PHONY: tools
+ifneq ($(OGGERR),)
+tools:
+	@echo libogg not found, tools will not be built
+else
 ifeq ($(LEX),)
 tools:
 	@echo lex not found, tools will not be built
@@ -94,6 +95,7 @@ else
 tools: tools/encoder tools/decoder
 endif
 endif
+endif
 
 .PHONY: doc
 ifeq ($(DOXYGEN),)
@@ -103,6 +105,17 @@ else
 doc:
 	@$(DOXYGEN) doc/kate.doxygen
 endif
+
+STATICLIBS:=$(LIBDIR)/libkate.a
+SHAREDLIBS:=$(LIBDIR)/libkate.$(VERSION).so
+
+ifeq ($(OGGERR),)
+STATICLIBS+=$(LIBDIR)/liboggkate.a
+SHAREDLIBS+=$(LIBDIR)/liboggkate.$(VERSION).so
+endif
+
+staticlib: $(STATICLIBS)
+sharedlib: $(SHAREDLIBS)
 
 $(OBJDIR)/static/%.o: src/%.c
 	@echo " CC $@"
@@ -188,20 +201,27 @@ clean:
 .PHONY: install
 install: staticlib sharedlib
 	mkdir -p $(PREFIX)/include/kate
-	cp include/kate/kate.h include/kate/oggkate.h $(PREFIX)/include/kate/
 	mkdir -p $(PREFIX)/lib
-	cp $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a $(PREFIX)/lib/
-	cp $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so $(PREFIX)/lib/
-	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
-	-/sbin/ldconfig -n $(PREFIX)/lib/
+	cp include/kate/kate.h $(PREFIX)/include/kate/
+	cp $(LIBDIR)/libkate.a $(PREFIX)/lib/
+	cp $(LIBDIR)/libkate.$(VERSION).so $(PREFIX)/lib/
+	cp -P $(LIBDIR)/libkate.so $(PREFIX)/lib/
+	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
 	mkdir -p $(PREFIX)/lib/pkgconfig
 	cat misc/pkgconfig/kate.pc\
            | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/kate.pc
+ifeq ($(OGGERR),)
+	cp include/kate/oggkate.h $(PREFIX)/include/kate/
+	cp $(LIBDIR)/liboggkate.a $(PREFIX)/lib/
+	cp $(LIBDIR)/liboggkate.$(VERSION).so $(PREFIX)/lib/
+	cp -P $(LIBDIR)/liboggkate.so $(PREFIX)/lib/
+	-cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
 	cat misc/pkgconfig/oggkate.pc | \
            awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(PREFIX)/lib/pkgconfig/oggkate.pc
+endif
+	-/sbin/ldconfig -n $(PREFIX)/lib/
 
 .PHONY: uninstall
 uninstall:
@@ -288,6 +308,10 @@ oggzdiff=cmp
 endif
 
 .PHONY: check
+ifneq ($(OGGERR),)
+check:
+	@echo "libogg not found, make check needs it"
+else
 check: tools/decoder tools/encoder
 	@echo " Checking Kate namespace"
 	@! nm -a $(STATICLIBS) $(SHAREDLIBS) \
@@ -312,6 +336,7 @@ check: tools/decoder tools/encoder
 	  $(ldsodir) $(valgrind) ./tools/decoder -o $(tmp_kate2) $(tmp_ogg2) && \
 	  cmp $(tmp_kate1) $(tmp_kate2) && \
 	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
+endif
 
 tools/encoder tools/decoder: $(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
 
