@@ -1,4 +1,5 @@
 0.1.6
+  libraries can now build in C89 mode
   the bitstream format is now fully documented
   use new names for oggz tools
 

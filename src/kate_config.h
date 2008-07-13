@@ -9,10 +9,17 @@
 #ifndef _KATE_CONFIG_H_
 #define _KATE_CONFIG_H_
 
-#ifndef __GNUC__
-#define __attribute__(x)
+#if (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L) || defined __USE_ISOC99
+#define KATE_USE_C99
+#endif
+
+#ifndef KATE_USE_C99
 #define inline
 #define const
+#endif
+
+#ifndef __GNUC__
+#define __attribute__(x)
 #endif
 
 #endif

@@ -314,7 +314,7 @@ static unsigned char get_zero(size_t count,const unsigned char *values)
 static int kate_rle_encode_best(size_t width,size_t height,const unsigned char *values,size_t bits,kate_pack_buffer *kpb)
 {
   const unsigned char *previous=NULL;
-  const unsigned char zero=get_zero(width*height,values); //values[0];
+  const unsigned char zero=get_zero(width*height,values);
 
 #ifdef DEBUG
   memset(kate_rle_stats,0,sizeof(kate_rle_stats));

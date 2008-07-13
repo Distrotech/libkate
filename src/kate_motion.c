@@ -189,7 +189,7 @@ int kate_motion_get_point(const kate_motion *km,kate_float duration,kate_float t
       kate_float curve_duration=km->durations[n];
       if (curve_duration<0.0) curve_duration=-curve_duration*duration;
       if (t<=curve_duration) {
-        // TODO: div by zero possible here
+        /* TODO: div by zero possible here */
         return kate_curve_get_point(km->curves[n],t/curve_duration,x,y);
       }
       t-=curve_duration;

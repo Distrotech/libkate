@@ -48,8 +48,8 @@ kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float of
   actual_offset=offset+(base-actual_base);
   goffset=(kate_int64_t)((actual_offset*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
   /* check if the values fit with the granule encoding parameters */
-  if (gbase>=(1ll<<(63-ki->granule_shift))-1) return KATE_E_LIMIT;
-  if (goffset>=(1ll<<ki->granule_shift)-1) return KATE_E_LIMIT;
+  if (gbase>=(((kate_int64_t)1)<<(63-ki->granule_shift))-1) return KATE_E_LIMIT;
+  if (goffset>=(((kate_int64_t)1)<<ki->granule_shift)-1) return KATE_E_LIMIT;
   return (gbase<<ki->granule_shift)|goffset;
 }
 

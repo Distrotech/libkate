@@ -25,7 +25,7 @@
 #define kate_fp_bits (sizeof(kate_fp)*8)
 #define kate_fp_cut_bits ((kate_fp_bits)/2-1)
 #define kate_fp_cut_bits_bits (kate_fp_bits==16?3:kate_fp_bits==32?4:kate_fp_bits==64?5:8)
-#define kate_fp_sign_bit (kate_fp_bits==16?0x8000:kate_fp_bits==32?0x80000000:kate_fp_bits==64?0x8000000000000000ull:0)
+#define kate_fp_sign_bit (kate_fp_bits==16?0x8000:kate_fp_bits==32?0x80000000:kate_fp_bits==64?((kate_int64_t)-1):0)
 
 static inline kate_fp f2kfp(kate_float f)
 {

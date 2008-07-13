@@ -357,7 +357,7 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   /* if we have no motions, go no further */
   if (!kin->event->nmotions) return 0;
 
-  // TODO: think about the consequences of this wrt continuations
+  /* TODO: think about the consequences of this wrt continuations */
 
   /* alter the flow of time */
   ret=kate_tracker_update_property(kin,kate_motion_semantics_time,&t,&dummy);
