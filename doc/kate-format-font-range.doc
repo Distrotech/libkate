@@ -1,0 +1,29 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_font_range Format - font_range
+
+A font_range definition consists of:
+
+\li a \ref format_32v "variable length integer" representing the first code point spanned by this range.
+\li a \ref format_32v "variable length integer" representing the last code point spanned by this range.
+\li a \ref format_32v "variable length integer" representing the index of the first bitmap to map to the first code point.
+
+Next, a \ref format_warp "warp".
+
+Next, the data ends.
+
+
+The bitmaps used by ranges are predefined bitmaps, and are used in order from the specified index.
+
+
+*/
+

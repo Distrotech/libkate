@@ -1,0 +1,47 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_0x88 Format - header packet type 0x88 - font ranges
+
+This header contains a (possibly empty) list of predefined font ranges
+that may be referred to by data packets.
+This header is mandatory, even if no font ranges are predefined.
+
+As with all headers, the first 8 bytes are composed of the header
+type (0x88) and the 7 byte kate signature ("kate\0\0\0").
+
+Next, we find a \ref format_32v "variable length integer", holding the number
+of predefined font ranges this header contains. A negative value is an error.
+
+Next, we find a list of \ref format_font_range "font range" definitions, as many as defined
+int the previously read number.
+
+Next, we find a \ref format_32v "variable length integer", holding the number
+of predefined font mappings this header contains. A negative value is an error.
+
+Next, for each predefined font mapping:
+
+\li a \ref format_32v "variable length integer" represented the number of
+ranges in this mapping.
+
+For each of those ranges:
+
+\li a bit being 1 if the range is predefined, 0 if not
+\li if the range is predefined, a \ref format_32v "variable length integer" being the
+index of the range in the list of predefined ranges
+\li if the range is not predefined, a \ref format_font_range "font range" definition.
+
+Next, we find a \ref format_warp "warp".
+
+Next, the data ends.
+
+*/
+
