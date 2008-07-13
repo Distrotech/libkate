@@ -1,7 +1,29 @@
-diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
 --- thoggen/src/th-disc-drive.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-disc-drive.c	2008-07-12 20:46:46.000000000 +0100
-@@ -1137,12 +1137,27 @@
++++ thoggen-with-kate/src/th-disc-drive.c	2008-07-13 22:09:45.000000000 +0100
+@@ -701,7 +701,21 @@
+ 		subp_attr_t *attr;
+ 		const gchar *lang_str;
+ 		gchar       *pad_name;
++                gboolean    found = FALSE;
++                gint        j;
+ 		
++                /* SPU streams sometimes collapse onto a single physical stream */
++                for (j = 0; j < i; ++j)
++                {
++                    if (info->subpicture_streams[i].phys_sid == info->subpicture_streams[j].phys_sid)
++                    {
++                        th_log ("SPU stream %d and %d map to the same physical stream\n", i, j);
++                        found = TRUE;
++                        break;
++                    }
++                }
++                if (found) continue;
++
+ 		attr = &info->subpicture_streams[i].attr;
+ 		
+ 		lang_str = dd_subp_stream_get_language_str_short (attr);
+@@ -1137,12 +1151,27 @@
                                      pgc_t        *pgc,
                                      ThTitleInfo  *tinfo)
  {
@@ -29,7 +51,7 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  	for (i = 0;  i < vts_file->vtsi_mat->nr_of_vts_subp_streams;  ++i)
  	{
  		subp_attr_t  attr;
-@@ -1156,10 +1171,10 @@
+@@ -1156,10 +1185,10 @@
  		/* get stream ID (depending on aspect ratio) (FIXME?) */
  		if (tinfo->video_aspect == 0) {
  			/* 4:3 */
@@ -42,7 +64,7 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  		}
  
  		attr = vts_file->vtsi_mat->vts_subp_attr[i];
-@@ -1185,11 +1200,19 @@
+@@ -1185,11 +1214,19 @@
  		if (attr.lang_extension >= SUBPICTURE_TYPE_LARGE)
  			continue;
  
@@ -62,9 +84,9 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  			
  		/* Don't have a stream in this language yet? add it */
  		if (j == tinfo->num_subpicture_streams) {
-diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 --- thoggen/src/th-job.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-job.c	2008-07-12 20:19:56.000000000 +0100
++++ thoggen-with-kate/src/th-job.c	2008-07-13 22:43:40.000000000 +0100
 @@ -57,6 +57,8 @@
  	PROP_AUDIO_BITRATE,         /* in kbps */
  	PROP_AUDIO_STREAM_ID,
@@ -192,7 +214,16 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  		case PROP_NUM_SUB_STREAMS:
  			g_value_set_uint (value, g_list_length (j->priv->sub_streams));
  			break;
-@@ -628,6 +700,20 @@
+@@ -456,7 +529,7 @@
+ 				guint pos_ms;
+ 				 
+ 				pos_ms = (guint) g_atomic_int_get ((gint*) &j->priv->current_buf_timestamp);
+-				
++
+ 				g_object_set_data (G_OBJECT (pixbuf), "timestamp", GUINT_TO_POINTER (pos_ms));
+ 			}
+ 		}
+@@ -628,6 +701,20 @@
  	                                                    FALSE, 
  	                                                    G_PARAM_READWRITE));
  
@@ -213,7 +244,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	/* FIXME: get rid of this useless property and replace with direct
  	 * structure access instead */
  	g_object_class_install_property (object_class, PROP_NUM_SUB_STREAMS,
-@@ -778,6 +864,7 @@
+@@ -778,6 +865,7 @@
  	j->priv->sub_stream_id = G_MAXUINT;
  
  	j->audio_streams = g_array_new (TRUE, TRUE, sizeof (ThJobAudioStream));
@@ -221,7 +252,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  }
  
  /***************************************************************************
-@@ -806,6 +893,7 @@
+@@ -806,6 +894,7 @@
  	j->priv = NULL;
  
  	g_array_free (j->audio_streams, TRUE);
@@ -229,7 +260,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  
  	/* chain up */
  	j_parent_class->finalize (object);
-@@ -1249,6 +1337,7 @@
+@@ -1249,6 +1338,7 @@
  	
  	total_bitrate_kbps = (gdouble) video_bitrate;
  	total_bitrate_kbps +=  (gdouble) job_get_total_audio_bitrate (j);
@@ -237,7 +268,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	
  	/* Add 1.75% overhead for the Ogg encapsulation (ca. 1-2% apparently) */
  	total_bitrate_kbps = total_bitrate_kbps * 1.0175;
-@@ -1290,6 +1379,29 @@
+@@ -1290,6 +1380,29 @@
  
  /***************************************************************************
   *
@@ -267,7 +298,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
   *   job_set_video_bitrate_from_file_size
   *
   ***************************************************************************/
-@@ -1514,6 +1630,27 @@
+@@ -1514,6 +1627,27 @@
      }
    }
  
@@ -295,7 +326,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
    /* configure video in queue */
    th_bin_set_child_properties (GST_BIN (j->priv->pipeline), "q-v-in",
        "max-size-buffers", (guint) 0,
-@@ -1534,6 +1671,7 @@
+@@ -1534,6 +1668,7 @@
  {
  	GstPadLinkReturn  linkret;
  	ThJobAudioStream *as = NULL;
@@ -303,7 +334,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	const gchar      *pad_name;
  	GstElement       *queue, *fakesink, *pipeline;
  	GstPad           *queue_sink_pad;
-@@ -1544,6 +1682,8 @@
+@@ -1544,6 +1679,8 @@
  
  	as = job_get_audio_stream_from_aid (j, j->priv->audio_stream_id);
  
@@ -312,7 +343,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	/* FIXME: sanity check, remove again */
  	{
  	  ThJobAudioStream *as2;
-@@ -1598,6 +1738,33 @@
+@@ -1598,6 +1735,33 @@
  		         pad_name, j->priv->audio_decoder, (mime) ? mime : "???");
  		goto hook_up;
  	}
@@ -346,7 +377,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	
  	th_log ("dvddemux::new-pad '%s' (skipping)", pad_name);
  	return;
-@@ -1614,6 +1781,8 @@
+@@ -1614,6 +1778,8 @@
  	queue_sink_pad = gst_element_get_pad (queue, "sink");
  	linkret = gst_pad_link (new_pad, queue_sink_pad);
  	gst_object_unref (queue_sink_pad);
@@ -355,7 +386,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	g_return_if_fail (GST_PAD_LINK_SUCCESSFUL (linkret));
  	gst_element_set_state (queue, GST_STATE_PAUSED);
  
-@@ -1805,6 +1976,19 @@
+@@ -1805,6 +1971,19 @@
  	  }
  	}
  
@@ -375,7 +406,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	tagsetter = gst_bin_get_by_name (pipeline, "v-encoder");
  	job_pipeline_set_tags_on_encoder (j, tagsetter, NULL);
  	gst_object_unref (tagsetter);
-@@ -1889,6 +2073,29 @@
+@@ -1889,6 +2068,29 @@
    }
  }
  
@@ -405,7 +436,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  /***************************************************************************
   *
   *   job_create_pipeline
-@@ -1971,6 +2178,54 @@
+@@ -1971,6 +2173,30 @@
  	  }
  	}
  
@@ -433,42 +464,10 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 +	  }
 +	}
 +
-+#if 1
-+	/* video transcoder  */	
-+	g_string_append_printf (pipe_desc,
-+	      "      demux.%s                                                "
-+	      "    ! queue name=q-v-in                                       "
-+	      "    ! mpeg2dec                                                "
-+	      "    ! thparsetter pixel-aspect-ratio=%u/%u                    "
-+	      "    ! videorate                                               "
-+	      "    ! video/x-raw-yuv,framerate=(fraction)%u/%u               "
-+	      "    ! videobox left=%u right=%u top=%u bottom=%u              "
-+	      "    ! videoscale method=%s                              "
-+	      "    ! queue max-size-buffers=5                                "
-+	      "    ! video/x-raw-yuv,width=%u,height=%u                      "
-+	      "    ! theoraenc name=v-encoder                                "
-+	      "    ! mux.                                                    "
-+	      "                                                              ",
-+	      j->priv->video_pad_name,
-+	      j->video_info.aspect_num, j->video_info.aspect_denom,
-+	      j->video_info.fps_num, j->video_info.fps_denom,
-+	      j->priv->crop_left, j->priv->crop_right, 
-+	      j->priv->crop_top, j->priv->crop_bottom,
-+	      scale_method,
-+	      width, height);
-+#else
  	/* video transcoder  */	
  	g_string_append_printf (pipe_desc,
  	      "      demux.%s                                                "
-@@ -1995,6 +2250,7 @@
- 	      j->priv->crop_top, j->priv->crop_bottom,
- 	      scale_method,
- 	      width, height);
-+#endif
- 	
- 	pipe = gst_parse_launch (pipe_desc->str, err);
- 	g_string_free (pipe_desc, TRUE);
-@@ -2033,6 +2289,8 @@
+@@ -2033,6 +2259,8 @@
  
  	job_create_pipeline_setup_audio_encoders (j);
  
@@ -477,7 +476,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	/* oggmux */
  	th_bin_set_child_properties (GST_BIN (pipe), "mux",
  	              "max-delay", (guint64) GST_SECOND/2,
-@@ -2124,6 +2382,7 @@
+@@ -2124,6 +2352,7 @@
  	}
  
  	j->priv->audio_pad_name = NULL;
@@ -485,7 +484,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	j->priv->video_pad_name = NULL;
  
  	if (j->priv->err)
-@@ -2381,6 +2640,7 @@
+@@ -2381,6 +2610,7 @@
      const gchar * lang)
  {
  	ThJobSubStream *ss;
@@ -493,7 +492,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  
  	g_return_if_fail (TH_IS_JOB (j));
  	g_return_if_fail (sid <= 99);
-@@ -2395,7 +2655,27 @@
+@@ -2395,7 +2625,27 @@
  
  	j->priv->sub_streams = g_list_append (j->priv->sub_streams, ss);
  	
@@ -521,7 +520,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  }
  
  /***************************************************************************
-diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-dialog.c
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-dialog.c
 --- thoggen/src/th-job-config-dialog.c	2008-06-16 17:24:30.000000000 +0100
 +++ thoggen-with-kate/src/th-job-config-dialog.c	2008-07-12 22:15:19.000000000 +0100
 @@ -23,6 +23,8 @@
@@ -925,7 +924,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  	response_id = th_fake_dialog_run (TH_FAKE_DIALOG (jcd));
  	if (response_id != GTK_RESPONSE_ACCEPT)
  	{
-diff -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-config-dialog.glade
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-config-dialog.glade
 --- thoggen/src/th-job-config-dialog.glade	2008-06-16 17:24:30.000000000 +0100
 +++ thoggen-with-kate/src/th-job-config-dialog.glade	2008-07-12 20:56:05.000000000 +0100
 @@ -36,6 +36,9 @@
@@ -1014,7 +1013,7 @@ diff -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-con
                  <child>
                    <widget class="GtkVBox" id="vbox-picture-size">
                      <property name="visible">True</property>
-diff -ru thoggen/src/th-job.h thoggen-with-kate/src/th-job.h
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-job.h thoggen-with-kate/src/th-job.h
 --- thoggen/src/th-job.h	2008-06-16 17:24:30.000000000 +0100
 +++ thoggen-with-kate/src/th-job.h	2008-06-16 19:08:10.000000000 +0100
 @@ -62,6 +62,7 @@
@@ -1025,7 +1024,7 @@ diff -ru thoggen/src/th-job.h thoggen-with-kate/src/th-job.h
  
  	ThJobPrivate          *priv;
  };
-diff -ru thoggen/src/th-main.c thoggen-with-kate/src/th-main.c
+diff -x Makefile -x Makefile.in -ru thoggen/src/th-main.c thoggen-with-kate/src/th-main.c
 --- thoggen/src/th-main.c	2008-06-16 17:24:30.000000000 +0100
 +++ thoggen-with-kate/src/th-main.c	2008-07-12 19:57:41.000000000 +0100
 @@ -77,6 +77,8 @@
