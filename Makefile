@@ -287,11 +287,16 @@ $(video_theora_ogg):
 	@echo If no such file is found, Kate streams will be built as single lone streams.
 
 STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
+ifneq ($(OGGERR),)
+streams:
+	@echo "libogg not found, make streams needs it"
+else
 ifneq ($(video_theora_ogg),)
 streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).ogg)
 else
 streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).kate.ogg) \
          $(video_theora_ogg)
+endif
 endif
 
 tmp_ogg1:="kate-check-1.kate.ogg"
