@@ -1,7 +1,35 @@
 diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
 --- thoggen/src/th-disc-drive.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-disc-drive.c	2008-06-16 19:08:10.000000000 +0100
-@@ -1156,10 +1156,10 @@
++++ thoggen-with-kate/src/th-disc-drive.c	2008-07-12 20:46:46.000000000 +0100
+@@ -1137,12 +1137,27 @@
+                                     pgc_t        *pgc,
+                                     ThTitleInfo  *tinfo)
+ {
++	static enum { kate_is_here, kate_is_not_here, kate_might_be_here } where_is_kate = kate_might_be_here;
+ 	guint i;
+ 
+ 	tinfo->num_subpicture_streams = 0;
+ 	
+ 	g_return_if_fail (pgc != NULL);
+ 
++        /* if the Kate plugin isn't installed, we can't do anything with those */
++        if (where_is_kate == kate_might_be_here)
++        {
++            if (gst_default_registry_check_feature_version ("kateenc", 0, 10, 0))
++                where_is_kate = kate_is_here;
++            else
++                where_is_kate = kate_is_not_here;
++        }
++	if (where_is_kate == kate_is_not_here)
++	{
++		th_log ("kate plugin not available");
++		return;
++	}
++
+ 	for (i = 0;  i < vts_file->vtsi_mat->nr_of_vts_subp_streams;  ++i)
+ 	{
+ 		subp_attr_t  attr;
+@@ -1156,10 +1171,10 @@
  		/* get stream ID (depending on aspect ratio) (FIXME?) */
  		if (tinfo->video_aspect == 0) {
  			/* 4:3 */
@@ -14,7 +42,7 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  		}
  
  		attr = vts_file->vtsi_mat->vts_subp_attr[i];
-@@ -1185,11 +1185,19 @@
+@@ -1185,11 +1200,19 @@
  		if (attr.lang_extension >= SUBPICTURE_TYPE_LARGE)
  			continue;
  
@@ -36,7 +64,7 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  		if (j == tinfo->num_subpicture_streams) {
 diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 --- thoggen/src/th-job.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-job.c	2008-06-16 19:08:10.000000000 +0100
++++ thoggen-with-kate/src/th-job.c	2008-07-12 20:19:56.000000000 +0100
 @@ -57,6 +57,8 @@
  	PROP_AUDIO_BITRATE,         /* in kbps */
  	PROP_AUDIO_STREAM_ID,
@@ -164,14 +192,6 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  		case PROP_NUM_SUB_STREAMS:
  			g_value_set_uint (value, g_list_length (j->priv->sub_streams));
  			break;
-@@ -456,7 +529,6 @@
- 				guint pos_ms;
- 				 
- 				pos_ms = (guint) g_atomic_int_get ((gint*) &j->priv->current_buf_timestamp);
--				
- 				g_object_set_data (G_OBJECT (pixbuf), "timestamp", GUINT_TO_POINTER (pos_ms));
- 			}
- 		}
 @@ -628,6 +700,20 @@
  	                                                    FALSE, 
  	                                                    G_PARAM_READWRITE));
@@ -247,7 +267,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
   *   job_set_video_bitrate_from_file_size
   *
   ***************************************************************************/
-@@ -1514,6 +1626,27 @@
+@@ -1514,6 +1630,27 @@
      }
    }
  
@@ -275,7 +295,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
    /* configure video in queue */
    th_bin_set_child_properties (GST_BIN (j->priv->pipeline), "q-v-in",
        "max-size-buffers", (guint) 0,
-@@ -1534,6 +1667,7 @@
+@@ -1534,6 +1671,7 @@
  {
  	GstPadLinkReturn  linkret;
  	ThJobAudioStream *as = NULL;
@@ -283,7 +303,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	const gchar      *pad_name;
  	GstElement       *queue, *fakesink, *pipeline;
  	GstPad           *queue_sink_pad;
-@@ -1544,6 +1678,8 @@
+@@ -1544,6 +1682,8 @@
  
  	as = job_get_audio_stream_from_aid (j, j->priv->audio_stream_id);
  
@@ -292,19 +312,13 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	/* FIXME: sanity check, remove again */
  	{
  	  ThJobAudioStream *as2;
-@@ -1598,6 +1734,39 @@
+@@ -1598,6 +1738,33 @@
  		         pad_name, j->priv->audio_decoder, (mime) ? mime : "???");
  		goto hook_up;
  	}
-+#if 1
-+        /* why is this that way for audio ? seems to work, but it needs to change for spu */
-+	else if (g_str_has_prefix (pad_name, "subpicture_")
-+	      && ((ss != NULL && g_str_equal (pad_name, ss->pad_name)) || j->priv->sub_all))
-+#else
 +	else if (j->priv->subpicture_pad_name == NULL
 +	      && g_str_has_prefix (pad_name, "subpicture_")
 +	      && ss != NULL && g_str_equal (pad_name, ss->pad_name))
-+#endif
 +	{
 +		const gchar *mime = NULL;
 +		GstCaps *caps;
@@ -327,12 +341,21 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 +		
 +		th_log ("dvddemux::new-pad '%s' (using) (%s) (%s)", 
 +		         pad_name, j->priv->subpicture_decoder, (mime) ? mime : "???");
-+		goto hook_up;
++                return;
 +	}
  	
  	th_log ("dvddemux::new-pad '%s' (skipping)", pad_name);
  	return;
-@@ -1805,6 +1974,19 @@
+@@ -1614,6 +1781,8 @@
+ 	queue_sink_pad = gst_element_get_pad (queue, "sink");
+ 	linkret = gst_pad_link (new_pad, queue_sink_pad);
+ 	gst_object_unref (queue_sink_pad);
++	if (!GST_PAD_LINK_SUCCESSFUL (linkret))
++      g_warning ("failed to link new_pad <=> queue at %s", G_STRLOC);
+ 	g_return_if_fail (GST_PAD_LINK_SUCCESSFUL (linkret));
+ 	gst_element_set_state (queue, GST_STATE_PAUSED);
+ 
+@@ -1805,6 +1976,19 @@
  	  }
  	}
  
@@ -352,7 +375,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	tagsetter = gst_bin_get_by_name (pipeline, "v-encoder");
  	job_pipeline_set_tags_on_encoder (j, tagsetter, NULL);
  	gst_object_unref (tagsetter);
-@@ -1889,6 +2071,29 @@
+@@ -1889,6 +2073,29 @@
    }
  }
  
@@ -382,7 +405,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  /***************************************************************************
   *
   *   job_create_pipeline
-@@ -1971,6 +2176,30 @@
+@@ -1971,6 +2178,54 @@
  	  }
  	}
  
@@ -410,10 +433,42 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 +	  }
 +	}
 +
++#if 1
++	/* video transcoder  */	
++	g_string_append_printf (pipe_desc,
++	      "      demux.%s                                                "
++	      "    ! queue name=q-v-in                                       "
++	      "    ! mpeg2dec                                                "
++	      "    ! thparsetter pixel-aspect-ratio=%u/%u                    "
++	      "    ! videorate                                               "
++	      "    ! video/x-raw-yuv,framerate=(fraction)%u/%u               "
++	      "    ! videobox left=%u right=%u top=%u bottom=%u              "
++	      "    ! videoscale method=%s                              "
++	      "    ! queue max-size-buffers=5                                "
++	      "    ! video/x-raw-yuv,width=%u,height=%u                      "
++	      "    ! theoraenc name=v-encoder                                "
++	      "    ! mux.                                                    "
++	      "                                                              ",
++	      j->priv->video_pad_name,
++	      j->video_info.aspect_num, j->video_info.aspect_denom,
++	      j->video_info.fps_num, j->video_info.fps_denom,
++	      j->priv->crop_left, j->priv->crop_right, 
++	      j->priv->crop_top, j->priv->crop_bottom,
++	      scale_method,
++	      width, height);
++#else
  	/* video transcoder  */	
  	g_string_append_printf (pipe_desc,
  	      "      demux.%s                                                "
-@@ -2033,6 +2262,8 @@
+@@ -1995,6 +2250,7 @@
+ 	      j->priv->crop_top, j->priv->crop_bottom,
+ 	      scale_method,
+ 	      width, height);
++#endif
+ 	
+ 	pipe = gst_parse_launch (pipe_desc->str, err);
+ 	g_string_free (pipe_desc, TRUE);
+@@ -2033,6 +2289,8 @@
  
  	job_create_pipeline_setup_audio_encoders (j);
  
@@ -422,7 +477,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	/* oggmux */
  	th_bin_set_child_properties (GST_BIN (pipe), "mux",
  	              "max-delay", (guint64) GST_SECOND/2,
-@@ -2124,6 +2355,7 @@
+@@ -2124,6 +2382,7 @@
  	}
  
  	j->priv->audio_pad_name = NULL;
@@ -430,7 +485,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  	j->priv->video_pad_name = NULL;
  
  	if (j->priv->err)
-@@ -2381,6 +2613,7 @@
+@@ -2381,6 +2640,7 @@
      const gchar * lang)
  {
  	ThJobSubStream *ss;
@@ -438,7 +493,7 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  
  	g_return_if_fail (TH_IS_JOB (j));
  	g_return_if_fail (sid <= 99);
-@@ -2395,7 +2628,27 @@
+@@ -2395,7 +2655,27 @@
  
  	j->priv->sub_streams = g_list_append (j->priv->sub_streams, ss);
  	
@@ -468,8 +523,17 @@ diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
  /***************************************************************************
 diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-dialog.c
 --- thoggen/src/th-job-config-dialog.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-job-config-dialog.c	2008-06-16 19:08:10.000000000 +0100
-@@ -36,6 +36,7 @@
++++ thoggen-with-kate/src/th-job-config-dialog.c	2008-07-12 22:15:19.000000000 +0100
+@@ -23,6 +23,8 @@
+ #include <gtk/gtk.h>
+ #include <glib/gi18n.h>
+ 
++#include <gst/gstregistry.h>
++
+ #include <string.h>
+ 
+ enum
+@@ -36,6 +38,7 @@
  enum
  {
  	COL_AUDIO_STREAM_ID = 0,
@@ -477,7 +541,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  	COL_LANG_NAME
  };
  
-@@ -54,11 +55,17 @@
+@@ -54,11 +57,18 @@
  	GtkWidget    *crop_bottom_label;
  	GtkWidget    *crop_button;
  	
@@ -497,10 +561,11 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
 +	gulong        spu_lang_all_sigid;
 +	GtkWidget    *spu_lang_all;
 +	GtkListStore *spu_lang_list;
++	GtkWidget    *spu_label;
  	
  	GtkWidget    *picsize_combobox;
  	GtkListStore *picsize_list;
-@@ -442,6 +449,161 @@
+@@ -442,6 +452,161 @@
  
  /***************************************************************************
   *
@@ -623,37 +688,37 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
 +				    -1);
 +        }
 +
-+	num_spu_streams = jcd->priv->job->subpicture_streams->len;
-+	for (i = 0;  i < num_spu_streams;  ++i)
-+	{
-+		const gchar *lang, *lang_name;
-+		gchar        nolangstr[256] = { 0x00, };
-+		guint        sid;
-+	
-+		if (th_job_get_subpicture_stream (jcd->priv->job, i, &sid, &lang))
-+		{
-+			GtkTreeIter  iter;
++        num_spu_streams = jcd->priv->job->subpicture_streams->len;
++        for (i = 0;  i < num_spu_streams;  ++i)
++        {
++	    const gchar *lang, *lang_name;
++	    gchar        nolangstr[256] = { 0x00, };
++	    guint        sid;
 +
-+			gtk_list_store_append (jcd->priv->spu_lang_list, &iter);
++	    if (th_job_get_subpicture_stream (jcd->priv->job, i, &sid, &lang))
++	    {
++		    GtkTreeIter  iter;
 +
-+			lang_name = th_utils_get_language_name (lang);
-+			
-+			if (lang_name == NULL)
-+			{
-+				g_snprintf (nolangstr, sizeof (nolangstr), "%s (subpicture_%02u)", _("Unknown Language"), sid);
-+				lang_name = nolangstr;
-+			}
++		    gtk_list_store_append (jcd->priv->spu_lang_list, &iter);
 +
-+			gtk_list_store_set (jcd->priv->spu_lang_list, &iter, 
-+			                    COL_SPU_STREAM_ID, sid,
-+			                    COL_LANG_NAME, lang_name,
-+			                    -1);
-+		
-+			if (sid == default_sid)
-+			{
-+				gtk_combo_box_set_active_iter (GTK_COMBO_BOX (jcd->priv->spu_lang_combobox), &iter);
-+			}
-+		}
++		    lang_name = th_utils_get_language_name (lang);
++
++		    if (lang_name == NULL)
++		    {
++			    g_snprintf (nolangstr, sizeof (nolangstr), "%s (subpicture_%02u)", _("Unknown Language"), sid);
++			    lang_name = nolangstr;
++		    }
++
++		    gtk_list_store_set (jcd->priv->spu_lang_list, &iter, 
++					COL_SPU_STREAM_ID, sid,
++					COL_LANG_NAME, lang_name,
++					-1);
++
++		    if (sid == default_sid)
++		    {
++			    gtk_combo_box_set_active_iter (GTK_COMBO_BOX (jcd->priv->spu_lang_combobox), &iter);
++		    }
++	    }
 +	}
 +}
 +
@@ -662,7 +727,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
   *   job_config_dialog_language_changed
   *
   ***************************************************************************/
-@@ -474,7 +636,7 @@
+@@ -474,7 +639,7 @@
    active = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (cbox));
  
    /* Disable combobox, set all audio flag */
@@ -671,7 +736,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
    g_object_set (jcd->priv->job, "audio-all", active, NULL);
  
    job_config_dialog_update_file_size_range (jcd);
-@@ -500,25 +662,25 @@
+@@ -500,25 +665,25 @@
  {
  	GtkCellRenderer *cell;
  
@@ -707,7 +772,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  		                          G_CALLBACK (job_config_dialog_language_all_toggled),
  		                          jcd);
  }
-@@ -537,13 +699,13 @@
+@@ -537,13 +702,13 @@
  	/* Need to block 'changed' signal handler here, otherwise
  	 *  the active iter might change while the list is cleared,
  	 *  leading to a wrong default audio id to be selected. */
@@ -726,7 +791,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  
  	g_object_get (jcd->priv->job, 
  	              "audio-stream-id", &default_aid,
-@@ -562,7 +724,7 @@
+@@ -562,7 +727,7 @@
  		{
  			GtkTreeIter  iter;
  
@@ -735,7 +800,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  
  			lang_name = th_utils_get_language_name (lang);
  			
-@@ -572,14 +734,14 @@
+@@ -572,14 +737,14 @@
  				lang_name = nolangstr;
  			}
  
@@ -752,7 +817,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  			}
  		}
  	}
-@@ -713,28 +875,30 @@
+@@ -713,28 +878,31 @@
  	
  	if (!th_utils_ui_load_interface ("th-job-config-dialog.glade", 
  	                                 FALSE,
@@ -787,6 +852,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
 +	                                 "th-language-all",          &jcd->priv->audio_lang_all,
 +	                                 "th-spu-language-combobox", &jcd->priv->spu_lang_combobox,
 +	                                 "th-spu-language-all",      &jcd->priv->spu_lang_all,
++	                                 "th-spu-label",             &jcd->priv->spu_label,
 +	                                 "th-picsize-combobox",      &jcd->priv->picsize_combobox,
 +	                                 "th-crop-top-label",        &jcd->priv->crop_top_label,
 +	                                 "th-crop-left-label",       &jcd->priv->crop_left_label,
@@ -805,7 +871,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  	                                 NULL))
  	{
  		g_warning ("th_utils_ui_load_interface (\"th-ui-job-config-dialog.glade\") failed.\n");
-@@ -784,6 +948,8 @@
+@@ -784,6 +952,8 @@
  
  	job_config_dialog_setup_language_combobox (jcd);
  	
@@ -814,7 +880,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  	job_config_dialog_setup_picsize_combobox (jcd);
  
  	jcd->priv->close_button = th_fake_dialog_add_button (TH_FAKE_DIALOG (jcd),
-@@ -918,11 +1084,24 @@
+@@ -918,11 +1088,32 @@
  
  	/* no need to show the 'all languages' checkbox if there is only one */
  	if (job->audio_streams->len == 1) {
@@ -832,6 +898,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
 +	} else {
 +	  gtk_widget_show (jcd->priv->spu_lang_all);
 +	}
++
 +	/* no need to show the spu languages list if there are no SPU tracks at all */
 +        if (job->subpicture_streams->len == 0) {
 +	  gtk_widget_hide (jcd->priv->spu_lang_combobox);
@@ -839,10 +906,17 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
 +	  gtk_widget_show (jcd->priv->spu_lang_combobox);
 +        }
 +
++        /* if we don't do subtitles because the Kate plugin wasn't found, explain this */
++        if (gst_default_registry_check_feature_version ("kateenc", 0, 10, 0)) {
++          gtk_label_set_markup (GTK_LABEL (jcd->priv->spu_label), _("<b>Subtitles language</b>"));
++        } else {
++          gtk_label_set_markup (GTK_LABEL (jcd->priv->spu_label), _("<b>Kate plugin not found, subtitles support disabled</b>"));
++        }
++
  	s = g_string_new (NULL);
  	g_string_append (s, "<b>");
  	g_string_append_printf (s, _("Configure DVD Title %u"), title_num + 1);
-@@ -936,6 +1115,8 @@
+@@ -936,6 +1127,8 @@
  
  	job_config_dialog_fill_language_combobox (jcd);
  
@@ -853,7 +927,7 @@ diff -ru thoggen/src/th-job-config-dialog.c thoggen-with-kate/src/th-job-config-
  	{
 diff -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-config-dialog.glade
 --- thoggen/src/th-job-config-dialog.glade	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-job-config-dialog.glade	2008-06-16 19:08:10.000000000 +0100
++++ thoggen-with-kate/src/th-job-config-dialog.glade	2008-07-12 20:56:05.000000000 +0100
 @@ -36,6 +36,9 @@
              <child>
                <widget class="GtkVBox" id="vbox-all">
@@ -875,10 +949,10 @@ diff -ru thoggen/src/th-job-config-dialog.glade thoggen-with-kate/src/th-job-con
 +                  <widget class="GtkVBox" id="vbox-spu-language">
 +                    <property name="visible">True</property>
 +                    <child>
-+                      <widget class="GtkLabel" id="label132-spu">
++                      <widget class="GtkLabel" id="th-spu-label">
 +                        <property name="visible">True</property>
 +                        <property name="xalign">0</property>
-+                        <property name="label" translatable="yes">&lt;b&gt;SPU language&lt;/b&gt;</property>
++                        <property name="label" translatable="yes">&lt;b&gt;Subtitles language&lt;/b&gt;</property>
 +                        <property name="use_markup">True</property>
 +                      </widget>
 +                      <packing>
@@ -953,7 +1027,7 @@ diff -ru thoggen/src/th-job.h thoggen-with-kate/src/th-job.h
  };
 diff -ru thoggen/src/th-main.c thoggen-with-kate/src/th-main.c
 --- thoggen/src/th-main.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-main.c	2008-06-16 19:08:10.000000000 +0100
++++ thoggen-with-kate/src/th-main.c	2008-07-12 19:57:41.000000000 +0100
 @@ -77,6 +77,8 @@
  	 { "videobox", "videobox", TH_GST_PLUGINS_GOOD },
  	 { "videorate", "videorate", TH_GST_PLUGINS_BASE },
