@@ -72,15 +72,5 @@ Data packets:
 \li \ref format_0x01 "0x01 (keepalive packet)"
 \li \ref format_0x7f "0x7f (end packet)"
 
-The remainder of the format will be documented later.
 
 */
-
-All Kate bitstream packets start with a packet identifier,
-a one byte unsigned integer that identifies the type of the packet.
-All header packets have the first bit set (eg, header packets have
-a type byte between 0x80 and 0xff).
-All data packets have the first bit cleared (eg, data packets have
-a type byte between 0x00 and 0x7f).
-The data following this byte is dependent on the packet type.
-
