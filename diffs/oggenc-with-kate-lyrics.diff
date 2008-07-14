@@ -1,12 +1,12 @@
-diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
---- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.c	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/encode.c	2008-07-13 13:21:51.000000000 +0100
+diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
+--- ../../../svn/xiph/vorbis-tools/oggenc/encode.c	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/encode.c	2008-07-14 19:05:10.000000000 +0100
 @@ -25,6 +25,11 @@
  #include "i18n.h"
  #include "skeleton.h"
  
 +#ifdef HAVE_KATE
-+#include "srt.h"
++#include "lyrics.h"
 +#include <kate/oggkate.h>
 +#endif
 +
@@ -289,8 +289,8 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
      ret = 0; /* Success, set return value to 0 since other things reuse it
                * for nefarious purposes. */
  
-diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
---- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.h	2008-04-15 13:57:29.000000000 +0100
+diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
+--- ../../../svn/xiph/vorbis-tools/oggenc/encode.h	2008-04-15 13:57:29.000000000 +0100
 +++ oggenc/encode.h	2008-07-13 11:08:01.000000000 +0100
 @@ -54,6 +54,8 @@
      int date_count;
@@ -326,9 +326,9 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
  } oe_enc_opt;
  
  
-diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.am
---- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/Makefile.am	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/Makefile.am	2008-07-13 11:50:05.000000000 +0100
+diff -ru ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.am
+--- ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/Makefile.am	2008-07-14 19:05:37.000000000 +0100
 @@ -13,16 +13,16 @@
  
  bin_PROGRAMS = oggenc
@@ -345,13 +345,71 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.a
  
  oggenc_SOURCES = $(flac_sources) \
 -                 oggenc.c audio.c encode.c platform.c \
-+                 oggenc.c audio.c encode.c platform.c srt.c \
++                 oggenc.c audio.c encode.c platform.c lyrics.c \
                   audio.h encode.h platform.h resample.c resample.h skeleton.c skeleton.h
  
  
-diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
---- /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/oggenc.c	2008-07-13 13:48:38.000000000 +0100
+diff -ru ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1 oggenc/man/oggenc.1
+--- ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/man/oggenc.1	2008-07-14 20:54:40.000000000 +0100
+@@ -78,6 +78,10 @@
+ .B -G
+ .I genre
+ ]
++[
++.B -L
++.I lyrics file
++]
+ .I input_files \fR...
+ 
+ .SH DESCRIPTION
+@@ -102,6 +106,9 @@
+ are available, the output filename will be the input filename with the
+ extension (that part after the final dot) replaced with ogg, so file.wav
+ will become file.ogg
++.br
++Optionally, lyrics may be embedded in the Ogg file, if Kate support was compiled in. Note, however, that multiplexing a Kate
++stream with Vorbis may cause some players to fail to play the stream.
+ 
+ .SH OPTIONS
+ .IP "-h, --help"
+@@ -191,6 +198,11 @@
+ .IP "-l album, --album album"
+ Set the album comment field to
+ .I album.
++
++.IP "-L filename, --lyrics filename"
++Loads lyrics from
++.I filename
++, and encodes them in a Kate stream multiplexed with the Vorbis stream.
+ .PP
+ 
+ Note that the \fB-a\fR, \fB-t\fR, and \fB-l\fR options can be given
+@@ -323,6 +335,12 @@
+ .RE
+ .PP
+ 
++Adding embedded lyrics.
++.RS
++oggenc somefile.wav --lyrics lyrics.lrc -o out.ogg
++.RE
++.PP
++
+ This encodes the three files, each with the
+ same artist/album tag, but with different title tags on each one. The
+ string given as an argument to -n is used to generate filenames, as shown
+@@ -355,6 +373,8 @@
+ 
+ .SH BUGS
+ Reading type 3 wav files (floating point samples) probably doesn't work other than on intel (or other 32 bit, little endian machines). 
++.br
++Enhanced LRC files are not yet supported.
+ 
+ .SH "SEE ALSO"
+ 
+diff -ru ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
+--- ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/oggenc.c	2008-07-14 20:42:43.000000000 +0100
 @@ -66,6 +66,7 @@
      {"scale", 1, 0, 0}, 
      {"advanced-encode-option", 1, 0, 0},
@@ -453,11 +511,11 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
          " -l, --album          Name of album\n"
          " -a, --artist         Name of artist\n"
          " -G, --genre          Genre of track\n"
-+        " -L, --lyrics         Lyrics for track (in .srt format)\n"
++        " -L, --lyrics         Include lyrics from given file (.srt or .lrc format)\n"
          "                      If multiple input files are given, then multiple\n"
          "                      instances of the previous five arguments will be used,\n"
          "                      in the order they are given. If fewer titles are\n"
-@@ -601,13 +625,13 @@
+@@ -601,14 +625,14 @@
      int ret;
      int option_index = 1;
  
@@ -468,8 +526,8 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
          switch(ret)
          {
              case 0:
--                if(!strcmp(long_options[option_index].name, "skleton")) {
-+                if(!strcmp(long_options[option_index].name, "skeleton")) {
+                 if(!strcmp(long_options[option_index].name, "skeleton")) {
+                 if(!strcmp(long_options[option_index].name, "skeleton")) {
                      opt->with_skeleton = 1;
                  }
                  else if(!strcmp(long_options[option_index].name, "managed")) {
@@ -489,10 +547,10 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
                  fprintf(stderr, _("WARNING: Unknown option specified, ignoring->\n"));
                  break;
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ oggenc/srt.h	2008-07-13 12:20:54.000000000 +0100
++++ oggenc/lyrics.h	2008-07-14 18:58:35.000000000 +0100
 @@ -0,0 +1,31 @@
-+#ifndef __SRT_H
-+#define __SRT_H
++#ifndef __LYRICS_H
++#define __LYRICS_H
 +
 +#include <stddef.h>
 +
@@ -523,8 +581,8 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +#endif
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ oggenc/srt.c	2008-07-13 12:32:22.000000000 +0100
-@@ -0,0 +1,229 @@
++++ oggenc/lyrics.c	2008-07-14 21:27:38.000000000 +0100
+@@ -0,0 +1,358 @@
 +/* OggEnc
 + **
 + ** This program is distributed under the GNU General Public License, version 2.
@@ -548,17 +606,25 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +#include <kate/oggkate.h>
 +#endif
 +
-+#include "srt.h"
++#include "lyrics.h"
++#include "i18n.h"
++
++typedef enum {
++  lf_unknown,
++  lf_srt,
++  lf_lrc,
++} lyrics_format;
 +
 +/*
 +static void report_unknown_subtitle_encoding(const char *name)
 +{
-+  fprintf(stderr, "Unknown character encoding: %s\n",name);
-+  fprintf(stderr, "Valid character encodings are:\n");
-+  fprintf(stderr, "  " SUPPORTED_ENCODINGS "\n");
++  fprintf(stderr, _("Unknown character encoding: %s\n"),name);
++  fprintf(stderr, _("Valid character encodings are:\n"));
++  fprintf(stderr, "  " _(SUPPORTED_ENCODINGS) "\n");
 +}
 +*/
 +
++#ifdef HAVE_KATE
 +static char *fgets2(char *s,size_t sz,FILE *f)
 +{
 +    char *ret = fgets(s, sz, f);
@@ -567,12 +633,16 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +    if (ptr) *ptr='\n';
 +    return ret;
 +}
++#endif
 +
++#ifdef HAVE_KATE
 +static double hmsms2s(int h,int m,int s,int ms)
 +{
 +    return h*3600+m*60+s+ms/1000.0;
 +}
++#endif
 +
++#ifdef HAVE_KATE
 +/* very simple implementation when no iconv */
 +static void convert_subtitle_to_utf8(oe_encoding encoding,unsigned char *text)
 +{
@@ -598,7 +668,7 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +      }
 +      newtext=(unsigned char*)malloc(1+nbytes);
 +      if (!newtext) {
-+        fprintf(stderr, "Memory allocation failed - cannot convert text\n");
++        fprintf(stderr, _("Memory allocation failed - cannot convert text\n"));
 +        return;
 +      }
 +      nbytes=0;
@@ -616,45 +686,64 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +      free(newtext);
 +      break;
 +    default:
-+      fprintf(stderr, "ERROR: encoding %d not handled in conversion!\n", encoding);
++      fprintf(stderr, _("ERROR: encoding %d not handled in conversion!\n"), encoding);
 +      break;
 +  }
 +}
++#endif
 +
-+oe_lyrics *load_lyrics(const char *filename, oe_encoding encoding)
-+{
 +#ifdef HAVE_KATE
++static int add_lyrics(oe_lyrics *lyrics, char *text, oe_encoding encoding,double t0,double t1)
++{
++  size_t len;
++  int ret;
++
++  convert_subtitle_to_utf8(encoding,(unsigned char*)text);
++  len = strlen(text);
++  lyrics->lyrics = (oe_lyrics_item*)realloc(lyrics->lyrics, (lyrics->count+1)*sizeof(oe_lyrics_item));
++  if (!lyrics->lyrics) {
++    fprintf(stderr, _("Out of memory\n"));
++    return -1;
++  }
++  ret=kate_text_validate(kate_utf8,text,len+1);
++  if (ret<0) {
++    fprintf(stderr,_("WARNING: subtitle %s is not valid utf-8\n"),text);
++  }
++  else {
++    /* kill off trailing \n characters */
++    while (len>0) {
++      if (text[len-1]=='\n') text[--len]=0; else break;
++    }
++    lyrics->lyrics[lyrics->count].text = (char*)malloc(len+1);
++    memcpy(lyrics->lyrics[lyrics->count].text, text, len+1);
++    lyrics->lyrics[lyrics->count].len = len;
++    lyrics->lyrics[lyrics->count].t0 = t0;
++    lyrics->lyrics[lyrics->count].t1 = t1;
++    lyrics->count++;
++  }
++  return 0;
++}
++#endif
++
++#ifdef HAVE_KATE
++static oe_lyrics *load_srt_lyrics(FILE *f, oe_encoding encoding)
++{
 +    enum { need_id, need_timing, need_text };
 +    int need = need_id;
 +    int last_seen_id=0;
 +    int ret;
 +    int id;
 +    static char text[4096];
++    static char str[4096];
 +    int h0,m0,s0,ms0,h1,m1,s1,ms1;
 +    double t0=0.0;
 +    double t1=0.0;
-+    static char str[4096];
-+    int warned=0;
 +    oe_lyrics *lyrics;
-+
-+    lyrics = NULL;
-+    FILE *f = fopen(filename, "r");
-+    if (!f) {
-+        fprintf(stderr,"WARNING - Failed to open lyrics file %s (%s)\n", filename, strerror(errno));
-+        return NULL;
-+    }
 +
 +    lyrics=(oe_lyrics*)malloc(sizeof(oe_lyrics));
 +    if (!lyrics) return NULL;
 +    lyrics->count = 0;
 +    lyrics->lyrics = NULL;
-+
-+    /* first, check for a BOM */
-+    ret=fread(str,1,3,f);
-+    if (ret<3 || memcmp(str,"\xef\xbb\xbf",3)) {
-+      /* No BOM, rewind */
-+      fseek(f,0,SEEK_SET);
-+    }
 +
 +    fgets2(str,sizeof(str),f);
 +    while (!feof(f)) {
@@ -662,13 +751,12 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +        case need_id:
 +          ret=sscanf(str,"%d\n",&id);
 +          if (ret!=1) {
-+            fprintf(stderr,"WARNING - Syntax error: %s\n",str);
-+            fclose(f);
++            fprintf(stderr,_("WARNING - Syntax error: %s\n"),str);
 +            free_lyrics(lyrics);
 +            return NULL;
 +          }
 +          if (id!=last_seen_id+1) {
-+            fprintf(stderr,"WARNING - non consecutive ids: %s - pretending not to have noticed\n",str);
++            fprintf(stderr,_("WARNING - non consecutive ids: %s - pretending not to have noticed\n"),str);
 +          }
 +          last_seen_id=id;
 +          need=need_timing;
@@ -677,8 +765,7 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +        case need_timing:
 +          ret=sscanf(str,"%d:%d:%d%*[.,]%d --> %d:%d:%d%*[.,]%d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1);
 +          if (ret!=8) {
-+            fprintf(stderr,"WARNING - Syntax error: %s\n",str);
-+            fclose(f);
++            fprintf(stderr,_("WARNING - Syntax error: %s\n"),str);
 +            free_lyrics(lyrics);
 +            return NULL;
 +          }
@@ -690,34 +777,9 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +          break;
 +        case need_text:
 +          if (*str=='\n') {
-+            convert_subtitle_to_utf8(encoding,(unsigned char*)text);
-+            size_t len = strlen(text);
-+            lyrics->lyrics = (oe_lyrics_item*)realloc(lyrics->lyrics, (lyrics->count+1)*sizeof(oe_lyrics_item));
-+            if (!lyrics->lyrics) {
-+              fprintf(stderr, "Out of memory\n");
-+              fclose(f);
++            if (add_lyrics(lyrics,str,encoding,t0,t1) < 0) {
 +              free_lyrics(lyrics);
 +              return NULL;
-+            }
-+            ret=kate_text_validate(kate_utf8,text,len+1);
-+            if (ret<0) {
-+              if (!warned) {
-+                fprintf(stderr,"WARNING: subtitle %s is not valid utf-8\n",text);
-+                fprintf(stderr,"  further invalid subtitles will NOT be flagged\n");
-+                warned=1;
-+              }
-+            }
-+            else {
-+              /* kill off trailing \n characters */
-+              while (len>0) {
-+                if (text[len-1]=='\n') text[--len]=0; else break;
-+              }
-+              lyrics->lyrics[lyrics->count].text = (char*)malloc(len+1);
-+              memcpy(lyrics->lyrics[lyrics->count].text, text, len+1);
-+              lyrics->lyrics[lyrics->count].len = len;
-+              lyrics->lyrics[lyrics->count].t0 = t0;
-+              lyrics->lyrics[lyrics->count].t1 = t1;
-+              lyrics->count++;
 +            }
 +            need=need_id;
 +          }
@@ -729,13 +791,138 @@ diff -ru /home/v/Kate/svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +      fgets2(str,sizeof(str),f);
 +    }
 +
-+    fclose(f);
-+
-+    /* fprintf(stderr,"  %u lyrics items loaded.\n", lyrics->count); */
-+
 +    return lyrics;
++}
++#endif
++
++#ifdef HAVE_KATE
++static int is_line_empty(const char *s)
++{
++  /* will work fine with UTF-8 despite the appearance s*/
++  while (*s) {
++    if (!strchr(" \t\r\n",*s)) return 0;
++    ++s;
++  }
++  return 1;
++}
++#endif
++
++#ifdef HAVE_KATE
++static oe_lyrics *load_lrc_lyrics(FILE *f, oe_encoding encoding)
++{
++  oe_lyrics *lyrics;
++  static char str[4096];
++  static char line[4096];
++  int m,s,ms;
++  double t,start_time = -1.0;
++  int offset;
++
++  /* skip headers */
++  fgets2(str,sizeof(str),f);
++  while (!feof(f)) {
++    if (sscanf(str, "[%u:%u.%u]%n\n",&m,&s,&ms,&offset) == 3)
++      break;
++    fgets2(str,sizeof(str),f);
++  }
++  if (feof(f)) {
++    fprintf(stderr,_("WARNING - Syntax error: %s\n"),str);
++    return NULL;
++  }
++
++  lyrics=(oe_lyrics*)malloc(sizeof(oe_lyrics));
++  if (!lyrics) return NULL;
++  lyrics->count = 0;
++  lyrics->lyrics = NULL;
++
++  while (!feof(f)) {
++    if (sscanf(str, "[%u:%u.%u]%n\n",&m,&s,&ms,&offset) != 3) {
++      fprintf(stderr,_("WARNING - Syntax error: %s\n"),str);
++      free_lyrics(lyrics);
++      return NULL;
++    }
++    t=hmsms2s(0,m,s,ms);
++
++    if (start_time>=0.0 && !is_line_empty(line)) {
++      if (add_lyrics(lyrics,line,encoding,start_time,t) < 0) {
++        free_lyrics(lyrics);
++        return NULL;
++      }
++    }
++
++    start_time=t;
++    strcpy(line,str+offset);
++    fgets2(str,sizeof(str),f);
++  }
++
++  return lyrics;
++}
++#endif
++
++#ifdef HAVE_KATE
++/* very weak checks, but we only support two formats, so it's ok */
++lyrics_format probe_lyrics_format(FILE *f)
++{
++  unsigned int dummy_int;
++  static char str[4096];
++  lyrics_format format=lf_unknown;
++  long pos;
++
++  if (!f) return lf_unknown;
++
++  pos=ftell(f);
++  fgets2(str,sizeof(str),f);
++
++  /* srt */
++  if (sscanf(str, "%u\n", &dummy_int) == 1)
++    format=lf_srt;
++
++  /* lrc */
++  if (str[0] == '[')
++    format=lf_lrc;
++
++  fseek(f,pos,SEEK_SET);
++
++  return format;
++}
++#endif
++
++oe_lyrics *load_lyrics(const char *filename, oe_encoding encoding)
++{
++#ifdef HAVE_KATE
++  static char str[4096];
++  int ret;
++  oe_lyrics *lyrics=NULL;
++
++  FILE *f = fopen(filename, "r");
++  if (!f) {
++      fprintf(stderr,_("WARNING - Failed to open lyrics file %s (%s)\n"), filename, strerror(errno));
++      return NULL;
++  }
++
++  /* first, check for a BOM */
++  ret=fread(str,1,3,f);
++  if (ret<3 || memcmp(str,"\xef\xbb\xbf",3)) {
++    /* No BOM, rewind */
++    fseek(f,0,SEEK_SET);
++  }
++
++  switch (probe_lyrics_format(f)) {
++    case lf_srt:
++      lyrics = load_srt_lyrics(f, encoding);
++      break;
++    case lf_lrc:
++      lyrics = load_lrc_lyrics(f, encoding);
++      break;
++    default:
++      fprintf(stderr, _("Failed to load %s - can't determine format\n"), filename);
++      break;
++  }
++
++  fclose(f);
++
++  return lyrics;
 +#else
-+    return 0;
++  return NULL;
 +#endif
 +}
 +
