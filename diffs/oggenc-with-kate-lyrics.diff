@@ -941,3 +941,24 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +    return &lyrics->lyrics[(*idx)++];
 +}
 +
+--- ../../../svn/xiph/vorbis-tools/README	2008-04-15 13:57:30.000000000 +0100
++++ README	2008-07-14 21:58:41.000000000 +0100
+@@ -26,7 +26,7 @@
+ with the header files).  Additionally, ogg123 requires libao, libcurl,
+ and a POSIX-compatible thread library.  Ogg123 can optionally compiled
+ to use libFLAC, libOggFLAC, and libspeex.  Oggenc can be optionally
+-compiled with libFLAC and libOggFLAC.  The libraries libogg,
++compiled with libFLAC, libOggFLAC, and libkate.  The libraries libogg,
+ libvorbis, and libao are all available at
+   http://www.vorbis.com/download.psp
+ 
+@@ -40,6 +40,9 @@
+ Speex is available at:
+   http://www.speex.org/
+ 
++Kate is available at:
++  http://libkate.googlecode.com/
++
+ CONTACT:
+ 
+ The Ogg Vorbis homepage is located at 'http://www.vorbis.com'. Up to
