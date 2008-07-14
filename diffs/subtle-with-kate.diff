@@ -1,15 +1,7 @@
 diff -ru subtle/MediaInfo.py subtle-new-with-kate/MediaInfo.py
 --- subtle/MediaInfo.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/MediaInfo.py	2008-07-01 07:28:07.000000000 +0100
-@@ -26,6 +26,7 @@
- class Media:
-     has_audio = None
-     has_video = None 
-+    sub_count = None
-     framerate = None
-     sourceURI = None
-     MIME = None
-@@ -37,12 +38,13 @@
++++ subtle-new-with-kate/MediaInfo.py	2008-07-14 22:54:07.000000000 +0100
+@@ -37,12 +37,13 @@
  
  class MediaInfo:
  
@@ -149,7 +141,7 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
      # \return supported subtitle types 
 diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 --- subtle/Subtle.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtle.py	2008-07-01 07:44:24.000000000 +0100
++++ subtle-new-with-kate/Subtle.py	2008-07-14 22:50:05.000000000 +0100
 @@ -371,7 +371,39 @@
          return None
  
@@ -236,19 +228,30 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
      
      def addMedia(self, mInfo):
          """
-@@ -535,8 +578,9 @@
-             self.media.append(mInfo)
+@@ -530,30 +573,32 @@
+         # First, wait for media discovery 
+         if mInfo.poll():
+             return True 
+-        mInfo = mInfo.getMedia()
+-        if mInfo.MIME:
+-            self.media.append(mInfo)
++        mInfoMedia = mInfo.getMedia()
++        if mInfoMedia.MIME:
++            self.media.append(mInfoMedia)
              self.updateStreamWindow()
              #Set videoWidget sizes according to media standards
 -            self.videoWidget.set_size_request(mInfo.videoWidth, \
 -                                                mInfo.videoHeight)
-+            if mInfo.videoWidth!=None and mInfo.videoHeight!=None:
-+                self.videoWidget.set_size_request(mInfo.videoWidth, \
-+                                                    mInfo.videoHeight)
++            if mInfoMedia.videoWidth!=None and mInfoMedia.videoHeight!=None:
++                self.videoWidget.set_size_request(mInfoMedia.videoWidth, \
++                                                    mInfoMedia.videoHeight)
              self.videoWidgetGst=VideoWidget(self.videoWidget)
              self.player=GstPlayer(self.videoWidgetGst)
-             self.player.set_location("file://"+mInfo.source)
-@@ -546,14 +590,15 @@
+-            self.player.set_location("file://"+mInfo.source)
++            self.player.set_location("file://"+mInfoMedia.source)
+             if self.videoWidget.flags() & gtk.REALIZED:
+                 self.play_toggled()
+             else:
                  self.videoWidget.connect_after('realize',
                                             lambda *x: self.play_toggled())
          else:
