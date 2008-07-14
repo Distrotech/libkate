@@ -588,7 +588,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 + ** This program is distributed under the GNU General Public License, version 2.
 + ** A copy of this license is included with this source.
 + **
-+ ** Copyright 2000-2002, Michael Smith <msmith@xiph.org>
++ ** Copyright 2008, ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
 + **
 + ** Portions from ffmpeg2theora, (c) j <j@v2v.cc>
 + **/
