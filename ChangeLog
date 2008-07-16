@@ -1,4 +1,5 @@
 0.1.6
+  new kate_high_decode_get_comments api function
   libraries can now build in C89 mode
   allow building without libogg (liboggkate and tools will not be built)
   the bitstream format is now fully documented

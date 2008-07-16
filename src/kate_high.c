@@ -140,3 +140,17 @@ int kate_high_decode_clear(kate_state *k)
   return 0;
 }
 
+/**
+  \ingroup high
+  Retrieves the comments structure for the given state
+  \param k the kate_state structure to retrieve comments from
+  \returns a pointer to the comments structure (NULL if error or not found)
+  */
+const kate_comment *kate_high_decode_get_comments(kate_state *k)
+{
+  if (!k) return NULL;
+  if (!k->kds) return NULL;
+
+  return k->kds->kc;
+}
+

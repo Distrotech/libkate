@@ -613,6 +613,7 @@ extern int kate_font_get_index_from_code_point(const kate_font_mapping *kfm,int 
 extern int kate_high_decode_init(kate_state *k);
 extern int kate_high_decode_packetin(kate_state *k,kate_packet *kp,kate_const kate_event **ev);
 extern int kate_high_decode_clear(kate_state *k);
+extern const kate_comment *kate_high_decode_get_comments(kate_state *k);
 
 /** \defgroup packet kate_packet */
 extern int kate_packet_wrap(kate_packet *kp,size_t nbytes,const void *data);
