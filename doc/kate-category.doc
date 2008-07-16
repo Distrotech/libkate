@@ -23,13 +23,19 @@ a string, albeit non localized.
 
 \li \c subtitles Movie (or other) subtitles, as (possibly formatted) text.
 
-For instance, ffmpeg2theora can create such streams.
+For instance, ffmpeg2theora can create such streams, which can be played
+back by VLC, MPlayer (if patched), the Annodex browser plugin (if patched),
+and any player using GStreamer (if patched).
 
 \li \c spu-subtitles Movie (or other) subtitles, as DVD style images.
 
-For instance, Thoggen (if patched) can create such streams.
+For instance, Thoggen (if patched) can create such streams, which can be
+played back by VLC, and MPLayer (if patched).
 
 \li \c lyrics Song lyrics (typically in the language they are sung in)
+
+For instance, oggenc (if patched) can create such streams, which can be
+played back by XMMS (if patched).
 
 */
 
