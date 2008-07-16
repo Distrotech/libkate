@@ -26,6 +26,8 @@ accesses a given kate stream at the same time (eg, two different
 threads may use libkate at the same time, provided they access two
 different streams).
 
+See \ref Support "here" for a list of software with Kate support.
+
 \htmlonly
 A commented
 <a href="high_8c-example.html">high level decoding example</a>.

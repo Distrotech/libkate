@@ -1,0 +1,89 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page Support
+
+This page lists the known software with Kate support.
+
+\section support-vorbis-tools vorbis-tools
+
+The vorbis tools have support for Kate stream:
+
+\li ogginfo recognizes and outputs information about Kate streams.
+\li if patched, oggenc can embed lyrics as Kate streams in an Ogg/Vorbis stream.
+
+\section support-oggz-tools oggz-tools
+
+The oggz tools and liboggz, a layer above libogg, have Kate support throughout
+for low level manipulation of Kate streams.
+
+\section support-ffmpeg2theora ffmpeg2theora
+
+ffmpeg2theora is a video encoder which converts to Vorbis and Theora.
+It can also include Kate subtitles.
+
+\section support-vlc VLC
+
+VLC is a cross platform media player.
+It can play simple text and image based Kate subtitles.
+
+\section support-mplayer MPlayer
+
+MPlayer is a media player.
+If patched, it can play simple text and image based Kate subtitles.
+
+\section support-gstreamer GStreamer
+
+GStreamer is a media platform.
+If patched, it can encode simple text and image based Kate streams, as well
+as decode simple text Kate streams.
+
+\section support-thoggen Thoggen
+
+Thoggen is a Linux DVD ripper.
+If patched, it can rip subtitle tracks from DVDs to Kate streams alongside
+Theora and Vorbis.
+
+\section support-xmms XMMS
+
+XMMS is the X multimedia system.
+If patched, it can display Kate lyrics in sync with a song.
+
+\section support-mkvtoolnix mkvtoolnix
+
+mkvtoolnix is a tool to manipulate Matroska streams.
+If patched, it can manipulate Kate streams in Matroska.
+
+\section support-icecast Icecast 2
+
+Icecast 2 is a streaming program.
+It can transparently stream Kate streams alongside Vorbis and/or Theora.
+
+\section support-liboggplay liboggplay
+
+liboggplay is a layer above liboggz that provides data format abstraction and
+stream synchronization.
+It can play simple text Kate streams.
+
+\section support-annodex-browser-plugin the Annodex browser plugin
+
+The Annodex browser plugin is a plugin for Mozilla that allows playing Theora
+videos in the browser.
+If patched, it can also display simple text Kate subtitles, and offers a
+Javascript API to control them.
+
+\section support-subtle Subtle
+
+Subtle is a subtitleS editor.
+If patched, if can edit simple text Kate streams.
+
+
+*/
