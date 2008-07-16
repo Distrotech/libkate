@@ -78,3 +78,9 @@ This patch needs the GStreamer patch above to be applied.
 Adds support for encoding lyrics as text Kate streams from .srt and .lrc files.
 There is no player that can read those yet though.
 
+
+
+ * XMMS (xmms-1.2.11-with-kate-lyrics.diff)
+
+Adds support for embedded Kate lyrics in Ogg streams, displaying them in sync.
+
