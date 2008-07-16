@@ -41,7 +41,7 @@ static int get_packet(ogg_sync_state *oy,ogg_stream_state *os,int *init,ogg_pack
     if (!*init && ogg_page_bos(&og)) {
       ogg_packet op;
       ogg_stream_packetpeek(os,&op);
-      if (op.bytes>=9 && !memcmp(op.packet,"\200kate\0\0\0\0",9)) {
+      if (op.bytes>=8 && !memcmp(op.packet,"\200kate\0\0\0",8)) {
         *init=1;
       }
       else {
