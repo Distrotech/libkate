@@ -85,5 +85,10 @@ Javascript API to control them.
 Subtle is a subtitleS editor.
 If patched, if can edit simple text Kate streams.
 
+\section support-audacious Audacious
+
+Audacious is a music player.
+If patched, it can display Kate lyrics in sync with a song.
+
 
 */
