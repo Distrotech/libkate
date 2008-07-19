@@ -84,3 +84,9 @@ There is no player that can read those yet though.
 
 Adds support for embedded Kate lyrics in Ogg streams, displaying them in sync.
 
+
+
+ * Audacious (audacious-plugins-1.5.1-with-kate-lyrics.diff)
+
+Adds support for embedded Kate lyrics in Ogg streams, displaying them in sync.
+
