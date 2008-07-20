@@ -1,0 +1,2629 @@
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/configure.ac ../xine-lib-1.1.12/configure.ac
+--- xine-lib-1.1.12/configure.ac	2008-04-11 15:17:50.000000000 +0100
++++ ../xine-lib-1.1.12/configure.ac	2008-07-20 13:53:20.000000000 +0100
+@@ -1235,6 +1235,32 @@
+ AC_SUBST([THEORA_LIBS])
+ 
+ dnl ---------------------------------------------
++dnl Kate libs.
++dnl ---------------------------------------------
++
++AC_ARG_WITH([kate],
++	AS_HELP_STRING([--without-kate], [Build without Kate text decoder]))
++
++if test "x$with_kate" != "xno"; then
++   PKG_CHECK_MODULES([KATE], [ogg oggkate kate], [have_kate=yes], [have_kate=no])
++   if test "x$have_kate" = "xno"; then
++     AC_CHECK_LIB([oggkate], [kate_ogg_decode_headerin], [have_kate=yes], [have_kate=no], -lkate -logg)
++     if test "x$have_kate" = "xyes"; then
++       KATE_LIBS="-loggkate -lkate -logg"
++     fi
++   fi
++   if test "x$with_kate" = "xyes" && test "x$have_kate" = "xno"; then
++      AC_MSG_ERROR([Kate support requested, but libkate not found])
++   elif test "x$have_kate" = "xyes"; then
++      AC_DEFINE([HAVE_KATE], [1], [Define this if you have kate])
++   fi
++fi
++AM_CONDITIONAL([HAVE_KATE], [test "x$have_kate" = "xyes"])
++
++AC_SUBST([KATE_CFLAGS])
++AC_SUBST([KATE_LIBS])
++
++dnl ---------------------------------------------
+ dnl Ogg/Speex libs.
+ dnl ---------------------------------------------
+ AC_ARG_WITH([speex],
+@@ -2733,6 +2759,7 @@
+ src/libspudec/Makefile
+ src/libspucc/Makefile
+ src/libspucmml/Makefile
++src/libspukate/Makefile
+ src/libspudvb/Makefile
+ src/libsputext/Makefile
+ src/libw32dll/Makefile
+@@ -3003,6 +3030,9 @@
+ if test "x$have_dxr3" = "xyes"; then
+   echo "   - dxr3_spu"
+ fi
++if test "x$have_kate" = "xyes"; then
++  echo "   - kate"
++fi
+ echo ""
+ 
+ dnl post plugins
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/doc/hackersguide/overview.sgml ../xine-lib-1.1.12/doc/hackersguide/overview.sgml
+--- xine-lib-1.1.12/doc/hackersguide/overview.sgml	2008-01-23 05:11:50.000000000 +0000
++++ ../xine-lib-1.1.12/doc/hackersguide/overview.sgml	2008-07-20 15:15:57.000000000 +0100
+@@ -288,6 +288,17 @@
+      </listitem>
+     </varlistentry>
+     <varlistentry>
++     <term><filename>libspukate</filename></term>
++     <listitem>
++      <para>
++       A xine decoder plugin for the kate library,
++       which has to be installed separately, providing
++       timed text and images (subtitles, lyrics).
++      </para>
++      <para></para>
++     </listitem>
++    </varlistentry>
++    <varlistentry>
+      <term><filename>libsputext</filename></term>
+      <listitem>
+       <para>
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/include/xine.h ../xine-lib-1.1.12/include/xine.h
+--- xine-lib-1.1.12/include/xine.h	2008-04-14 21:56:28.000000000 +0100
++++ ../xine-lib-1.1.12/include/xine.h	2008-07-20 14:58:07.000000000 +0100
+@@ -1680,6 +1680,7 @@
+ #define XINE_EVENT_DROPPED_FRAMES        12 /* number of dropped frames is too high */
+ #define XINE_EVENT_MRL_REFERENCE_EXT     13 /* demuxer->frontend: MRL reference(s) for the real stream */
+ #define XINE_EVENT_AUDIO_AMP_LEVEL       14 /* report current audio amp level (l/r/mute) */
++#define XINE_EVENT_SYNCED_TEXT           15 /* synced text (lyrics, etc) */
+ 
+ 
+ /* input events coming from frontend */
+@@ -1832,6 +1833,15 @@
+   char                messages[1];
+ } xine_ui_message_data_t;
+ 
++/*
++ * Synced text. Lyrics, subtitles, etc.
++ */
++typedef struct {
++  double              start_time; /* seconds */
++  double              end_time; /* seconds */
++  size_t              text_len;
++  const char          *text;
++} xine_synced_text_data_t;
+ 
+ /*
+  * notify frame format change
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/include/xine.h.in ../xine-lib-1.1.12/include/xine.h.in
+--- xine-lib-1.1.12/include/xine.h.in	2008-04-11 19:43:27.000000000 +0100
++++ ../xine-lib-1.1.12/include/xine.h.in	2008-07-20 13:53:20.000000000 +0100
+@@ -1680,6 +1680,7 @@
+ #define XINE_EVENT_DROPPED_FRAMES        12 /* number of dropped frames is too high */
+ #define XINE_EVENT_MRL_REFERENCE_EXT     13 /* demuxer->frontend: MRL reference(s) for the real stream */
+ #define XINE_EVENT_AUDIO_AMP_LEVEL       14 /* report current audio amp level (l/r/mute) */
++#define XINE_EVENT_SYNCED_TEXT           15 /* synced text (lyrics, etc) */
+ 
+ 
+ /* input events coming from frontend */
+@@ -1832,6 +1833,15 @@
+   char                messages[1];
+ } xine_ui_message_data_t;
+ 
++/*
++ * Synced text. Lyrics, subtitles, etc.
++ */
++typedef struct {
++  double              start_time; /* seconds */
++  double              end_time; /* seconds */
++  size_t              text_len;
++  const char          *text;
++} xine_synced_text_data_t;
+ 
+ /*
+  * notify frame format change
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/demux_matroska.c ../xine-lib-1.1.12/src/demuxers/demux_matroska.c
+--- xine-lib-1.1.12/src/demuxers/demux_matroska.c	2008-04-07 22:23:52.000000000 +0100
++++ ../xine-lib-1.1.12/src/demuxers/demux_matroska.c	2008-07-20 13:53:20.000000000 +0100
+@@ -646,6 +646,61 @@
+   }
+ }
+ 
++static void init_codec_kate(demux_matroska_t *this, matroska_track_t *track) {
++  buf_element_t *buf;
++  uint8_t nb_lace;
++  int *frame;
++  int i, offset;
++  uint8_t *data;
++  int nheaders;
++
++  nb_lace = track->codec_private[0];
++  nheaders = nb_lace+1;
++  xprintf(this->stream->xine, XINE_VERBOSITY_DEBUG,
++    LOG_MODULE ": kate: %d headers in %d bytes\n", nheaders, track->codec_private_len);
++
++  frame = (int*)alloca(nheaders * sizeof(int));
++  offset = 1;
++  for (i=0; i<nb_lace; ++i) {
++    frame[i] = 0;
++    do {
++      frame[i] += track->codec_private[offset];
++    } while (offset < track->codec_private_len && track->codec_private[offset++]==0xff);
++    if (offset == track->codec_private_len) {
++      xprintf(this->stream->xine, XINE_VERBOSITY_LOG,
++        "demux_matroska: kate: private decoder data is corrupt (tried to get us over the buffer end)\n");
++    }
++  }
++  frame[nheaders-1] = track->codec_private_len-offset;
++  for (i = 0; i < nb_lace; i++) frame[nheaders-1] -= frame[i];
++
++  data = track->codec_private + offset;
++  for (i = 0; i < nheaders; i++) {
++    buf = track->fifo->buffer_pool_alloc (track->fifo);
++    
++    if (frame[i]+1 > buf->max_size) {
++      xprintf(this->stream->xine, XINE_VERBOSITY_LOG,
++              "demux_matroska: private decoder data length (%d) is greater than fifo buffer length (%" PRId32 ")\n",
++              frame[i], buf->max_size);
++      buf->free_buffer(buf);
++      return;
++    }
++    buf->size = frame[i]+1;
++
++    /* we send in one go - cheap - so each packet is also start and end */
++    buf->decoder_flags = BUF_FLAG_HEADER | BUF_FLAG_FRAME_START | BUF_FLAG_FRAME_END;
++    buf->type          = track->buf_type;
++    buf->pts           = 0;
++
++    /* first byte is "raw" - here, we send raw data (without ogg_packet) */
++    buf->content[0] = 1;
++    xine_fast_memcpy (buf->content+1, data, frame[i]);
++    data += frame[i];
++
++    track->fifo->put (track->fifo, buf);
++  }
++}
++
+ 
+ static int aac_get_sr_index (uint32_t sample_rate) {
+   if (92017 <= sample_rate)
+@@ -1458,6 +1513,10 @@
+       if (track->compress_algo == MATROSKA_COMPRESS_NONE) {
+         track->compress_algo = MATROSKA_COMPRESS_UNKNOWN;
+       }
++    } else if (!strcmp(track->codec_id, MATROSKA_CODEC_ID_S_KATE)) {
++      lprintf("MATROSKA_CODEC_ID_S_KATE\n");
++      track->buf_type = BUF_SPU_KATE;
++      init_codec = init_codec_kate;
+     } else {
+       lprintf("unknown codec\n");
+     }
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/demux_ogg.c ../xine-lib-1.1.12/src/demuxers/demux_ogg.c
+--- xine-lib-1.1.12/src/demuxers/demux_ogg.c	2008-04-06 19:29:07.000000000 +0100
++++ ../xine-lib-1.1.12/src/demuxers/demux_ogg.c	2008-07-20 15:03:18.000000000 +0100
+@@ -50,6 +50,11 @@
+ #include <theora/theora.h>
+ #endif
+ 
++#ifdef HAVE_KATE
++#include <kate/kate.h>
++#include <kate/oggkate.h>
++#endif
++
+ #define LOG_MODULE "demux_ogg"
+ #define LOG_VERBOSE
+ 
+@@ -214,7 +219,8 @@
+     } else
+       return 0;
+   } else if (this->si[stream_num]->buf_types == BUF_VIDEO_THEORA ||
+-	     (this->si[stream_num]->buf_types & 0xFFFF0000) == BUF_SPU_CMML) {
++	     (this->si[stream_num]->buf_types & 0xFFFF0000) == BUF_SPU_CMML ||
++	     (this->si[stream_num]->buf_types & 0xFFFF0000) == BUF_SPU_KATE) {
+     int64_t iframe, pframe;
+     int granuleshift;
+     granuleshift = this->si[stream_num]->granuleshift;
+@@ -293,13 +299,13 @@
+   }
+ }
+ 
+-#ifdef HAVE_THEORA
++#if defined HAVE_THEORA || defined HAVE_KATE
+ static void send_ogg_packet (demux_ogg_t *this,
+-                               fifo_buffer_t *fifo,
+-                               ogg_packet *op,
+-                               int64_t pts,
+-                               uint32_t decoder_flags,
+-                               int stream_num) {
++                             fifo_buffer_t *fifo,
++                             ogg_packet *op,
++                             int64_t pts,
++                             uint32_t decoder_flags,
++                             int stream_num) {
+ 
+   buf_element_t *buf;
+ 
+@@ -311,8 +317,16 @@
+     buf = fifo->buffer_pool_alloc (fifo);
+     buf->decoder_flags = decoder_flags;
+     if (done==0) {
+-      memcpy (buf->content, op, op_size);
+-      offset=op_size;
++      if ((this->si[stream_num]->buf_types & 0xFFFF0000) == BUF_SPU_KATE && (decoder_flags & BUF_FLAG_HEADER)) {
++        /* first byte in the buffer is "raw" - here, we send cooked packets (with ogg_packet) */
++        buf->content[0] = 0;
++        memcpy (buf->content+1, op, op_size);
++        offset=op_size+1;
++      }
++      else {
++        memcpy (buf->content, op, op_size);
++        offset=op_size;
++      }
+       buf->decoder_flags = buf->decoder_flags | BUF_FLAG_FRAME_START;
+     }
+ 
+@@ -726,6 +740,23 @@
+              stream_num, op->bytes, buf->pts, str);
+ 
+     this->video_fifo->put (this->video_fifo, buf);
++  } else if ((this->si[stream_num]->buf_types & 0xFFFF0000) == BUF_SPU_KATE) {
++    int64_t pts;
++
++    if ((op->granulepos != -1) || (this->si[stream_num]->header_granulepos != -1)) {
++      pts = get_pts(this, stream_num, op->granulepos );
++    } else
++      pts = 0;
++
++    llprintf (DEBUG_PACKETS,
++             "kate stream %d op-gpos %" PRId64 " hdr-gpos %" PRId64 " pts %" PRId64 " \n",
++             stream_num,
++             op->granulepos,
++             this->si[stream_num]->header_granulepos,
++             pts);
++
++    /* we send to the video fifo if there is one, and to the audio one if not */
++    send_ogg_packet (this, this->stream->video_out ? this->video_fifo : this->audio_fifo, op, pts, decoder_flags, stream_num);
+   } else if ((this->si[stream_num]->buf_types & 0xFF000000) == BUF_SPU_BASE) {
+ 
+     buf_element_t *buf;
+@@ -1192,6 +1223,57 @@
+ #endif
+ }
+ 
++static void decode_kate_header (demux_ogg_t *this, const int stream_num, ogg_packet *op) {
++
++#ifdef HAVE_KATE
++  kate_info ki;
++  kate_comment kc;
++
++  kate_info_init(&ki);
++  kate_comment_init(&kc);
++
++  lprintf("decode_kate_header, calling kate_decode_headerin, packet %lld\n",op->packetno);
++  if (kate_ogg_decode_headerin(&ki, &kc, op) >= 0) {
++    unsigned int channel = this->num_spu_streams++;
++
++    this->si[stream_num]->language = strdup ( ki.language );
++
++    this->si[stream_num]->factor = (int64_t) 90000 * (int64_t) ki.gps_denominator;
++    this->si[stream_num]->quotient = ki.gps_numerator;
++
++    this->frame_duration = ((int64_t) 90000*ki.gps_denominator);
++    this->frame_duration /= ki.gps_numerator;
++
++    this->si[stream_num]->granuleshift = ki.granule_shift;
++
++    this->si[stream_num]->headers=ki.num_headers;
++    this->si[stream_num]->buf_types = BUF_SPU_KATE | channel;
++
++    lprintf ("decoded kate header - bitstream v%d.%d, language %s, category %s\n",
++        ki.bitstream_version_major, ki.bitstream_version_minor,
++        ki.language, ki.category);
++    lprintf("  granule encoding: rate %d/%d, granule shift %d\n",
++        ki.gps_numerator,ki.gps_denominator,
++        ki.granule_shift);
++  } else {
++    /*Rejected stream*/
++    xprintf (this->stream->xine, XINE_VERBOSITY_DEBUG,
++             "A kate header was rejected by libkate\n");
++    this->si[stream_num]->buf_types = BUF_CONTROL_NOP;
++    this->si[stream_num]->headers = 0; /* FIXME: don't know */
++  }
++
++  kate_comment_clear(&kc);
++  kate_info_clear(&ki);
++
++#else
++  xine_log (this->stream->xine, XINE_LOG_MSG,
++            _("ogg: kate track found but kate support was not compiled in.\n"));
++  this->si[stream_num]->buf_types = BUF_SPU_KATE;
++  this->num_spu_streams++;
++#endif
++}
++
+ static void decode_flac_header (demux_ogg_t *this, const int stream_num, ogg_packet *op) {
+   xine_flac_metadata_header header;
+   xine_flac_streaminfo_block streaminfo = {};
+@@ -1409,6 +1491,8 @@
+           decode_anxdata_header(this, stream_num, &op);
+ 	} else if (!strncmp (&op.packet[0], "CMML", 4)) {
+ 	  decode_cmml_header(this, stream_num, &op);
++	} else if (!strncmp (&op.packet[1], "kate\0\0\0", 7)) {
++	  decode_kate_header(this, stream_num, &op);
+         } else {
+           xprintf(this->stream->xine, XINE_VERBOSITY_DEBUG,
+                   "demux_ogg: unknown stream type (signature >%.8s<). hex dump of bos packet follows:\n",
+@@ -1897,6 +1981,8 @@
+       strcpy( str, "none");
+       return DEMUX_OPTIONAL_SUCCESS;
+     } else if ((channel>=0) && (channel<this->num_streams)) {
++      if ( format_lang_string (this, 0xFFFFFFFF, BUF_SPU_KATE+channel, channel, str) == DEMUX_OPTIONAL_SUCCESS)
++        return DEMUX_OPTIONAL_SUCCESS;
+       return format_lang_string (this, 0xFFFFFFFF, BUF_SPU_OGM+channel, channel, str);
+     }
+     return DEMUX_OPTIONAL_UNSUPPORTED;
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/Makefile.am ../xine-lib-1.1.12/src/demuxers/Makefile.am
+--- xine-lib-1.1.12/src/demuxers/Makefile.am	2008-04-07 17:53:21.000000000 +0100
++++ ../xine-lib-1.1.12/src/demuxers/Makefile.am	2008-07-20 13:53:20.000000000 +0100
+@@ -51,8 +51,8 @@
+ 	xineplug_dmx_flv.la 
+ 
+ xineplug_dmx_ogg_la_SOURCES = demux_ogg.c
+-xineplug_dmx_ogg_la_LIBADD = $(XINE_LIB) $(VORBIS_LIBS) $(SPEEX_LIBS) $(THEORA_LIBS) $(OGG_LIBS) $(LTLIBINTL)
+-xineplug_dmx_ogg_la_CFLAGS = $(AM_CFLAGS) $(VORBIS_CFLAGS) $(SPEEX_CFLAGS) $(THEORA_CFLAGS) $(OGG_CFLAGS)
++xineplug_dmx_ogg_la_LIBADD = $(XINE_LIB) $(VORBIS_LIBS) $(SPEEX_LIBS) $(THEORA_LIBS) $(KATE_LIBS) $(OGG_LIBS) $(LTLIBINTL)
++xineplug_dmx_ogg_la_CFLAGS = $(AM_CFLAGS) $(VORBIS_CFLAGS) $(SPEEX_CFLAGS) $(THEORA_CFLAGS) $(KATE_CFLAGS) $(OGG_CFLAGS)
+ 
+ xineplug_dmx_avi_la_SOURCES = demux_avi.c
+ xineplug_dmx_avi_la_LIBADD = $(XINE_LIB) $(LTLIBINTL)
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/matroska.h ../xine-lib-1.1.12/src/demuxers/matroska.h
+--- xine-lib-1.1.12/src/demuxers/matroska.h	2008-01-23 05:11:52.000000000 +0000
++++ ../xine-lib-1.1.12/src/demuxers/matroska.h	2008-07-20 13:53:20.000000000 +0100
+@@ -289,6 +289,7 @@
+ #define MATROSKA_CODEC_ID_S_SSA          "S_SSA"         /* deprecated */
+ #define MATROSKA_CODEC_ID_S_ASS          "S_ASS"         /* deprecated */
+ #define MATROSKA_CODEC_ID_S_VOBSUB       "S_VOBSUB"
++#define MATROSKA_CODEC_ID_S_KATE         "S_KATE"
+ 
+ /* block lacing */
+ #define MATROSKA_NO_LACING               0x0
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/libspucmml/xine_cmml_decoder.c ../xine-lib-1.1.12/src/libspucmml/xine_cmml_decoder.c
+--- xine-lib-1.1.12/src/libspucmml/xine_cmml_decoder.c	2008-01-23 05:11:53.000000000 +0000
++++ ../xine-lib-1.1.12/src/libspucmml/xine_cmml_decoder.c	2008-07-20 13:53:20.000000000 +0100
+@@ -140,15 +140,17 @@
+   size_t i=0;
+   int width=0,w,dummy;
+   char letter[2]={0, 0};
++  size_t len;
+ 
+-  while (i<=strlen(text)) {
++  len=strlen(text);
++  while (i<=len) {
+     switch (text[i]) {
+     case '<':
+       if (!strncmp("<b>", text+i, 3)) {
+         /*Do somethink to enable BOLD typeface*/
+         i=i+3;
+         break;
+-      } else if (!strncmp("</b>", text+i, 3)) {
++      } else if (!strncmp("</b>", text+i, 4)) {
+         /*Do somethink to disable BOLD typeface*/
+         i=i+4;
+         break;
+@@ -156,16 +158,16 @@
+         /*Do somethink to enable italics typeface*/
+         i=i+3;
+         break;
+-      } else if (!strncmp("</i>", text+i, 3)) {
++      } else if (!strncmp("</i>", text+i, 4)) {
+         /*Do somethink to disable italics typeface*/
+         i=i+4;
+         break;
+-      } else if (!strncmp("<font>", text+i, 3)) {       
++      } else if (!strncmp("<font>", text+i, 6)) {       
+         /*Do somethink to disable typing
+           fixme - no teststreams*/
+         i=i+6;
+         break;
+-      } else if (!strncmp("</font>", text+i, 3)) {
++      } else if (!strncmp("</font>", text+i, 7)) {
+         /*Do somethink to enable typing
+           fixme - no teststreams*/
+         i=i+7;
+@@ -184,17 +186,51 @@
+   return width;
+ }
+ 
++/* copied from libsputext - can't link against it, it's a plugin too */
++static int parse_utf8_size(unsigned char *c)
++{
++  if ( c[0]<0x80 )
++      return 1;
++  
++  if( c[1]==0 )
++    return 1;
++  if ( (c[0]>=0xC2 && c[0]<=0xDF) && (c[1]>=0x80 && c[1]<=0xBF) )
++    return 2;
++  
++  if( c[2]==0 )
++    return 2;	
++  else if ( c[0]==0xE0 && (c[1]>=0xA0 && c[1]<=0xBF) && (c[2]>=0x80 && c[1]<=0xBF) )
++    return 3;
++  else if ( (c[0]>=0xE1 && c[0]<=0xEC) && (c[1]>=0x80 && c[1]<=0xBF) && (c[2]>=0x80 && c[1]<=0xBF) )
++    return 3;
++  else if ( c[0]==0xED && (c[1]>=0x80 && c[1]<=0x9F) && (c[2]>=0x80 && c[1]<=0xBF) )
++    return 3;
++  else if ( c[0]==0xEF && (c[1]>=0xA4 && c[1]<=0xBF) && (c[2]>=0x80 && c[1]<=0xBF) )
++    return 3;
++  else
++    return 1;
++}
++
+ static void render_line(spucmml_decoder_t *this, int x, int y, char* text) {
+   size_t i=0;
+   int w,dummy;
+-  char letter[2]={0,0};
++  char letter[5]; /* utf-8 is 4 characters max, plus 1 for terminating zero */
++  size_t len;
+ 
+-  while (i<=strlen(text)) {
+-    letter[0]=text[i];
++  len=strlen(text);
++  while (i<=len) {
++    int bytes = parse_utf8_size ((unsigned char*)&text[i]);
++    if (bytes+i>len) {
++      /* malformed sequence ? zero found when expecting a non zero continuation,
++         the (wrong) character will be ignored */
++      break;
++    }
++    memcpy(letter,&text[i],bytes);
++    letter[bytes]=0;
+     this->stream->osd_renderer->render_text(this->osd, x, y, letter, OSD_TEXT1);
+     this->stream->osd_renderer->get_text_size(this->osd, letter, &w, &dummy);
+     x=x+w;
+-    i++;
++    i+=bytes;
+   }
+ }
+ 
+@@ -458,7 +494,6 @@
+   this->spu_decoder.dispose             = spudec_dispose;
+   this->spu_decoder.get_interact_info   = NULL;
+   this->spu_decoder.set_button          = NULL;
+-  this->spu_decoder.dispose             = spudec_dispose;
+ 
+   this->class  = class;
+   this->stream = stream;
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/Makefile.am ../xine-lib-1.1.12/src/Makefile.am
+--- xine-lib-1.1.12/src/Makefile.am	2008-02-21 01:13:10.000000000 +0000
++++ ../xine-lib-1.1.12/src/Makefile.am	2008-07-20 13:53:20.000000000 +0100
+@@ -1,5 +1,9 @@
+ include $(top_srcdir)/misc/Makefile.common
+ 
++if HAVE_KATE
++libspukate = libspukate
++endif
++
+ # Order is important be careful changing SUBDIRS
+ SUBDIRS = \
+ 	xine-utils \
+@@ -15,6 +19,7 @@
+ 	libspudec \
+ 	libspucc \
+ 	libspucmml \
++	$(libspukate) \
+ 	libspudvb \
+ 	libsputext \
+ 	libdts \
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/xine-engine/audio_decoder.c ../xine-lib-1.1.12/src/xine-engine/audio_decoder.c
+--- xine-lib-1.1.12/src/xine-engine/audio_decoder.c	2008-03-28 14:24:50.000000000 +0000
++++ ../xine-lib-1.1.12/src/xine-engine/audio_decoder.c	2008-07-20 13:53:20.000000000 +0100
+@@ -42,6 +42,36 @@
+ #include "xine_internal.h"
+ #include "xineutils.h"
+ 
++/* if updating SPU decoders for audio only streams, the decoders might crash
++   as they'll expect a valid video out - so only allow the ones we know are ok */
++static int is_suitable_audio_spu(int type)
++{
++  int streamtype = type & 0xFFFF0000;
++  switch (streamtype) {
++    case BUF_SPU_KATE:
++      return 1;
++    default:
++      return 0;
++  }
++}
++
++static void update_spu_decoder (xine_stream_t *stream, int type) {
++
++  int streamtype = (type>>16) & 0xFF;
++  
++  if( stream->spu_decoder_streamtype != streamtype ||
++      !stream->spu_decoder_plugin ) {
++    
++    if (stream->spu_decoder_plugin)
++      _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++          
++    stream->spu_decoder_streamtype = streamtype;
++    stream->spu_decoder_plugin = _x_get_spu_decoder (stream, streamtype);
++
++  }
++  return ;
++}
++
+ static void *audio_decoder_loop (void *stream_gen) {
+ 
+   buf_element_t   *buf = NULL;
+@@ -52,11 +82,14 @@
+   xine_ticket_t   *running_ticket = stream->xine->port_ticket;
+   int              running = 1;
+   int              prof_audio_decode = -1;
++  int              prof_spu_decode = -1;
+   uint32_t         buftype_unknown = 0;
+   int              audio_channel_user = stream->audio_channel_user;
+ 
+   if (prof_audio_decode == -1)
+     prof_audio_decode = xine_profiler_allocate_slot ("audio decoder/output");
++  if (!stream->video_out && prof_spu_decode == -1)
++    prof_spu_decode = xine_profiler_allocate_slot ("SPU decoder/output");
+ 
+   while (running) {
+ 
+@@ -96,6 +129,12 @@
+ 	stream->audio_type = 0;
+       }
+       
++      if (!stream->video_out && stream->spu_decoder_plugin) {
++        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++        stream->spu_decoder_plugin = NULL;
++        stream->spu_track_map_entries = 0;
++      }
++
+       running_ticket->release(running_ticket, 0);
+       
+       if( !stream->gapless_switch )
+@@ -173,6 +212,11 @@
+ 	stream->audio_track_map_entries = 0;
+ 	stream->audio_type = 0;
+       }
++      if (!stream->video_out && stream->spu_decoder_plugin) {
++        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++        stream->spu_decoder_plugin = NULL;
++        stream->spu_track_map_entries = 0;
++      }
+       
+       running_ticket->release(running_ticket, 0);
+       running = 0;
+@@ -185,11 +229,14 @@
+       lprintf ("reset\n");
+ 
+       _x_extra_info_reset( stream->audio_decoder_extra_info );
++      running_ticket->acquire(running_ticket, 0);
+       if (stream->audio_decoder_plugin) {
+-	running_ticket->acquire(running_ticket, 0);
+ 	stream->audio_decoder_plugin->reset (stream->audio_decoder_plugin);
+-	running_ticket->release(running_ticket, 0);
+       }
++      if (stream->spu_decoder_plugin) {
++        stream->spu_decoder_plugin->reset (stream->spu_decoder_plugin);
++      }
++      running_ticket->release(running_ticket, 0);
+       break;
+           
+     case BUF_CONTROL_DISCONTINUITY:
+@@ -240,19 +287,19 @@
+ 
+     default:
+ 
+-      if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
+-        break;
+-
+-      xine_profiler_start_count (prof_audio_decode);
+-
+-      running_ticket->acquire(running_ticket, 0);
+-	  
+       if ( (buf->type & 0xFF000000) == BUF_AUDIO_BASE ) {
+ 	
+ 	uint32_t audio_type = 0;
+ 	int      i,j;
+ 	uint32_t chan=buf->type&0x0000FFFF;
+ 
++        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
++          break;
++
++        xine_profiler_start_count (prof_audio_decode);
++
++        running_ticket->acquire(running_ticket, 0);
++	  
+ 	/*
+         printf("audio_decoder: buf_type=%08x auto=%08x user=%08x\n",
+ 	       buf->type, 
+@@ -377,17 +424,81 @@
+ 	    }
+ 	  }
+ 	}
++
++        if (running_ticket->ticket_revoked)
++          running_ticket->renew(running_ticket, 0);
++        running_ticket->release(running_ticket, 0);
++      
++        xine_profiler_stop_count (prof_audio_decode);
++
++///
++      } else if ( (buf->type & 0xFF000000) == BUF_SPU_BASE ) {
++
++        int      i,j;
++
++        if (stream->video_out || !is_suitable_audio_spu(buf->type))
++          break;
++
++        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_SPU))
++          break;
++
++        xine_profiler_start_count (prof_spu_decode);
++
++        running_ticket->acquire(running_ticket, 0);
++      
++        update_spu_decoder(stream, buf->type);
++
++        /* update track map */
++
++        i = 0;
++        while ( (i<stream->spu_track_map_entries) && (stream->spu_track_map[i]<buf->type) ) 
++          i++;
++        
++        if ( (i==stream->spu_track_map_entries)
++             || (stream->spu_track_map[i] != buf->type) ) {
++          xine_event_t  ui_event;
++
++          j = stream->spu_track_map_entries;
++
++          if (j >= 50)
++            break;
++
++          while (j>i) {
++            stream->spu_track_map[j] = stream->spu_track_map[j-1];
++            j--;
++          }
++          stream->spu_track_map[i] = buf->type;
++          stream->spu_track_map_entries++;
++
++	  ui_event.type        = XINE_EVENT_UI_CHANNELS_CHANGED;
++	  ui_event.data_length = 0;
++	  xine_event_send (stream, &ui_event);
++        }
++
++        if (stream->spu_channel_user >= 0) {
++          if (stream->spu_channel_user < stream->spu_track_map_entries)
++            stream->spu_channel = (stream->spu_track_map[stream->spu_channel_user] & 0xFF);
++          else
++            stream->spu_channel = stream->spu_channel_auto;
++        }
++
++        if (stream->spu_decoder_plugin) {
++          stream->spu_decoder_plugin->decode_data (stream->spu_decoder_plugin, buf);
++        }
++
++        if (running_ticket->ticket_revoked)
++          running_ticket->renew(running_ticket, 0);
++        running_ticket->release(running_ticket, 0);
++      
++        xine_profiler_stop_count (prof_spu_decode);
++
++///
++
+       } else if( buf->type != buftype_unknown ) {
+ 	  xine_log (stream->xine, XINE_LOG_MSG, 
+ 		    _("audio_decoder: error, unknown buffer type: %08x\n"), buf->type );
+ 	  buftype_unknown = buf->type;
+       }
+-
+-      if (running_ticket->ticket_revoked)
+-        running_ticket->renew(running_ticket, 0);
+-      running_ticket->release(running_ticket, 0);
+-      
+-      xine_profiler_stop_count (prof_audio_decode);
+     }
+ 
+     /* some decoders require a full reinitialization when audio
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/xine-engine/buffer.h ../xine-lib-1.1.12/src/xine-engine/buffer.h
+--- xine-lib-1.1.12/src/xine-engine/buffer.h	2008-04-07 17:54:41.000000000 +0100
++++ ../xine-lib-1.1.12/src/xine-engine/buffer.h	2008-07-20 13:53:20.000000000 +0100
+@@ -271,6 +271,7 @@
+ #define BUF_SPU_CVD             0x04050000
+ #define BUF_SPU_OGM             0x04060000
+ #define BUF_SPU_CMML            0x04070000
++#define BUF_SPU_KATE            0x04080000
+ 
+ /* demuxer block types: */
+ 
+diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/xine-engine/osd.c ../xine-lib-1.1.12/src/xine-engine/osd.c
+--- xine-lib-1.1.12/src/xine-engine/osd.c	2008-03-28 14:24:50.000000000 +0000
++++ ../xine-lib-1.1.12/src/xine-engine/osd.c	2008-07-20 13:53:20.000000000 +0100
+@@ -942,7 +942,7 @@
+ 	  ret = osd_renderer_load_font(osd->renderer, osd->font->filename);
+ 	if(!ret)
+ 	  osd->font = NULL;
+-      }      
++      }
+     }
+ 
+   pthread_mutex_unlock (&osd->renderer->osd_mutex);
+@@ -1528,6 +1528,14 @@
+ 
+   lprintf("osd=%p at (%d,%d) %dx%d\n",osd, x1,y1, width,height );
+ 
++  /* prevent overflowing to right and bottom */
++  if (x1+width > osd->width) {
++    width = osd->width-x1;
++  }
++  if (y1+height > osd->height) {
++    height = osd->height-y1;
++  }
++
+   /* update clipping area */
+   osd->x1 = MIN( osd->x1, x1 );
+   osd->x2 = MAX( osd->x2, x1+width );
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ ../xine-lib-1.1.12/src/libspukate/Makefile.am	2008-07-20 13:55:13.000000000 +0100
+@@ -0,0 +1,8 @@
++include $(top_srcdir)/misc/Makefile.common
++
++xineplug_LTLIBRARIES = xineplug_decode_spukate.la
++
++xineplug_decode_spukate_la_SOURCES = xine_kate_decoder.c
++xineplug_decode_spukate_la_LIBADD  = $(XINE_LIB) $(PTHREAD_LIBS) $(LTLIBINTL) $(KATE_LIBS)
++xineplug_decode_spukate_la_CFLAGS = $(VISIBILITY_FLAG) $(KATE_CFLAGS)
++xineplug_decode_spukate_la_LDFLAGS = $(xineplug_ldflags)
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ ../xine-lib-1.1.12/src/libspukate/xine_kate_decoder.c	2008-07-20 14:15:20.000000000 +0100
+@@ -0,0 +1,1843 @@
++/*
++ * Copyright (C) 2000-2003 the xine project
++ * 
++ * This file is part of xine, a free video player.
++ * 
++ * xine is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ * 
++ * xine is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ * 
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110, USA
++ */
++
++#define LOG_MODULE "libspukate"
++#define LOG_VERBOSE
++/*
++#define LOG
++*/
++#define LOG_OSD 0
++#define LOG_SCHEDULING 0
++#define LOG_WIDTH 0
++
++#include <pthread.h>
++#include <ogg/ogg.h>
++#include <kate/kate.h>
++#include <kate/oggkate.h>
++#include "xine_internal.h"
++
++/* TODO:
++
++   - only recreate OSD when needed (call clear to clear, set_pos, etc...)
++   - automatic line splitting if too long ?
++   - unscaled OSD
++   - freetype fonts
++   - better karaoke - need more speccing of the kate format
++   - karaoke marker - a temp red cross at the momemt
++   - find a better solution for the ticks
++   - use more inline markup (font size/color)
++   - less wasteful use of palette now that I understand how it works
++   - a user option to use/ignore info other than text (motions, etc)
++
++   */
++
++/* xine hides the bloody OSD when I tell it to show it if it happens to have
++   nothing drawn on it yet, which means when I draw something afterwards, it
++   doesn't show because xine ignored my show request */
++#define FORCE_SHOWING
++
++/* scheduling shows/hides for non animated items means that there can be a small
++   gap between the shows/hides between animated and non animated items, as animated
++   items are shown/hidden when ticked */
++//#define SCHEDULE_SHOWS
++
++typedef enum {
++  SUBTITLE_SIZE_TINY = 0,
++  SUBTITLE_SIZE_SMALL,
++  SUBTITLE_SIZE_NORMAL,
++  SUBTITLE_SIZE_LARGE,
++  SUBTITLE_SIZE_VERY_LARGE,
++  SUBTITLE_SIZE_HUGE,
++
++  SUBTITLE_SIZE_NUM        /* number of values in enum */
++} subtitle_size;
++
++typedef enum {
++  FONT_NORMAL,
++  FONT_ITALICS,
++  FONT_BOLD,
++  FONT_BOLD_ITALICS,
++
++  NUM_FONT_TYPES
++} font_type;
++
++static const char *subtitle_size_strings[] = {
++  "tiny", "small", "normal", "large", "very large", "huge", NULL
++};
++
++#define rgb2yuv(R,G,B) ((((((66*R+129*G+25*B+128)>>8)+16)<<8)|(((112*R-94*G-18*B+128)>>8)+128))<<8|(((-38*R-74*G+112*B+128)>>8)+128))
++
++/* colors 224 to 255 are for background/marker colors */
++#define FIRST_BACKGROUND_PALETTE 224
++
++/* how many palette colors an item gets in the FIRST_BACKGROUND_PALETTE range */
++#define COLOR_SLOTS 2
++
++/* max number of lines on a single subtitle */
++#define MAX_LINES 8
++
++typedef struct xinekate_draw_parms_s {
++  /* those are filled in by the scanning */
++  int width[MAX_LINES]; /* pixels */
++  int height[MAX_LINES]; /* pixels */
++  int nbytes[MAX_LINES]; /* number of bytes in each line */
++  int nglyphs[MAX_LINES]; /* number of glyphs in each line */
++  int nlines;
++
++  /* those are filled by the drawing */
++  int lineidx;
++  int total_text_width;
++  int total_text_height;
++  int dx;
++  int glyphidx;
++} xinekate_draw_parms_t;
++
++typedef struct xinekate_class_s {
++  spu_decoder_class_t class;
++  xine_t            *xine;
++
++} xinekate_class_t;
++
++typedef struct xinekate_style_tracker_s {
++  int italics;
++  int bold;
++  int underline;
++  int strike;
++  int sub;
++  int sup;
++} xinekate_style_tracker_t;
++
++/* a text (animated or not) */
++typedef struct xinekate_decoder_item_s {
++  struct xinekate_decoder_s *decoder;
++
++  int id;
++
++  int allocated_palette_idx;
++
++  osd_renderer_t *osd_renderer;
++
++  int64_t start_pts;
++  int64_t end_pts;
++
++  kate_text_encoding text_encoding;
++  kate_text_directionality text_directionality;
++  char *ev_text;
++  size_t len;
++  size_t len0;
++
++  const kate_style *style;
++  const kate_region *region;
++  const kate_font_mapping *font_mapping;
++
++  /* the current region */
++  int                x0;
++  int                y0;
++  int                x1;
++  int                y1;
++
++  /* the current region, with margins added */
++  int                mx0;
++  int                my0;
++  int                mx1;
++  int                my1;
++
++  xinekate_style_tracker_t style_tracker;
++
++  xinekate_draw_parms_t  draw_parms;
++
++  /* palette and colors */
++  uint32_t           palette[OVL_PALETTE_SIZE];
++  uint8_t            trans[OVL_PALETTE_SIZE];
++  int                current_text_palette;
++
++  /* animations */
++  int                animated;
++  int                last_animation_frame_pts;
++  kate_tracker       kin;
++
++
++  int                font_size;
++  int                font_size_dy;
++
++  osd_object_t      *osd;
++
++  osd_object_t      *canvas; /* for draw semantics */
++  int                prev_draw_x;
++  int                prev_draw_y;
++  int                draw_hole;
++
++} xinekate_decoder_item_t;
++
++/* a single kate stream */
++typedef struct xinekate_decoder_s {
++  struct xinekate_master_decoder_s *master;
++
++  int                channel;
++
++  /* kate info */
++  kate_state         k;
++  kate_info          ki;
++  kate_comment       kc;
++  const kate_event  *ev;
++  int                decoding;
++
++  /* ogg packet transfer via xinebuffers */
++  ogg_packet         op; /* coming from Ogg */
++  kate_packet        kp; /* coming from Matroska */
++  int                reject;
++  int                op_max_size;
++  unsigned char*     packet;
++  int                done;
++  int                raw;
++
++  size_t             nitems;
++  xinekate_decoder_item_t *items;
++
++} xinekate_decoder_t;
++
++/* the main decoder/demultiplexer */
++typedef struct xinekate_master_decoder_s {
++  spu_decoder_t      spu_decoder;
++
++  xinekate_class_t  *class;
++
++  xine_stream_t     *stream;
++
++  /* to keep track of what's happening (like, eg, resizing) */
++  xine_event_queue_t *queue;
++
++  /* guards access to the whole decoder list */
++  pthread_mutex_t    mutex;
++  pthread_t          timer_thread;
++  int                quit_thread;
++
++  int                cached_width;          /* frame width */
++  int                cached_height;         /* frame height */
++
++  char              *font[NUM_FONT_TYPES];          /* subtitle fonts */
++  subtitle_size      subtitle_size; /* size of subtitles */
++  int                vertical_offset;
++
++  int                item_id_generator;
++
++  size_t             ndecoders;
++  xinekate_decoder_t **decoders;
++} xinekate_master_decoder_t;
++
++
++/* readin_op and collect_data modified from the theora decoder plugin */
++
++static void readin_op (xinekate_decoder_t *this, unsigned char* src, int size) {
++  if ( this->done+size > this->op_max_size) {
++    while (this->op_max_size < this->done+size)
++      this->op_max_size=this->op_max_size*2;
++    this->packet=realloc(this->packet, this->op_max_size);
++    this->op.packet=this->packet;
++    this->kp.data=this->packet;
++  }
++  xine_fast_memcpy ( this->packet+this->done, src, size);
++  this->done=this->done+size;
++}
++
++static int collect_data (xinekate_decoder_t *this, buf_element_t *buf ) {
++  /* Assembles an ogg_packet which was sent with send_ogg_packet over xinebuffers */
++  /* this->done, this->rejected, this->op, this->decoder->flags and this->raw are needed*/
++
++  if (buf->decoder_flags & BUF_FLAG_FRAME_START) {
++    this->done=0;  /*start from the beginnig*/
++    this->reject=0;/*new packet - new try*/ 
++
++    /* for headers, first byte in the buffer is "raw" (without ogg_packet) */
++    this->raw = 0;
++    if (buf->decoder_flags & BUF_FLAG_HEADER) {
++      this->raw = buf->content[0];
++      lprintf("header: %s\n",this->raw?"raw (kate_packet)":"normal (ogg_packet)");
++      if (this->raw) {
++        this->kp.data=this->packet;
++        this->kp.nbytes=0;
++
++        readin_op (this, buf->content + 1, buf->size - 1 );
++      }
++      else {
++        /*copy the ogg_packet struct and the sum, correct the adress of the packet*/
++        xine_fast_memcpy (&this->op, buf->content+1, sizeof(ogg_packet));
++        this->op.packet=this->packet;
++
++        readin_op (this, buf->content + sizeof(ogg_packet) + 1, buf->size - sizeof(ogg_packet) - 1 );
++      }
++    }
++    else {
++      lprintf("non-header (normal. ogg_packet)\n");
++      /*copy the ogg_packet struct and the sum, correct the adress of the packet*/
++      xine_fast_memcpy (&this->op, buf->content, sizeof(ogg_packet));
++      this->op.packet=this->packet;
++
++      readin_op (this, buf->content + sizeof(ogg_packet), buf->size - sizeof(ogg_packet) );
++    }
++    /*read the rest of the data*/
++
++  } else {
++    if (this->done==0 || this->reject) {
++      /*we are starting to collect an packet without the beginnig
++	reject the rest*/
++      lprintf (LOG_MODULE ": rejecting packet (%d done)\n", this->done);
++      this->reject=1;
++      return 0;
++    }
++    readin_op (this, buf->content, buf->size );
++  }
++  
++  if ((buf->decoder_flags & BUF_FLAG_FRAME_END) && !this->reject) {
++    if (this->raw) {
++      this->kp.nbytes=this->done;
++    }
++    else if ( this->done != this->op.bytes ) {
++      lprintf (LOG_MODULE ": A packet changed its size during transfer - rejected\n");
++      lprintf ("           size %d    should be %ld\n", this->done , this->op.bytes);
++      this->op.bytes=this->done;
++      this->kp.nbytes=this->done;
++    }
++    lprintf("[1] collect got packet: first byte %x\n",this->raw?((unsigned char*)this->kp.data)[0]:this->op.packet[-0]);
++    lprintf("[2] collect got packet: first byte %x\n",this->raw?((unsigned char*)this->kp.data)[0]:this->op.packet[-0]);
++    lprintf("[3] collect got packet: first byte %x\n",this->raw?((unsigned char*)this->kp.data)[0]:this->op.packet[-0]);
++    return 1;
++  }
++  return 0;
++}
++
++static inline char *get_font (xinekate_master_decoder_t *this, const xinekate_style_tracker_t *st)
++{
++#ifdef HAVE_FT2
++  if (this->use_font_ft)
++    return this->font_ft;
++  else
++#endif
++
++  {
++    static const font_type font_table[2][2] = {
++      { FONT_NORMAL, FONT_BOLD },
++      { FONT_ITALICS, FONT_BOLD_ITALICS },
++    };
++
++    if (!st) return this->font[FONT_NORMAL];
++
++    return this->font[font_table[st->italics?1:0][st->bold?1:0]];
++  }
++}
++
++static void xinekate_send_synced_text_event(xinekate_decoder_t *decoder, const kate_event *ev)
++{
++  xine_event_t event;
++  xine_synced_text_data_t data;
++
++  if (ev) {
++    data.start_time = ev->start_time;
++    data.end_time = ev->end_time;
++    data.text_len = ev->len0;
++    data.text = ev->text;
++printf("xinekate_send_synced_text_event: [%s]\n", ev->text);
++  }
++  else {
++    data.start_time = 0.0;
++    data.end_time = 0.0;
++    data.text_len = 0;
++    data.text = "";
++  }
++
++  event.type        = XINE_EVENT_SYNCED_TEXT;
++  event.stream      = decoder->master->stream;
++  event.data        = &data;
++  event.data_length = sizeof(data);
++
++  xine_event_send(decoder->master->stream, &event);
++
++  printf("synced text event sent: %s\n", ev?ev->text:"<none>");
++}
++
++static void update_osd (xinekate_decoder_item_t *this, int force_update)
++{
++  if (!this->decoder->master->stream->video_out)
++    return;
++
++  if (!this->osd || force_update) {
++    int frame_width = this->decoder->master->cached_width;
++    int frame_height = this->decoder->master->cached_height;
++
++    /* Create a full-window OSD */
++    if( this->osd )
++      this->osd_renderer->free_object (this->osd);
++
++    this->osd = this->osd_renderer->new_object (this->osd_renderer, frame_width, frame_height);
++
++    switch (this->text_encoding) {
++      case kate_utf8:
++        this->osd_renderer->set_encoding(this->osd, "utf8");
++        break;
++      default:
++        lprintf("Unsupported text encoding in kate stream: %d - defaulting to utf8\n",this->text_encoding);
++        this->osd_renderer->set_encoding(this->osd, "utf8");
++        break;
++    }
++
++    this->osd_renderer->set_font (this->osd, get_font (this->decoder->master, NULL), this->font_size);
++
++    this->osd_renderer->set_position (this->osd, 0, 0);
++
++    lprintf("new OSD created, %dx%d, font %s/%d\n",
++        frame_width, frame_height, get_font(this->decoder->master, NULL), this->font_size);
++  }
++  else {
++    this->osd_renderer->clear(this->osd);
++  }
++}
++
++static void region_to_osd(xinekate_decoder_t *this, const kate_region *kr, int *x0, int *y0, int *x1, int *y1)
++{
++  switch (kr->metric) {
++    default:
++      lprintf("Unknown metric (%d), defaulting to pixels\n",kr->metric);
++      /* fall through */
++    case kate_pixel:
++      *x0 = kr->x;
++      *y0 = kr->y;
++      *x1 = kr->x+kr->w-1;
++      *y1 = kr->x+kr->h-1;
++      break;
++    case kate_percentage:
++      *x0 = kr->x*this->master->cached_width/100;
++      *y0 = kr->y*this->master->cached_height/100;
++      *x1 = (kr->x+kr->w)*this->master->cached_width/100-1;
++      *y1 = (kr->y+kr->h)*this->master->cached_height/100-1;
++      break;
++    case kate_millionths:
++      *x0 = kr->x*this->master->cached_width/1000000;
++      *y0 = kr->y*this->master->cached_height/1000000;
++      *x1 = (kr->x+kr->w)*this->master->cached_width/1000000-1;
++      *y1 = (kr->y+kr->h)*this->master->cached_height/1000000-1;
++      break;
++  }
++}
++
++static uint8_t temp_bitmap_mapping[256];
++static void xinekate_setup_bitmap(xinekate_decoder_item_t *this,const kate_bitmap *kb,const kate_palette *kp)
++{
++  if (!kp) {
++    kp=this->decoder->ki.palettes[kb->palette>=0?kb->palette:0];
++  }
++
++  this->osd_renderer->get_palette(this->osd, this->palette, this->trans);
++  {
++    int n;
++    for (n=0;n<128 && n<kp->ncolors;++n) {
++      const kate_color *kc=kp->colors+n;
++      temp_bitmap_mapping[n]=n+128;
++      this->palette[n+128] = rgb2yuv(kc->r,kc->g,kc->b);
++      this->trans[n+128] = kc->a/17;
++    }
++  }
++  this->osd_renderer->set_palette(this->osd, this->palette, this->trans);
++}
++
++static void xinekate_render_code_point(xinekate_decoder_item_t *this,int x,int y,int c,int palette,int *w,int *h)
++{
++  if (this->font_mapping) {
++    int bitmap_idx=kate_font_get_index_from_code_point(this->font_mapping,c);
++    if (bitmap_idx>=0) {
++      if (bitmap_idx>=0 && bitmap_idx<this->decoder->ki.nbitmaps) {
++        const kate_bitmap *kb=this->decoder->ki.bitmaps[bitmap_idx];
++        if (palette>=0) {
++          xinekate_setup_bitmap(this,kb,NULL);
++          this->osd_renderer->draw_bitmap(this->osd,kb->pixels,x,y,kb->width,kb->height,temp_bitmap_mapping);
++        }
++        *w=kb->width;
++        *h=kb->height;
++      }
++      else {
++        lprintf("Bitmap out of range!\n");
++        *w=0;
++        *h=0;
++      }
++      return;
++    }
++    else if (bitmap_idx!=KATE_E_NOT_FOUND) {
++      lprintf("Error finding bitmap index from code point: %d\n",bitmap_idx);
++      *w=0;
++      *h=0;
++      return;
++    }
++  }
++
++  /* either no font mapping, or the glyph to render was not found there */
++  char glyph[8],*wptr=glyph;
++  size_t glen0=sizeof(glyph);
++  kate_text_set_character(this->text_encoding,c,&wptr,&glen0);
++  kate_text_set_character(this->text_encoding,0,&wptr,&glen0);
++  if (palette>=0) {
++    this->osd_renderer->render_text(this->osd,x,y,glyph,palette);
++  }
++  this->osd_renderer->get_text_size(this->osd,glyph,w,h);
++}
++
++static void xinekate_render_l2r(xinekate_decoder_item_t *this,int x,int y,const char *text,int palette,size_t len0,int *w,int *h)
++{
++  int ret,gw,gh;
++  
++  *w=0;
++  *h=0;
++  for (;;) {
++    ret=kate_text_get_character(this->text_encoding,&text,&len0);
++    if (ret<0) {
++      lprintf("failed to read a character from string\n");
++      return;
++    }
++    if (ret==0) {
++      /* done */
++      return;
++    }
++    xinekate_render_code_point(this,x+*w,y,ret,palette,&gw,&gh);
++    *w+=gw;
++    if (gh>*h) *h=gh;
++  }
++}
++
++static void xinekate_render_r2l(xinekate_decoder_item_t *this,int x,int y,const char *text,int palette,size_t len0,int *w,int *h)
++{
++  int ret,gw,gh;
++  
++  ret=kate_text_get_character(this->text_encoding,&text,&len0);
++  if (ret<0) {
++    lprintf("failed to read a character from string\n");
++    *w=0;
++    *h=0;
++    return;
++  }
++  if (ret==0) {
++    /* done */
++    *w=0;
++    *h=0;
++    return;
++  }
++  xinekate_render_r2l(this,x,y,text,palette,len0,w,h);
++  xinekate_render_code_point(this,x+*w,y,ret,palette,&gw,&gh);
++  *w+=gw;
++  if (gh>*h) *h=gh;
++}
++
++static void xinekate_filled_rect(xinekate_decoder_item_t *this,int x1,int y1,int x2,int y2,int color)
++{
++  /* the osd.c code seems to use x2/y2 as the width (eg, +1), rather than the last pixel, so fixup here.
++     I'm not sure if it's a bug in osd.c, or just a poor choice of naming for the parameters */
++  this->osd_renderer->filled_rect(this->osd,x1,y1,x2+1,y2+1,color);
++}
++
++static void xinekate_draw_hline(xinekate_decoder_item_t *this,int x0,int x1,int y,int color)
++{
++  int n=this->font_size/16;
++
++  xinekate_filled_rect(this,x0,y-n/2,x1,y+n/2,color);
++}
++
++static void xinekate_render_text(xinekate_decoder_item_t *this,int x,int y,const char *text,int palette,int *w,int *h)
++{
++  switch (this->text_directionality) {
++    default:
++      lprintf("Unsupported text directionality, defaulting to left-to-right/top-to-bottom\n");
++      /* fall through */
++    case kate_l2r_t2b:
++      xinekate_render_l2r(this,x,y,text,palette,strlen(text)+1,w,h);
++      break;
++    case kate_r2l_t2b:
++      xinekate_render_r2l(this,x,y,text,palette,strlen(text)+1,w,h);
++      break;
++  }
++
++  if (palette>=0) {
++    if (this->style_tracker.underline || this->style_tracker.strike) {
++      if (this->style_tracker.underline) {
++        xinekate_draw_hline(this,x,x+(*w)-1,y+(*h)*3/3,palette+10);
++      }
++      if (this->style_tracker.strike) {
++        xinekate_draw_hline(this,x,x+(*w)-1,y+(*h)*2/3,palette+10);
++      }
++    }
++  }
++}
++
++static void add_margins(int *lower,int *higher,kate_space_metric metric,int lower_margin,int higher_margin,int sz)
++{
++  switch (metric) {
++    case kate_pixel:
++      *lower+=lower_margin;
++      *higher-=higher_margin;
++      break;
++    case kate_percentage:
++      *lower+=lower_margin*sz/100;
++      *higher-=higher_margin*sz/100;
++      break;
++    case kate_millionths:
++      *lower+=lower_margin*sz/1000000;
++      *higher-=higher_margin*sz/1000000;
++      break;
++    default:
++      lprintf("invalid space metric: %d\n",metric);
++      break;
++  }
++}
++
++static void xinekate_setup_event_region(xinekate_decoder_item_t *this)
++{
++  int rw,rh;
++
++  if (this->animated && this->kin.has.region) {
++    /* animation takes precedence */
++    this->x0=this->kin.region_x;
++    this->y0=this->kin.region_y;
++    this->x1=this->kin.region_x+this->kin.region_w-1;
++    this->y1=this->kin.region_y+this->kin.region_h-1;
++  }
++  else if (this->region) {
++    region_to_osd(this->decoder,this->region,&this->x0,&this->y0,&this->x1,&this->y1);
++  }
++  else {
++    lprintf("No region defined, using bottom of screen default\n");
++    this->x0=this->decoder->master->cached_width*10/100;
++    this->y0=this->decoder->master->cached_height*80/100;
++    this->x1=this->decoder->master->cached_width*80/100;
++    this->y1=this->decoder->master->cached_height*90/100;
++  }
++
++  this->mx0=this->x0;
++  this->my0=this->y0;
++  this->mx1=this->x1;
++  this->my1=this->y1;
++
++  rw=this->x1-this->x0+1;
++  if (this->animated && this->kin.has.hmargins) {
++    /* animated margins ? */
++    add_margins(&this->mx0,&this->mx1,kate_pixel,this->kin.left_margin,this->kin.right_margin,rw);
++  }
++  else if (this->style) {
++    /* margins from the style */
++    add_margins(&this->mx0,&this->mx1,this->style->margin_metric,this->style->left_margin,this->style->right_margin,rw);
++  }
++
++  rh=this->y1-this->y0+1;
++  if (this->animated && this->kin.has.vmargins) {
++    /* animated margins ? */
++    add_margins(&this->my0,&this->my1,kate_pixel,this->kin.top_margin,this->kin.bottom_margin,rh);
++  }
++  else if (this->style) {
++    /* margins from the style */
++    add_margins(&this->my0,&this->my1,this->style->margin_metric,this->style->top_margin,this->style->bottom_margin,rh);
++  }
++}
++
++static void reset_style_tracker(xinekate_style_tracker_t *tracker)
++{
++  memset(tracker,0,sizeof(*tracker));
++}
++
++static void set_single_color(xinekate_decoder_item_t *this,int idx,int offset,int r,int g,int b,int a)
++{
++  /* read the palette from the OSD */
++  this->osd_renderer->get_palette(this->osd, this->palette, this->trans);
++
++  this->palette[FIRST_BACKGROUND_PALETTE+idx*COLOR_SLOTS+offset] = rgb2yuv(r,g,b);
++  this->trans[FIRST_BACKGROUND_PALETTE+idx*COLOR_SLOTS+offset] = a / 15;
++
++  /* write the palette back to the OSD */
++  this->osd_renderer->set_palette(this->osd, this->palette, this->trans);
++
++  if (this->canvas)
++    this->osd_renderer->set_palette(this->canvas, this->palette, this->trans);
++}
++
++static void set_font_color(xinekate_decoder_item_t *this,int idx,int r,int g,int b,int a)
++{
++  int c;
++  static const uint8_t texttrans[]={0,0,3,6,8,10,12,14,15,15,15};
++
++  /* read the palette from the OSD */
++  this->osd_renderer->get_palette(this->osd, this->palette, this->trans);
++
++  for (c=0;c<TEXT_PALETTE_SIZE;++c) {
++    this->palette[idx*TEXT_PALETTE_SIZE+c] = rgb2yuv(r,g,b);
++    this->trans[idx*TEXT_PALETTE_SIZE+c] = texttrans[c] * a / 255;
++  }
++
++  /* write the palette back to the OSD */
++  this->osd_renderer->set_palette(this->osd, this->palette, this->trans);
++}
++
++static void set_item_font_size(xinekate_decoder_item_t *this)
++{
++  static int sizes[SUBTITLE_SIZE_NUM] = { 16, 20, 24, 32, 48, 64 };
++  int idx=this->decoder->master->subtitle_size;
++  this->font_size = sizes[idx];
++}
++
++/* reset OSD to default state */
++static void reset_osd_state(xinekate_decoder_item_t *this)
++{
++  int r,g,b,a;
++
++  reset_style_tracker(&this->style_tracker);
++
++  if (this->style) {
++    this->style_tracker.bold=this->style->bold;
++    this->style_tracker.italics=this->style->italics;
++    this->style_tracker.underline=this->style->underline;
++    this->style_tracker.strike=this->style->strike;
++    this->style_tracker.sub=0;
++    this->style_tracker.sup=0;
++  }
++
++  set_item_font_size(this);
++  this->osd_renderer->set_font (this->osd, get_font(this->decoder->master, NULL), this->font_size);
++  r=this->style?this->style->text_color.r:255;
++  g=this->style?this->style->text_color.g:255;
++  b=this->style?this->style->text_color.b:255;
++  a=this->style?this->style->text_color.a:255;
++  set_font_color(this,this->allocated_palette_idx,r,g,b,a);
++  this->current_text_palette=this->allocated_palette_idx*TEXT_PALETTE_SIZE;
++  this->x0=this->y0=this->x1=this->y1=-1;
++  this->mx0=this->my0=this->mx1=this->my1=-1;
++}
++
++static void xinekate_draw_event_background(xinekate_decoder_item_t *this)
++{
++  const kate_bitmap *bitmap;
++
++  if (this->region) {
++    /* only draw background if we have a region */
++
++    if (this->kin.has.background_color) {
++      int r=this->kin.background_color.r;
++      int g=this->kin.background_color.g;
++      int b=this->kin.background_color.b;
++      int a=this->kin.background_color.a;
++      set_single_color(this,this->allocated_palette_idx,0,r,g,b,a);
++
++      xinekate_filled_rect(this,this->x0,this->y0,this->x1,this->y1,
++          FIRST_BACKGROUND_PALETTE+this->allocated_palette_idx*COLOR_SLOTS+0);
++    }
++
++    bitmap=this->kin.event->bitmap;
++    if (bitmap) {
++      const kate_palette *pal=this->kin.event->palette;
++      if (!pal) {
++        if (bitmap->palette>=0) pal=this->decoder->ki.palettes[bitmap->palette];
++      }
++      if (pal) {
++        int x=this->x0, y=this->y0;
++        int frame_width = this->decoder->master->cached_width;
++        int frame_height = this->decoder->master->cached_height;
++        xinekate_setup_bitmap(this, bitmap, pal);
++        if (x+bitmap->width>=frame_width) x=frame_width-bitmap->width-1;
++        if (y+bitmap->height>=frame_height) y=frame_height-bitmap->height-1;
++        if (x<0) x=0;
++        if (y<0) y=0;
++        this->osd_renderer->draw_bitmap (this->osd, bitmap->pixels,
++            x, y, bitmap->width, bitmap->height,
++            temp_bitmap_mapping);
++      }
++      else {
++        lprintf("No palette to display bitmap, not drawing bitmap\n");
++      }
++    }
++  }
++}
++
++static int probe_text(const char ** const text,const char *start,size_t *len)
++{
++  size_t start_len=strlen(start);
++  if (start_len>*len) return 0; /* means it'd go beyond the buffer */
++  if (strncmp(*text, start, start_len)) return 0;
++  *text+=start_len;
++  return 1;
++}
++
++#define SIMPLE_TAG(tag,field)                            \
++  if (probe_text(&text, #tag ">", &len0)) {              \
++    if (st->field==0) {                                  \
++      xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,0); \
++      changed=1;                                         \
++    }                                                    \
++    ++st->field;                                         \
++  }                                                      \
++  else if (probe_text(&text, "/" #tag ">", &len0)) {     \
++    if (st->field==1) {                                  \
++      xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,0); \
++      changed=1;                                         \
++    }                                                    \
++    --st->field;                                         \
++  }                                                      \
++
++static void xinekate_flush_text(xinekate_decoder_item_t *this,
++                                char *parsed_text,size_t len0,char **parsed_ptr,size_t *parsed_text_len,size_t *nglyphs,
++                                void (*f)(xinekate_decoder_item_t*,intptr_t,const char*,size_t,int),intptr_t user,int eol)
++{
++  if (*nglyphs>0) {
++    int ret = kate_text_set_character(this->text_encoding, 0, parsed_ptr, parsed_text_len);
++    if (ret < 0) {
++      lprintf("Failed to null terminate string (%d), dropping string on the floor\n", ret);
++    }
++    else {
++      this->osd_renderer->set_font (this->osd, get_font (this->decoder->master, &this->style_tracker), this->font_size);
++      (*f)(this,user,parsed_text,*nglyphs,eol);
++    }
++
++    *nglyphs=0;
++  }
++
++  *parsed_ptr=parsed_text;
++  *parsed_text_len=len0;
++}
++
++static int parse_line(xinekate_decoder_item_t *this,const char *text,size_t len0,
++                      void (*f)(xinekate_decoder_item_t*,intptr_t,const char*,size_t,int),intptr_t user)
++{
++  kate_text_encoding text_encoding = this->text_encoding;
++  int c;
++  xinekate_style_tracker_t *st = &this->style_tracker;
++  char *parsed_text, *parsed_ptr;
++  size_t parsed_text_len;
++  size_t nglyphs;
++  int ret;
++
++  /* init parsed text */
++  parsed_text = malloc(len0);
++  if (!parsed_text) return -1;
++  *parsed_text=0;
++  parsed_ptr = parsed_text;
++  parsed_text_len=len0;
++  nglyphs=0;
++
++  while ((c=kate_text_get_character(text_encoding, &text, &len0)) > 0) {
++    if (c=='<') {
++      int changed=0;
++      /* tag start, act on it or ignore */
++      SIMPLE_TAG(i,italics)
++      else SIMPLE_TAG(em,italics)
++      else SIMPLE_TAG(b,bold)
++      else SIMPLE_TAG(strong,bold)
++      else SIMPLE_TAG(u,underline)
++      else SIMPLE_TAG(s,strike)
++      else SIMPLE_TAG(sup,sup)
++      else SIMPLE_TAG(sub,sub)
++      else if (probe_text(&text, "br>", &len0)) {
++        xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,1);
++      }
++      else if (probe_text(&text, "kate ", &len0)) {
++        /* kate custom command */
++        lprintf("Found (and skipped) Kate command: <kate ");
++        int tmp;
++        do {
++          tmp=kate_text_get_character(text_encoding, &text, &len0);
++          lprintf("%c",tmp);
++        } while (tmp && tmp!='>');
++        lprintf("\n");
++      }
++      else {
++        /* unknown tag, seek to its end and ignore it */
++        int tmp;
++        do {
++          tmp=kate_text_get_character(text_encoding, &text, &len0);
++        } while (tmp && tmp!='>');
++      }
++    }
++    else if (c=='\n') {
++      xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,1);
++    }
++    else {
++      /* that's a displayable character */
++
++      ret = kate_text_set_character(text_encoding, c, &parsed_ptr, &parsed_text_len);
++      if (ret < 0) {
++        lprintf("Failed to add character to string (%d), ignoring\n", ret);
++      }
++      else {
++        ++nglyphs;
++
++        /* if there's a path, each character is rendered separately */
++        if (this->kin.has.path) {
++          xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,0);
++        }
++      }
++    }
++  }
++
++  /* process any line in progress */
++  xinekate_flush_text(this,parsed_text,len0,&parsed_ptr,&parsed_text_len,&nglyphs,f,user,1);
++
++  free(parsed_text);
++
++  return 0;
++}
++
++static void width_helper(xinekate_decoder_item_t *this,intptr_t user,const char *text,size_t nglyphs,int eol)
++{
++  xinekate_draw_parms_t *draw_parms=(xinekate_draw_parms_t*)user;
++
++  int w, h;
++  xinekate_render_text(this,0,0,text,-1,&w,&h); /* negative palette means don't actually render */
++
++  draw_parms->width[draw_parms->nlines] += w;
++  if (h>draw_parms->height[draw_parms->nlines]) draw_parms->height[draw_parms->nlines]=h;
++  draw_parms->nbytes[draw_parms->nlines] += strlen(text);
++  draw_parms->nglyphs[draw_parms->nlines] += nglyphs;
++
++  if (eol) ++draw_parms->nlines;
++}
++
++static int align_helper(int x0,int x1,int w,double align,int external)
++{
++  if (external) {
++    return (int)(x0-w+(x1-(x0-w))*(align+1.0)/2.0);
++  }
++  else {
++    return (int)(x0+((x1-w)-(x0))*(align+1.0)/2.0);
++  }
++}
++
++static void draw_helper(xinekate_decoder_item_t *this,intptr_t user,const char *text,size_t nglyphs,int eol)
++{
++  xinekate_draw_parms_t *draw_parms=(xinekate_draw_parms_t*)user;
++  int n,p;
++  int first_glyph,last_glyph;
++
++  int w=draw_parms->width[draw_parms->lineidx],h=draw_parms->height[draw_parms->lineidx];
++  int x=this->mx0,y=this->my0;
++  int tw,th;
++  
++  /* animations override static values */
++  if (this->kin.has.path) {
++    kate_tracker_get_text_path_position(&this->kin,draw_parms->glyphidx,&x,&y);
++  }
++  else if (this->kin.has.text_pos) {
++    x=this->kin.text_x;
++    y=this->kin.text_y;
++  }
++  else if (this->kin.has.text_alignment_int) {
++    x=align_helper(this->mx0,this->mx1,w,this->kin.text_halign,0);
++    y=align_helper(this->my0,this->my1,h,this->kin.text_valign,0);
++  }
++  else if (this->kin.has.text_alignment_ext) {
++    x=align_helper(this->mx0,this->mx1,w,this->kin.text_halign,1);
++    y=align_helper(this->my0,this->my1,h,this->kin.text_valign,1);
++  }
++  else {
++    /* no position, nor alignment, default to center in the region */
++    x=align_helper(this->mx0,this->mx1,w,0,0);
++    y=align_helper(this->my0,this->my1,h,0,0); /* what in case of multiple lines ? */
++  }
++  if (this->kin.has.text_color) {
++    int r=this->kin.text_color.r;
++    int g=this->kin.text_color.g;
++    int b=this->kin.text_color.b;
++    int a=this->kin.text_color.a;
++    set_font_color(this,this->allocated_palette_idx,r,g,b,a);
++    this->current_text_palette=this->allocated_palette_idx*TEXT_PALETTE_SIZE;
++  }
++
++  first_glyph=0;
++  for (n=0;n<draw_parms->lineidx;++n) {
++    y+=draw_parms->height[n];
++    first_glyph+=draw_parms->nglyphs[n];
++  }
++
++  if (w>draw_parms->total_text_width) draw_parms->total_text_width=w;
++  draw_parms->total_text_height=y+h;
++
++  if (!this->kin.has.path) {
++    /* on a path, each character gets placed precisely, so we don't place
++       characters one after the other */
++    x+=draw_parms->dx;
++  }
++
++  lprintf("item id %d: ready to draw line %d (%s), %d glyphs at offset %d, at %d %d, pal %d (%d), "
++          "w/h %d/%d, x0 %d x1 %d, mx0 %d mx1 %d\n",
++      this->id,draw_parms->lineidx,text,
++      draw_parms->nglyphs[draw_parms->lineidx],first_glyph,
++      x,y,
++      this->current_text_palette,this->current_text_palette/TEXT_PALETTE_SIZE,
++      w,h,this->x0,this->x1,this->mx0,this->mx1);
++  xinekate_render_text(this,x,y,text,this->current_text_palette,&tw,&th);
++  draw_parms->dx+=tw;
++
++  /* work out where to place markers, if any */
++  for (p=0;p<4;++p) {
++    if (this->kin.has.glyph_pointer&(1<<p)) {
++      double mx=this->kin.glyph_pointer[p];
++      if (mx<0) continue;
++      int charidx=(int)mx;
++      last_glyph=first_glyph+draw_parms->nglyphs[draw_parms->lineidx]-1;
++      if (charidx>=first_glyph) {
++        /* the marker is within our text, convert to pixel offset */
++        size_t len=strlen(text),wlen0=len+4,rlen0=wlen0;
++        char *substr=calloc(1,wlen0),*wptr=substr;
++        const char *rptr=text;
++        int g,c,ret,w0,h0,w1,h1;
++
++        if (charidx<=last_glyph) {
++          /* work out the size of the substring up to the character before the current one */
++          for (g=0;g<charidx-first_glyph;++g) {
++            ret=kate_text_get_character(kate_utf8,&rptr,&rlen0);
++            if (ret<0) {
++              lprintf("Failed to get character from string");
++              break;
++            }
++            c=ret;
++            ret=kate_text_set_character(kate_utf8,c,&wptr,&wlen0);
++            if (ret<0) {
++              lprintf("Failed to add character to temporary karaoke string");
++              break;
++            }
++          }
++          this->osd_renderer->get_text_size(this->osd,substr,&w0,&h0);
++
++          /* transfer the current character and get the size of the text with it */
++          ret=kate_text_get_character(kate_utf8,&rptr,&rlen0);
++          if (ret<0) {
++            lprintf("Failed to get character from string");
++            break;
++          }
++          c=ret;
++          ret=kate_text_set_character(kate_utf8,c,&wptr,&wlen0);
++          if (ret<0) {
++            lprintf("Failed to add character to temporary karaoke string");
++          }
++          this->osd_renderer->get_text_size(this->osd,substr,&w1,&h1);
++        }
++
++        /* if there is a secondary style, use it, else draw a marker */
++        if (this->kin.event->secondary_style) {
++          int dummyw,dummyh;
++          int r=this->kin.event->secondary_style->text_color.r;
++          int g=this->kin.event->secondary_style->text_color.g;
++          int b=this->kin.event->secondary_style->text_color.b;
++          int a=this->kin.event->secondary_style->text_color.a;
++          set_font_color(this,this->allocated_palette_idx,r,g,b,a);
++          ++this->allocated_palette_idx;
++          this->current_text_palette=this->allocated_palette_idx*TEXT_PALETTE_SIZE;
++          lprintf("rendering text [%s] at %d %d, with color %d %d %d %d\n",charidx<=last_glyph?substr:text,x,y,r,g,b,a);
++          xinekate_render_text(this, x, y, charidx<=last_glyph?substr:text, this->current_text_palette, &dummyw, &dummyh);
++          --this->allocated_palette_idx;
++        }
++        else {
++          if (charidx<=last_glyph) {
++            /* temp: red marker for testing */
++            int r=255;
++            int g=96;
++            int b=96;
++            int a=255;
++            set_single_color(this,this->allocated_palette_idx,1,r,g,b,a);
++            int color=FIRST_BACKGROUND_PALETTE+this->allocated_palette_idx*COLOR_SLOTS+1;
++
++            /* calculate the pixel position of the marker based on the substring lengths */
++            double x_offset=(mx-(int)mx)*w1+(1.0-(mx-(int)mx))*w0;
++            int pixel_x=x+(int)(x_offset+0.5);
++            double my=this->kin.glyph_height[p];
++            int pixel_y=y+(1.0-my)*this->font_size;
++            lprintf("Glyph pointer %d (%f %f) is at line %d, at glyph %d, pixel offset %f, pixel x/y %d/%d\n",
++                p+1,mx,my,draw_parms->lineidx,charidx-first_glyph,x_offset,pixel_x,pixel_y);
++            lprintf("  w0 %d, w1 %d\n",w0,w1);
++
++            /* TODO: draw a marker rather than just a cross */
++            this->osd_renderer->line(this->osd, pixel_x-5, pixel_y-5, pixel_x+5, pixel_y+5, color);
++            this->osd_renderer->line(this->osd, pixel_x-5, pixel_y+5, pixel_x+5, pixel_y-5, color);
++          }
++
++          /* don't leak please */
++          free(substr);
++        }
++      }
++    }
++  }
++
++  draw_parms->glyphidx+=nglyphs;
++  if (eol) {
++    ++draw_parms->lineidx;
++    draw_parms->dx=0;
++  }
++}
++
++static void xinekate_draw_item(xinekate_decoder_item_t *this)
++{
++  int l;
++
++  if (!this->decoder->master->stream->video_out)
++    return;
++
++  update_osd (this,0);
++
++  reset_osd_state(this);
++
++  xinekate_setup_event_region(this);
++
++  /* first the background, if any */
++  xinekate_draw_event_background(this);
++
++  /* scan/draw setup */
++  for (l=0;l<MAX_LINES;++l) {
++    this->draw_parms.width[l]=0;
++    this->draw_parms.height[l]=0;
++    this->draw_parms.nbytes[l]=0;
++    this->draw_parms.nglyphs[l]=0;
++  }
++  this->draw_parms.nlines=0;
++  this->draw_parms.lineidx=0;
++  this->draw_parms.total_text_width=0;
++  this->draw_parms.total_text_height=0;
++  this->draw_parms.dx=0;
++  this->draw_parms.glyphidx=0;
++
++  if (this->kin.has.text_size) {
++    /* ignore text_size_x, use height only, xine only has a single font size */
++    /* lprintf("font size animation, base %d, mult %f\n",this->font_size,this->kin.text_size_y); */
++    this->font_size *= this->kin.text_size_y;
++    /* lprintf("  font size now %d, font will be %s\n",this->font_size,get_font(this->decoder->master,&this->style_tracker)); */
++    this->osd_renderer->set_font (this->osd, get_font (this->decoder->master, &this->style_tracker), this->font_size);
++  }
++
++  /* if there is a drawn motion, do it separately as it needs memory */
++  if (this->kin.has.draw) {
++    if (!this->canvas) {
++      int frame_width = this->decoder->master->cached_width;
++      int frame_height = this->decoder->master->cached_height;
++      lprintf("creating canvas %d %d\n",frame_width,frame_height);
++      this->canvas = this->osd_renderer->new_object (this->osd_renderer, frame_width, frame_height);
++      if (this->canvas) {
++        this->osd_renderer->set_position(this->canvas, 0, 0);
++        int r=this->style?this->style->draw_color.r:255;
++        int g=this->style?this->style->draw_color.g:255;
++        int b=this->style?this->style->draw_color.b:255;
++        int a=this->style?this->style->draw_color.a:255;
++        set_single_color(this,this->allocated_palette_idx,1,r,g,b,a); // FIXME: color idx 1
++      }
++      this->prev_draw_x = 0;
++      this->prev_draw_y = 0;
++    }
++    if (this->canvas) {
++      int x=(int)(this->kin.draw_x+0.5);
++      int y=(int)(this->kin.draw_y+0.5);
++      if (!this->draw_hole) {
++        int color=FIRST_BACKGROUND_PALETTE+this->allocated_palette_idx*COLOR_SLOTS+1; // FIXME: color idx 1
++        /* lprintf("drawing on canvas from %d %d to %d %d\n",this->prev_draw_x, this->prev_draw_y, x,y); */
++        this->osd_renderer->line(this->canvas, this->prev_draw_x, this->prev_draw_y, x, y, color);
++//this->osd_renderer->filled_rect(this->canvas, this->prev_draw_x,this->prev_draw_y,this->prev_draw_x,this->prev_draw_y,color);
++//this->osd_renderer->filled_rect(this->canvas, x,y,x,y,color);
++        this->osd_renderer->show(this->canvas, 0);
++      }
++      this->prev_draw_x=x;
++      this->prev_draw_y=y;
++      this->draw_hole=0;
++    }
++  }
++  else if (this->canvas) {
++    /* we don't have a draw motion, but since we have a canvas, we had one before,
++       so remember this so we don't draw through the hole once we get a point again */
++    this->draw_hole=1;
++  }
++
++  /* scan the text */
++  parse_line(this, this->ev_text, this->len0, &width_helper, (intptr_t)&this->draw_parms);
++
++  /* then draw the text */
++  parse_line(this, this->ev_text, this->len0, &draw_helper, (intptr_t)&this->draw_parms);
++}
++
++static void xinekate_init_item(xinekate_decoder_item_t *item, xinekate_decoder_t *decoder,int palette_idx)
++{
++  item->id =decoder->master->item_id_generator++;
++
++  item->decoder=decoder;
++  item->allocated_palette_idx=0;
++
++  item->osd_renderer = decoder->master->stream->osd_renderer;
++  item->osd = NULL;
++  item->canvas = NULL;
++  item->draw_hole = 1;
++
++  const kate_event *ev = decoder->ev;
++
++  item->animated = (ev->nmotions>0);
++
++  item->start_pts = ev->start_time*90000;
++  item->end_pts = ev->end_time*90000;
++  lprintf("xinekate_init_item, adding new item id %d from %"PRId64" to %"PRId64" (%s), text [%s]\n",
++      item->id,item->start_pts,item->end_pts,item->animated?"animated":"static",ev->text);
++
++  item->text_encoding = ev->text_encoding;
++  item->text_directionality = ev->text_directionality;
++  item->ev_text = malloc(ev->len0);
++  if (!item->ev_text) return;
++  memcpy(item->ev_text, ev->text, ev->len0);
++  item->len=ev->len;
++  item->len0=ev->len0;
++
++  item->style=ev->style;
++  item->region=ev->region;
++  item->font_mapping=ev->font_mapping;
++  lprintf("new item: style %p, region %p\n",item->style,item->region);
++
++  /* nothing animated yet */
++  item->last_animation_frame_pts=-1;
++
++  set_item_font_size(item);
++
++  update_osd(item,1);
++
++  /* only draw if it's not animated - if it is, it'll get drawn when ticked, so
++     its animations will have been updated by then */
++  kate_tracker_init(&item->kin,&item->decoder->ki,ev);
++  kate_tracker_update(
++    &item->kin,0.0,
++    item->decoder->master->cached_width,item->decoder->master->cached_height,
++    0,0,item->decoder->master->cached_width,item->decoder->master->cached_height
++ );
++#ifdef SCHEDULE_SHOWS
++  if (!item->animated) {
++    /* need to draw again if the width/height change ? */
++    xinekate_draw_item(item);
++
++    /* schedule the showing/hiding at the right time */
++    item->osd_renderer->show(item->osd, item->start_pts);
++    item->osd_renderer->hide(item->osd, item->end_pts);
++  }
++#endif
++}
++
++static void xinekate_decoder_item_refresh(xinekate_decoder_item_t *item, int redraw)
++{
++  if (item->decoder->master->stream->video_out) {
++    update_osd(item,1);
++    if (redraw)
++      xinekate_draw_item(item);
++  }
++}
++
++static void xinekate_decoder_item_tick(xinekate_decoder_item_t *item, int64_t pts)
++{
++  double t;
++
++  /* if the motion hasn't started yet, or is over, same */
++  if (pts<item->start_pts || pts>item->end_pts) return;
++
++  /* when first displayed, send a synced text message */
++  if (item->last_animation_frame_pts<0) {
++    xinekate_send_synced_text_event(item->decoder, item->kin.event);
++    item->last_animation_frame_pts=pts;
++  }
++
++#ifdef SCHEDULE_SHOWS
++  /* if no motions, we don't have anything to animate */
++  if (!item->animated) return;
++#endif
++
++  /* if we updated not that long ago, don't hog the cpu */
++  if (item->last_animation_frame_pts>=0 && pts-item->last_animation_frame_pts<1000) return;
++
++  /* if not animated, the first update should have been enough, do not waste time again */
++  if (item->animated) {
++    t=(pts-item->start_pts)/90000.0;
++
++    kate_tracker_update(
++      &item->kin,t,
++      item->decoder->master->cached_width,item->decoder->master->cached_height,
++      0,0,item->decoder->master->cached_width,item->decoder->master->cached_height
++    );
++  }
++
++  item->last_animation_frame_pts=pts;
++}
++
++static void xinekate_decoder_item_draw(xinekate_decoder_item_t *item, int64_t pts)
++{
++#ifdef SCHEDULE_SHOWS
++  /* if no motions, we don't have anything to animate */
++  if (!item->animated) return;
++#endif
++
++  /* if the motion hasn't started yet, or is over, same */
++  if (pts<item->start_pts || pts>item->end_pts) return;
++
++  // TODO: we might not need to redraw every time ?
++  // TODO: if only region position changes, might be enough to set_pos the osd
++  xinekate_draw_item(item);
++
++#ifdef FORCE_SHOWING
++  if (1)
++#else
++  if (item->last_animation_frame_pts<0)
++#endif
++  {
++    //if (!item->animated) lprintf("Showing now non animated OSD, text %s\n",item->ev_text);
++    if (item->osd_renderer)
++      item->osd_renderer->show(item->osd, 0);
++  }
++}
++
++static double xinekate_get_item_z(const xinekate_decoder_item_t *item)
++{
++  if (item->kin.has.z) return item->kin.z;
++  return 0.0;
++}
++
++static void xinekate_add_item(xinekate_decoder_t *this)
++{
++  this->items=(xinekate_decoder_item_t*)realloc(this->items,(this->nitems+1)*sizeof(xinekate_decoder_item_t));
++  xinekate_init_item(&this->items[this->nitems], this, 0);
++  ++this->nitems;
++}
++
++static void xinekate_clear_item(xinekate_decoder_item_t *item)
++{
++  lprintf("item id %d: clearing (%s)\n",item->id, item->ev_text);
++
++  xinekate_send_synced_text_event(item->decoder, NULL);
++
++  kate_tracker_clear(&item->kin);
++
++  if (item->ev_text) {
++    free(item->ev_text);
++    item->ev_text=NULL;
++  }
++  if (item->osd) {
++    item->osd_renderer->hide(item->osd, 0);
++    item->osd_renderer->free_object(item->osd);
++    item->osd=NULL;
++    if (item->canvas) {
++      item->osd_renderer->free_object(item->canvas);
++      item->canvas=NULL;
++    }
++    lprintf("item id %d: OSD destroyed\n",item->id);
++  }
++}
++
++static void xinekate_remove_item(xinekate_decoder_t *this,int idx)
++{
++  size_t n;
++
++  xinekate_clear_item(&this->items[idx]);
++  for (n=idx;n<this->nitems-1;++n) /* keep the list sorted, in case it messes up up Z priority */
++    this->items[n]=this->items[n+1];
++  --this->nitems;
++}
++
++static void add_kate_event(xinekate_decoder_t *this, int64_t start_pts)
++{
++  xinekate_add_item(this);
++}
++
++static xinekate_decoder_t *xinekate_new_decoder(xinekate_master_decoder_t *master, int channel)
++{
++  xinekate_decoder_t *this;
++
++  this = (xinekate_decoder_t *) xine_xmalloc (sizeof (xinekate_decoder_t));
++
++  this->master = master;
++  this->channel = channel;
++
++  this->op_max_size = 4096;
++  this->packet = malloc(this->op_max_size);
++  this->done = 0;
++
++  /* init kate data structures */
++  kate_info_init(&this->ki);
++  kate_comment_init(&this->kc);
++  this->decoding = 0;
++
++  this->items=NULL;
++  this->nitems=0;
++
++  return this;
++}
++
++static void xinekate_destroy_decoder(xinekate_decoder_t *this)
++{
++  size_t n;
++
++  for (n=0;n<this->nitems;++n) xinekate_clear_item(&this->items[n]);
++  free(this->items);
++
++  if (this->decoding) kate_clear(&this->k);
++  kate_comment_clear(&this->kc);
++  kate_info_clear(&this->ki);
++
++  free(this->packet);
++}
++
++static void xinekate_decoder_reset (xinekate_decoder_t *this) {
++
++  size_t n;
++
++  for (n=0;n<this->nitems;++n) xinekate_clear_item(&this->items[n]);
++  free(this->items);
++  this->items=NULL;
++  this->nitems=0;
++}
++
++static void xinekate_decoder_refresh(xinekate_decoder_t *this, int redraw)
++{
++  size_t n;
++  for (n=0;n<this->nitems;++n)
++    xinekate_decoder_item_refresh(&this->items[n], redraw);
++}
++
++static int xinekate_item_z_sorter(const void *e1,const void *e2)
++{
++  const xinekate_decoder_item_t *item1=(const xinekate_decoder_item_t*)e1;
++  const xinekate_decoder_item_t *item2=(const xinekate_decoder_item_t*)e2;
++  double z1=xinekate_get_item_z(item1);
++  double z2=xinekate_get_item_z(item2);
++  if (z1<z2) {
++    return -1;
++  }
++  else if (z1>z2) {
++    return +1;
++  }
++  else {
++    /* same depth, we want to be stable, compare on id */
++    return item1->id-item2->id;
++  }
++}
++
++static void xinekate_decoder_tick(xinekate_decoder_t *this, int64_t pts)
++{
++  size_t n;
++  int sorted=1;
++  double prev_z;
++
++  /* remove those items that are in the past */
++  for (n=0;n<this->nitems;++n) {
++    if (pts>=this->items[n].end_pts) {
++      xinekate_remove_item(this,n);
++      --n;
++    }
++  }
++
++  if (this->nitems>0) {
++    /* tick the remainder */
++    for (n=0;n<this->nitems;++n)
++      xinekate_decoder_item_tick(&this->items[n], pts);
++
++    /* qsort won't tell us if anything was moved, but we need to know, as
++       it means we have to tell xine of the new ordering, so we check if the
++       current ordering is sorted already - if not, we sort and refresh all
++       items so the OSDs get recreated in the new showing order */
++    prev_z=xinekate_get_item_z(&this->items[0]);
++    for (n=1;n<this->nitems;++n) {
++      double z=xinekate_get_item_z(&this->items[n]);
++      if (z<prev_z) {
++        sorted=0;
++        break;
++      }
++      prev_z=z;
++    }
++
++    if (!sorted) {
++      qsort(this->items,this->nitems,sizeof(this->items[0]),&xinekate_item_z_sorter);
++      for (n=0;n<this->nitems;++n) {
++        xinekate_decoder_item_refresh(&this->items[n], 0);
++      }
++    }
++
++    /* and draw them */
++    for (n=0;n<this->nitems;++n)
++      xinekate_decoder_item_draw(&this->items[n], pts);
++  }
++}
++
++static void xinekate_decoder_decode_data(xinekate_decoder_t *this, buf_element_t *buf) {
++  int ret;
++  xine_stream_t *stream = this->master->stream;
++  int selected_channel = stream->spu_channel & 0x1f;
++
++  if (!collect_data(this, buf)) return;
++
++  /* get the Ogg packet */
++  lprintf("Kate packet seen, %ld bytes\n",this->raw ? this->kp.nbytes : this->op.bytes);
++
++  /* send the packet to Kate */
++  if ( (buf->decoder_flags & BUF_FLAG_HEADER) &&
++       !(buf->decoder_flags & BUF_FLAG_STDHEADER) ) {
++    if (this->raw)
++      ret = kate_decode_headerin(&this->ki, &this->kc, &this->kp);
++    else
++      ret = kate_ogg_decode_headerin(&this->ki, &this->kc, &this->op);
++    if (ret<0) {
++      lprintf(LOG_MODULE ": a packet was rejected by Kate (%d)\n", ret);
++      return;
++    }
++    else if (ret>0) {
++      /* this was the last header */
++      lprintf("Last header seen, we can start decoding\n");
++      ret = kate_decode_init(&this->k, &this->ki);
++      if (ret<0) {
++        lprintf("Failed to init Kate for decoding (%d)\n", ret);
++        return;
++      }
++      this->decoding=1;
++
++      lprintf("Kate initialized for decoding, bitstream v%d.%d, language %s, category %s\n",
++          this->ki.bitstream_version_major, this->ki.bitstream_version_minor,
++          this->ki.language, this->ki.category);
++    }
++
++    /* we do no more on headers */
++    return;
++  }
++  else if (buf->decoder_flags & BUF_FLAG_HEADER) {
++    return;
++  }
++
++  if (!this->decoding) {
++    lprintf(LOG_MODULE ": got data before we could init for decoding, ignoring\n");
++    return;
++  }
++
++  if (this->raw)
++    ret = kate_decode_packetin(&this->k, &this->kp);
++  else
++    ret = kate_ogg_decode_packetin(&this->k, &this->op);
++  if (ret<0) {
++    lprintf(LOG_MODULE ": a packet was rejected by Kate (%d)\n", ret);
++    return;
++  }
++
++  /* if we're not selected, do nothing */
++  if ( selected_channel != this->channel ) {
++    /*
++    lprintf(LOG_MODULE ": selected stream is %d, we are %d, doing nothing\n",
++        selected_channel, this->channel);
++        */
++    return;
++  }
++
++  /* we might have an event ready */
++  ret = kate_decode_eventout(&this->k, &this->ev);
++  if (ret<0) {
++    lprintf("Failed to request an event from Kate (%d)\n", ret);
++    return;
++  }
++  else if (ret>0) {
++    /* no event available, we do nothing more */
++    return;
++  }
++
++  add_kate_event(this, buf->pts);
++}
++
++static void xinekate_master_decoder_refresh(xinekate_master_decoder_t *this, int redraw)
++{
++  size_t n;
++  for (n=0;n<this->ndecoders;++n)
++    xinekate_decoder_refresh(this->decoders[n], redraw);
++}
++
++static void xinekate_master_decoder_tick(xinekate_master_decoder_t *this, int64_t pts)
++{ 
++  size_t n;
++  for (n=0;n<this->ndecoders;++n)
++    xinekate_decoder_tick(this->decoders[n], pts);
++}
++
++static int64_t xinekate_get_now(xinekate_master_decoder_t *this)
++{
++  metronom_t *metronom = this->stream->metronom;
++  int64_t vpts_offset = metronom->get_option( metronom, METRONOM_VPTS_OFFSET );
++  int64_t spu_offset = metronom->get_option( metronom, METRONOM_SPU_OFFSET );
++  return xine_get_current_vpts(this->stream)-(vpts_offset+spu_offset);
++}
++
++static void xinekate_master_decoder_decode_data (spu_decoder_t *this_gen, buf_element_t *buf) {
++
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *) this_gen;
++  xine_event_t *event;
++  int this_channel;
++  size_t n;
++  int64_t pts;
++
++  lprintf("xinekate_master_decoder_decode_data: got buffer\n");
++
++  /* if the packet was just a dummy one for tick, we're done */
++  if (!buf || buf->size==0) return;
++
++  pthread_mutex_lock(&this->mutex);
++
++  if (this->cached_width<=0 || this->cached_height<=0) {
++    /* first, get the current state of the video frame if we don't have it */
++    if (this->stream->video_out) {
++      int64_t unused_img_duration;
++      this->stream->video_out->status(this->stream->video_out, NULL,
++                                     &this->cached_width, &this->cached_height, &unused_img_duration);
++      xinekate_master_decoder_refresh(this, 1);
++      lprintf("video frame size: %d %d\n",this->cached_width,this->cached_height);
++    }
++  }
++
++  /* First, get any events out of the way */
++  while ((event = xine_event_get(this->queue))) {
++    switch (event->type) {
++    case XINE_EVENT_FRAME_FORMAT_CHANGE:
++      {
++        xine_format_change_data_t *frame_change = (xine_format_change_data_t *)event->data;
++        this->cached_width = frame_change->width;
++        this->cached_height = frame_change->height;
++        xinekate_master_decoder_refresh(this, 1);
++      }
++      break;
++    }
++    xine_event_free(event);
++  }
++
++  lprintf("xinekate_master_decoder_decode_data: buffer got us a packet, dispatching\n");
++  /* Dispatch the relevant decoder */
++  this_channel = buf->type & 0x1f;
++  for (n=0;n<this->ndecoders;++n) {
++    if (this->decoders[n]->channel == this_channel) break;
++  }
++  if (n==this->ndecoders) {
++    lprintf("Kate master decoder has no decoder for channel %d, creating one\n", this_channel);
++    this->decoders=(xinekate_decoder_t**)realloc(this->decoders, (this->ndecoders+1)*sizeof(xinekate_decoder_t*));
++    this->decoders[this->ndecoders++]=xinekate_new_decoder(this, this_channel);
++  }
++
++  xinekate_decoder_decode_data(this->decoders[n], buf);
++
++  pts=xinekate_get_now(this);
++  xinekate_master_decoder_tick(this, pts);
++
++  pthread_mutex_unlock(&this->mutex);
++}
++
++static void xinekate_master_decoder_reset (spu_decoder_t *this_gen) {
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *) this_gen;
++  
++  lprintf("Kate master stream was reset\n");
++
++  pthread_mutex_lock(&this->mutex);
++  size_t n;
++  for (n=0;n<this->ndecoders;++n)
++    xinekate_decoder_reset(this->decoders[n]);
++  pthread_mutex_unlock(&this->mutex);
++}
++
++static void xinekate_master_decoder_discontinuity (spu_decoder_t *this_gen) {
++  (void)this_gen;
++  lprintf("Kate master stream got notice of a discontinuity\n");
++  /* do nothing */
++}
++
++static void xinekate_master_decoder_dispose (spu_decoder_t *this_gen) {
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *) this_gen;
++
++  this->quit_thread=1;
++  pthread_join(this->timer_thread, NULL);
++  pthread_mutex_destroy(&this->mutex);
++
++  size_t n;
++  for (n=0;n<this->ndecoders;++n)
++    xinekate_destroy_decoder(this->decoders[n]);
++  free(this->decoders);
++  xine_event_dispose_queue(this->queue);
++  free(this);
++}
++
++static void update_vertical_offset(void *this_gen, xine_cfg_entry_t *entry)
++{
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *)this_gen;
++  this->vertical_offset = entry->num_value;
++  xinekate_master_decoder_refresh(this, 1);
++}
++
++static void update_osd_font(void *this_gen, int font, char *str_value)
++{
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *)this_gen;
++  this->font[font] = str_value;
++  xinekate_master_decoder_refresh(this, 1);
++}
++
++static void update_osd_font_normal(void *this_gen, xine_cfg_entry_t *entry)
++{
++  update_osd_font(this_gen, FONT_NORMAL,entry->str_value);
++}
++
++static void update_osd_font_italics(void *this_gen, xine_cfg_entry_t *entry)
++{
++  update_osd_font(this_gen, FONT_ITALICS,entry->str_value);
++}
++
++static void update_osd_font_bold(void *this_gen, xine_cfg_entry_t *entry)
++{
++  update_osd_font(this_gen, FONT_BOLD,entry->str_value);
++}
++
++static void update_osd_font_bold_italics(void *this_gen, xine_cfg_entry_t *entry)
++{
++  update_osd_font(this_gen, FONT_BOLD_ITALICS,entry->str_value);
++}
++
++static void update_subtitle_size(void *this_gen, xine_cfg_entry_t *entry)
++{
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *)this_gen;
++  this->subtitle_size = entry->num_value;
++  xinekate_master_decoder_refresh(this, 1);
++}
++
++static void* xinekate_timer_thread_routine(void *this_gen)
++{
++  xinekate_master_decoder_t *this = (xinekate_master_decoder_t *) this_gen;
++  int64_t pts,last_pts=0;
++
++  while(!this->quit_thread)
++  {
++    pthread_mutex_lock(&this->mutex);
++
++    pts=xinekate_get_now(this);
++    if (pts>last_pts+500 || pts<last_pts) {
++      //lprintf("anim thread: xine_get_current_vpts: %"PRId64"\n",pts);
++      xinekate_master_decoder_tick(this, pts);
++      last_pts=pts;
++    }
++
++    pthread_mutex_unlock(&this->mutex);
++  }
++
++  return NULL;
++}
++
++static spu_decoder_t *xinekate_class_open_plugin (spu_decoder_class_t *class_gen, xine_stream_t *stream) {
++
++  xinekate_class_t *class = (xinekate_class_t *)class_gen;
++  xinekate_master_decoder_t *this;
++
++  this = (xinekate_master_decoder_t *) xine_xmalloc (sizeof (xinekate_master_decoder_t));
++
++  this->spu_decoder.decode_data         = xinekate_master_decoder_decode_data;
++  this->spu_decoder.reset               = xinekate_master_decoder_reset;
++  this->spu_decoder.discontinuity       = xinekate_master_decoder_discontinuity;
++  this->spu_decoder.dispose             = xinekate_master_decoder_dispose;
++  this->spu_decoder.get_interact_info   = NULL;
++  this->spu_decoder.set_button          = NULL;
++
++  this->class  = class;
++  this->stream = stream;
++
++  this->cached_width = this->cached_height = -1;
++
++  this->font[FONT_NORMAL] = class->xine->config->register_string(class->xine->config, 
++                              "subtitles.separate.font", 
++                              "sans", 
++                              _("font for external subtitles"), 
++                              NULL, 0, update_osd_font_normal, this);
++
++  this->font[FONT_ITALICS] = class->xine->config->register_string(class->xine->config, 
++                              "subtitles.separate.font.italics", 
++                              "sans", 
++                              _("font for italics external subtitles"), 
++                              NULL, 0, update_osd_font_italics, this);
++
++  this->font[FONT_BOLD] = class->xine->config->register_string(class->xine->config, 
++                              "subtitles.separate.font.bold", 
++                              "sans", 
++                              _("font for bold external subtitles"), 
++                              NULL, 0, update_osd_font_bold, this);
++
++  this->font[FONT_BOLD_ITALICS] = class->xine->config->register_string(class->xine->config, 
++                              "subtitles.separate.font.bold_italics", 
++                              "sans", 
++                              _("font for bold italics external subtitles"), 
++                              NULL, 0, update_osd_font_bold_italics, this);
++
++  this->subtitle_size  = class->xine->config->register_enum(class->xine->config, 
++			      "subtitles.separate.subtitle_size", 
++			       1,
++			       subtitle_size_strings,
++			       _("subtitle size"),
++			       _("You can adjust the subtitle size here. The setting will "
++			         "be evaluated relative to the window size."),
++			       0, update_subtitle_size, this);
++
++  this->vertical_offset  = class->xine->config->register_num(class->xine->config,
++                              "subtitles.separate.vertical_offset", 
++                              0,
++                              _("subtitle vertical offset (relative window size)"), 
++                              NULL, 0, update_vertical_offset, this);
++
++  this->item_id_generator=0;
++
++  this->ndecoders=0;
++  this->decoders=NULL;
++
++  this->queue = xine_event_new_queue(stream);
++
++  this->quit_thread=0;
++  pthread_mutex_init(&this->mutex, NULL);
++  pthread_create(&this->timer_thread, NULL, &xinekate_timer_thread_routine, this);
++
++  return (spu_decoder_t *) this;
++}
++
++static void xinekate_class_dispose (spu_decoder_class_t *this) {
++  free (this);
++}
++
++static char *xinekate_class_get_identifier (spu_decoder_class_t *this) {
++  return "kate";
++}
++
++static char *xinekate_class_get_description (spu_decoder_class_t *this) {
++  return "Kate text subtitle decoder plugin";
++}
++
++static void *init_kate_plugin (xine_t *xine, void *data) {
++
++  xinekate_class_t *this ;
++
++  this = (xinekate_class_t *) xine_xmalloc (sizeof (xinekate_class_t));
++
++  this->class.open_plugin      = xinekate_class_open_plugin;
++  this->class.get_identifier   = xinekate_class_get_identifier;
++  this->class.get_description  = xinekate_class_get_description;
++  this->class.dispose          = xinekate_class_dispose;
++
++  this->xine                   = xine;
++
++  return &this->class;
++}
++
++
++/* plugin catalog information */
++static uint32_t supported_types[] = { BUF_SPU_KATE, 0 };
++
++static const decoder_info_t xinekate_decoder_info = {
++  supported_types,     /* supported types */
++  1                    /* priority        */
++};
++
++const plugin_info_t xine_plugin_info[] EXPORTED = {
++  /* type, API, "name", version, special_info, init_function */  
++  { PLUGIN_SPU_DECODER, 16, "kate", XINE_VERSION_CODE, &xinekate_decoder_info, &init_kate_plugin },
++  { PLUGIN_NONE, 0, "", 0, NULL, NULL }
++};
++

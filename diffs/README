@@ -16,7 +16,7 @@ It demuxes and uses Kate streams in both Ogg and Matroska containers.
 
 
 
- * xine (xine-lib-1.1.9.1-with-kate.diff, xine-ui-0.99.5-synced-lyrics.diff)
+ * xine (xine-lib-1.1.12-with-kate.diff, xine-ui-0.99.5-synced-lyrics.diff)
 
 This adds support for multiple Kate streams multiplexed alongside any
 audio and video. Kate streams can be selected at runtime.
