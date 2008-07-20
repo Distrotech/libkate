@@ -903,8 +903,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-05 17:09:22.000000000 +0100
-@@ -0,0 +1,1499 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-19 11:32:35.000000000 +0100
+@@ -0,0 +1,1530 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -1008,6 +1008,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ARG_GRANULE_RATE_DEN,
 +  ARG_GRANULE_SHIFT,
 +  ARG_KEEPALIVE_MIN_TIME,
++  ARG_ORIGINAL_CANVAS_WIDTH,
++  ARG_ORIGINAL_CANVAS_HEIGHT,
 +};
 +
 +/* taken off the dvdsubdec element */
@@ -1111,6 +1113,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          "Set the granule shift",
 +          0, 64, 32, G_PARAM_READWRITE));
 +
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
++      g_param_spec_int ("original-canvas-width", "Original canvas width",
++          "Set the width of the canvas this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
++      g_param_spec_int ("original-canvas-height", "Original canvas height",
++          "Set the height of the canvas this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READWRITE));
++
 +  g_object_class_install_property (gobject_class, ARG_KEEPALIVE_MIN_TIME,
 +      g_param_spec_float ("keepalive-min-time", "Keepalive mimimum time",
 +          "Set minimum time to emit keepalive packets (0 disables keepalive packets)",
@@ -1159,6 +1171,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke->granule_rate_numerator = 1000;
 +  ke->granule_rate_denominator = 1;
 +  ke->granule_shift = 32;
++  ke->original_canvas_width = 0;
++  ke->original_canvas_height = 0;
 +  ke->keepalive_min_time = DEFAULT_KEEPALIVE_MIN_TIME;
 +  memcpy (ke->spu_clut, gst_kate_enc_default_clut, sizeof (gst_kate_enc_default_clut));
 +}
@@ -1199,6 +1213,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case ARG_KEEPALIVE_MIN_TIME:
 +      ke->keepalive_min_time = g_value_get_float(value);
 +      break;
++    case ARG_ORIGINAL_CANVAS_WIDTH:
++      ke->original_canvas_width = g_value_get_int(value);
++      break;
++    case ARG_ORIGINAL_CANVAS_HEIGHT:
++      ke->original_canvas_height = g_value_get_int(value);
++      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
@@ -1229,6 +1249,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +    case ARG_KEEPALIVE_MIN_TIME:
 +      g_value_set_float (value, ke->keepalive_min_time);
++      break;
++    case ARG_ORIGINAL_CANVAS_WIDTH:
++      g_value_set_int (value, ke->original_canvas_width);
++      break;
++    case ARG_ORIGINAL_CANVAS_HEIGHT:
++      g_value_set_int (value, ke->original_canvas_height);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2093,6 +2119,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          break;
 +        }
 +      }
++      ret = kate_info_set_original_canvas_size (&ke->ki, ke->original_canvas_width, ke->original_canvas_height);
++      if (ret < 0) {
++        GST_WARNING_OBJECT (ke, "failed to set original canvas size: %d", ret);
++        break;
++      }
 +      ret = kate_comment_init (&ke->kc);
 +      if (ret < 0) {
 +        GST_WARNING_OBJECT (ke, "failed to initialize kate comment structure: %d", ret);
@@ -2405,8 +2436,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-06-29 14:57:12.000000000 +0100
-@@ -0,0 +1,117 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-07-19 11:27:22.000000000 +0100
+@@ -0,0 +1,120 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -2500,6 +2531,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  int granule_shift;
 +
 +  float keepalive_min_time;
++
++  size_t original_canvas_width;
++  size_t original_canvas_height;
 +
 +  /* SPU decoding */
 +  guint8 spu_colormap[4];
@@ -3714,6 +3748,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +# headers we need but don't want installed
 +noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ gst-plugins-bad/ext/kate/README	2008-07-16 19:18:16.000000000 +0100
+@@ -0,0 +1,16 @@
++Kate is a free codec for text based data, which can also carry images.
++It is typically used to create overlays on a video.
++
++The Kate plugin contains various elements to manipulate Kate streams:
++
++ - katedec: decodes Kate streams (text only for now)
++ - kateenc: encodes Kate streams from text and SPU images
++ - kateparse: parses Kate streams
++ - katetag: allows changing metadata in a Kate stream
++
++More information about Kate can be found at:
++http://wiki.xiph.org/index.php/OggKate
++
++libkate, a codec for Kate streans, can be found at:
++http://libkate.googlecode.com/
++
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
 +++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-06 21:09:14.000000000 +0100
 @@ -0,0 +1,803 @@
