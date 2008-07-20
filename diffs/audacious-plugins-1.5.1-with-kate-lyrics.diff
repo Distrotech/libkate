@@ -57,18 +57,44 @@ diff -ru audacious-plugins-1.5.1-original/configure.ac audacious-plugins-1.5.1/c
  echo "  Free Lossless Audio Codec (flacng):     $have_flacng"
  echo "  Commodore 64 audio (sid):               $have_sidplay"
  echo "  Game music (spc, nsf & gbs):            yes"
+diff -ru audacious-plugins-1.5.1-original/extra.mk.in audacious-plugins-1.5.1/extra.mk.in
+--- audacious-plugins-1.5.1-original/extra.mk.in	2008-05-23 23:44:19.000000000 +0100
++++ audacious-plugins-1.5.1/extra.mk.in	2008-07-20 20:04:13.000000000 +0100
+@@ -161,6 +161,8 @@
+ HAVE_GNOME_VFS_TRUE ?= @HAVE_GNOME_VFS_TRUE@
+ HAVE_JACK_FALSE ?= @HAVE_JACK_FALSE@
+ HAVE_JACK_TRUE ?= @HAVE_JACK_TRUE@
++HAVE_KATE_FALSE ?= @HAVE_KATE_FALSE@
++HAVE_KATE_TRUE ?= @HAVE_KATE_TRUE@
+ HAVE_NULL_TRUE ?= @HAVE_NULL_TRUE@
+ HAVE_LIBSAMPLERATE_FALSE ?= @HAVE_LIBSAMPLERATE_FALSE@
+ HAVE_LIBSAMPLERATE_TRUE ?= @HAVE_LIBSAMPLERATE_TRUE@
+@@ -197,6 +199,8 @@
+ INTL_LIBTOOL_SUFFIX_PREFIX ?= @INTL_LIBTOOL_SUFFIX_PREFIX@
+ JACK_CFLAGS ?= @JACK_CFLAGS@
+ JACK_LIBS ?= @JACK_LIBS@
++KATE_CFLAGS ?= @KATE_CFLAGS@
++KATE_LIBS ?= @KATE_LIBS@
+ LDFLAGS ?= @LDFLAGS@
+ LEDCODE ?= @LEDCODE@
+ LIBBEEP_MAJOR_VERSION ?= @LIBBEEP_MAJOR_VERSION@
 diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugins-1.5.1/src/vorbis/configure.c
 --- audacious-plugins-1.5.1-original/src/vorbis/configure.c	2008-05-23 23:44:20.000000000 +0100
-+++ audacious-plugins-1.5.1/src/vorbis/configure.c	2008-07-20 17:49:23.000000000 +0100
-@@ -17,6 +17,7 @@
++++ audacious-plugins-1.5.1/src/vorbis/configure.c	2008-07-20 19:55:56.000000000 +0100
+@@ -17,6 +17,12 @@
  
  static GtkWidget *title_tag_override, *title_tag_box, *title_tag_entry,
      *title_desc;
-+static GtkWidget *kate_display, *kate_offset_spin, *kate_offset_box, *kate_offset_label;;
++#ifdef HAVE_KATE
++static GtkWidget *kate_display;
++static GtkWidget *kate_offset_spin, *kate_offset_box, *kate_offset_label;
++#else
++static GtkWidget *kate_not_compiled_in_label;
++#endif
  
  vorbis_config_t vorbis_cfg;
  
-@@ -26,19 +27,26 @@
+@@ -26,19 +32,34 @@
      mcs_handle_t *db;
      GtkToggleButton *tb;
  
@@ -78,13 +104,21 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
 +	g_free(vorbis_cfg.tag_format);
      vorbis_cfg.tag_format =
          g_strdup(gtk_entry_get_text(GTK_ENTRY(title_tag_entry)));
++#ifdef HAVE_KATE
 +    vorbis_cfg.kate_offset =
 +        gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(kate_offset_spin));
++#else
++    vorbis_cfg.kate_offset = 0;
++#endif
  
      tb = GTK_TOGGLE_BUTTON(title_tag_override);
      vorbis_cfg.tag_override = gtk_toggle_button_get_active(tb);
++#ifdef HAVE_KATE
 +    tb = GTK_TOGGLE_BUTTON(kate_display);
 +    vorbis_cfg.kate_display = gtk_toggle_button_get_active(tb);
++#else
++    vorbis_cfg.kate_display = FALSE;
++#endif
  
      db = aud_cfg_db_open();
      aud_cfg_db_set_bool(db, "vorbis", "tag_override",
@@ -97,10 +131,11 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
      gtk_widget_destroy(vorbis_configurewin);
  }
  
-@@ -58,10 +66,22 @@
+@@ -58,10 +79,26 @@
      gtk_widget_set_sensitive(title_desc, override);
  }
  
++#ifdef HAVE_KATE
 +static void
 +kate_display_cb(GtkWidget * w, gpointer data)
 +{
@@ -110,17 +145,20 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
 +    gtk_widget_set_sensitive(kate_offset_label, display);
 +    gtk_widget_set_sensitive(kate_offset_spin, display);
 +}
++#endif
 +
  void
  vorbis_configure(void)
  {
      GtkWidget *title_frame, *title_tag_vbox, *title_tag_label;
 +    GtkWidget *kate_frame, *kate_vbox;
++#ifdef HAVE_KATE
 +    GtkObject *kate_offset_adj;
++#endif
      GtkWidget *bbox, *ok, *cancel;
  
      if (vorbis_configurewin != NULL) {
-@@ -120,6 +140,35 @@
+@@ -120,6 +157,40 @@
  
      gtk_box_pack_start(GTK_BOX(vbox), title_frame, TRUE, TRUE, 0);
  
@@ -133,6 +171,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
 +    gtk_container_border_width(GTK_CONTAINER(kate_vbox), 5);
 +    gtk_container_add(GTK_CONTAINER(kate_frame), kate_vbox);
 +
++#ifdef HAVE_KATE
 +    kate_display = gtk_check_button_new_with_label(_("Display Kate lyrics"));
 +    gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(kate_display), vorbis_cfg.kate_display);
 +    g_signal_connect(G_OBJECT(kate_display), "clicked", G_CALLBACK(kate_display_cb), NULL);
@@ -150,6 +189,10 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
 +    gtk_box_pack_start(GTK_BOX(kate_offset_box), kate_offset_spin, FALSE, FALSE, 0);
 +    gtk_spin_button_set_value(GTK_SPIN_BUTTON(kate_offset_spin),
 +                                 vorbis_cfg.kate_offset);
++#else
++    kate_not_compiled_in_label = gtk_label_new(_("Kate support not compiled in"));
++    gtk_box_pack_start(GTK_BOX(kate_vbox), kate_not_compiled_in_label, FALSE, FALSE, 0);
++#endif
 +
 +    gtk_box_pack_start(GTK_BOX(vbox), kate_frame, TRUE, TRUE, 0);
 +
@@ -158,15 +201,15 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/configure.c audacious-plugi
      bbox = gtk_hbutton_box_new();
 diff -ru audacious-plugins-1.5.1-original/src/vorbis/Makefile audacious-plugins-1.5.1/src/vorbis/Makefile
 --- audacious-plugins-1.5.1-original/src/vorbis/Makefile	2008-05-23 23:44:20.000000000 +0100
-+++ audacious-plugins-1.5.1/src/vorbis/Makefile	2008-07-18 20:32:40.000000000 +0100
++++ audacious-plugins-1.5.1/src/vorbis/Makefile	2008-07-20 20:00:38.000000000 +0100
 @@ -11,5 +11,5 @@
  plugindir := ${plugindir}/${INPUT_PLUGIN_DIR}
  
  CFLAGS += ${PLUGIN_CFLAGS}
 -CPPFLAGS += ${PLUGIN_CPPFLAGS} ${MOWGLI_CFLAGS}  ${OGG_VORBIS_CFLAGS} ${GTK_CFLAGS} ${GLIB_CFLAGS}  -I../..
 -LIBS += ${OGG_VORBIS_LIBS} ${GTK_LIBS} ${GLIB_LIBS}  ${MOWGLI_LIBS}
-+CPPFLAGS += ${PLUGIN_CPPFLAGS} ${MOWGLI_CFLAGS}  ${OGG_VORBIS_CFLAGS} ${KATE_CFLAGS} ${GTK_CFLAGS} ${GLIB_CFLAGS}  -I../..
-+LIBS += ${OGG_VORBIS_LIBS} ${KATE_LIBS} ${GTK_LIBS} ${GLIB_LIBS}  ${MOWGLI_LIBS}
++CPPFLAGS += ${PLUGIN_CPPFLAGS} ${MOWGLI_CFLAGS} ${KATE_CFLAGS} ${OGG_VORBIS_CFLAGS} ${GTK_CFLAGS} ${GLIB_CFLAGS}  -I../..
++LIBS += ${KATE_LIBS} ${OGG_VORBIS_LIBS} ${GTK_LIBS} ${GLIB_LIBS}  ${MOWGLI_LIBS}
 diff -ru audacious-plugins-1.5.1-original/src/vorbis/vcedit.c audacious-plugins-1.5.1/src/vorbis/vcedit.c
 --- audacious-plugins-1.5.1-original/src/vorbis/vcedit.c	2008-05-23 23:44:20.000000000 +0100
 +++ audacious-plugins-1.5.1/src/vorbis/vcedit.c	2008-07-19 08:36:42.000000000 +0100
@@ -449,7 +492,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vcedit.h audacious-plugins-
  
 diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-1.5.1/src/vorbis/vorbis.c
 --- audacious-plugins-1.5.1-original/src/vorbis/vorbis.c	2008-05-23 23:44:20.000000000 +0100
-+++ audacious-plugins-1.5.1/src/vorbis/vorbis.c	2008-07-20 18:12:11.000000000 +0100
++++ audacious-plugins-1.5.1/src/vorbis/vorbis.c	2008-07-20 20:02:12.000000000 +0100
 @@ -4,6 +4,7 @@
   * Copyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
   * Copyright (C) 2008 Cristi Măgherușan <majeru@gentoo.ro>
@@ -694,15 +737,17 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
      g_mutex_unlock(vf_mutex);
      return TRUE;
  }
-@@ -242,6 +431,7 @@
+@@ -242,6 +431,9 @@
      vorbis_info *vi;
      gint br;
      VFSVorbisFile *fd = NULL;
++#ifdef HAVE_KATE
 +    char *text;
++#endif
  
      int last_section = -1;
  
-@@ -281,8 +471,12 @@
+@@ -281,8 +473,12 @@
       * need to change playback settings at a section boundary
       */
   
@@ -716,7 +761,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
      if (ov_open_callbacks(datasource, &vf, NULL, 0, aud_vfs_is_streaming(fd->fd) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
          vorbis_callbacks.close_func(datasource);
          g_mutex_unlock(vf_mutex);
-@@ -430,6 +624,22 @@
+@@ -430,6 +626,22 @@
              last_section = current_section;
           
          }
@@ -739,7 +784,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
      } /* main loop */
  
      if (!playback->error) {
-@@ -620,7 +830,11 @@
+@@ -620,7 +832,11 @@
       * machine initialization.  If it returns zero, the stream
       * *is* Vorbis and we're fully ready to decode.
       */
@@ -751,7 +796,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
          aud_vfs_fclose(stream);
          return NULL;
      }
-@@ -632,6 +846,8 @@
+@@ -632,6 +848,8 @@
       * vorbisfile.a.  ov_clear will fclose it
       */
      ov_clear(&vfile);
@@ -760,7 +805,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
  
      return tuple;
  }
-@@ -691,7 +907,8 @@
+@@ -691,7 +909,8 @@
                                          "Jorn Baayen <jorn@nl.linux.org>\n"
                                          "Haavard Kvaalen <havardk@xmms.org>\n"
                                          "Gian-Carlo Pascutto <gcp@sjeng.org>\n"
@@ -770,7 +815,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
                                          "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
                                         _("Ok"), FALSE, NULL, NULL);
        g_signal_connect(G_OBJECT(about_window), "destroy",
-@@ -715,6 +932,8 @@
+@@ -715,6 +934,8 @@
      vorbis_cfg.proxy_pass = NULL;
      vorbis_cfg.tag_override = FALSE;
      vorbis_cfg.tag_format = NULL;
@@ -779,7 +824,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
  
      db = aud_cfg_db_open();
      aud_cfg_db_get_int(db, "vorbis", "http_buffer_size",
-@@ -744,9 +963,13 @@
+@@ -744,9 +965,13 @@
      aud_cfg_db_get_string(db, NULL, "proxy_user", &vorbis_cfg.proxy_user);
      aud_cfg_db_get_string(db, NULL, "proxy_pass", &vorbis_cfg.proxy_pass);
  
@@ -793,7 +838,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
  
      aud_mime_set_plugin("application/ogg", &vorbis_ip);
  }
-@@ -786,6 +1009,7 @@
+@@ -786,6 +1011,7 @@
  
      g_strfreev(vorbis_tag_encoding_list);
      g_mutex_free(vf_mutex);
@@ -801,7 +846,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
  }
  
  static size_t
-@@ -793,7 +1017,16 @@
+@@ -793,7 +1019,16 @@
  {
      VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
  
@@ -819,7 +864,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
  }
  
  static int
-@@ -801,6 +1034,16 @@
+@@ -801,6 +1036,16 @@
  {
      VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
  
@@ -836,7 +881,7 @@ diff -ru audacious-plugins-1.5.1-original/src/vorbis/vorbis.c audacious-plugins-
      return aud_vfs_fseek(handle->fd, offset, whence);
  }
  
-@@ -813,6 +1056,12 @@
+@@ -813,6 +1058,12 @@
  
      if (handle->probe == FALSE)
      {
