@@ -4,6 +4,7 @@
   allow building without libogg (liboggkate and tools will not be built)
   the bitstream format is now fully documented
   use new names for oggz tools
+  the encoder can now read .lrc (lyrics) files
 
 0.1.5
   new kate_encode_get_granule api function

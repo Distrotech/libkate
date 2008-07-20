@@ -241,6 +241,74 @@ static int convert_srt(FILE *fin,FILE *fout)
   return 0;
 }
 
+static int is_line_empty(const char *s)
+{
+  while (*s) {
+    if (!strchr(" \t\r\n",*s)) return 0;
+    ++s;
+  }
+  return 1;
+}
+
+static int convert_lrc(FILE *fin,FILE *fout)
+{
+  int ret;
+  static char text[4096];
+  unsigned int m,s,ms;
+  double t,start_time=-1.0;
+  int offset;
+  int line=0;
+
+  flush_headers(fout);
+
+  fgets2(str,sizeof(str),fin,1);
+
+  if (!memcmp(str,utf16lebom,sizeof(utf16lebom)) || !memcmp(str,utf16bebom,sizeof(utf16bebom))) {
+    fprintf(stderr,"This file seems to be encoded in UTF-16, Kate only supports UTF-8\n");
+    fprintf(stderr,"You will need to convert it to UTF-8 first (eg, use iconv)\n");
+    return -1;
+  }
+
+  if (!memcmp(str,utf32lebom,sizeof(utf32lebom)) || !memcmp(str,utf32bebom,sizeof(utf32bebom))) {
+    fprintf(stderr,"This file seems to be encoded in UTF-32, Kate only supports UTF-8\n");
+    fprintf(stderr,"You will need to convert it to UTF-8 first (eg, use iconv)\n");
+    return -1;
+  }
+
+  /* kill any utf-8 BOM present */
+  if (!memcmp(str,utf8bom,sizeof(utf8bom))) {
+    /* printf("UTF-8 BOM found at start, skipped\n"); */
+    memmove(str,str+3,strlen(str+3)+1);
+  }
+
+  /* skip headers */
+  while (!feof(fin)) {
+    ret=sscanf(str,"[%u:%u.%u]",&m,&s,&ms);
+    if (ret==3) break;
+    ++line;
+    fgets2(str,sizeof(str),fin,1);
+  }
+
+  while (!feof(fin)) {
+    ++line;
+    ret=sscanf(str,"[%u:%u.%u]%n\n",&m,&s,&ms,&offset);
+    if (ret!=3) {
+      fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
+      return -1;
+    }
+    t=hmsms2s(0,m,s,ms);
+    if (start_time>0.0 && !is_line_empty(text)) {
+      if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
+      kate_ogg_encode_text(&k,start_time,t,text,strlen(text),&op);
+      send_packet(fout);
+    }
+    start_time=t;
+    strcpy(text,str+offset);
+    fgets2(str,sizeof(str),fin,1);
+  }
+  return 0;
+}
+
 static void print_version(void)
 {
   printf("Kate reference encoder - %s\n",kate_get_version_string());
@@ -297,7 +365,7 @@ int main(int argc,char **argv)
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
           printf("   -t <type>           set input filename type\n");
-          printf("       types can be: kate, srt\n");
+          printf("       types can be: kate, srt, lrc\n");
           printf("   -l <language>       set input filename language\n");
           printf("   -s <hex number>     set serial number of output stream\n");
           printf("   -r                  write raw Kate stream\n");
@@ -393,6 +461,9 @@ int main(int argc,char **argv)
   }
   else if (!strcmp(output_filename_type,"srt")) {
     ret=convert_srt(fin,fout);
+  }
+  else if (!strcmp(output_filename_type,"lrc")) {
+    ret=convert_lrc(fin,fout);
   }
   else {
     fprintf(stderr,"Invalid format type: %s\n",output_filename_type);
