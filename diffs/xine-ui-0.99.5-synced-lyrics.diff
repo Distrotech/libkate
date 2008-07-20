@@ -1,0 +1,21 @@
+diff -ru xine-ui-0.99.5/src/xitk/main.c ../xine-ui-0.99.5/src/xitk/main.c
+--- xine-ui-0.99.5/src/xitk/main.c	2007-04-23 23:48:20.000000000 +0100
++++ ../xine-ui-0.99.5/src/xitk/main.c	2008-07-20 12:36:11.000000000 +0100
+@@ -1060,6 +1060,17 @@
+     }
+     break;
+     
++    /* synced text - lyrics, etc */
++  case XINE_EVENT_SYNCED_TEXT:
++    if(event->stream == gGui->stream) {
++      /* only if the video window is hidden */
++      if (!video_window_is_visible()) {
++        xine_synced_text_data_t *stevent = (xine_synced_text_data_t *) event->data;
++        panel_set_title(stevent->text);
++      }
++    }
++    break;
++    
+     /* message (dialog) for the ui to display */
+   case XINE_EVENT_UI_MESSAGE: 
+     if(event->stream == gGui->stream) {
