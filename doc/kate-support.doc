@@ -90,5 +90,16 @@ If patched, if can edit simple text Kate streams.
 Audacious is a music player.
 If patched, it can display Kate lyrics in sync with a song.
 
+\section support-xine-lib xine-lib
+
+xine-lib is a media player framework.
+If patched, it can decode full text and image based Kate streams and render them.
+
+\section support-xine-ui xine-ui
+
+xine-ui is a frontend for xine-lib.
+If patched, it can decode text based Kate streams and display text as lyrics in
+its player window.
+
 
 */
