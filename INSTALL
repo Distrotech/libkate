@@ -39,9 +39,9 @@ To build those:
 
 $ make streams
 
-You will need a patched version of oggmerge or liboggz that supports Kate,
-the diff is in the diffs directory. You will also need a sample video to
-merge with, though it is also possible to create Kate-only streams.
+You will need a recent version of either liboggz or ogg-tools.
+You will also need a sample video to merge with, Kate-only streams will
+still be created if none is available.
 Built streams will be placed in the built-streams directory, one with a
 single Kate stream, and another one merged with a Theora video of your
 own chosing.
