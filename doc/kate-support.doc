@@ -13,89 +13,93 @@
 
 This page lists the known software with Kate support.
 
-\section support-vorbis-tools vorbis-tools
+\section support-out-of-the-box Out of the box support
+
+\subsection support-oggz-tools oggz-tools
+
+The oggz tools and liboggz, a layer above libogg, have Kate support throughout
+for low level manipulation of Kate streams.
+
+\subsection support-ffmpeg2theora ffmpeg2theora
+
+ffmpeg2theora is a video encoder which converts to Vorbis and Theora.
+It can also include text Kate subtitles.
+
+\subsection support-vlc VLC
+
+VLC is a cross platform media player.
+It can play simple text and image based Kate subtitles.
+
+\subsection support-icecast Icecast 2
+
+Icecast 2 is a streaming media server.
+It can transparently stream Kate streams alongside Vorbis and/or Theora.
+
+\subsection support-liboggplay liboggplay
+
+liboggplay is a layer above liboggz that provides data format abstraction and
+stream synchronization.
+It can play simple text Kate streams.
+
+\section support-if-patched Support needing patches
+
+\subsection support-vorbis-tools vorbis-tools
 
 The vorbis tools have support for Kate stream:
 
 \li ogginfo recognizes and outputs information about Kate streams.
 \li if patched, oggenc can embed lyrics as Kate streams in an Ogg/Vorbis stream.
 
-\section support-oggz-tools oggz-tools
-
-The oggz tools and liboggz, a layer above libogg, have Kate support throughout
-for low level manipulation of Kate streams.
-
-\section support-ffmpeg2theora ffmpeg2theora
-
-ffmpeg2theora is a video encoder which converts to Vorbis and Theora.
-It can also include Kate subtitles.
-
-\section support-vlc VLC
-
-VLC is a cross platform media player.
-It can play simple text and image based Kate subtitles.
-
-\section support-mplayer MPlayer
+\subsection support-mplayer MPlayer
 
 MPlayer is a media player.
 If patched, it can play simple text and image based Kate subtitles.
 
-\section support-gstreamer GStreamer
+\subsection support-gstreamer GStreamer
 
-GStreamer is a media platform.
+GStreamer is a media framework.
 If patched, it can encode simple text and image based Kate streams, as well
 as decode simple text Kate streams.
 
-\section support-thoggen Thoggen
+\subsection support-thoggen Thoggen
 
 Thoggen is a Linux DVD ripper.
 If patched, it can rip subtitle tracks from DVDs to Kate streams alongside
 Theora and Vorbis.
 
-\section support-xmms XMMS
+\subsection support-xmms XMMS
 
 XMMS is the X multimedia system.
 If patched, it can display Kate lyrics in sync with a song.
 
-\section support-mkvtoolnix mkvtoolnix
+\subsection support-mkvtoolnix mkvtoolnix
 
 mkvtoolnix is a tool to manipulate Matroska streams.
 If patched, it can manipulate Kate streams in Matroska.
 
-\section support-icecast Icecast 2
-
-Icecast 2 is a streaming program.
-It can transparently stream Kate streams alongside Vorbis and/or Theora.
-
-\section support-liboggplay liboggplay
-
-liboggplay is a layer above liboggz that provides data format abstraction and
-stream synchronization.
-It can play simple text Kate streams.
-
-\section support-annodex-browser-plugin the Annodex browser plugin
+\subsection support-annodex-browser-plugin the Annodex browser plugin
 
 The Annodex browser plugin is a plugin for Mozilla that allows playing Theora
 videos in the browser.
 If patched, it can also display simple text Kate subtitles, and offers a
 Javascript API to control them.
 
-\section support-subtle Subtle
+\subsection support-subtle Subtle
 
 Subtle is a subtitleS editor.
 If patched, if can edit simple text Kate streams.
 
-\section support-audacious Audacious
+\subsection support-audacious Audacious
 
 Audacious is a music player.
 If patched, it can display Kate lyrics in sync with a song.
 
-\section support-xine-lib xine-lib
+\subsection support-xine-lib xine-lib
 
 xine-lib is a media player framework.
 If patched, it can decode full text and image based Kate streams and render them.
 
-\section support-xine-ui xine-ui
+\subsection support-xine-ui xine-ui
 
 xine-ui is a frontend for xine-lib.
 If patched, it can decode text based Kate streams and display text as lyrics in
