@@ -54,7 +54,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
  dnl post plugins
 diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/doc/hackersguide/overview.sgml ../xine-lib-1.1.12/doc/hackersguide/overview.sgml
 --- xine-lib-1.1.12/doc/hackersguide/overview.sgml	2008-01-23 05:11:50.000000000 +0000
-+++ ../xine-lib-1.1.12/doc/hackersguide/overview.sgml	2008-07-20 15:15:57.000000000 +0100
++++ ../xine-lib-1.1.12/doc/hackersguide/overview.sgml	2008-07-20 16:31:01.000000000 +0100
 @@ -288,6 +288,17 @@
       </listitem>
      </varlistentry>
@@ -129,7 +129,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
   * notify frame format change
 diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/demux_matroska.c ../xine-lib-1.1.12/src/demuxers/demux_matroska.c
 --- xine-lib-1.1.12/src/demuxers/demux_matroska.c	2008-04-07 22:23:52.000000000 +0100
-+++ ../xine-lib-1.1.12/src/demuxers/demux_matroska.c	2008-07-20 13:53:20.000000000 +0100
++++ ../xine-lib-1.1.12/src/demuxers/demux_matroska.c	2008-07-20 17:03:35.000000000 +0100
 @@ -646,6 +646,61 @@
    }
  }
@@ -203,6 +203,20 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
      } else {
        lprintf("unknown codec\n");
      }
+@@ -1476,7 +1535,12 @@
+           this->num_audio_tracks++;
+           break;
+         case MATROSKA_TRACK_SUBTITLE:
+-          track->fifo = this->stream->video_fifo;
++          /* allow use as lyrics - only kate will actually work this way for now,
++             see comments in audio_decoder.c */
++          if (this->stream->video_out)
++            track->fifo = this->stream->video_fifo;
++          else
++            track->fifo = this->stream->audio_fifo;
+           track->buf_type |= this->num_sub_tracks;
+           this->num_sub_tracks++;
+           break;
 diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1.1.12/src/demuxers/demux_ogg.c ../xine-lib-1.1.12/src/demuxers/demux_ogg.c
 --- xine-lib-1.1.12/src/demuxers/demux_ogg.c	2008-04-06 19:29:07.000000000 +0100
 +++ ../xine-lib-1.1.12/src/demuxers/demux_ogg.c	2008-07-20 15:03:18.000000000 +0100
@@ -782,8 +796,8 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +xineplug_decode_spukate_la_CFLAGS = $(VISIBILITY_FLAG) $(KATE_CFLAGS)
 +xineplug_decode_spukate_la_LDFLAGS = $(xineplug_ldflags)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ ../xine-lib-1.1.12/src/libspukate/xine_kate_decoder.c	2008-07-20 14:15:20.000000000 +0100
-@@ -0,0 +1,1843 @@
++++ ../xine-lib-1.1.12/src/libspukate/xine_kate_decoder.c	2008-07-20 17:03:11.000000000 +0100
+@@ -0,0 +1,1851 @@
 +/*
 + * Copyright (C) 2000-2003 the xine project
 + * 
@@ -1052,7 +1066,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +    this->reject=0;/*new packet - new try*/ 
 +
 +    /* for headers, first byte in the buffer is "raw" (without ogg_packet) */
-+    this->raw = 0;
++    //this->raw = 0;
 +    if (buf->decoder_flags & BUF_FLAG_HEADER) {
 +      this->raw = buf->content[0];
 +      lprintf("header: %s\n",this->raw?"raw (kate_packet)":"normal (ogg_packet)");
@@ -1071,12 +1085,20 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +      }
 +    }
 +    else {
-+      lprintf("non-header (normal. ogg_packet)\n");
-+      /*copy the ogg_packet struct and the sum, correct the adress of the packet*/
-+      xine_fast_memcpy (&this->op, buf->content, sizeof(ogg_packet));
-+      this->op.packet=this->packet;
-+
-+      readin_op (this, buf->content + sizeof(ogg_packet), buf->size - sizeof(ogg_packet) );
++      /* no first byte on data packets, we remember what headers had */
++      if (this->raw) {
++        lprintf("non-header (without ogg_packet)\n");
++        this->kp.data=this->packet;
++        this->kp.nbytes=0;
++        readin_op (this, buf->content, buf->size );
++      }
++      else {
++        lprintf("non-header (normal. ogg_packet)\n");
++        /*copy the ogg_packet struct and the sum, correct the adress of the packet*/
++        xine_fast_memcpy (&this->op, buf->content, sizeof(ogg_packet));
++        this->op.packet=this->packet;
++        readin_op (this, buf->content + sizeof(ogg_packet), buf->size - sizeof(ogg_packet) );
++      }
 +    }
 +    /*read the rest of the data*/
 +
