@@ -89,18 +89,18 @@ int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *f
 #define MORPHINT(field) style->field=(int)((kate_float)0.5+LERP(t,from->field,to->field))
   MORPH(halign);
   MORPH(valign);
-  MORPH(text_color.r);
-  MORPH(text_color.g);
-  MORPH(text_color.b);
-  MORPH(text_color.a);
-  MORPH(background_color.r);
-  MORPH(background_color.g);
-  MORPH(background_color.b);
-  MORPH(background_color.a);
-  MORPH(draw_color.r);
-  MORPH(draw_color.g);
-  MORPH(draw_color.b);
-  MORPH(draw_color.a);
+  MORPHINT(text_color.r);
+  MORPHINT(text_color.g);
+  MORPHINT(text_color.b);
+  MORPHINT(text_color.a);
+  MORPHINT(background_color.r);
+  MORPHINT(background_color.g);
+  MORPHINT(background_color.b);
+  MORPHINT(background_color.a);
+  MORPHINT(draw_color.r);
+  MORPHINT(draw_color.g);
+  MORPHINT(draw_color.b);
+  MORPHINT(draw_color.a);
   MORPHINT(font_metric); /* doesn't make much sense, caveat streamor */
   MORPH(font_width);
   MORPH(font_height);
@@ -250,6 +250,14 @@ static int kate_tracker_update_property(const kate_tracker *kin,kate_motion_sema
   return kate_tracker_update_property_at(kin,kin->t,semantics,px,py);
 }
 
+static unsigned char kate_float_to_color_component(kate_float c)
+{
+  int v=(int)(c+(kate_float)0.5);
+  if (v<0) v=0;
+  if (v>255) v=255;
+  return v;
+}
+
 /**
   \ingroup tracker
   Tracks changes in an event at the given time.
@@ -303,16 +311,16 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   if (kr) {
     switch (kr->metric) {
       case kate_percentage:
-        kin->region_x=kr->x*frame_w/100;
-        kin->region_y=kr->y*frame_h/100;
-        kin->region_w=kr->w*frame_w/100;
-        kin->region_h=kr->h*frame_h/100;
+        kin->region_x=kr->x*frame_w/(kate_float)100;
+        kin->region_y=kr->y*frame_h/(kate_float)100;
+        kin->region_w=kr->w*frame_w/(kate_float)100;
+        kin->region_h=kr->h*frame_h/(kate_float)100;
         break;
       case kate_millionths: /* use 64 bit arithmetic to avoid overflow */
-        kin->region_x=kr->x*(kate_int64_t)frame_w/10000000;
-        kin->region_y=kr->y*(kate_int64_t)frame_h/10000000;
-        kin->region_w=kr->w*(kate_int64_t)frame_w/10000000;
-        kin->region_h=kr->h*(kate_int64_t)frame_h/10000000;
+        kin->region_x=kr->x*(kate_int64_t)frame_w/(kate_float)10000000;
+        kin->region_y=kr->y*(kate_int64_t)frame_h/(kate_float)10000000;
+        kin->region_w=kr->w*(kate_int64_t)frame_w/(kate_float)10000000;
+        kin->region_h=kr->h*(kate_int64_t)frame_h/(kate_float)10000000;
         break;
       case kate_pixel:
         kin->region_x=kr->x;
@@ -484,40 +492,40 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   /* update colors */
   ret=kate_tracker_update_property(kin,kate_motion_semantics_text_color_rg,&r,&g);
   if (ret==0) {
-    kin->text_color.r=r;
-    kin->text_color.g=g;
+    kin->text_color.r=kate_float_to_color_component(r);
+    kin->text_color.g=kate_float_to_color_component(g);
     kin->has.text_color=1;
   }
   ret=kate_tracker_update_property(kin,kate_motion_semantics_text_color_ba,&b,&a);
   if (ret==0) {
-    kin->text_color.b=b;
-    kin->text_color.a=a;
+    kin->text_color.b=kate_float_to_color_component(b);
+    kin->text_color.a=kate_float_to_color_component(a);
     kin->has.text_color=1;
   }
 
   ret=kate_tracker_update_property(kin,kate_motion_semantics_background_color_rg,&r,&g);
   if (ret==0) {
-    kin->background_color.r=r;
-    kin->background_color.g=g;
+    kin->background_color.r=kate_float_to_color_component(r);
+    kin->background_color.g=kate_float_to_color_component(g);
     kin->has.background_color=1;
   }
   ret=kate_tracker_update_property(kin,kate_motion_semantics_background_color_ba,&b,&a);
   if (ret==0) {
-    kin->background_color.b=b;
-    kin->background_color.a=a;
+    kin->background_color.b=kate_float_to_color_component(b);
+    kin->background_color.a=kate_float_to_color_component(a);
     kin->has.background_color=1;
   }
 
   ret=kate_tracker_update_property(kin,kate_motion_semantics_draw_color_rg,&r,&g);
   if (ret==0) {
-    kin->draw_color.r=r;
-    kin->draw_color.g=g;
+    kin->draw_color.r=kate_float_to_color_component(r);
+    kin->draw_color.g=kate_float_to_color_component(g);
     kin->has.draw_color=1;
   }
   ret=kate_tracker_update_property(kin,kate_motion_semantics_draw_color_ba,&b,&a);
   if (ret==0) {
-    kin->draw_color.b=b;
-    kin->draw_color.a=a;
+    kin->draw_color.b=kate_float_to_color_component(b);
+    kin->draw_color.a=kate_float_to_color_component(a);
     kin->has.draw_color=1;
   }
 

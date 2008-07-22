@@ -233,7 +233,7 @@ pause                              {return PAUSE;}
 {unumber16}                    {lvalp->unumber=strtoul(katedesc_text,NULL,16);return UNUMBER;}
 {number10}                     {lvalp->number=strtol(katedesc_text,NULL,10);return NUMBER;}
 {number16}                     {lvalp->number=strtol(katedesc_text,NULL,16);return NUMBER;}
-{fp}                           {lvalp->fp=atof(katedesc_text);return FLOAT;}
+{fp}                           {lvalp->fp=(kate_float)atof(katedesc_text);return FLOAT;}
 {color6}                       {lvalp->color=strtol(katedesc_text+1,NULL,16);return COLORSPEC;}
 {color8}                       {lvalp->color=strtol(katedesc_text+1,NULL,16);return COLORSPEC;}
 

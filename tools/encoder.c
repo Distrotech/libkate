@@ -130,7 +130,7 @@ static const char *eat_arg(int argc,char **argv,int *n)
 
 static kate_float hmsms2s(int h,int m,int s,int ms)
 {
-  return h*3600+m*60+s+ms/1000.0;
+  return h*3600+m*60+s+ms/(kate_float)1000.0;
 }
 
 static char *fgets2(char *s,size_t len,FILE *f,int ignore_hash)

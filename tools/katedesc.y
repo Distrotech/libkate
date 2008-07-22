@@ -2005,8 +2005,8 @@ kd_curve_def_name_or_index: kd_curve_name_or_index { reference_curve_from($1); }
 
 
 float: FLOAT { $$=$1; }
-     | UNUMBER { $$=$1; }
-     | NUMBER { $$=$1; }
+     | UNUMBER { $$=(kate_float)$1; }
+     | NUMBER { $$=(kate_float)$1; }
      ;
 
 timespec: UNUMBER ':' unumber60 ':' float60 { $$=$1*3600+$3*60+$5; }
