@@ -27,7 +27,7 @@ static FILE *kd_open(const char *filename)
     return NULL;
   }
 
-  f=fopen(filename,"r");
+  f=fopen(filename,"rb");
   if (!f) {
     fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
     return NULL;

@@ -428,7 +428,7 @@ int main(int argc,char **argv)
     fin=stdin;
   }
   else {
-    fin=fopen(input_filename,"r");
+    fin=fopen(input_filename,"rb");
     if (!fin) {
       fprintf(stderr,"%s: %s\n",input_filename,strerror(errno));
       exit(-1);
@@ -439,7 +439,7 @@ int main(int argc,char **argv)
     fout=stdout;
   }
   else {
-    fout=fopen(output_filename,"w");
+    fout=fopen(output_filename,"wb");
     if (!fout) {
       fprintf(stderr,"%s: %s\n",output_filename,strerror(errno));
       exit(-1);
