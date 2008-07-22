@@ -836,7 +836,7 @@ static kate_comment kc;
     fout=stdout;
   }
   else {
-    fout=fopen(output_filename,"wb");
+    fout=fopen(output_filename,"w");
     if (!fout) {
       fprintf(stderr,"%s: %s\n",output_filename,strerror(errno));
       exit(-1);
