@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <unistd.h>
 #include <limits.h>
 #include <string.h>
 #include "kate_internal.h"

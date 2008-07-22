@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 #include <stdint.h>
-#include <unistd.h>
 #include "kate_internal.h"
 #include "kate/kate.h"
 #include "kate_bitwise.h"
