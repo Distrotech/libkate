@@ -343,7 +343,7 @@ static void write_bitmap(const char *filename,const kate_bitmap *kb,const kate_p
   size_t n,x,y;
   FILE *f;
   
-  f=fopen(filename,"wb");
+  f=fopen(filename,"w");
   if (!f) {
     fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
     return;
