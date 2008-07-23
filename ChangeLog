@@ -1,3 +1,7 @@
+0.1.7
+  win32 fixes (Roman Vorobets)
+  win32 build files (Roman Vorobets)
+
 0.1.6
   new kate_high_decode_get_comments api function
   libraries can now build in C89 mode
