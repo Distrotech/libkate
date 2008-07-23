@@ -6,7 +6,7 @@ includedir=${pcfiledir}/../../include
 
 Name: Kate
 Description: liboggkate is an interface between libkate and libogg
-Version: 0.1.6
+Version: 0.1.7
 URL: http://wiki.xiph.org/index.php/OggKate
 Requires: kate ogg >= 1.1.2
 Conflicts: 

@@ -55,7 +55,7 @@ CFLAGS_SHARED=$(CFLAGS) -fPIC
 CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
 LDFLAGS+=-L$(LIBDIR)
 
-VERSION=0.1.6
+VERSION=0.1.7
 SONAME_MAJOR=0
 
 all: staticlib sharedlib tools #doc
