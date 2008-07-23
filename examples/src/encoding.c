@@ -64,6 +64,9 @@ int main()
   kate_encode_init(&k,&ki);
   ogg_stream_init(&os,0x12345678);
 
+  /* for the benefit of windows, which mangles data otherwise */
+  set_binary_file(stdout);
+
   /*
     Before you can create events, headers need to be sent. Here, we'll just send
     the headers directly, but you will usually want to add regions, styles, etc to

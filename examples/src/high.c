@@ -12,49 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <ogg/ogg.h>
+#include "common.h"
 
 /* All the libkate API is available from the main kate header file: */
 
 #include <kate/kate.h>
-
-/*
-   This function returns the next packet, reading data as necessary
-  */
-
-static int get_packet(ogg_sync_state *oy,ogg_stream_state *os,int *init,ogg_packet *op)
-{
-  char *buffer;
-  size_t bytes;
-  ogg_page og;
-
-  /* try to get a packet from the stream */
-  if (*init && ogg_stream_packetout(os,op)) return 0;
-
-  /* read data and feed the pages to ogg */
-  buffer=ogg_sync_buffer(oy,4096);
-  bytes=fread(buffer,1,4096,stdin);
-  if (bytes==0) return 1; /* we're done */
-  ogg_sync_wrote(oy,bytes);
-  while (ogg_sync_pageout(oy,&og)>0) {
-    if (!*init && ogg_page_bos(&og)) {
-      ogg_stream_init(os,ogg_page_serialno(&og));
-    }
-    ogg_stream_pagein(os,&og);
-    if (!*init && ogg_page_bos(&og)) {
-      ogg_packet op;
-      ogg_stream_packetpeek(os,&op);
-      if (op.bytes>=8 && !memcmp(op.packet,"\200kate\0\0\0",8)) {
-        *init=1;
-      }
-      else {
-        ogg_stream_clear(os);
-      }
-    }
-  }
-
-  /* try again with the new data */
-  return get_packet(oy,os,init,op);
-}
 
 int main()
 {
@@ -65,6 +27,9 @@ int main()
   kate_state k;
   const kate_event *ev;
   kate_packet kp;
+
+  /* for the benefit of windows, which mangles data otherwise */
+  set_binary_file(stdin);
 
   /* we initialize ogg and the kate state  */
   ogg_sync_init(&oy);
