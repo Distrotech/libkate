@@ -249,6 +249,7 @@ dist:
 	cp -R tools/kpng.[ch] $(distname)/tools
 	cp README INSTALL COPYING AUTHORS THANKS ChangeLog Makefile $(distname)
 	cp -R misc $(distname)
+	cp -R contrib $(distname)
 	tar cvfz $(distname).tar.gz --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore $(distname)
 	rm -fr $(distname)
 
