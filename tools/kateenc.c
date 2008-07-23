@@ -7,7 +7,12 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
+#if !defined WIN32 && !defined _WIN32
 #include <unistd.h>
+#else
+#include <io.h>
+#include <fcntl.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -436,6 +441,9 @@ int main(int argc,char **argv)
   }
 
   if (!output_filename || !strcmp(output_filename,"-")) {
+#if defined WIN32 || defined _WIN32
+    _setmode(_fileno(stdout),_O_BINARY);
+#endif
     fout=stdout;
   }
   else {

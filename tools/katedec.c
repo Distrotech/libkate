@@ -7,7 +7,12 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
+#if !defined WIN32 && !defined _WIN32
 #include <unistd.h>
+#else
+#include <io.h>
+#include <fcntl.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -822,6 +827,9 @@ static kate_comment kc;
   }
 
   if (!input_filename || !strcmp(input_filename,"-")) {
+#if defined WIN32 || defined _WIN32
+    _setmode(_fileno(stdin),_O_BINARY);
+#endif
     fin=stdin;
   }
   else {
