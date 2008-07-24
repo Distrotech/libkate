@@ -33,7 +33,7 @@ and any player using GStreamer (if patched).
 \li \c spu-subtitles Movie (or other) subtitles, as DVD style images.
 
 For instance, Thoggen (if patched) can create such streams, which can be
-played back by VLC, and MPLayer (if patched).
+played back by VLC, and MPlayer (if patched).
 
 \li \c lyrics Song lyrics (typically in the language they are sung in)
 
