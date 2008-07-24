@@ -21,6 +21,9 @@ set up for the French locale might display the category as "sous-titres".
 If a particular category is not recognized, it may still be displayed as
 a string, albeit non localized.
 
+If using custom categories for your own use, you may use category names
+prefixed by "x-". These are reserved for private use.
+
 \li \c subtitles Movie (or other) subtitles, as (possibly formatted) text.
 
 For instance, ffmpeg2theora can create such streams, which can be played
