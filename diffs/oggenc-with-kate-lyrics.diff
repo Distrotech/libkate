@@ -1,6 +1,6 @@
-diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
 --- ../../../svn/xiph/vorbis-tools/oggenc/encode.c	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/encode.c	2008-07-14 19:05:10.000000000 +0100
++++ oggenc/encode.c	2008-07-16 19:28:52.000000000 +0100
 @@ -25,6 +25,11 @@
  #include "i18n.h"
  #include "skeleton.h"
@@ -83,7 +83,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
      long samplesdone=0;
      int eos;
      long bytes_written = 0, packetsdone=0;
-@@ -293,9 +328,28 @@
+@@ -293,9 +328,30 @@
      vorbis_analysis_init(&vd,&vi);
      vorbis_block_init(&vd,&vb);
  
@@ -98,6 +98,8 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
 +            /* init kate for encoding */
 +            kate_info_init(&ki);
 +            kate_info_set_category(&ki, "lyrics");
++            if (opt->lyrics_language)
++              kate_info_set_language(&ki, opt->lyrics_language);
 +            kate_comment_init(&kc);
 +            kate_encode_init(&k,&ki);
 +        }
@@ -113,7 +115,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
  
      /* create the skeleton fishead packet and output it */ 
      if (opt->with_skeleton) { 
-@@ -319,7 +373,7 @@
+@@ -319,7 +375,7 @@
                  &header_main,&header_comments,&header_codebooks);
  
          /* And stream them out */
@@ -122,7 +124,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
          ogg_stream_packetin(&os,&header_main);
  	while((result = ogg_stream_flush(&os, &og)))
          {
-@@ -333,13 +387,48 @@
+@@ -333,13 +389,48 @@
              }
          }
  
@@ -173,7 +175,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
          ogg_stream_packetin(&os,&header_comments);
          ogg_stream_packetin(&os,&header_codebooks);
  
-@@ -356,6 +445,27 @@
+@@ -356,6 +447,27 @@
          }
      }
  
@@ -201,7 +203,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
      if (opt->with_skeleton) { 
          add_eos_packet_to_stream(&so); 
          if ((ret = flush_ogg_stream_to_file(&so, opt->out))) { 
-@@ -420,6 +530,39 @@
+@@ -420,6 +532,39 @@
                      int result = ogg_stream_pageout(&os,&og);
                      if(!result) break;
  
@@ -241,7 +243,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
                      ret = oe_write_page(&og, opt->out);
                      if(ret != og.header_len + og.body_len)
                      {
-@@ -437,6 +580,47 @@
+@@ -437,6 +582,47 @@
          }
      }
  
@@ -289,19 +291,21 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.c oggenc/encode.c
      ret = 0; /* Success, set return value to 0 since other things reuse it
                * for nefarious purposes. */
  
-diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
 --- ../../../svn/xiph/vorbis-tools/oggenc/encode.h	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/encode.h	2008-07-13 11:08:01.000000000 +0100
-@@ -54,6 +54,8 @@
++++ oggenc/encode.h	2008-07-16 19:27:59.000000000 +0100
+@@ -54,6 +54,10 @@
      int date_count;
      char **genre;
      int genre_count;
 +    char **lyrics;
 +    int lyrics_count;
++    char **lyrics_language;
++    int lyrics_language_count;
      adv_opt *advopt;
      int advopt_count;
      int copy_comments;
-@@ -88,6 +90,7 @@
+@@ -88,6 +92,7 @@
  
      unsigned int serial;
      unsigned int skeleton_serial;
@@ -309,7 +313,7 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
          int fixedserial;
  } oe_options;
  
-@@ -96,6 +99,7 @@
+@@ -96,6 +101,7 @@
      vorbis_comment *comments;
      unsigned int serialno;
      unsigned int skeleton_serialno;
@@ -317,271 +321,19 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/encode.h oggenc/encode.h
  
      audio_read_func read_samples;
      progress_func progress_update;
-@@ -127,6 +131,8 @@
+@@ -127,6 +133,9 @@
      FILE *out;
      char *filename;
      char *infilename;
 +
 +    char *lyrics;
++    char *lyrics_language;
  } oe_enc_opt;
  
  
-diff -ru ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.am
---- ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/Makefile.am	2008-07-14 19:05:37.000000000 +0100
-@@ -13,16 +13,16 @@
- 
- bin_PROGRAMS = oggenc
- 
--INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @I18N_CFLAGS@
-+INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @KATE_CFLAGS@ @I18N_CFLAGS@
- 
- oggenc_LDADD = @SHARE_LIBS@ \
--	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @OGG_LIBS@ \
-+	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @KATE_LIBS@ @OGG_LIBS@ \
- 	       @LIBICONV@ @I18N_LIBS@ @FLAC_LIBS@
- 
- oggenc_DEPENDENCIES = @SHARE_LIBS@
- 
- oggenc_SOURCES = $(flac_sources) \
--                 oggenc.c audio.c encode.c platform.c \
-+                 oggenc.c audio.c encode.c platform.c lyrics.c \
-                  audio.h encode.h platform.h resample.c resample.h skeleton.c skeleton.h
- 
- 
-diff -ru ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1 oggenc/man/oggenc.1
---- ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/man/oggenc.1	2008-07-14 20:54:40.000000000 +0100
-@@ -78,6 +78,10 @@
- .B -G
- .I genre
- ]
-+[
-+.B -L
-+.I lyrics file
-+]
- .I input_files \fR...
- 
- .SH DESCRIPTION
-@@ -102,6 +106,9 @@
- are available, the output filename will be the input filename with the
- extension (that part after the final dot) replaced with ogg, so file.wav
- will become file.ogg
-+.br
-+Optionally, lyrics may be embedded in the Ogg file, if Kate support was compiled in. Note, however, that multiplexing a Kate
-+stream with Vorbis may cause some players to fail to play the stream.
- 
- .SH OPTIONS
- .IP "-h, --help"
-@@ -191,6 +198,11 @@
- .IP "-l album, --album album"
- Set the album comment field to
- .I album.
-+
-+.IP "-L filename, --lyrics filename"
-+Loads lyrics from
-+.I filename
-+, and encodes them in a Kate stream multiplexed with the Vorbis stream.
- .PP
- 
- Note that the \fB-a\fR, \fB-t\fR, and \fB-l\fR options can be given
-@@ -323,6 +335,12 @@
- .RE
- .PP
- 
-+Adding embedded lyrics.
-+.RS
-+oggenc somefile.wav --lyrics lyrics.lrc -o out.ogg
-+.RE
-+.PP
-+
- This encodes the three files, each with the
- same artist/album tag, but with different title tags on each one. The
- string given as an argument to -n is used to generate filenames, as shown
-@@ -355,6 +373,8 @@
- 
- .SH BUGS
- Reading type 3 wav files (floating point samples) probably doesn't work other than on intel (or other 32 bit, little endian machines). 
-+.br
-+Enhanced LRC files are not yet supported.
- 
- .SH "SEE ALSO"
- 
-diff -ru ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
---- ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c	2008-04-15 13:57:29.000000000 +0100
-+++ oggenc/oggenc.c	2008-07-14 20:42:43.000000000 +0100
-@@ -66,6 +66,7 @@
-     {"scale", 1, 0, 0}, 
-     {"advanced-encode-option", 1, 0, 0},
-     {"discard-comments", 0, 0, 0},
-+    {"lyrics",1,0,'L'},
-     {NULL,0,0,0}
- };
- 
-@@ -81,10 +82,10 @@
- int main(int argc, char **argv)
- {
-     /* Default values */
--    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
-+    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
-               0, NULL, 0, NULL, 0, NULL, 0, 1, 0, 0, 0,16,44100,2, 0, NULL,
-               DEFAULT_NAMEFMT_REMOVE, DEFAULT_NAMEFMT_REPLACE,
--              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0};
-+              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0, 0};
- 
-     int i;
- 
-@@ -132,6 +133,7 @@
-         srand(time(NULL));
-         opt.serial = rand();
-         opt.skeleton_serial = opt.serial + numfiles;
-+        opt.kate_serial = opt.skeleton_serial + numfiles;
-     }
- 
-     for(i = 0; i < numfiles; i++)
-@@ -146,6 +148,7 @@
-         int closeout = 0, closein = 0;
-         char *artist=NULL, *album=NULL, *title=NULL, *track=NULL;
-         char *date=NULL, *genre=NULL;
-+        char *lyrics=NULL;
-         input_format *format;
-         int resampled = 0;
- 
-@@ -153,6 +156,7 @@
- 
-         enc_opts.serialno = opt.serial++;
-         enc_opts.skeleton_serialno = opt.skeleton_serial++;
-+        enc_opts.kate_serialno = opt.kate_serial++;
-         enc_opts.progress_update = update_statistics_full;
-         enc_opts.start_encode = start_encode_full;
-         enc_opts.end_encode = final_statistics;
-@@ -165,6 +169,19 @@
-         build_comments(&vc, &opt, i, &artist, &album, &title, &track,
-                 &date, &genre);
- 
-+        if(opt.lyrics_count)
-+        {
-+            if(i >= opt.lyrics_count)
-+            {
-+                /* TODO: I think it'd be better to default to *none*, but it would be inconsistent with the rest */
-+                if(!opt.quiet)
-+                    fprintf(stderr, _("WARNING: Insufficient lyrics specified, defaulting to final lyrics.\n"));
-+                lyrics = opt.lyrics[opt.lyrics_count-1];
-+            }
-+            else
-+                lyrics = opt.lyrics[i];
-+        }
-+
-         if(!strcmp(infiles[i], "-"))
-         {
-             setbinmode(stdin);
-@@ -269,15 +286,20 @@
-                 end = strrchr(infiles[i], '.');
-                 end = end?end:(start + strlen(infiles[i])+1);
- 
--                extension = (opt.with_skeleton) ? ".oga" : ".ogg";
-+                /* if adding skeleton or kate, we're not Vorbis I anymore */
-+                extension = (opt.with_skeleton || opt.lyrics_count>0) ? ".oga" : ".ogg";
-                 out_fn = malloc(end - start + 5);
-                 strncpy(out_fn, start, end-start);
-                 out_fn[end-start] = 0;
-                 strcat(out_fn, extension);
-             }
-             else {
--                fprintf(stderr, _("WARNING: No filename, defaulting to \"default.ogg\"\n"));
--                out_fn = strdup("default.ogg");
-+                /* if adding skeleton or kate, we're not Vorbis I anymore */
-+                if (opt.with_skeleton || opt.lyrics_count>0)
-+                    out_fn = strdup("default.oga");
-+                else
-+                    out_fn = strdup("default.ogg");
-+                fprintf(stderr, _("WARNING: No filename, defaulting to \"%s\"\n"), out_fn);
-             }
- 
-             /* Create any missing subdirectories, if possible */
-@@ -323,6 +345,7 @@
-         enc_opts.quality_set = opt.quality_set;
-         enc_opts.advopt = opt.advopt;
-         enc_opts.advopt_count = opt.advopt_count;
-+        enc_opts.lyrics = lyrics;
- 
-         if(opt.resamplefreq && opt.resamplefreq != enc_opts.rate) {
-             int fromrate = enc_opts.rate;
-@@ -470,6 +493,7 @@
-         " -l, --album          Name of album\n"
-         " -a, --artist         Name of artist\n"
-         " -G, --genre          Genre of track\n"
-+        " -L, --lyrics         Include lyrics from given file (.srt or .lrc format)\n"
-         "                      If multiple input files are given, then multiple\n"
-         "                      instances of the previous five arguments will be used,\n"
-         "                      in the order they are given. If fewer titles are\n"
-@@ -601,14 +625,14 @@
-     int ret;
-     int option_index = 1;
- 
--    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkl:m:M:n:N:o:P:q:QrR:s:t:vX:",
-+    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkL:l:m:M:n:N:o:P:q:QrR:s:t:vX:",
-                     long_options, &option_index)) != -1)
-     {
-         switch(ret)
-         {
-             case 0:
-                 if(!strcmp(long_options[option_index].name, "skeleton")) {
-                 if(!strcmp(long_options[option_index].name, "skeleton")) {
-                     opt->with_skeleton = 1;
-                 }
-                 else if(!strcmp(long_options[option_index].name, "managed")) {
-@@ -857,6 +881,14 @@
-             case 'k':
-                 opt->with_skeleton = 1;
-                 break;
-+            case 'L':
-+#ifdef HAVE_KATE
-+                opt->lyrics = realloc(opt->lyrics, (++opt->lyrics_count)*sizeof(char *));
-+                opt->lyrics[opt->lyrics_count - 1] = strdup(optarg);
-+#else
-+                fprintf(stderr, _("WARNING: Kate support not compiled in, lyrics will not be included.\n"));
-+#endif
-+                break;
-             case '?':
-                 fprintf(stderr, _("WARNING: Unknown option specified, ignoring->\n"));
-                 break;
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ oggenc/lyrics.h	2008-07-14 18:58:35.000000000 +0100
-@@ -0,0 +1,31 @@
-+#ifndef __LYRICS_H
-+#define __LYRICS_H
-+
-+#include <stddef.h>
-+
-+#define SUPPORTED_ENCODINGS "utf-8, utf8, iso-8859-1, latin1"
-+
-+typedef enum {
-+  oe_encoding_unset,
-+  oe_encoding_UTF8,
-+  oe_encoding_ISO_8859_1,
-+} oe_encoding;
-+
-+typedef struct oe_lyrics_item {
-+    char *text;
-+    size_t len;
-+    double t0;
-+    double t1;
-+} oe_lyrics_item;
-+
-+typedef struct oe_lyrics {
-+    size_t count;
-+    oe_lyrics_item *lyrics;
-+} oe_lyrics;
-+
-+extern oe_lyrics *load_lyrics(const char *filename, oe_encoding encoding);
-+extern void free_lyrics(oe_lyrics *lyrics);
-+extern const oe_lyrics_item *get_lyrics(const oe_lyrics *lyrics, double t, size_t *idx);
-+
-+#endif
-+
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ oggenc/lyrics.c	2008-07-14 21:27:38.000000000 +0100
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/lyrics.c oggenc/lyrics.c
+--- ../../../svn/xiph/vorbis-tools/oggenc/lyrics.c	1970-01-01 01:00:00.000000000 +0100
++++ oggenc/lyrics.c	2008-07-14 21:44:19.000000000 +0100
 @@ -0,0 +1,358 @@
 +/* OggEnc
 + **
@@ -941,24 +693,307 @@ diff -ru ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
 +    return &lyrics->lyrics[(*idx)++];
 +}
 +
---- ../../../svn/xiph/vorbis-tools/README	2008-04-15 13:57:30.000000000 +0100
-+++ README	2008-07-14 21:58:41.000000000 +0100
-@@ -26,7 +26,7 @@
- with the header files).  Additionally, ogg123 requires libao, libcurl,
- and a POSIX-compatible thread library.  Ogg123 can optionally compiled
- to use libFLAC, libOggFLAC, and libspeex.  Oggenc can be optionally
--compiled with libFLAC and libOggFLAC.  The libraries libogg,
-+compiled with libFLAC, libOggFLAC, and libkate.  The libraries libogg,
- libvorbis, and libao are all available at
-   http://www.vorbis.com/download.psp
- 
-@@ -40,6 +40,9 @@
- Speex is available at:
-   http://www.speex.org/
- 
-+Kate is available at:
-+  http://libkate.googlecode.com/
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/lyrics.h oggenc/lyrics.h
+--- ../../../svn/xiph/vorbis-tools/oggenc/lyrics.h	1970-01-01 01:00:00.000000000 +0100
++++ oggenc/lyrics.h	2008-07-14 18:58:35.000000000 +0100
+@@ -0,0 +1,31 @@
++#ifndef __LYRICS_H
++#define __LYRICS_H
 +
- CONTACT:
++#include <stddef.h>
++
++#define SUPPORTED_ENCODINGS "utf-8, utf8, iso-8859-1, latin1"
++
++typedef enum {
++  oe_encoding_unset,
++  oe_encoding_UTF8,
++  oe_encoding_ISO_8859_1,
++} oe_encoding;
++
++typedef struct oe_lyrics_item {
++    char *text;
++    size_t len;
++    double t0;
++    double t1;
++} oe_lyrics_item;
++
++typedef struct oe_lyrics {
++    size_t count;
++    oe_lyrics_item *lyrics;
++} oe_lyrics;
++
++extern oe_lyrics *load_lyrics(const char *filename, oe_encoding encoding);
++extern void free_lyrics(oe_lyrics *lyrics);
++extern const oe_lyrics_item *get_lyrics(const oe_lyrics *lyrics, double t, size_t *idx);
++
++#endif
++
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am oggenc/Makefile.am
+--- ../../../svn/xiph/vorbis-tools/oggenc/Makefile.am	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/Makefile.am	2008-07-14 19:05:37.000000000 +0100
+@@ -13,16 +13,16 @@
  
- The Ogg Vorbis homepage is located at 'http://www.vorbis.com'. Up to
+ bin_PROGRAMS = oggenc
+ 
+-INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @I18N_CFLAGS@
++INCLUDES = @SHARE_CFLAGS@ @OGG_CFLAGS@ @VORBIS_CFLAGS@ @KATE_CFLAGS@ @I18N_CFLAGS@
+ 
+ oggenc_LDADD = @SHARE_LIBS@ \
+-	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @OGG_LIBS@ \
++	       @VORBISENC_LIBS@ @VORBIS_LIBS@ @KATE_LIBS@ @OGG_LIBS@ \
+ 	       @LIBICONV@ @I18N_LIBS@ @FLAC_LIBS@
+ 
+ oggenc_DEPENDENCIES = @SHARE_LIBS@
+ 
+ oggenc_SOURCES = $(flac_sources) \
+-                 oggenc.c audio.c encode.c platform.c \
++                 oggenc.c audio.c encode.c platform.c lyrics.c \
+                  audio.h encode.h platform.h resample.c resample.h skeleton.c skeleton.h
+ 
+ 
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1 oggenc/man/oggenc.1
+--- ../../../svn/xiph/vorbis-tools/oggenc/man/oggenc.1	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/man/oggenc.1	2008-07-24 18:50:47.000000000 +0100
+@@ -78,6 +78,14 @@
+ .B -G
+ .I genre
+ ]
++[
++.B -L
++.I lyrics file
++]
++[
++.B -Y
++.I lyrics-language language-string
++]
+ .I input_files \fR...
+ 
+ .SH DESCRIPTION
+@@ -102,6 +110,9 @@
+ are available, the output filename will be the input filename with the
+ extension (that part after the final dot) replaced with ogg, so file.wav
+ will become file.ogg
++.br
++Optionally, lyrics may be embedded in the Ogg file, if Kate support was compiled in. Note, however, that multiplexing a Kate
++stream with Vorbis may cause some players to fail to play the stream, as they expect a single stream in the Ogg file.
+ 
+ .SH OPTIONS
+ .IP "-h, --help"
+@@ -191,11 +202,21 @@
+ .IP "-l album, --album album"
+ Set the album comment field to
+ .I album.
++
++.IP "-L filename, --lyrics filename"
++Loads lyrics from
++.I filename
++, and encodes them in a Kate stream multiplexed with the Vorbis stream.
++
++.IP "-Y language-string, --lyrics-language language-string"
++Sets the language for the corresponding lyrics file to
++.I language-string.
++This should be an ISO 639-1 language code, or a RFC 3066 language tag.
+ .PP
+ 
+-Note that the \fB-a\fR, \fB-t\fR, and \fB-l\fR options can be given
+-multiple times.  They will be applied, one to each file, in the order
+-given.  If there are fewer album, title, or artist comments given than
++Note that the \fB-a\fR, \fB-t\fR, \fB-l\fR, \fB-L\fR, and \fb-Y\fR  options
++can be given multiple times.  They will be applied, one to each file, in the
++order given.  If there are fewer album, title, or artist comments given than
+ there are input files,
+ .B oggenc
+ will reuse the final one for the remaining files, and issue a warning
+@@ -323,6 +344,12 @@
+ .RE
+ .PP
+ 
++Adding embedded lyrics.
++.RS
++oggenc somefile.wav --lyrics lyrics.lrc --lyrics-language en -o out.ogg
++.RE
++.PP
++
+ This encodes the three files, each with the
+ same artist/album tag, but with different title tags on each one. The
+ string given as an argument to -n is used to generate filenames, as shown
+@@ -355,6 +382,8 @@
+ 
+ .SH BUGS
+ Reading type 3 wav files (floating point samples) probably doesn't work other than on intel (or other 32 bit, little endian machines). 
++.br
++Enhanced LRC files are not yet supported.
+ 
+ .SH "SEE ALSO"
+ 
+diff -ruN -x Makefile -x Makefile.in -x '*.Po' -x sample.srt -x CVS ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c oggenc/oggenc.c
+--- ../../../svn/xiph/vorbis-tools/oggenc/oggenc.c	2008-04-15 13:57:29.000000000 +0100
++++ oggenc/oggenc.c	2008-07-17 22:56:58.000000000 +0100
+@@ -66,6 +66,8 @@
+     {"scale", 1, 0, 0}, 
+     {"advanced-encode-option", 1, 0, 0},
+     {"discard-comments", 0, 0, 0},
++    {"lyrics",1,0,'L'},
++    {"lyrics-language",1,0,'Y'},
+     {NULL,0,0,0}
+ };
+ 
+@@ -81,10 +83,10 @@
+ int main(int argc, char **argv)
+ {
+     /* Default values */
+-    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
+-              0, NULL, 0, NULL, 0, NULL, 0, 1, 0, 0, 0,16,44100,2, 0, NULL,
++    oe_options opt = {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL,
++              0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, 1, 0, 0, 0,16,44100,2, 0, NULL,
+               DEFAULT_NAMEFMT_REMOVE, DEFAULT_NAMEFMT_REPLACE,
+-              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0};
++              NULL, 0, -1,-1,-1,.3,-1,0, 0,0.f, 0, 0, 0, 0};
+ 
+     int i;
+ 
+@@ -132,6 +134,7 @@
+         srand(time(NULL));
+         opt.serial = rand();
+         opt.skeleton_serial = opt.serial + numfiles;
++        opt.kate_serial = opt.skeleton_serial + numfiles;
+     }
+ 
+     for(i = 0; i < numfiles; i++)
+@@ -146,6 +149,7 @@
+         int closeout = 0, closein = 0;
+         char *artist=NULL, *album=NULL, *title=NULL, *track=NULL;
+         char *date=NULL, *genre=NULL;
++        char *lyrics=NULL, *lyrics_language=NULL;
+         input_format *format;
+         int resampled = 0;
+ 
+@@ -153,6 +157,7 @@
+ 
+         enc_opts.serialno = opt.serial++;
+         enc_opts.skeleton_serialno = opt.skeleton_serial++;
++        enc_opts.kate_serialno = opt.kate_serial++;
+         enc_opts.progress_update = update_statistics_full;
+         enc_opts.start_encode = start_encode_full;
+         enc_opts.end_encode = final_statistics;
+@@ -165,6 +170,31 @@
+         build_comments(&vc, &opt, i, &artist, &album, &title, &track,
+                 &date, &genre);
+ 
++        if(opt.lyrics_count)
++        {
++            if(i >= opt.lyrics_count)
++            {
++                /* TODO: I think it'd be better to default to *none*, but it would be inconsistent with the rest */
++                if(!opt.quiet)
++                    fprintf(stderr, _("WARNING: Insufficient lyrics specified, defaulting to final lyrics.\n"));
++                lyrics = opt.lyrics[opt.lyrics_count-1];
++            }
++            else
++                lyrics = opt.lyrics[i];
++        }
++
++        if(opt.lyrics_language_count)
++        {
++            if(i >= opt.lyrics_language_count)
++            {
++                if(!opt.quiet)
++                    fprintf(stderr, _("WARNING: Insufficient lyrics languages specified, defaulting to final lyrics language.\n"));
++                lyrics_language = opt.lyrics_language[opt.lyrics_language_count-1];
++            }
++            else
++                lyrics_language = opt.lyrics_language[i];
++        }
++
+         if(!strcmp(infiles[i], "-"))
+         {
+             setbinmode(stdin);
+@@ -269,15 +299,20 @@
+                 end = strrchr(infiles[i], '.');
+                 end = end?end:(start + strlen(infiles[i])+1);
+ 
+-                extension = (opt.with_skeleton) ? ".oga" : ".ogg";
++                /* if adding skeleton or kate, we're not Vorbis I anymore */
++                extension = (opt.with_skeleton || opt.lyrics_count>0) ? ".oga" : ".ogg";
+                 out_fn = malloc(end - start + 5);
+                 strncpy(out_fn, start, end-start);
+                 out_fn[end-start] = 0;
+                 strcat(out_fn, extension);
+             }
+             else {
+-                fprintf(stderr, _("WARNING: No filename, defaulting to \"default.ogg\"\n"));
+-                out_fn = strdup("default.ogg");
++                /* if adding skeleton or kate, we're not Vorbis I anymore */
++                if (opt.with_skeleton || opt.lyrics_count>0)
++                    out_fn = strdup("default.oga");
++                else
++                    out_fn = strdup("default.ogg");
++                fprintf(stderr, _("WARNING: No filename, defaulting to \"%s\"\n"), out_fn);
+             }
+ 
+             /* Create any missing subdirectories, if possible */
+@@ -323,6 +358,8 @@
+         enc_opts.quality_set = opt.quality_set;
+         enc_opts.advopt = opt.advopt;
+         enc_opts.advopt_count = opt.advopt_count;
++        enc_opts.lyrics = lyrics;
++        enc_opts.lyrics_language = lyrics_language;
+ 
+         if(opt.resamplefreq && opt.resamplefreq != enc_opts.rate) {
+             int fromrate = enc_opts.rate;
+@@ -470,6 +507,8 @@
+         " -l, --album          Name of album\n"
+         " -a, --artist         Name of artist\n"
+         " -G, --genre          Genre of track\n"
++        " -L, --lyrics         Include lyrics from given file (.srt or .lrc format)\n"
++        " -Y, --lyrics-language  Sets the language for the lyrics\n"
+         "                      If multiple input files are given, then multiple\n"
+         "                      instances of the previous five arguments will be used,\n"
+         "                      in the order they are given. If fewer titles are\n"
+@@ -490,6 +529,7 @@
+         " You can specify taking the file from stdin by using - as the input filename.\n"
+         " In this mode, output is to stdout unless an output filename is specified\n"
+         " with -o\n"
++        "Lyrics files may be in SubRip (.srt) or LRC (.lrc) format\n"
+         "\n"), VERSION_STRING, COPYRIGHT);
+ }
+ 
+@@ -601,13 +641,13 @@
+     int ret;
+     int option_index = 1;
+ 
+-    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkl:m:M:n:N:o:P:q:QrR:s:t:vX:",
++    while((ret = getopt_long(argc, argv, "A:a:b:B:c:C:d:G:hkL:l:m:M:n:N:o:P:q:QrR:s:t:vX:",
+                     long_options, &option_index)) != -1)
+     {
+         switch(ret)
+         {
+             case 0:
+-                if(!strcmp(long_options[option_index].name, "skleton")) {
++                if(!strcmp(long_options[option_index].name, "skeleton")) {
+                     opt->with_skeleton = 1;
+                 }
+                 else if(!strcmp(long_options[option_index].name, "managed")) {
+@@ -857,6 +897,22 @@
+             case 'k':
+                 opt->with_skeleton = 1;
+                 break;
++            case 'L':
++#ifdef HAVE_KATE
++                opt->lyrics = realloc(opt->lyrics, (++opt->lyrics_count)*sizeof(char *));
++                opt->lyrics[opt->lyrics_count - 1] = strdup(optarg);
++#else
++                fprintf(stderr, _("WARNING: Kate support not compiled in, lyrics will not be included.\n"));
++#endif
++                break;
++            case 'Y':
++#ifdef HAVE_KATE
++                opt->lyrics_language = realloc(opt->lyrics_language, (++opt->lyrics_language_count)*sizeof(char *));
++                opt->lyrics_language[opt->lyrics_language_count - 1] = strdup(optarg);
++#else
++                fprintf(stderr, _("WARNING: Kate support not compiled in, lyrics will not be included.\n"));
++#endif
++                break;
+             case '?':
+                 fprintf(stderr, _("WARNING: Unknown option specified, ignoring->\n"));
+                 break;
