@@ -466,7 +466,7 @@ static void write_canvas_size(FILE *f,const kate_info *ki,size_t indent)
   sindent[indent]=0;
 
   if (ki->original_canvas_width>0 || ki->original_canvas_height>0) {
-    fprintf(f,"%scanvas size %zu/%zu\n",sindent,ki->original_canvas_width,ki->original_canvas_height);
+    fprintf(f,"%scanvas size %zu %zu\n",sindent,ki->original_canvas_width,ki->original_canvas_height);
   }
 
   kate_free(sindent);
