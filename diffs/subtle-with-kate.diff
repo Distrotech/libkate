@@ -53,10 +53,13 @@ diff -ru subtle/Subtitles/__init__.py subtle-new-with-kate/Subtitles/__init__.py
  
 diff -ru subtle/Subtitles/Sub.py subtle-new-with-kate/Subtitles/Sub.py
 --- subtle/Subtitles/Sub.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Sub.py	2008-06-30 21:25:37.000000000 +0100
-@@ -78,3 +78,9 @@
++++ subtle-new-with-kate/Subtitles/Sub.py	2008-07-26 12:11:59.000000000 +0100
+@@ -77,4 +77,12 @@
+             Set the subtitle text and this method will rearrange the
              structure of lines as well as all other attributes.
          """
++        self.lines = []
++        self._processText(text)
          pass
 +
 +    def getSubStartTime(self):
@@ -80,7 +83,7 @@ diff -ru subtle/Subtitles/SubRip.py subtle-new-with-kate/Subtitles/SubRip.py
          for i in self.subKeys:
 diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.py
 --- subtle/Subtitles/Subtitles.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Subtitles.py	2008-06-30 20:33:30.000000000 +0100
++++ subtle-new-with-kate/Subtitles/Subtitles.py	2008-07-26 12:12:21.000000000 +0100
 @@ -41,6 +41,8 @@
          self.filename = FN
          # TODO: Support more subtitles types
@@ -99,7 +102,17 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
          TS.text=Text
          TS.start_time=STime
          TS.end_time=ETime
-@@ -103,6 +105,39 @@
+@@ -76,7 +78,8 @@
+     # Update text for sub.
+     def updateText(self, key, text):
+         if key in self.subs.keys():
+-            self.subs[key].text = text
++            # self.subs[key].text = text
++            self.subs[key].setSubText (text)
+         else:
+             print "Subkey %s not found" % key
+ 
+@@ -103,6 +106,39 @@
          return None
  
  
