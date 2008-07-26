@@ -67,7 +67,7 @@ diff -ru audacious-plugins-be718ff506c0/extra.mk.in ../audacious-plugins-be718ff
  LIBBEEP_MAJOR_VERSION ?= @LIBBEEP_MAJOR_VERSION@
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plugins-be718ff506c0/src/vorbis/configure.c
 --- audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-24 17:58:43.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-26 23:03:29.000000000 +0100
 @@ -17,6 +17,14 @@
  
  static GtkWidget *title_tag_override, *title_tag_box, *title_tag_entry,
@@ -124,7 +124,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
      gtk_widget_destroy(vorbis_configurewin);
  }
  
-@@ -58,10 +85,26 @@
+@@ -58,10 +85,27 @@
      gtk_widget_set_sensitive(title_desc, override);
  }
  
@@ -137,6 +137,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
 +    gtk_widget_set_sensitive(kate_offset_box, display);
 +    gtk_widget_set_sensitive(kate_offset_label, display);
 +    gtk_widget_set_sensitive(kate_offset_spin, display);
++    gtk_widget_set_sensitive(kate_all_streams, display);
 +}
 +#endif
 +
@@ -151,7 +152,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
      GtkWidget *bbox, *ok, *cancel;
  
      if (vorbis_configurewin != NULL) {
-@@ -120,6 +163,57 @@
+@@ -120,6 +164,57 @@
  
      gtk_box_pack_start(GTK_BOX(vbox), title_frame, TRUE, TRUE, 0);
  
