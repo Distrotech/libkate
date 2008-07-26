@@ -67,8 +67,8 @@ diff -ru audacious-plugins-be718ff506c0/extra.mk.in ../audacious-plugins-be718ff
  LIBBEEP_MAJOR_VERSION ?= @LIBBEEP_MAJOR_VERSION@
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plugins-be718ff506c0/src/vorbis/configure.c
 --- audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-24 08:11:47.000000000 +0100
-@@ -17,6 +17,13 @@
++++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-24 17:58:43.000000000 +0100
+@@ -17,6 +17,14 @@
  
  static GtkWidget *title_tag_override, *title_tag_box, *title_tag_entry,
      *title_desc;
@@ -78,11 +78,12 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
 +static GtkTooltips *kate_tip_display, *kate_tip_offset, *kate_tip_all_streams;
 +#else
 +static GtkWidget *kate_not_compiled_in_label;
++static GtkTooltips *kate_tip_not_compiled_in;
 +#endif
  
  vorbis_config_t vorbis_cfg;
  
-@@ -26,19 +33,38 @@
+@@ -26,19 +34,38 @@
      mcs_handle_t *db;
      GtkToggleButton *tb;
  
@@ -123,7 +124,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
      gtk_widget_destroy(vorbis_configurewin);
  }
  
-@@ -58,10 +84,26 @@
+@@ -58,10 +85,26 @@
      gtk_widget_set_sensitive(title_desc, override);
  }
  
@@ -150,7 +151,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
      GtkWidget *bbox, *ok, *cancel;
  
      if (vorbis_configurewin != NULL) {
-@@ -120,6 +162,54 @@
+@@ -120,6 +163,57 @@
  
      gtk_box_pack_start(GTK_BOX(vbox), title_frame, TRUE, TRUE, 0);
  
@@ -198,6 +199,9 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
 +#else
 +    kate_not_compiled_in_label = gtk_label_new(_("Kate support not compiled in"));
 +    gtk_box_pack_start(GTK_BOX(kate_vbox), kate_not_compiled_in_label, FALSE, FALSE, 0);
++    kate_tip_not_compiled_in = gtk_tooltips_new();
++    gtk_tooltips_set_tip(kate_tip_not_compiled_in, kate_not_compiled_in_label, _("This plugin was not compiled with libkate, lyrics will be ignored.\nInstall libkate and rebuild this plugin for lyrics support"), NULL);
++    gtk_tooltips_enable(kate_tip_not_compiled_in);
 +#endif
 +
 +    gtk_box_pack_start(GTK_BOX(vbox), kate_frame, TRUE, TRUE, 0);
@@ -496,6 +500,39 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vcedit.h ../audacious-plugins
  	int               eosin;
  } vcedit_state;
  
+diff -ru audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c ../audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c
+--- audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c	2008-07-18 10:10:11.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c	2008-07-24 18:01:27.000000000 +0100
+@@ -43,6 +43,7 @@
+ static gboolean write_and_pivot_files(vcedit_state * state);
+ 
+ extern GMutex *vf_mutex;
++extern GMutex *kate_mutex;
+ 
+ static mowgli_dictionary_t *
+ dictionary_from_vorbis_comment(vorbis_comment * vc)
+@@ -127,11 +128,13 @@
+     if(!tuple || !fd) return FALSE;
+     
+     g_mutex_lock(vf_mutex);
++    g_mutex_lock(kate_mutex);
+ 
+     state = vcedit_new_state();
+ 
+     if(vcedit_open(state, fd) < 0) {
+         vcedit_clear(state);
++        g_mutex_unlock(kate_mutex);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+     }
+@@ -154,6 +157,7 @@
+     ret = write_and_pivot_files(state);
+ 
+     vcedit_clear(state);
++    g_mutex_unlock(kate_mutex);
+     g_mutex_unlock(vf_mutex);
+ 
+     return ret;
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c
 --- audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-07-18 10:10:11.000000000 +0100
 +++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-07-24 08:07:38.000000000 +0100
