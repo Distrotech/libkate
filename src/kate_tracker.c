@@ -317,10 +317,10 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
         kin->region_h=kr->h*frame_h/(kate_float)100;
         break;
       case kate_millionths: /* use 64 bit arithmetic to avoid overflow */
-        kin->region_x=kr->x*(kate_int64_t)frame_w/(kate_float)10000000;
-        kin->region_y=kr->y*(kate_int64_t)frame_h/(kate_float)10000000;
-        kin->region_w=kr->w*(kate_int64_t)frame_w/(kate_float)10000000;
-        kin->region_h=kr->h*(kate_int64_t)frame_h/(kate_float)10000000;
+        kin->region_x=kr->x*(kate_int64_t)frame_w/(kate_float)1000000;
+        kin->region_y=kr->y*(kate_int64_t)frame_h/(kate_float)1000000;
+        kin->region_w=kr->w*(kate_int64_t)frame_w/(kate_float)1000000;
+        kin->region_h=kr->h*(kate_int64_t)frame_h/(kate_float)1000000;
         break;
       case kate_pixel:
         kin->region_x=kr->x;
