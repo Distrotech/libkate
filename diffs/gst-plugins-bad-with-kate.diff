@@ -276,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-07-05 17:20:41.000000000 +0100
-@@ -0,0 +1,525 @@
++++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-07-26 19:43:36.000000000 +0100
+@@ -0,0 +1,542 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -382,6 +382,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ARG_REMOVE_MARKUP,
 +  ARG_LANGUAGE,
 +  ARG_CATEGORY,
++  ARG_ORIGINAL_CANVAS_WIDTH,
++  ARG_ORIGINAL_CANVAS_HEIGHT,
 +};
 +
 +static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -452,6 +454,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      g_param_spec_string ("category", "Category", "The category of the stream",
 +          "", G_PARAM_READABLE));
 +
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
++      g_param_spec_int ("original-canvas-width", "Original canvas width (0 is unspecified)",
++          "The canvas width this stream was authored for",
++          0, G_MAXINT, 0, G_PARAM_READABLE));
++
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
++      g_param_spec_int ("original-canvas-height", "Original canvas height",
++          "The canvas height this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READABLE));
++
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
 +}
 +
@@ -479,6 +491,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  dec->remove_markup = FALSE;
 +  dec->language = NULL;
 +  dec->category = NULL;
++  dec->original_canvas_width = 0;
++  dec->original_canvas_height = 0;
 +  dec->initialized = FALSE;
 +
 +  dec->tags = NULL;
@@ -488,12 +502,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec)
 +{
-+  GstKateDec *kd = GST_KATE_DEC (object);
-+
 +  switch (prop_id) {
-+    case ARG_REMOVE_MARKUP:
-+      kd->remove_markup = g_value_get_boolean (value);
-+      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
@@ -515,6 +524,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +    case ARG_CATEGORY:
 +      g_value_set_string (value, kd->category);
++      break;
++    case ARG_ORIGINAL_CANVAS_WIDTH:
++      g_value_set_int (value, kd->original_canvas_width);
++      break;
++    case ARG_ORIGINAL_CANVAS_HEIGHT:
++      g_value_set_int (value, kd->original_canvas_height);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -579,6 +594,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      kd->language = g_strdup (kd->k.ki->language);
 +      if (kd->category) g_free (kd->category);
 +      kd->category = g_strdup (kd->k.ki->category);
++      kd->original_canvas_width = kd->k.ki->original_canvas_width;
++      kd->original_canvas_height = kd->k.ki->original_canvas_height;
 +
 +      break;
 +
@@ -804,8 +821,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-06-25 21:09:15.000000000 +0100
-@@ -0,0 +1,96 @@
++++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-07-26 19:43:01.000000000 +0100
+@@ -0,0 +1,98 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -885,6 +902,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gchar *language;
 +  gchar *category;
++  gint original_canvas_width;
++  gint original_canvas_height;
 +
 +  GstTagList *tags;
 +
@@ -903,8 +922,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-19 11:32:35.000000000 +0100
-@@ -0,0 +1,1530 @@
++++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-25 08:26:32.000000000 +0100
+@@ -0,0 +1,1541 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -1935,11 +1954,22 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  /* create the region */
 +  kate_region_init (kr);
-+  kr->metric = kate_pixel;
-+  kr->x = x;
-+  kr->y = y;
-+  kr->w = kb->width;
-+  kr->h = kb->height;
++  if (ke->original_canvas_width>0 && ke->original_canvas_height>0) {
++    /* prefer relative sizes in case we're encoding for a different resolution
++       that what the SPU was created for */
++    kr->metric = kate_millionths;
++    kr->x = 1000000*x/ke->original_canvas_width;
++    kr->y = 1000000*y/ke->original_canvas_height;
++    kr->w = 1000000*kb->width/ke->original_canvas_width;
++    kr->h = 1000000*kb->height/ke->original_canvas_height;
++  }
++  else {
++    kr->metric = kate_pixel;
++    kr->x = x;
++    kr->y = y;
++    kr->w = kb->width;
++    kr->h = kb->height;
++  }
 +
 +  return GST_FLOW_OK;
 +}
@@ -3292,8 +3322,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-07-05 16:21:10.000000000 +0100
-@@ -0,0 +1,267 @@
++++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-07-26 08:52:02.000000000 +0100
+@@ -0,0 +1,322 @@
 +/*
 + * GStreamer
 + * Copyright (C) 2006 James Livingston <doclivingston@gmail.com>
@@ -3381,6 +3411,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ARG_0,
 +  ARG_LANGUAGE,
 +  ARG_CATEGORY,
++  ARG_ORIGINAL_CANVAS_WIDTH,
++  ARG_ORIGINAL_CANVAS_HEIGHT,
 +};
 +
 +static void gst_kate_tag_base_init (gpointer g_class);
@@ -3445,6 +3477,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      g_param_spec_string ("category", "Category", "Set the category of the stream",
 +          "", G_PARAM_READWRITE));
 +
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
++      g_param_spec_int ("original-canvas-width", "Original canvas width",
++          "Set the width of the canvas this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
++      g_param_spec_int ("original-canvas-height", "Original canvas height",
++          "Set the height of the canvas this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READWRITE));
++
 +  gstkateparse_class->parse_packet = GST_DEBUG_FUNCPTR (gst_kate_tag_parse_packet);
 +}
 +
@@ -3453,6 +3495,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +{
 +  kt->language = NULL;
 +  kt->category = NULL;
++  kt->original_canvas_width = -1;
++  kt->original_canvas_height = -1;
 +}
 +
 +static void
@@ -3479,6 +3523,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      str = g_value_get_string (value);
 +      if (str) kt->category = g_strdup(str);
 +      break;
++    case ARG_ORIGINAL_CANVAS_WIDTH:
++      kt->original_canvas_width = g_value_get_int (value);
++      break;
++    case ARG_ORIGINAL_CANVAS_HEIGHT:
++      kt->original_canvas_height = g_value_get_int (value);
++      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
@@ -3498,12 +3548,37 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case ARG_CATEGORY:
 +      g_value_set_string (value, kt->category ? kt->category : "");
 +      break;
++    case ARG_ORIGINAL_CANVAS_WIDTH:
++      g_value_set_int (value, kt->original_canvas_width);
++      break;
++    case ARG_ORIGINAL_CANVAS_HEIGHT:
++      g_value_set_int (value, kt->original_canvas_height);
++      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
 +  }
 +}
 +
++static guint16 encode_canvas_size(size_t size)
++{
++  size_t base=size;
++  size_t shift=0;
++  int value;
++
++  while (base&~((1<<12)-1)) {
++    /* we have a high bit we can't fit, increase shift if we wouldn't lose low bits */
++    if ((size>>shift)&1) return 0;
++    ++shift;
++    base>>=1;
++  }
++  if (shift>=16) return 0;
++
++  /* the size can be represented in our encoding */
++  value=(base<<4)|shift;
++
++  return (guint16)value;
++}
 +
 +static GstFlowReturn
 +gst_kate_tag_parse_packet (GstKateParse * parse, GstBuffer * buffer)
@@ -3529,6 +3604,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    if (kt->category) {
 +      strncpy((char*)GST_BUFFER_DATA (buffer)+48, kt->category, 15);
 +      GST_BUFFER_DATA (buffer)[63] = 0;
++    }
++    if (kt->original_canvas_width >= 0) {
++      guint16 v = encode_canvas_size(kt->original_canvas_width);
++      GST_BUFFER_DATA (buffer)[16] = v&0xff;
++      GST_BUFFER_DATA (buffer)[17] = (v>>8)&0xff;
++    }
++    if (kt->original_canvas_height >= 0) {
++      guint16 v = encode_canvas_size(kt->original_canvas_height);
++      GST_BUFFER_DATA (buffer)[18] = v&0xff;
++      GST_BUFFER_DATA (buffer)[19] = (v>>8)&0xff;
 +    }
 +  }
 +
@@ -3562,8 +3647,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatetag.h	2008-06-24 20:44:24.000000000 +0100
-@@ -0,0 +1,66 @@
++++ gst-plugins-bad/ext/kate/gstkatetag.h	2008-07-26 08:43:46.000000000 +0100
+@@ -0,0 +1,68 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
 + * Copyright (C) <2006> James Livingston <doclivingston@gmail.com>
@@ -3619,6 +3704,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gchar *language;
 +  gchar *category;
++  gint original_canvas_width;
++  gint original_canvas_height;
 +};
 +
 +struct _GstKateTagClass {
@@ -3768,8 +3855,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +http://libkate.googlecode.com/
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-06 21:09:14.000000000 +0100
-@@ -0,0 +1,803 @@
++++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-26 19:52:39.000000000 +0100
+@@ -0,0 +1,804 @@
 +/* GStreamer
 + *
 + * unit test for kate
@@ -4532,6 +4619,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  g_list_free (buffers);
 +}
 +GST_END_TEST;
++
 +Suite *
 +kate_suite (void)
 +{
