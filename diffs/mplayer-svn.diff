@@ -553,8 +553,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  $_def_faad_internal
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.c mplayer-svn-with-kate/katedec.c
 --- mplayer-svn/katedec.c	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.c	2008-07-06 12:46:28.000000000 +0100
-@@ -0,0 +1,288 @@
++++ mplayer-svn-with-kate/katedec.c	2008-07-27 18:25:10.000000000 +0100
+@@ -0,0 +1,296 @@
 +/* Katedec.c
 +
 +   ogg.k.ogg.k@googlemail.com
@@ -763,6 +763,14 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    draw_alpha(xpos,ypos,w,h,katedec_y,katedec_a,stride);
 +#else
 +    draw_alpha_ptr=draw_alpha;
++    /*
++       we don't want to scale the position, just the image, as:
++        - either the positions were expressed in absolute pixels, in which case we must use those
++        - either they were expressed in relative units, in which case the tracker will already
++          have given us the correct positions
++     */
++    xpos = xpos*original_canvas_width/dxs;
++    ypos = ypos*original_canvas_height/dys;
 +    spudec_draw_scaled_image(dxs, dys,
 +                             katedec_y, katedec_a,
 +                             xpos, ypos, w, h, stride,
