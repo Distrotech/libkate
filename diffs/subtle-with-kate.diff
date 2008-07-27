@@ -154,7 +154,18 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
      # \return supported subtitle types 
 diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 --- subtle/Subtle.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtle.py	2008-07-14 22:50:05.000000000 +0100
++++ subtle-new-with-kate/Subtle.py	2008-07-27 20:47:32.000000000 +0100
+@@ -246,8 +246,8 @@
+             model, iter = result
+             if self.subsListStore.iter_is_valid(iter):
+                 cur, sTime, eTime = self.subsListStore.get(iter, 0, 1, 2)
+-                self.Subtitle.subAdd(sTime-1,sTime-2,'',None,1)
+-                self.subsListStore.insert_before(iter, (cur, sTime-1, sTime-2,\
++                self.Subtitle.subAdd(sTime-2,sTime-1,'',None,1)
++                self.subsListStore.insert_before(iter, (cur, sTime-2, sTime-1,\
+                                                     'New subtitle...'))
+                 self.reorder_SubsListStore()
+         return
 @@ -371,7 +371,39 @@
          return None
  
