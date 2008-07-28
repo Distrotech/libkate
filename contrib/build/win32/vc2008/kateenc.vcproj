@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\..\include;..\..\src;..\include;..\..\..\libogg\include;..\..\..\libpng;..\..\..\zlib"
+				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\..\..\..\src;..\include;..\..\..\..\..\libogg\include;..\..\..\..\..\libpng;..\..\..\..\..\zlib"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,9 +61,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib libogg.lib"
+				AdditionalDependencies="libpng.lib libogg.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="..\lib"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				TargetMachine="1"
@@ -117,7 +117,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\include;..\..\include;..\..\src;..\include;..\..\..\libogg\include;..\..\..\libpng;..\..\..\zlib"
+				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\..\..\..\src;..\include;..\..\..\..\..\libogg\include;..\..\..\..\..\libpng;..\..\..\..\..\zlib"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -136,9 +136,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="zlib.lib libpng.lib libogg.lib"
+				AdditionalDependencies="libpng.lib libogg.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="..\lib"
+				AdditionalLibraryDirectories=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
@@ -177,11 +177,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\tools\encoder.c"
+				RelativePath="..\..\..\..\tools\encoder.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\katedesc.tab.c"
+				RelativePath="..\..\..\..\tools\katedesc.tab.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -201,11 +201,11 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\tools\kpng.c"
+				RelativePath="..\..\..\..\tools\kpng.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\lex.katedesc.c"
+				RelativePath="..\..\..\..\tools\lex.katedesc.c"
 				>
 			</File>
 		</Filter>
@@ -215,15 +215,15 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\tools\katedesc.h"
+				RelativePath="..\..\..\..\tools\katedesc.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\katedesc.tab.h"
+				RelativePath="..\..\..\..\tools\katedesc.tab.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\tools\kpng.h"
+				RelativePath="..\..\..\..\tools\kpng.h"
 				>
 			</File>
 		</Filter>

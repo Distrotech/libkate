@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\include;..\..\include;..\include;..\..\..\libogg\include"
+				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\include;..\..\..\..\..\libogg\include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -105,7 +105,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\include;..\..\include;..\include;..\..\..\libogg\include"
+				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\include;..\..\..\..\..\libogg\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
@@ -151,79 +151,75 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\kate.c"
+				RelativePath="..\..\..\..\src\kate.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_bitwise.c"
+				RelativePath="..\..\..\..\src\kate_bitwise.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_comment.c"
+				RelativePath="..\..\..\..\src\kate_comment.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_decode.c"
+				RelativePath="..\..\..\..\src\kate_decode.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_decode_state.c"
+				RelativePath="..\..\..\..\src\kate_decode_state.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_encode.c"
+				RelativePath="..\..\..\..\src\kate_encode.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_encode_state.c"
+				RelativePath="..\..\..\..\src\kate_encode_state.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_event.c"
+				RelativePath="..\..\..\..\src\kate_event.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_font.c"
+				RelativePath="..\..\..\..\src\kate_font.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_fp.c"
+				RelativePath="..\..\..\..\src\kate_fp.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_granule.c"
+				RelativePath="..\..\..\..\src\kate_granule.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_high.c"
+				RelativePath="..\..\..\..\src\kate_high.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_info.c"
+				RelativePath="..\..\..\..\src\kate_info.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_motion.c"
+				RelativePath="..\..\..\..\src\kate_motion.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_ogg.c"
+				RelativePath="..\..\..\..\src\kate_packet.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_packet.c"
+				RelativePath="..\..\..\..\src\kate_rle.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_rle.c"
+				RelativePath="..\..\..\..\src\kate_text.c"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_text.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\kate_tracker.c"
+				RelativePath="..\..\..\..\src\kate_tracker.c"
 				>
 			</File>
 		</Filter>
@@ -233,39 +229,35 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\..\include\kate\kate.h"
+				RelativePath="..\..\..\..\include\kate\kate.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_bitwise.h"
+				RelativePath="..\..\..\..\src\kate_bitwise.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_config.h"
+				RelativePath="..\..\..\..\src\kate_config.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_decode_state.h"
+				RelativePath="..\..\..\..\src\kate_decode_state.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_encode_state.h"
+				RelativePath="..\..\..\..\src\kate_encode_state.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_fp.h"
+				RelativePath="..\..\..\..\src\kate_fp.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_internal.h"
+				RelativePath="..\..\..\..\src\kate_internal.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\kate_rle.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\include\kate\oggkate.h"
+				RelativePath="..\..\..\..\src\kate_rle.h"
 				>
 			</File>
 		</Filter>
