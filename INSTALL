@@ -1,6 +1,9 @@
 
-Prerequisites:
-  libogg: available at http://www.xiph.org
+libkate itself does not require any libraries apart from the usual
+system libraries (libc, etc).
+
+Recommended prerequisites:
+  libogg: available at http://www.xiph.org: for liboggkate and tools
 
 Optional dependencies:
   liboggz or ogg-tools: to build example streams
@@ -9,6 +12,9 @@ Optional dependencies:
 Of course, if you want to make use of the patches to third party
 software found in the diffs directory, you will need the relevant
 software to which they apply as well as their dependencies.
+
+Windows users without Cygwin or MSYS may find build files in the
+contrib/build/win32 tree.
 
 There is no configure machinery (yet).  Build with:
 
