@@ -1,12 +1,38 @@
+#
+# Several variables may be set to change the behavior of this Makefile:
+#  LIBQUAL: name of the lib directory to use for installed libraries  (default: "lib")
+#  PREFIX: where to install libraries, headers, etc (default: "/usr/local")
+#  DESTDIR: a directory where the prefix tree is to be installed (default: "")
+#  C89: if set to 1, the code will build in C89 mode (default: "")
+#  DEBUG: if set to 1, the code will build with debug information (default: "")
+#  PROFILE: if set to 1, the code will build with profile information (default: "")
+#  SPAMMY_WARNINGS: if set to 1, the code will build with more warnings flags (default: "")
+#  CC: name of the command to compile
+#  LD: name of the command to link
+#  AR: name of the command to create an archive
+#  RANLIB: name of the command to generate an archive index
+#  STRIP: name of the command to strip a library
+#  LIBTOOL: name of the libtool script
+#  RM: name of the command to remove a file
+#  RMDIR: name of the command to remove a directory
+#
+
 CC=gcc
 LD=gcc
 AR=ar
 RANLIB=ranlib
 STRIP=strip
+LIBTOOL=libtool
+RM=/bin/rm
+RMDIR=/bin/rmdir
+
+RM_F=$(RM) -f
+RM_FR=$(RM) -fr
 
 OBJDIR=obj
 LIBDIR=lib
 OGGDIR=built-streams
+LIBQUAL=lib
 
 SPAMMY_WARNINGS=0
 
@@ -22,43 +48,52 @@ CWARNFLAGS_FULL+=-Wconversion
 CWARNFLAGS_LIGHT:=$(CWARNFLAGS_FULL)
 endif
 
-CFLAGS=-Iinclude -Isrc
+LIBTOOL_OPTS=--silent --tag=CC
+
+EXTRA_CFLAGS+=-Iinclude -Isrc
 
 ifeq ($(C89),1)
-CFLAGS+=-std=c89
+EXTRA_CFLAGS+=-std=c89
 CWARNFLAGS_LIGHT+=-Wwrite-strings
 else
-CFLAGS+=-std=c99
+EXTRA_CFLAGS+=-std=c99
 endif
 
 ifeq ($(DEBUG),1)
-CFLAGS+=-g -O0 -DDEBUG
+EXTRA_CFLAGS+=-g -O0 -DDEBUG
 STRIP=/bin/true
 else
 CWARNFLAGS_LIGHT+=-Winline -Wdisabled-optimization
-CFLAGS+=-O2
-LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
+EXTRA_CFLAGS+=-O2
+EXTRA_LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
 STRIPFLAGS=-X -d -x -X --strip-unneeded
 endif
 
 ifeq ($(PROFILE),1)
-CFLAGS+=-pg -g
-LDFLAGS+=-pg
+EXTRA_CFLAGS+=-pg -g
+EXTRA_LDFLAGS+=-pg
 endif
 
 ifeq ($(PREFIX),)
 PREFIX=/usr/local
 endif
 
+EXTRA_CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
+EXTRA_LDFLAGS+=-L$(LIBDIR)
+
+CFLAGS+=$(EXTRA_CFLAGS)
 CFLAGS_STATIC=$(CFLAGS)
-CFLAGS_SHARED=$(CFLAGS) -fPIC
-CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
-LDFLAGS+=-L$(LIBDIR)
+CFLAGS_SHARED=$(CFLAGS) -fPIC -DPIC
+LDFLAGS+=$(EXTRA_LDFLAGS)
 
 VERSION=0.1.7
+LIBVER_CURRENT=1
+LIBVER_REVISION=0
+LIBVER_AGE=0
 SONAME_MAJOR=0
+LIBTOOL_VERSION_INFO=$(LIBVER_CURRENT):$(LIBVER_REVISION):$(LIBVER_AGE)
 
-all: staticlib sharedlib tools #doc
+all: lib #doc
 
 MODULES=kate kate_info kate_comment kate_granule kate_event \
         kate_motion kate_text kate_tracker kate_fp kate_font \
@@ -69,9 +104,14 @@ MODULES=kate kate_info kate_comment kate_granule kate_event \
 
 OBJS_STATIC=$(foreach module, $(MODULES),$(OBJDIR)/static/$(module).o)
 OBJS_SHARED=$(foreach module, $(MODULES),$(OBJDIR)/shared/$(module).o)
+OBJS_LIBTOOL=$(foreach module, $(MODULES),$(OBJDIR)/libtool/$(module).lo)
 
 LIBOGGKATE_OBJS_STATIC=$(OBJDIR)/static/kate_ogg.o
 LIBOGGKATE_OBJS_SHARED=$(OBJDIR)/shared/kate_ogg.o
+LIBOGGKATE_OBJS_LIBTOOL=$(OBJDIR)/libtool/kate_ogg.lo
+
+DECODER_OBJS=$(OBJDIR)/decoder.o
+ENCODER_OBJS=$(OBJDIR)/encoder.o $(OBJDIR)/katedesc.tab.o $(OBJDIR)/lex.katedesc.o $(OBJDIR)/kpng.o
 
 LEX=$(shell which flex 2> /dev/null)
 YACC=$(shell which bison 2> /dev/null)
@@ -82,7 +122,7 @@ OGGERR:=$(shell echo -e "\#include <ogg/ogg.h>\nint main() { ogg_page og; return
 .PHONY: tools
 ifneq ($(OGGERR),)
 tools:
-	@echo libogg not found, tools will not be built
+	@echo libogg not found, liboggkate and tools will not be built
 else
 ifeq ($(LEX),)
 tools:
@@ -108,14 +148,21 @@ endif
 
 STATICLIBS:=$(LIBDIR)/libkate.a
 SHAREDLIBS:=$(LIBDIR)/libkate.$(VERSION).so
+LIBTOOLLIBS:=$(LIBDIR)/libkate.la
 
 ifeq ($(OGGERR),)
 STATICLIBS+=$(LIBDIR)/liboggkate.a
 SHAREDLIBS+=$(LIBDIR)/liboggkate.$(VERSION).so
+LIBTOOLLIBS+=$(LIBDIR)/liboggkate.la
 endif
 
 staticlib: $(STATICLIBS)
 sharedlib: $(SHAREDLIBS)
+libtoollib: $(LIBTOOLLIBS)
+
+#lib: staticlib sharedlib libtoollib
+lib: libtoollib
+
 
 $(OBJDIR)/static/%.o: src/%.c
 	@echo " CC $@"
@@ -126,6 +173,11 @@ $(OBJDIR)/shared/%.o: src/%.c
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
 	@$(CC) $(CFLAGS_SHARED) $(CWARNFLAGS_FULL) -o $@ -c $<
+
+$(OBJDIR)/libtool/%.lo: src/%.c
+	@echo " CC $@"
+	@mkdir -p $(dir $@)
+	@$(LIBTOOL) $(LIBTOOL_OPTS) --mode=compile $(CC) $(CFLAGS) $(CWARNFLAGS_FULL) -o $@ -c $<
 
 $(OBJDIR)/%.o: tools/%.c
 	@echo " CC $@"
@@ -142,15 +194,15 @@ tools/katedesc.tab.c: tools/katedesc.y
 	@mkdir -p $(dir $@)
 	@$(YACC) -v -b katedesc_ -p katedesc_ -d -o $@ $<
 
-tools/decoder: $(OBJDIR)/decoder.o
+tools/decoder: $(DECODER_OBJS)
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $< `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $(DECODER_OBJS) `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
-tools/encoder: $(OBJDIR)/encoder.o $(OBJDIR)/katedesc.tab.o $(OBJDIR)/lex.katedesc.o $(OBJDIR)/kpng.o
+tools/encoder: $(ENCODER_OBJS)
 	@echo " CC $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $^ -lpng `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
+	@$(CC) $(LDFLAGS) -o $@ $(ENCODER_OBJS) -lpng `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
 $(LIBDIR)/libkate.a: $(OBJS_STATIC)
 	@echo " AR $@"
@@ -182,57 +234,75 @@ $(LIBDIR)/liboggkate.$(VERSION).so: $(LIBOGGKATE_OBJS_SHARED)
 	@/sbin/ldconfig -n $(LIBDIR)
 	@ln -fs liboggkate.so.$(SONAME_MAJOR) lib/liboggkate.so
 
+$(LIBDIR)/libkate.la: $(OBJS_LIBTOOL)
+	@echo " AR $@"
+	@mkdir -p $(dir $@)
+	@$(LIBTOOL) $(LIBTOOL_OPTS) --mode=link $(LD) $(LDFLAGS) -rpath $(PREFIX)/lib -version-info $(LIBTOOL_VERSION_INFO) -o $@ $^
+
+$(LIBDIR)/liboggkate.la: $(LIBOGGKATE_OBJS_LIBTOOL)
+	@echo " AR $@"
+	@mkdir -p $(dir $@)
+	@$(LIBTOOL) $(LIBTOOL_OPTS) --mode=link $(LD) $(LDFLAGS) -rpath $(PREFIX)/lib -version-info $(LIBTOOL_VERSION_INFO) -o $@ $^
+
 .PHONY: clean
 clean:
-	rm -f $(OBJS_STATIC) $(OBJS_STATIC:.o=.d)
-	rm -f $(LIBOGGKATE_OBJS_STATIC) $(OBJS_STATIC:.o=.d)
-	rm -f $(OBJS_SHARED) $(OBJS_SHARED:.o=.d)
-	rm -f $(LIBOGGKATE_OBJS_SHARED) $(OBJS_SHARED:.o=.d)
-	rm -f $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a
-	rm -f $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so
-	rm -f $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so
-	rm -f $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR)
-	rm -f tools/encoder
-	rm -f tools/decoder
-	rm -f $(OBJDIR)/*.[od]
-	rm -f tools/katedesc.tab.[ch]
-	rm -f tools/lex.katedesc.c
+	$(RM_F) $(OBJS_STATIC) $(OBJS_STATIC:.o=.d)
+	$(RM_F) $(LIBOGGKATE_OBJS_STATIC) $(LIBOGGKATE_OBJS_STATIC:.o=.d)
+	$(RM_F) $(OBJS_SHARED) $(OBJS_SHARED:.o=.d)
+	$(RM_F) $(LIBOGGKATE_OBJS_SHARED) $(LIBOGGKATE_OBJS_SHARED:.o=.d)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(OBJS_LIBTOOL) $(OBJS_LIBTOOL:.o=.d)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBOGGKATE_OBJS_LIBTOOL) $(OBJS_LIBTOOL:.o=.d)
+	$(RM_F) $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a
+	$(RM_F) $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so
+	$(RM_F) $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so
+	$(RM_F) $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBDIR)/libkate.la $(LIBDIR)/liboggkate.la
+	$(RM_F) tools/encoder
+	$(RM_F) tools/decoder
+	$(RM_F) $(OBJDIR)/*.[od]
+	$(RM_F) tools/katedesc.tab.[ch]
+	$(RM_F) tools/lex.katedesc.c
 
 .PHONY: install
-install: staticlib sharedlib
-	mkdir -p $(PREFIX)/include/kate
-	mkdir -p $(PREFIX)/lib
-	cp include/kate/kate.h $(PREFIX)/include/kate/
-	cp $(LIBDIR)/libkate.a $(PREFIX)/lib/
-	cp $(LIBDIR)/libkate.$(VERSION).so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/libkate.so $(PREFIX)/lib/
-	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
-	mkdir -p $(PREFIX)/lib/pkgconfig
+install: lib
+	mkdir -p $(DESTDIR)$(PREFIX)/include/kate
+	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+	cp include/kate/kate.h $(DESTDIR)$(PREFIX)/include/kate/
+	-cp $(LIBDIR)/libkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp $(LIBDIR)/libkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp -P $(LIBDIR)/libkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/libkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig
 	cat misc/pkgconfig/kate.pc\
            | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
-           > $(PREFIX)/lib/pkgconfig/kate.pc
+           > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/kate.pc
 ifeq ($(OGGERR),)
-	cp include/kate/oggkate.h $(PREFIX)/include/kate/
-	cp $(LIBDIR)/liboggkate.a $(PREFIX)/lib/
-	cp $(LIBDIR)/liboggkate.$(VERSION).so $(PREFIX)/lib/
-	cp -P $(LIBDIR)/liboggkate.so $(PREFIX)/lib/
-	-cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/
+	cp include/kate/oggkate.h $(DESTDIR)$(PREFIX)/include/kate/
+	-cp $(LIBDIR)/liboggkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp $(LIBDIR)/liboggkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp -P $(LIBDIR)/liboggkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/liboggkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
 	cat misc/pkgconfig/oggkate.pc | \
            awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
-           > $(PREFIX)/lib/pkgconfig/oggkate.pc
+           > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/oggkate.pc
 endif
-	-/sbin/ldconfig -n $(PREFIX)/lib/
+	-/sbin/ldconfig -n $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
 
 .PHONY: uninstall
 uninstall:
-	-rm -f $(PREFIX)/lib/libkate.a $(PREFIX)/lib/liboggkate.a
-	-rm -f $(PREFIX)/lib/libkate.$(VERSION).so $(PREFIX)/lib/liboggkate.$(VERSION).so
-	-rm -f $(PREFIX)/lib/libkate.so $(PREFIX)/lib/liboggkate.so
-	-rm -f $(PREFIX)/lib/libkate.so.$(SONAME_MAJOR) $(PREFIX)/lib/liboggkate.so.$(SONAME_MAJOR)
-	-rm -f $(PREFIX)/include/kate/kate.h
-	-rm -f $(PREFIX)/include/kate/oggkate.h
-	-rmdir $(PREFIX)/include/kate
-	-rm -f $(PREFIX)/lib/pkgconfig/kate.pc $(PREFIX)/lib/pkgconfig/oggkate.pc
+	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.a
+	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.$(VERSION).so
+	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.so
+	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.so.$(SONAME_MAJOR)
+	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=uninstall $(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.la
+	-$(RM_F) $(DESTDIR)$(PREFIX)/include/kate/kate.h
+	-$(RM_F) $(DESTDIR)$(PREFIX)/include/kate/oggkate.h
+	-$(RMDIR) $(DESTDIR)$(PREFIX)/include/kate
+	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/kate.pc $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/oggkate.pc
 
 distname:=libkate-$(VERSION)
 .PHONY: dist
@@ -320,7 +390,7 @@ check:
 else
 check: tools/decoder tools/encoder
 	@echo " Checking Kate namespace"
-	@! nm -a $(STATICLIBS) $(SHAREDLIBS) \
+	@! nm -a $(STATICLIBS) $(SHAREDLIBS) $(LIBTOOLLIBS) \
          | grep "^[0-9a-z]\{8\} [A-T] [^\.]" \
 	 | grep -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
          | grep -v "^.\{11\}kate_"

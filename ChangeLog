@@ -1,4 +1,5 @@
 0.1.7
+  Makefile overhaul: add libtool, less hardcoding, etc
   win32 fixes (Roman Vorobets)
   win32 build files (Roman Vorobets)
   fix off-by-ten tracker scaling bug
