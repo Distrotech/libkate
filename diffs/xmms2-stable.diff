@@ -1,0 +1,437 @@
+diff -ru xmms2-stable/INSTALL ../xmms2-stable/INSTALL
+--- xmms2-stable/INSTALL	2008-07-30 20:25:49.000000000 +0100
++++ ../xmms2-stable/INSTALL	2008-07-30 20:26:22.000000000 +0100
+@@ -20,6 +20,7 @@
+ ** [http://www.underbit.com/products/mad/ MAD] (Ubuntu and debian users will want libmad0-dev) - For listening to MPEG files (MPEG 1 & 2 layers I, II and III - includes MP3)
+ ** [http://www.audiocoding.com/ FAAD] - For listening to AAC.
+ ** [http://www.xiph.org Vorbisfile] - For listening to Ogg Vorbis.
++** [http://libkate.googlecode.com/ libkate] - For synced lyrics in Ogg Vorbis streams.
+ ** [http://sidplay2.sourceforge.net/ SIDplay2] - For listening to SIDs.
+ ** [http://www.geocities.com/SiliconValley/Lakes/5147/resid/ reSID] - For listening to SIDs.
+ ** [http://flac.sourceforge.net/ libFLAC] - for FLAC support
+diff -ru xmms2-stable/src/include/xmms/xmms_medialib.h ../xmms2-stable/src/include/xmms/xmms_medialib.h
+--- xmms2-stable/src/include/xmms/xmms_medialib.h	2008-07-30 20:25:49.000000000 +0100
++++ ../xmms2-stable/src/include/xmms/xmms_medialib.h	2008-07-30 20:27:17.000000000 +0100
+@@ -80,6 +80,7 @@
+ #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_FILE "website_file"
+ #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_PUBLISHER "website_publisher"
+ #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_COPYRIGHT "website_copyright"
++#define XMMS_MEDIALIB_ENTRY_PROPERTY_CURRENT_LYRICS "current_lyrics"
+ 
+ G_BEGIN_DECLS
+ 
+diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vorbis/vorbis.c
+--- xmms2-stable/src/plugins/vorbis/vorbis.c	2008-07-30 20:25:49.000000000 +0100
++++ ../xmms2-stable/src/plugins/vorbis/vorbis.c	2008-07-30 20:26:22.000000000 +0100
+@@ -31,6 +31,9 @@
+ #include <math.h>
+ #include <vorbis/codec.h>
+ #include <vorbis/vorbisfile.h>
++#ifdef HAVE_KATE
++#include <kate/kate.h>
++#endif
+ 
+ #include <glib.h>
+ #include <string.h>
+@@ -38,10 +41,28 @@
+ #include <stdlib.h>
+ #include <ctype.h>
+ 
++#ifdef HAVE_KATE
++typedef struct {
++	char *text;
++	double t;
++} lyrics_event;
++#endif
++
+ typedef struct xmms_vorbis_data_St {
+ 	OggVorbis_File vorbisfile;
+ 	ov_callbacks callbacks;
+ 	gint current;
++#ifdef HAVE_KATE
++	ogg_sync_state ksy;
++	ogg_stream_state kst;
++	kate_state k;
++	enum { kis_none, kis_sync, kis_all } kate_init_state;
++	size_t num_lyrics_events;
++	lyrics_event *lyrics_events;
++	GThread *thread;
++	GMutex *mutex;
++	gboolean running;
++#endif
+ } xmms_vorbis_data_t;
+ 
+ typedef enum { STRING, INTEGER } ptype;
+@@ -77,6 +98,14 @@
+ static gboolean xmms_vorbis_init (xmms_xform_t *decoder);
+ static void xmms_vorbis_destroy (xmms_xform_t *decoder);
+ static gint64 xmms_vorbis_seek (xmms_xform_t *xform, gint64 samples, xmms_xform_seek_mode_t whence, xmms_error_t *err);
++#ifdef HAVE_KATE
++static void process_kate(xmms_xform_t *xform, const char *ptr, size_t bytes);
++static void add_lyrics_event(xmms_xform_t *xform, const char *text, double t);
++static void clear_lyrics_events(xmms_xform_t *xform);
++static char *get_next_lyrics_event(xmms_xform_t *xform, double t);
++static void set_current_lyrics(xmms_xform_t *xform, const char *text);
++static gpointer lyrics_thread (gpointer arg);
++#endif
+ 
+ /*
+  * Plugin header
+@@ -112,6 +141,7 @@
+ 	                ">>28 string \x01vorbis", NULL);
+ 
+ 	xmms_magic_extension_add ("application/ogg", "*.ogg");
++	xmms_magic_extension_add ("application/ogg", "*.oga");
+ 
+ 	return TRUE;
+ }
+@@ -126,6 +156,14 @@
+ 	data = xmms_xform_private_data_get (xform);
+ 	g_return_if_fail (data);
+ 
++#ifdef HAVE_KATE
++	data->running = FALSE;
++	if (data->thread) {
++		g_thread_join (data->thread);
++	}
++	g_mutex_free (data->mutex);
++#endif
++
+ 	ov_clear (&data->vorbisfile);
+ 	g_free (data);
+ }
+@@ -146,6 +184,11 @@
+ 
+ 	ret = xmms_xform_read (xform, ptr, size * nmemb, &error);
+ 
++#ifdef HAVE_KATE
++	data = xmms_xform_private_data_get (xform);
++        if (data) process_kate(xform, ptr, ret);
++#endif
++
+ 	return ret / size;
+ }
+ 
+@@ -153,11 +196,20 @@
+ vorbis_callback_seek (void *datasource, ogg_int64_t offset, int whence)
+ {
+ 	xmms_xform_t *xform = datasource;
++	xmms_vorbis_data_t *data;
+ 	xmms_error_t err;
+ 	gint ret;
+ 
+ 	g_return_val_if_fail (xform, -1);
+ 
++	data = xmms_xform_private_data_get (xform);
++#ifdef HAVE_KATE
++	g_return_val_if_fail (data, -1);
++        if (data->kate_init_state >= kis_sync) {
++            ogg_sync_reset(&data->ksy);
++        }
++#endif
++
+ 	xmms_error_reset (&err);
+ 
+ 	if (whence == SEEK_CUR) {
+@@ -176,6 +228,25 @@
+ static int
+ vorbis_callback_close (void *datasource)
+ {
++#ifdef HAVE_KATE
++	xmms_xform_t *xform = datasource;
++	xmms_vorbis_data_t *data;
++	data = xmms_xform_private_data_get (xform);
++	if (data) {
++		if (data->kate_init_state == kis_all) {
++			ogg_stream_clear(&data->kst);
++		}
++		if (data->kate_init_state >= kis_sync) {
++			ogg_sync_reset(&data->ksy);
++		}
++		if (data->kate_init_state == kis_all) {
++			kate_high_decode_clear(&data->k);
++		}
++		data->kate_init_state = kis_sync;
++	}
++        clear_lyrics_events(xform);
++#endif
++
+ 	return 0;
+ }
+ 
+@@ -311,6 +382,9 @@
+ 	gint ret;
+ 	guint playtime;
+ 	const gchar *metakey;
++#ifdef HAVE_KATE
++	GError *error = NULL;
++#endif
+ 
+ 	g_return_val_if_fail (xform, FALSE);
+ 
+@@ -323,14 +397,36 @@
+ 
+ 	data->current = -1;
+ 
++#ifdef HAVE_KATE
++	ogg_sync_init(&data->ksy);
++	data->kate_init_state = kis_sync;
++	data->num_lyrics_events = 0;
++	data->lyrics_events = NULL;
++	data->mutex = g_mutex_new ();
++	data->thread = NULL;
++	data->running = TRUE;
++#endif
++
+ 	xmms_xform_private_data_set (xform, data);
+ 
+ 	ret = ov_open_callbacks (xform, &data->vorbisfile, NULL, 0,
+ 	                         data->callbacks);
+ 	if (ret) {
++#ifdef HAVE_KATE
++		g_mutex_free (data->mutex);
++		ogg_sync_clear (&data->ksy);
++#endif
++		g_free (data);
+ 		return FALSE;
+ 	}
+ 
++#ifdef HAVE_KATE
++	data->thread = g_thread_create (&lyrics_thread, xform, TRUE, &error);
++	if (data->thread) {
++		g_thread_set_priority (data->thread, G_THREAD_PRIORITY_LOW);
++	}
++#endif
++
+ 	vi = ov_info (&data->vorbisfile, -1);
+ 
+ 	playtime = ov_time_total (&data->vorbisfile, -1);
+@@ -417,7 +513,213 @@
+ 		return -1;
+ 	}
+ 
++#ifdef HAVE_KATE
++        if (data->kate_init_state >= kis_sync) {
++            ogg_sync_reset(&data->ksy);
++        }
++        clear_lyrics_events(xform);
++#endif
++
+ 	ov_pcm_seek (&data->vorbisfile, samples);
+ 
+ 	return samples;
+ }
++
++#ifdef HAVE_KATE
++
++static int is_kate_bos(ogg_page *og)
++{
++	ogg_stream_state os;
++	ogg_packet op;
++	int kate_bos = 0;
++
++	if (!ogg_page_bos(og)) return 0;
++	ogg_stream_init(&os, ogg_page_serialno (og));
++	ogg_stream_pagein(&os, og);
++	if (ogg_stream_packetpeek(&os, &op) > 0) {
++		kate_bos = (op.bytes>=8 && !memcmp(op.packet,"\200kate\0\0\0",8));
++		ogg_stream_clear(&os);
++	}
++	return kate_bos;
++}
++
++static void reset_kate(xmms_xform_t *xform)
++{
++	xmms_vorbis_data_t *data;
++
++	data = xmms_xform_private_data_get (xform);
++	g_return_if_fail (data);
++
++	if (data->kate_init_state == kis_all) {
++		ogg_stream_clear(&data->kst);
++		kate_high_decode_clear(&data->k);
++	}
++
++	if (data->kate_init_state >= kis_sync) {
++		data->kate_init_state = kis_sync;
++	}
++
++	clear_lyrics_events(xform);
++}
++
++static void process_kate(xmms_xform_t *xform, const char *ptr, size_t sz)
++{
++	int ret;
++	ogg_page og;
++	ogg_packet op;
++	char *buffer;
++	xmms_vorbis_data_t *data;
++
++	g_return_if_fail (xform);
++	data = xmms_xform_private_data_get (xform);
++	g_return_if_fail (data);
++
++	if (data->kate_init_state < kis_sync)
++		return;
++
++	buffer = ogg_sync_buffer(&data->ksy, sz);
++	if (buffer) {
++		memcpy(buffer, ptr, sz);
++		ogg_sync_wrote(&data->ksy, sz);
++	}
++
++    while (ogg_sync_pageout(&data->ksy, &og) > 0) {
++        /* if we get a Kate BOS, reset */
++        if (is_kate_bos(&og)) {
++#ifdef DEBUG
++            g_message("found Kate BOS - init for %08x\n", ogg_page_serialno (&og));
++#endif
++            reset_kate(xform);
++            ogg_stream_init(&data->kst, ogg_page_serialno (&og));
++            ogg_stream_pagein(&data->kst, &og);
++            ret = kate_high_decode_init(&data->k);
++            if (ret < 0) {
++#ifdef DEBUG
++                g_message("kate_high_decode_init failed: %d\n", ret);
++#endif
++                ogg_stream_clear(&data->kst);
++                data->kate_init_state = kis_sync;
++            }
++            else {
++                data->kate_init_state = kis_all;
++            }
++        }
++        else if (data->kate_init_state == kis_all) {
++           ogg_stream_pagein(&data->kst, &og);
++
++            while (ogg_stream_packetout(&data->kst, &op) > 0) {
++                const kate_event *ev = NULL;
++                kate_packet kp;
++                kate_packet_wrap(&kp, op.bytes, op.packet);
++                ret = kate_high_decode_packetin(&data->k, &kp, &ev);
++                if (ret < 0) {
++#ifdef DEBUG
++                    g_message("kate_high_decode_packetin failed: %d\n", ret);
++#endif
++                }
++                else {
++                    if (ev) {
++			g_mutex_lock (data->mutex);
++                        add_lyrics_event(xform, ev->text, ev->start_time);
++                        add_lyrics_event(xform, "", ev->end_time);
++			g_mutex_unlock (data->mutex);
++                    }
++                    if (ret > 0) {
++                        /* eos */
++                        reset_kate(xform);
++                    }
++                }
++            }
++        }
++    }
++}
++
++static void add_lyrics_event(xmms_xform_t *xform, const char *text, double t)
++{
++	xmms_vorbis_data_t *data;
++	lyrics_event *new_lyrics_events;
++
++	g_return_if_fail (xform);
++	data = xmms_xform_private_data_get (xform);
++	g_return_if_fail (data);
++
++	new_lyrics_events = (lyrics_event*)g_realloc(data->lyrics_events, (data->num_lyrics_events+1)*sizeof(lyrics_event));
++	if (!new_lyrics_events) {
++		/* failed to allocate */
++		return;
++	}
++	data->lyrics_events = new_lyrics_events;
++
++	new_lyrics_events[data->num_lyrics_events].text = g_strdup(text);
++	new_lyrics_events[data->num_lyrics_events].t = t;
++
++	++data->num_lyrics_events;
++}
++
++static char *get_next_lyrics_event(xmms_xform_t *xform, double t)
++{
++	xmms_vorbis_data_t *data;
++	char *text;
++
++	g_return_val_if_fail (xform, NULL);
++	data = xmms_xform_private_data_get (xform);
++	g_return_val_if_fail (data, NULL);
++
++	if (data->num_lyrics_events == 0) return NULL;
++	if (data->lyrics_events[0].t > t) return NULL;
++
++	text = data->lyrics_events[0].text;
++	--data->num_lyrics_events;
++	memmove(data->lyrics_events, data->lyrics_events+1, sizeof(lyrics_event)*data->num_lyrics_events);
++
++	return text; /* caller owns and must free */
++}
++
++static void clear_lyrics_events(xmms_xform_t *xform)
++{
++	xmms_vorbis_data_t *data;
++	size_t n;
++
++	g_return_if_fail (xform);
++	data = xmms_xform_private_data_get (xform);
++	g_return_if_fail (data);
++
++	for (n=0; n<data->num_lyrics_events; ++n) {
++		/* NULL is fine to free */
++		g_free(data->lyrics_events[n].text);
++	}
++	g_free(data->lyrics_events);
++	data->lyrics_events = NULL;
++	data->num_lyrics_events = 0;
++
++	set_current_lyrics(xform, "");
++}
++
++static void set_current_lyrics(xmms_xform_t *xform, const char *text)
++{
++	g_return_if_fail (xform);
++	xmms_xform_metadata_set_str (xform, XMMS_MEDIALIB_ENTRY_PROPERTY_CURRENT_LYRICS, text);
++}
++
++static gpointer
++lyrics_thread (gpointer arg)
++{
++	xmms_xform_t *xform = (xmms_xform_t *)arg;
++	xmms_vorbis_data_t *data = xmms_xform_private_data_get (xform);
++	double t;
++
++	while (data->running) {
++		g_mutex_lock(data->mutex);
++		t = ov_time_tell(&data->vorbisfile);
++		char *lyrics = get_next_lyrics_event (xform, t);
++		if (lyrics) {
++			set_current_lyrics (xform, lyrics);
++			g_free (lyrics);
++		}
++		g_mutex_unlock(data->mutex);
++	}
++	return NULL;
++}
++
++#endif
++
+diff -ru xmms2-stable/src/plugins/vorbis/wscript ../xmms2-stable/src/plugins/vorbis/wscript
+--- xmms2-stable/src/plugins/vorbis/wscript	2008-07-30 20:25:49.000000000 +0100
++++ ../xmms2-stable/src/plugins/vorbis/wscript	2008-07-30 20:26:22.000000000 +0100
+@@ -1,6 +1,10 @@
+ from waftools.plugin import plugin
+ 
+ def plugin_configure(conf):
+-    return conf.check_pkg('vorbisfile', destvar='vorbis')
++    vorbis_found = conf.check_pkg('vorbisfile', destvar='vorbis')
++    if conf.check_pkg('kate'):
++        conf.env['CCDEFINES_vorbis'] += ['HAVE_KATE']
++        conf.env['LINKFLAGS_vorbis'] += ['-lkate -logg']
++    return vorbis_found
+ 
+ configure, build = plugin('vorbis', needs_lib=True, configure=plugin_configure, source="vorbis.c")
