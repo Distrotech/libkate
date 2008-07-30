@@ -265,13 +265,17 @@ clean:
 	$(RM_F) $(LIBOGGKATE_OBJS_STATIC) $(LIBOGGKATE_OBJS_STATIC:.o=.d)
 	$(RM_F) $(OBJS_SHARED) $(OBJS_SHARED:.o=.d)
 	$(RM_F) $(LIBOGGKATE_OBJS_SHARED) $(LIBOGGKATE_OBJS_SHARED:.o=.d)
+ifneq ($(LIBTOOL),)
 	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(OBJS_LIBTOOL) $(OBJS_LIBTOOL:.lo=.d)
-	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBOGGKATE_OBJS_LIBTOOL) $(OBJS_LIBTOOL:.lo=.d)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBOGGKATE_OBJS_LIBTOOL) $(LIBOGGKATE_OBJS_LIBTOOL:.lo=.d)
+endif
 	$(RM_F) $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a
 	$(RM_F) $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so
 	$(RM_F) $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so
 	$(RM_F) $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR)
+ifneq ($(LIBTOOL),)
 	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBDIR)/libkate.la $(LIBDIR)/liboggkate.la
+endif
 	$(RM_F) tools/encoder
 	$(RM_F) tools/decoder
 	$(RM_F) $(OBJDIR)/*.[od]
@@ -283,29 +287,37 @@ install: lib
 	mkdir -p $(DESTDIR)$(PREFIX)/include/kate
 	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBQUAL)
 	cp include/kate/kate.h $(DESTDIR)$(PREFIX)/include/kate/
-	-cp $(LIBDIR)/libkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp $(LIBDIR)/libkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp -P $(LIBDIR)/libkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/libkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+ifneq ($(LIBTOOL),)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/libkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+else
+	cp $(LIBDIR)/libkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp $(LIBDIR)/libkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp -P $(LIBDIR)/libkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+endif
 	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig
 	cat misc/pkgconfig/kate.pc\
            | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/kate.pc
 ifeq ($(OGGERR),)
 	cp include/kate/oggkate.h $(DESTDIR)$(PREFIX)/include/kate/
-	-cp $(LIBDIR)/liboggkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp $(LIBDIR)/liboggkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp -P $(LIBDIR)/liboggkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/liboggkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
-	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+ifneq ($(LIBTOOL),)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=install cp $(LIBDIR)/liboggkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=finish $(DESTDIR)$(PREFIX)/$(LIBQUAL)
+else
+	cp $(LIBDIR)/liboggkate.a $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp $(LIBDIR)/liboggkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp -P $(LIBDIR)/liboggkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+	cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+endif
 	cat misc/pkgconfig/oggkate.pc | \
            awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
            > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/oggkate.pc
 endif
+ifeq ($(LIBTOOL),)
 	-/sbin/ldconfig -n $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
+endif
 
 .PHONY: uninstall
 uninstall:
@@ -313,7 +325,9 @@ uninstall:
 	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.$(VERSION).so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.$(VERSION).so
 	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.so
 	-$(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.so.$(SONAME_MAJOR)
+ifneq ($(LIBTOOL),)
 	-$(LIBTOOL) $(LIBTOOL_OPTS) --mode=uninstall $(RM_F) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/libkate.la $(DESTDIR)$(PREFIX)/$(LIBQUAL)/liboggkate.la
+endif
 	-$(RM_F) $(DESTDIR)$(PREFIX)/include/kate/kate.h
 	-$(RM_F) $(DESTDIR)$(PREFIX)/include/kate/oggkate.h
 	-$(RMDIR) $(DESTDIR)$(PREFIX)/include/kate
