@@ -335,7 +335,7 @@ endif
 
 distname:=libkate-$(VERSION)
 .PHONY: dist
-dist:
+dist: tools/katedesc.tab.c tools/katedesc.tab.h tools/lex.katedesc.c
 	mkdir -p $(distname)
 	cp -R src include examples diffs $(distname)
 	cp -R doc $(distname)
