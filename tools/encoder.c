@@ -380,7 +380,7 @@ int main(int argc,char **argv)
             output_filename=eat_arg(argc,argv,&n);
           }
           else {
-            fprintf(stderr,"Only one output filename may be converted at a time\n");
+            fprintf(stderr,"Only one output filename may be given\n");
             exit(-1);
           }
           break;
@@ -389,7 +389,7 @@ int main(int argc,char **argv)
             output_filename_type=eat_arg(argc,argv,&n);
           }
           else {
-            fprintf(stderr,"Only one output filename type may be converted at a time\n");
+            fprintf(stderr,"Only one output type may be given\n");
             exit(-1);
           }
           break;
@@ -418,7 +418,7 @@ int main(int argc,char **argv)
         input_filename=argv[n];
       }
       else {
-        fprintf(stderr,"Only one input filename may be converted at a time\n");
+        fprintf(stderr,"Only one input filename may be given\n");
         exit(-1);
       }
     }
