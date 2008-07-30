@@ -50,41 +50,41 @@ endif
 
 LIBTOOL_OPTS=--silent --tag=CC
 
-EXTRA_CFLAGS+=-Iinclude -Isrc
+BUILT_CFLAGS+=-Iinclude -Isrc
 
 ifeq ($(C89),1)
-EXTRA_CFLAGS+=-std=c89
+BUILT_CFLAGS+=-std=c89
 CWARNFLAGS_LIGHT+=-Wwrite-strings
 else
-EXTRA_CFLAGS+=-std=c99
+BUILT_CFLAGS+=-std=c99
 endif
 
 ifeq ($(DEBUG),1)
-EXTRA_CFLAGS+=-g -O0 -DDEBUG
+BUILT_CFLAGS+=-g -O0 -DDEBUG
 STRIP=/bin/true
 else
 CWARNFLAGS_LIGHT+=-Winline -Wdisabled-optimization
-EXTRA_CFLAGS+=-O2
-EXTRA_LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
+BUILT_CFLAGS+=-O2
+BUILT_LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
 STRIPFLAGS=-X -d -x -X --strip-unneeded
 endif
 
 ifeq ($(PROFILE),1)
-EXTRA_CFLAGS+=-pg -g
-EXTRA_LDFLAGS+=-pg
+BUILT_CFLAGS+=-pg -g
+BUILT_LDFLAGS+=-pg
 endif
 
 ifeq ($(PREFIX),)
 PREFIX=/usr/local
 endif
 
-EXTRA_CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
-EXTRA_LDFLAGS+=-L$(LIBDIR)
+BUILT_CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
+BUILT_LDFLAGS+=-L$(LIBDIR)
 
-CFLAGS+=$(EXTRA_CFLAGS)
+CFLAGS+=$(BUILT_CFLAGS)
 CFLAGS_STATIC=$(CFLAGS)
 CFLAGS_SHARED=$(CFLAGS) -fPIC -DPIC
-LDFLAGS+=$(EXTRA_LDFLAGS)
+LDFLAGS+=$(BUILT_LDFLAGS)
 
 VERSION=0.1.7
 LIBVER_CURRENT=1
