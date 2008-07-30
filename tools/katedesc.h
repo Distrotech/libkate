@@ -36,5 +36,7 @@ extern kate_state k;
 extern kate_info ki;
 extern kate_comment kc;
 
+extern char base_path[];
+
 #endif
 

@@ -40,6 +40,7 @@ kate_state k;
 kate_info ki;
 kate_comment kc;
 ogg_int64_t packetno;
+char base_path[4096]="";
 
 static char str[4096];
 static int headers_written=0;
@@ -433,11 +434,24 @@ int main(int argc,char **argv)
     fin=stdin;
   }
   else {
+    const char *ptr,*end;
     fin=fopen(input_filename,"r");
     if (!fin) {
       fprintf(stderr,"%s: %s\n",input_filename,strerror(errno));
       exit(-1);
     }
+    ptr=end=input_filename;
+    while (*ptr) {
+      if (*ptr=='/' || *ptr=='\\')
+        end=ptr;
+      ++ptr;
+    }
+    if ((size_t)(end-input_filename+1)>=sizeof(base_path)) {
+      fprintf(stderr,"%s too long\n",input_filename);
+      exit(-1);
+    }
+    strncpy(base_path,input_filename,end-input_filename+1);
+    base_path[end-input_filename+1]=0; /* just after the last slash */
   }
 
   if (!output_filename || !strcmp(output_filename,"-")) {

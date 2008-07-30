@@ -1,6 +1,6 @@
 kate {
   defs {
-    define bitmap { source "examples/kate/sample.png" }
+    define bitmap { source "sample.png" }
 
     define region { percent position 45 45 size 10 10 }
     define region { percent position 15 75 size 10 10 clip }
