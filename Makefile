@@ -16,6 +16,12 @@
 #  RM: name of the command to remove a file
 #  RMDIR: name of the command to remove a directory
 #
+#  libtool is autodetected, and used if found. If not found, static and shared libraries will
+#  be built instead of libtool libraries. By passing LIBTOOL= to make, it is possible to build
+#  static and shared libraries without libtool even if libtool is present. Of course, it is
+#  also possible to build libtool libraries using a particular libtool script, by passing its
+#  path in the LIBTOOL variable (eg, make LIBTOOL=$HOME/bin/libtool-custom).
+#
 
 CC=gcc
 LD=gcc
@@ -23,11 +29,10 @@ AR=ar
 RANLIB=ranlib
 STRIP=strip
 LIBTOOL=libtool
-RM=/bin/rm
+RM=/bin/rm -f
 RMDIR=/bin/rmdir
 
 RM_F=$(RM) -f
-RM_FR=$(RM) -fr
 
 OBJDIR=obj
 LIBDIR=lib
@@ -78,7 +83,7 @@ ifeq ($(PREFIX),)
 PREFIX=/usr/local
 endif
 
-BUILT_CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).d" -MF "$(basename $@).d"
+BUILT_CFLAGS+=-MMD -MT "$(basename $@).o $(basename $@).lo $(basename $@).d" -MF "$(basename $@).d"
 BUILT_LDFLAGS+=-L$(LIBDIR)
 
 CFLAGS+=$(BUILT_CFLAGS)
@@ -93,7 +98,7 @@ LIBVER_AGE=0
 SONAME_MAJOR=0
 LIBTOOL_VERSION_INFO=$(LIBVER_CURRENT):$(LIBVER_REVISION):$(LIBVER_AGE)
 
-all: lib #doc
+all: lib tools #doc
 
 MODULES=kate kate_info kate_comment kate_granule kate_event \
         kate_motion kate_text kate_tracker kate_fp kate_font \
@@ -116,6 +121,13 @@ ENCODER_OBJS=$(OBJDIR)/encoder.o $(OBJDIR)/katedesc.tab.o $(OBJDIR)/lex.katedesc
 LEX=$(shell which flex 2> /dev/null)
 YACC=$(shell which bison 2> /dev/null)
 DOXYGEN=$(shell which doxygen 2> /dev/null)
+LIBTOOL=$(shell which libtool 2> /dev/null)
+
+ifneq ($(LIBTOOL),)
+LIBTOOL_LINK_WRAPPER=$(LIBTOOL) $(LIBTOOL_OPTS) --mode=link
+else
+LIBTOOL_LINK_WRAPPER=
+endif
 
 OGGERR:=$(shell echo -e "\#include <ogg/ogg.h>\nint main() { ogg_page og; return ogg_page_serialno(&og); }" | $(CC) -xc -o /dev/null - -logg -lm -lc 2>&1)
 
@@ -160,9 +172,12 @@ staticlib: $(STATICLIBS)
 sharedlib: $(SHAREDLIBS)
 libtoollib: $(LIBTOOLLIBS)
 
-#lib: staticlib sharedlib libtoollib
+.PHONY: lib staticlib sharedlib libtoollib
+ifneq ($(LIBTOOL),)
 lib: libtoollib
-
+else
+lib: sharedlib staticlib
+endif
 
 $(OBJDIR)/static/%.o: src/%.c
 	@echo " CC $@"
@@ -195,14 +210,14 @@ tools/katedesc.tab.c: tools/katedesc.y
 	@$(YACC) -v -b katedesc_ -p katedesc_ -d -o $@ $<
 
 tools/decoder: $(DECODER_OBJS)
-	@echo " CC $@"
+	@echo " LD $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $(DECODER_OBJS) `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
+	@$(LIBTOOL_LINK_WRAPPER) $(CC) $(LDFLAGS) -o $@ $(DECODER_OBJS) `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
 tools/encoder: $(ENCODER_OBJS)
-	@echo " CC $@"
+	@echo " LD $@"
 	@mkdir -p $(dir $@)
-	@$(CC) $(LDFLAGS) -o $@ $(ENCODER_OBJS) -lpng `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
+	@$(LIBTOOL_LINK_WRAPPER) $(CC) $(LDFLAGS) -o $@ $(ENCODER_OBJS) -lpng `PKG_CONFIG_PATH=misc/pkgconfig:${PKG_CONFIG_PATH} pkg-config --libs oggkate`
 
 $(LIBDIR)/libkate.a: $(OBJS_STATIC)
 	@echo " AR $@"
@@ -250,8 +265,8 @@ clean:
 	$(RM_F) $(LIBOGGKATE_OBJS_STATIC) $(LIBOGGKATE_OBJS_STATIC:.o=.d)
 	$(RM_F) $(OBJS_SHARED) $(OBJS_SHARED:.o=.d)
 	$(RM_F) $(LIBOGGKATE_OBJS_SHARED) $(LIBOGGKATE_OBJS_SHARED:.o=.d)
-	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(OBJS_LIBTOOL) $(OBJS_LIBTOOL:.o=.d)
-	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBOGGKATE_OBJS_LIBTOOL) $(OBJS_LIBTOOL:.o=.d)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(OBJS_LIBTOOL) $(OBJS_LIBTOOL:.lo=.d)
+	$(LIBTOOL) $(LIBTOOL_OPTS) --mode=clean $(RM_F) $(LIBOGGKATE_OBJS_LIBTOOL) $(OBJS_LIBTOOL:.lo=.d)
 	$(RM_F) $(LIBDIR)/libkate.a $(LIBDIR)/liboggkate.a
 	$(RM_F) $(LIBDIR)/libkate.$(VERSION).so $(LIBDIR)/liboggkate.$(VERSION).so
 	$(RM_F) $(LIBDIR)/libkate.so $(LIBDIR)/liboggkate.so
@@ -414,7 +429,7 @@ check: tools/decoder tools/encoder
 	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
 endif
 
-tools/encoder tools/decoder: $(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
+tools/encoder tools/decoder: lib #$(LIBDIR)/liboggkate.a $(LIBDIR)/libkate.a
 
 ifneq '$(findstring clean,$(MAKECMDGOALS))' 'clean'
 -include obj/*.d obj/*/*.d
