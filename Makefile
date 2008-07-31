@@ -28,7 +28,11 @@ LD=gcc
 AR=ar
 RANLIB=ranlib
 STRIP=strip
+ifeq ($(shell uname),Darwin)
+LIBTOOL=glibtool
+else
 LIBTOOL=libtool
+endif
 RM=/bin/rm -f
 RMDIR=/bin/rmdir
 
@@ -70,8 +74,14 @@ STRIP=/bin/true
 else
 CWARNFLAGS_LIGHT+=-Winline -Wdisabled-optimization
 BUILT_CFLAGS+=-O2
+ifeq ($(shell uname),Linux)
 BUILT_LDFLAGS+=-Wl,-x -Wl,-S -Wl,-O2
 STRIPFLAGS=-X -d -x -X --strip-unneeded
+else
+BUILT_LDFLAGS=
+STRIP=/bin/true
+STRIPFLAGS=
+endif
 endif
 
 ifeq ($(PROFILE),1)
@@ -129,7 +139,7 @@ else
 LIBTOOL_LINK_WRAPPER=
 endif
 
-OGGERR:=$(shell echo -e "\#include <ogg/ogg.h>\nint main() { ogg_page og; return ogg_page_serialno(&og); }" | $(CC) -xc -o /dev/null - -logg -lm -lc 2>&1)
+OGGERR:=$(shell echo -e "\#include <ogg/ogg.h>\nint main() { ogg_page og; return ogg_page_serialno(&og); }" | $(CC) -xc -o $(OBJDIR)/_oggerr.o - -logg -lm -lc 2>&1)
 
 .PHONY: tools
 ifneq ($(OGGERR),)
@@ -176,7 +186,11 @@ libtoollib: $(LIBTOOLLIBS)
 ifneq ($(LIBTOOL),)
 lib: libtoollib
 else
+ifeq ($(shell uname),Linux)
 lib: sharedlib staticlib
+else
+lib: staticlib
+endif
 endif
 
 $(OBJDIR)/static/%.o: src/%.c
