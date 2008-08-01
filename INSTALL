@@ -30,6 +30,10 @@ Uninstall with one of:
 $ make uninstall PREFIX=$HOME
 # make uninstall
 
+See comments at the top of the Makefile for a list of variables that
+can be used to modify the behavior of the Makefile (including PREFIX,
+DESTDIR, command names, etc)
+
 
 If you do not have Flex or Bison, you will be able to build the tools,
 but not to modify them.

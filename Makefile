@@ -33,15 +33,17 @@ LIBTOOL=glibtool
 else
 LIBTOOL=libtool
 endif
+LIBQUAL=lib
 RM=/bin/rm -f
 RMDIR=/bin/rmdir
 
 RM_F=$(RM) -f
 
+
+# relative to the source tree
 OBJDIR=obj
 LIBDIR=lib
 OGGDIR=built-streams
-LIBQUAL=lib
 
 SPAMMY_WARNINGS=0
 
@@ -311,9 +313,12 @@ else
 	cp -P $(LIBDIR)/libkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
 endif
 	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig
-	cat misc/pkgconfig/kate.pc\
-           | awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
-           > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/kate.pc
+	cat misc/pkgconfig/kate.pc \
+           | awk -v px="$(PREFIX)" -v lq="$(LIBQUAL)" ' \
+	     /^prefix=/ {print "prefix="px; next} \
+	     /^libqual=/ {print "libqual="lq; next} \
+	     {print} \
+	   ' > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/kate.pc
 ifeq ($(OGGERR),)
 	cp include/kate/oggkate.h $(DESTDIR)$(PREFIX)/include/kate/
 ifneq ($(LIBTOOL),)
@@ -325,9 +330,12 @@ else
 	cp -P $(LIBDIR)/liboggkate.so $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
 	cp -P $(LIBDIR)/liboggkate.so.$(SONAME_MAJOR) $(DESTDIR)$(PREFIX)/$(LIBQUAL)/
 endif
-	cat misc/pkgconfig/oggkate.pc | \
-           awk -v px="$(PREFIX)" '/^prefix=/ {print "prefix="px; next} {print}' \
-           > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/oggkate.pc
+	cat misc/pkgconfig/oggkate.pc \
+           | awk -v px="$(PREFIX)" -v lq="$(LIBQUAL)" ' \
+	     /^prefix=/ {print "prefix="px; next} \
+	     /^libqual=/ {print "libqual="lq; next} \
+	     {print} \
+	   ' > $(DESTDIR)$(PREFIX)/$(LIBQUAL)/pkgconfig/oggkate.pc
 endif
 ifeq ($(LIBTOOL),)
 	-/sbin/ldconfig -n $(DESTDIR)$(PREFIX)/$(LIBQUAL)/

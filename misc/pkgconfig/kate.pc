@@ -1,7 +1,8 @@
 # This is the pkg-config file for libkate
 prefix=/usr/local
 exec_prefix=${prefix}
-libdir=${exec_prefix}/lib
+libqual=lib
+libdir=${exec_prefix}/${libqual}
 includedir=${prefix}/include
 
 Name: Kate
