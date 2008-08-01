@@ -91,6 +91,11 @@ BUILT_CFLAGS+=-pg -g
 BUILT_LDFLAGS+=-pg
 endif
 
+# seems some archs that use GCC have attribute disabled, resulting in a sea of warnings
+ifneq ($(shell uname),Linux)
+BUILT_CFLAGS+=-DKATE_USE_ATTRIBUTE
+endif
+
 ifeq ($(PREFIX),)
 PREFIX=/usr/local
 endif

@@ -18,7 +18,7 @@
 #define const
 #endif
 
-#ifndef __GNUC__
+#if !defined __GNUC__ || !defined KATE_USE_ATTRIBUTE
 #define __attribute__(x)
 #endif
 
