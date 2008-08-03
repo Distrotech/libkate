@@ -1565,6 +1565,35 @@ static void init_font_mapping(void)
   kmapping->ranges=NULL;
 }
 
+static int check_font_overlap(const kate_font_range *kfr0,const kate_font_range *kfr1)
+{
+  if (!kfr0 || !kfr1) return KATE_E_INVALID_PARAMETER;
+
+  if (kfr0->last_code_point<kfr1->first_code_point) return 0;
+  if (kfr1->last_code_point<kfr0->first_code_point) return 0;
+
+  return KATE_E_INIT;
+}
+
+static int check_font_ranges(const kate_font_mapping *kfm)
+{
+  size_t n,l;
+
+  if (!kfm) return KATE_E_INVALID_PARAMETER;
+
+  for (n=0;n<kfm->nranges;++n) {
+    const kate_font_range *kfr=kfm->ranges[n];
+    if (!kfr) return KATE_E_INIT;
+    if (kfr->last_code_point<kfr->first_code_point) return KATE_E_INIT;
+    for (l=n+1;l<kfm->nranges;++l) {
+      int ret=check_font_overlap(kfr,kfm->ranges[l]);
+      if (ret<0) return ret;
+    }
+  }
+
+  return 0;
+}
+
 static void add_font_range_to_mapping(void)
 {
   int ret;
@@ -1576,7 +1605,7 @@ static void add_font_range_to_mapping(void)
   kmapping->ranges[kmapping->nranges]=krange;
   ++kmapping->nranges;
 
-  ret=kate_font_check_ranges(kmapping);
+  ret=check_font_ranges(kmapping);
   if (ret<0) yyerror("font mapping ranges overlap");
 
   krange=NULL;

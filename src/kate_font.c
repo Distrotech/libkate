@@ -15,35 +15,6 @@
 #include "kate_internal.h"
 #include "kate/kate.h"
 
-static int kate_font_check_overlap(const kate_font_range *kfr0,const kate_font_range *kfr1)
-{
-  if (!kfr0 || !kfr1) return KATE_E_INVALID_PARAMETER;
-
-  if (kfr0->last_code_point<kfr1->first_code_point) return 0;
-  if (kfr1->last_code_point<kfr0->first_code_point) return 0;
-
-  return KATE_E_INIT;
-}
-
-int kate_font_check_ranges(const kate_font_mapping *kfm)
-{
-  size_t n,l;
-
-  if (!kfm) return KATE_E_INVALID_PARAMETER;
-
-  for (n=0;n<kfm->nranges;++n) {
-    const kate_font_range *kfr=kfm->ranges[n];
-    if (!kfr) return KATE_E_INIT;
-    if (kfr->last_code_point<kfr->first_code_point) return KATE_E_INIT;
-    for (l=n+1;l<kfm->nranges;++l) {
-      int ret=kate_font_check_overlap(kfr,kfm->ranges[l]);
-      if (ret<0) return ret;
-    }
-  }
-
-  return 0;
-}
-
 /**
   \ingroup font
   Returns the index of the bitmap which corresponds to the given code point, if any.
