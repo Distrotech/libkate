@@ -39,16 +39,16 @@ lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@
 lib_liboggkate_la_LIBADD=@OGG_LIBS@
 
 if HAVE_OGG
-tools_encoder_SOURCES=tools/encoder.c tools/lex.katedesc.c tools/katedesc.tab.c tools/kpng.c
-tools_decoder_SOURCES=tools/decoder.c
-tools_encoder_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
-tools_decoder_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@
-tools_encoder_CFLAGS=@CWARNFLAGS_LIGHT@
-tools_decoder_CFLAGS=@CWARNFLAGS_LIGHT@
-noinst_PROGRAMS=tools/decoder
+tools_kateenc_SOURCES=tools/kateenc.c tools/lex.katedesc.c tools/katedesc.tab.c tools/kpng.c
+tools_katedec_SOURCES=tools/katedec.c
+tools_kateenc_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
+tools_katedec_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@
+tools_kateenc_CFLAGS=@CWARNFLAGS_LIGHT@
+tools_katedec_CFLAGS=@CWARNFLAGS_LIGHT@
+bin_PROGRAMS=tools/katedec
 noinst_HEADERS+=tools/katedesc.h
 if HAVE_PNG
-noinst_PROGRAMS+=tools/encoder
+bin_PROGRAMS+=tools/kateenc
 endif
 endif
 
@@ -101,7 +101,7 @@ tmp_ogg2:="kate-check-2.kate.ogg"
 tmp_kate1:="kate-check-1.kate"
 tmp_kate2:="kate-check-2.kate"
 
-check-local: tools/encoder tools/decoder
+check-local: tools/kateenc tools/katedec
 	@echo " Checking Kate namespace"
 	@! /usr/bin/nm -a lib/.libs/*.a lib/.libs/*.so \
          | $(GREP) "^[0-9a-z]\{8\} [A-T] [^\.]" \
@@ -110,7 +110,7 @@ check-local: tools/encoder tools/decoder
 	@echo " Checking memory allocation routines"
 	@! $(GREP) -E '[^_](malloc|realloc|free|calloc|memalign)\(' \
            src/* include/kate/* \
-           tools/katedesc.h tools/encoder.c tools/decoder.c tools/*.[ly] \
+           tools/katedesc.h tools/kateenc.c tools/katedec.c tools/*.[ly] \
 	 | $(GREP) -v "^include/kate/kate.h:#define kate_"
 	@echo " Checking forgotten debug traces"
 	@! $(GREP) -E '[^sn]printf' \
@@ -119,11 +119,11 @@ check-local: tools/encoder tools/decoder
 if HAVE_OGG
 	@$(foreach stream, $(STREAMS), \
 	  echo " Checking Kate stream $(stream)" && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/encoder -s 0 -t kate -o $(tmp_ogg1) $(top_srcdir)/examples/kate/$(stream).kate && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/decoder -o $(tmp_kate1) $(tmp_ogg1) && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/encoder -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
+	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg1) $(top_srcdir)/examples/kate/$(stream).kate && \
+	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate1) $(tmp_ogg1) && \
+	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
 	  $(OGG_DIFF) $(tmp_ogg1) $(tmp_ogg2) && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/decoder -o $(tmp_kate2) $(tmp_ogg2) && \
+	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate2) $(tmp_ogg2) && \
 	  cmp $(tmp_kate1) $(tmp_kate2) && \
 	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
 endif
@@ -133,12 +133,12 @@ if HAVE_OGG
 video_theora_ogg:=$(shell ls video.theora.ogg 2> /dev/null || ls video.theora.ogv 2> /dev/null)
 
 .PRECIOUS: $(OGGDIR)/%.kate.ogg
-$(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/encoder
+$(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/kateenc
 	@echo " Building Kate stream from $<"
 	@mkdir -p $(dir $@)
-	@$(LIBTOOL) --mode=execute ./tools/encoder -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
+	@$(LIBTOOL) --mode=execute ./tools/kateenc -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
 
-$(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg tools/encoder
+$(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg tools/kateenc
 if HAVE_OGG_MERGE
 	@if test "x${video_theora_ogg}" = "x"; then \
 	  echo "video.theora.ogv not found, Kate streams will not be merged with video."; \
