@@ -188,7 +188,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="__STDC__"
+						PreprocessorDefinitions="__STDC__;snprintf=_snprintf"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -196,7 +196,7 @@
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="__STDC__"
+						PreprocessorDefinitions="__STDC__;snprintf=_snprintf"
 					/>
 				</FileConfiguration>
 			</File>
