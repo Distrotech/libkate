@@ -551,8 +551,8 @@ extern int kate_curve_init(kate_curve *kc);
 extern int kate_motion_init(kate_motion *km);
 
 /** \defgroup text Text manipulation */
-extern int kate_text_get_character(kate_text_encoding text_encoding,const char * const* const text,size_t *len0);
-extern int kate_text_set_character(kate_text_encoding text_encoding,int c,char * const * const text,size_t *len0);
+extern int kate_text_get_character(kate_text_encoding text_encoding,const char ** const text,size_t *len0);
+extern int kate_text_set_character(kate_text_encoding text_encoding,int c,char ** const text,size_t *len0);
 extern int kate_text_remove_markup(kate_text_encoding text_encoding,char *text,size_t *len0);
 extern int kate_text_validate(kate_text_encoding text_encoding,const char *text,size_t len0);
 
