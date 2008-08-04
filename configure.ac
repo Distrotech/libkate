@@ -1,0 +1,186 @@
+AC_INIT([libkate],[0.1.7])
+
+AC_CONFIG_SRCDIR([include/kate/kate.h.in])
+AC_CONFIG_AUX_DIR([misc/autotools])
+
+AC_PREREQ(2.53)
+
+AC_CANONICAL_TARGET
+
+AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
+AC_CONFIG_HEADERS([include/config.h])
+
+LIBKATE_SHARED_VERSION="1:0:0"
+LIBOGGKATE_SHARED_VERSION="1:0:0"
+
+AC_PROG_CC_C_O
+AC_PROG_LIBTOOL
+AC_PROG_LEX
+AC_PROG_YACC
+AC_PROG_GREP
+AC_PROG_NM
+
+AC_C_CONST
+AC_C_INLINE
+
+
+# headers
+
+AC_HEADER_STDC
+AC_CHECK_HEADERS([unistd.h])
+
+dnl Work out which int types to use
+AC_CHECK_HEADERS(
+  [stdint.h],
+  [
+    INCLUDE_INT_HEADER="#include <stdint.h>"
+    INT32_T="int32_t"
+    UINT32_T="uint32_t"
+    INT64_T="int64_t"
+    UINT64_T="uint64_t"
+  ],
+  [
+    AC_TYPE_INT32_T
+    test "x$ac_cv_c_int32_t" == "xyes" && INT32_T="int32_t" || INT32_T=$ac_cv_c_int32_t
+    AC_TYPE_UINT32_T
+    test "x$ac_cv_c_uint32_t" == "xyes" && UINT32_T="uint32_t" || INT32_T=$ac_cv_c_uint32_t
+    AC_TYPE_INT64_T
+    test "x$ac_cv_c_int64_t" == "xyes" && INT64_T="int64_t" || INT64_T=$ac_cv_c_int64_t
+    AC_TYPE_UINT64_T
+    test "x$ac_cv_c_uint64_t" == "xyes" && UINT64_T="uint64_t" || INT64_T=$ac_cv_c_uint64_t
+  ]
+)
+
+AC_MSG_CHECKING(for attribute)
+AC_CACHE_VAL(
+  [has_attribute],
+  [
+    AC_COMPILE_IFELSE(
+      [
+          void attribute_function(int arg __attribute__((unused))) __attribute__((visibility("internal")));
+      ],
+      [has_attribute=yes],
+      [has_attribute=no]
+    )
+  ]
+)
+if test "x${has_attribute}" = "xyes"
+then
+  AC_DEFINE_UNQUOTED(HAVE_ATTRIBUTE, [1], [Define to 1 if the compiler supports __attribute__])
+fi
+AC_MSG_RESULT($has_attribute)
+
+AC_TYPE_SIZE_T
+
+AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes)
+AC_CHECK_PROG(HAVE_DOXYGEN,doxygen,yes)
+AM_CONDITIONAL(HAVE_DOXYGEN,test "${HAVE_DOXYGEN}" = "yes")
+AC_PATH_PROG(VALGRIND,valgrind,)
+if test "x$VALGRIND" != "x"
+then
+  VALGRIND="$VALGRIND -q --leak-check=full --show-reachable=yes"
+fi
+
+AC_PATH_PROG(OGGZ,oggz,)
+if test "x$OGGZ" != "x"
+then
+  OGG_MERGE="oggz merge"
+  OGG_DIFF="oggz diff"
+else
+  AC_PATH_PROG(OGG_MERGE,oggz-merge,)
+  if test "x$OGG_MERGE" = "x"
+  then
+    AC_PATH_PROG(OGG_MERGE,oggmerge,)
+  fi
+  AC_PATH_PROG(OGG_DIFF,oggz-diff,)
+  if test "x$OGG_DIFF" = "x"
+  then
+    AC_PATH_PROG(OGG_DIFF,cmp,)
+  fi
+fi
+AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
+
+VERSION_MAJOR=${VERSION:0:1}
+VERSION_MINOR=${VERSION:2:1}
+VERSION_PATCH=${VERSION:4:1}
+
+if test "x$HAVE_PKG_CONFIG" = "xyes"
+then
+  PKG_CHECK_MODULES(OGG, ogg >= 1.0, HAVE_OGG=yes, HAVE_OGG=no)
+fi
+if test "x$HAVE_OGG" = "xno"
+then
+  AC_CHECK_LIB(
+    ogg,
+    ogg_sync_init,
+    [
+      AC_CHECK_HEADER(
+        [ogg/ogg.h],
+        [HAVE_OGG=yes],
+        [HAVE_OGG=no],
+      )
+    ],
+    [HAVE_OGG=no]
+  )
+fi
+AM_CONDITIONAL(HAVE_OGG,test "x${HAVE_OGG}" = "xyes")
+
+if test "x$HAVE_PKG_CONFIG" = "xyes"
+then
+  PKG_CHECK_MODULES(PNG, libpng, HAVE_PNG=yes, HAVE_PNG=no)
+fi
+if test "x$HAVE_PNG" = "xno"
+then
+  AC_CHECK_LIB(
+    png,
+    png_read_init,
+    [
+      AC_CHECK_HEADER(
+        [png.h],
+        [HAVE_PNG=yes],
+        [HAVE_PNG=no],
+      )
+    ],
+    [HAVE_PNG=no]
+  )
+fi
+AM_CONDITIONAL(HAVE_PNG,test "${HAVE_PNG}" = "yes")
+
+CWARNFLAGS_LIGHT="-W -Wall -Wdeclaration-after-statement -Wcast-qual -Wcast-align"
+CWARNFLAGS_LIGHT="$CWARNFLAGS_LIGHT -Winit-self -Wcast-align -pedantic -Wformat=2 -Wunused"
+CWARNFLAGS_LIGHT="$CWARNFLAGS_LIGHT -Wstrict-aliasing=2 -Wpointer-arith -Wbad-function-cast -Waggregate-return"
+
+CWARNFLAGS_FULL="$CWARNFLAGS_LIGHT"
+CWARNFLAGS_FULL="$CWARNFLAGS_FULL -Wshadow -Wsign-compare -Wredundant-decls -Wmissing-prototypes -Wundef -Wmissing-declarations"
+
+#ifeq ($(SPAMMY_WARNINGS),1)
+#CWARNFLAGS_FULL="$CWARNFLAGS_FULL -Wconversion"
+#CWARNFLAGS_LIGHT="$CWARNFLAGS_FULL"
+#endif
+
+
+AC_SUBST([LIBKATE_SHARED_VERSION])
+AC_SUBST([LIBOGGKATE_SHARED_VERSION])
+AC_SUBST([INCLUDE_INT_HEADER])
+AC_SUBST(VERSION_MAJOR)
+AC_SUBST(VERSION_MINOR)
+AC_SUBST(VERSION_PATCH)
+AC_SUBST([INT32_T])
+AC_SUBST([UINT32_T])
+AC_SUBST([INT64_T])
+AC_SUBST([UINT64_T])
+AC_SUBST([CONST])
+AC_SUBST([CWARNFLAGS_LIGHT])
+AC_SUBST([CWARNFLAGS_FULL])
+
+AC_CONFIG_FILES(
+  [Makefile]
+  [include/kate/kate.h]
+  [misc/pkgconfig/kate.pc]
+  [misc/pkgconfig/kate-uninstalled.pc]
+  [misc/pkgconfig/oggkate.pc]
+  [misc/pkgconfig/oggkate-uninstalled.pc]
+  [doc/kate.doxygen]
+)
+AC_OUTPUT
+

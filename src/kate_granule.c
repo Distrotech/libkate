@@ -8,8 +8,8 @@
 
 
 #define KATE_INTERNAL
-
 #include "kate_internal.h"
+
 #include "kate/kate.h"
 
 /**

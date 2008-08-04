@@ -8,9 +8,9 @@
 
 
 #define KATE_INTERNAL
+#include "kate_internal.h"
 
 #include <stdlib.h>
-#include "kate_internal.h"
 #include "kate/kate.h"
 #include "kate_bitwise.h"
 #include "kate_fp.h"

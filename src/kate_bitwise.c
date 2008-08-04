@@ -16,14 +16,19 @@
  ********************************************************************
 
   function: packing variable sized words into an octet stream
-  last mod: $Id: kate_bitwise.c,v 1.1 2008/05/16 18:32:12 lyrian Exp $
+  last mod: $Id: kate_bitwise.c,v 1.2 2008/08/04 20:41:47 lyrian Exp $
 
  ********************************************************************/
 
 /* We're 'LSb' endian; if we write a word but read individual bits,
    then we'll read the lsb first */
 
+#define KATE_INTERNAL
+#include "kate_internal.h"
+
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include <stdlib.h>
 #include "kate_bitwise.h"
 

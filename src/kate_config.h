@@ -9,16 +9,9 @@
 #ifndef _KATE_CONFIG_H_
 #define _KATE_CONFIG_H_
 
-#if (defined __STDC_VERSION__ && __STDC_VERSION__ >= 199901L) || defined __USE_ISOC99
-#define KATE_USE_C99
-#endif
+#include "config.h"
 
-#ifndef KATE_USE_C99
-#define inline
-#define const
-#endif
-
-#if !defined __GNUC__ || !defined KATE_USE_ATTRIBUTE
+#if !defined HAVE_ATTRIBUTE
 #define __attribute__(x)
 #endif
 

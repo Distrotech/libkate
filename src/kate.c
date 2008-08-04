@@ -8,9 +8,11 @@
 
 
 #define KATE_INTERNAL
-
-#include <string.h>
 #include "kate_internal.h"
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #include "kate/kate.h"
 #include "kate_decode_state.h"
 #include "kate_encode_state.h"

@@ -8,9 +8,11 @@
 
 
 #define KATE_INTERNAL
-
-#include <string.h>
 #include "kate_internal.h"
+
+#ifdef HAVE_STRING_H
+#include <string.h>
+#endif
 #include "kate/kate.h"
 
 /* #define ENABLE_CODE_POINTS_ABOVE_0x10ffff */
@@ -237,7 +239,7 @@ int kate_text_get_character(kate_text_encoding text_encoding,const char ** const
   \returns >=0 success, the number of bytes used to write this code point
   \returns KATE_E_* error
   */
-int kate_text_set_character(kate_text_encoding text_encoding,int c,char **const text,size_t *len0)
+int kate_text_set_character(kate_text_encoding text_encoding,int c,char ** const text,size_t *len0)
 {
   char tmp[8]={0};
   size_t bytes;

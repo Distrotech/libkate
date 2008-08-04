@@ -8,11 +8,13 @@
 
 
 #define KATE_INTERNAL
+#include "kate_internal.h"
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
-#include "kate_internal.h"
+#endif
 #include "kate/kate.h"
 
 /**

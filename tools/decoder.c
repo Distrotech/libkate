@@ -7,9 +7,11 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#if !defined WIN32 && !defined _WIN32
+#include "config.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
-#else
+#endif
+#if defined WIN32 || defined _WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif

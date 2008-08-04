@@ -8,9 +8,9 @@
 
 
 #define KATE_INTERNAL
+#include "kate_internal.h"
 
 #include <stdlib.h>
-#include "kate_internal.h"
 #include "kate/kate.h"
 
 static int kate_event_init(kate_event *ev,const kate_info *ki)
