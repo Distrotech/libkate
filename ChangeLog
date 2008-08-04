@@ -1,5 +1,6 @@
 0.1.7
-  Makefile overhaul: add libtool, less hardcoding, etc
+  autotools support
+  tools renamed to kateenc and katedec, and now installed
   win32 fixes (Roman Vorobets)
   win32 build files (Roman Vorobets)
   fix off-by-ten tracker scaling bug
