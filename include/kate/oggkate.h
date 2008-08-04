@@ -17,7 +17,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <ogg/ogg.h>
-#include "kate.h"
+#include <kate/kate.h>
 
 #ifdef __cplusplus
 extern "C" {
