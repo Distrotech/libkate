@@ -29,7 +29,7 @@ int nwarnings=0;
 extern ogg_packet op;
 
 static char *temp_macro_name=NULL;
-static kate_float timebase = (kate_float)0.0;
+static kate_float timebase = (kate_float)0;
 
 typedef kate_style kd_style;
 typedef kate_region kd_region;
