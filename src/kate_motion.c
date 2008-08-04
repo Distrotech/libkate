@@ -10,7 +10,6 @@
 #define KATE_INTERNAL
 
 #include <stdlib.h>
-#include <stdio.h>
 #include "kate_internal.h"
 #include "kate/kate.h"
 

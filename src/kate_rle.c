@@ -9,9 +9,6 @@
 
 #define KATE_INTERNAL
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <limits.h>
 #include <string.h>
 #include "kate_internal.h"
 #include "kate/kate.h"
