@@ -76,8 +76,8 @@ typedef struct kate_region {
   int w;                         /**< size of the region */
   int h;                         /**< size of the region */
   int style;                     /**< default style to apply to text in this region */
-  uint32_t clip:1;               /**< text/images will be clipped to the region */
-  uint32_t pad0:31;
+  unsigned int clip:1;           /**< text/images will be clipped to the region */
+  unsigned int pad0:31;
   uintptr_t pad1[6];
 } kate_region;
 
@@ -108,12 +108,12 @@ typedef struct kate_style {
   kate_float right_margin;           /**< size of right margin */
   kate_float bottom_margin;          /**< size of bottom margin */
 
-  uint32_t bold:1;                   /**< display text in bold */
-  uint32_t italics:1;                /**< display text in italics */
-  uint32_t underline:1;              /**< display underlined text */
-  uint32_t strike:1;                 /**< display striked text */
-  uint32_t justify:1;                /**< display justified text */
-  uint32_t pad0:27;
+  unsigned int bold:1;               /**< display text in bold */
+  unsigned int italics:1;            /**< display text in italics */
+  unsigned int underline:1;          /**< display underlined text */
+  unsigned int strike:1;             /**< display striked text */
+  unsigned int justify:1;            /**< display justified text */
+  unsigned int pad0:27;
 
   kate_const char *font;             /**< name of the font to use */
 
@@ -205,8 +205,8 @@ typedef struct kate_motion {
   kate_motion_mapping x_mapping;                 /**< how to remap the x coordinate of the points */
   kate_motion_mapping y_mapping;                 /**< how to remap the y coordinate of the points */
   kate_motion_semantics semantics;               /**< what use this motion has */
-  uint32_t periodic:1;                           /**< if true, repeats periodically (loops) */
-  uint32_t pad0:31;
+  unsigned int periodic:1;                       /**< if true, repeats periodically (loops) */
+  unsigned int pad0:31;
   uintptr_t pad1[5];
 } kate_motion;
 
@@ -393,27 +393,27 @@ typedef struct kate_tracker {
   kate_float t;                                 /**< the current time at which the tracker interpolates */
 
   struct {
-    uint32_t region:1;                          /**< if set, the tracker has region information */
-    uint32_t text_alignment_int:1;              /**< if set, the tracker has internal text alignment information */
-    uint32_t text_alignment_ext:1;              /**< if set, the tracker has external text alignment information */
-    uint32_t text_pos:1;                        /**< if set, the tracker has text position information */
-    uint32_t text_size:1;                       /**< if set, the tracker has text size information */
-    uint32_t marker_pos:4;                      /**< if set, the tracker has marker position information */
-    uint32_t text_color:1;                      /**< if set, the tracker has text color information */
-    uint32_t background_color:1;                /**< if set, the tracker has background color information */
-    uint32_t draw_color:1;                      /**< if set, the tracker has draw color information */
-    uint32_t glyph_pointer:4;                   /**< if set, the tracker has glyph pointer information */
-    uint32_t path:1;                            /**< if set, the tracker has text path information */
-    uint32_t draw:1;                            /**< if set, the tracker has draw information */
-    uint32_t visible_section:1;                 /**< if set, the tracker has visible section information */
-    uint32_t z:1;                               /**< if set, the tracker has z (depth) information */
-    uint32_t hmargins:1;                        /**< if set, the tracker has horizontal margin information */
-    uint32_t vmargins:1;                        /**< if set, the tracker has vertical margin information */
-    uint32_t bitmap_pos:1;                      /**< if set, the tracker has bitmap position information */
-    uint32_t bitmap_size:1;                     /**< if set, the tracker has bitmap size information */
+    unsigned int region:1;                      /**< if set, the tracker has region information */
+    unsigned int text_alignment_int:1;          /**< if set, the tracker has internal text alignment information */
+    unsigned int text_alignment_ext:1;          /**< if set, the tracker has external text alignment information */
+    unsigned int text_pos:1;                    /**< if set, the tracker has text position information */
+    unsigned int text_size:1;                   /**< if set, the tracker has text size information */
+    unsigned int marker_pos:4;                  /**< if set, the tracker has marker position information */
+    unsigned int text_color:1;                  /**< if set, the tracker has text color information */
+    unsigned int background_color:1;            /**< if set, the tracker has background color information */
+    unsigned int draw_color:1;                  /**< if set, the tracker has draw color information */
+    unsigned int glyph_pointer:4;               /**< if set, the tracker has glyph pointer information */
+    unsigned int path:1;                        /**< if set, the tracker has text path information */
+    unsigned int draw:1;                        /**< if set, the tracker has draw information */
+    unsigned int visible_section:1;             /**< if set, the tracker has visible section information */
+    unsigned int z:1;                           /**< if set, the tracker has z (depth) information */
+    unsigned int hmargins:1;                    /**< if set, the tracker has horizontal margin information */
+    unsigned int vmargins:1;                    /**< if set, the tracker has vertical margin information */
+    unsigned int bitmap_pos:1;                  /**< if set, the tracker has bitmap position information */
+    unsigned int bitmap_size:1;                 /**< if set, the tracker has bitmap size information */
     /* 24 bits */
-    uint32_t pad0:8;
-    uint32_t pad1:32;
+    unsigned int pad0:8;
+    unsigned int pad1:32;
     /* 64 bits */
   } has;                                        /**< bitfield describing what information the tracker has */
 
