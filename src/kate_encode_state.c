@@ -10,7 +10,9 @@
 #define KATE_INTERNAL
 #include "kate_internal.h"
 
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include "kate/kate.h"
 #include "kate_encode_state.h"
 

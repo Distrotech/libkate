@@ -16,7 +16,7 @@
  ********************************************************************
 
   function: packing variable sized words into an octet stream
-  last mod: $Id: kate_bitwise.c,v 1.2 2008/08/04 20:41:47 lyrian Exp $
+  last mod: $Id: kate_bitwise.c,v 1.3 2008/08/05 20:14:21 lyrian Exp $
 
  ********************************************************************/
 
@@ -29,7 +29,9 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
+#endif
 #include "kate_bitwise.h"
 
 #define BUFFER_INCREMENT 256
