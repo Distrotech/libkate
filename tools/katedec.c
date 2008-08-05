@@ -22,7 +22,6 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#include <time.h>
 #include <ogg/ogg.h>
 #include <kate/oggkate.h>
 #include "kate_internal.h"

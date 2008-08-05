@@ -15,13 +15,15 @@
 #include <io.h>
 #include <fcntl.h>
 #endif
+#ifdef HAVE_TIME_H
+#include <time.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
 #include <errno.h>
-#include <time.h>
 #include <ogg/ogg.h>
 #include <kate/oggkate.h>
 #include "katedesc.h"
