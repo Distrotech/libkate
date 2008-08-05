@@ -185,6 +185,7 @@ AC_CONFIG_FILES(
   [misc/pkgconfig/oggkate.pc]
   [misc/pkgconfig/oggkate-uninstalled.pc]
   [doc/kate.doxygen]
+  [README]
 )
 AC_OUTPUT
 

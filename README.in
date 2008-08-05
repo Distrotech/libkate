@@ -1,0 +1,58 @@
+
+
+ libkate @VERSION@
+ Kate bitstream 0.3
+
+
+
+This is libkate, the reference implementation of a codec for the Kate bitstream
+format.
+Kate is a karaoke and text codec meant for encapsulation in an Ogg container.
+It can carry text, images, and animate them.
+
+Kate is meant to be used for karaoke alongside audio/video streams (typically
+Vorbis and Theora), movie subtitles, song lyrics, and anything that needs text
+data at arbitrary time intervals.
+
+The newest version of libkate can be found at:
+
+http://libkate.googlecode.com/
+
+More information can be found at the xiph wiki:
+
+http://wiki.xiph.org/index.php/OggKate
+
+For build instructions, see INSTALL.
+
+A sample encoder and decoder are included in this distribution.
+
+To encode a Kate stream from a kate text file:
+
+$ ./tools/encoder -t kate -o output.kate.ogg input.kate
+
+
+To encode a Kate stream from a SubRip (.srt) format file:
+
+$ ./tools/encoder -t srt -o output.kate.ogg input.srt
+
+
+To decode a Kate stream:
+
+$ ./tools/decoder -o output.kate input.kate.ogg
+
+
+VLC 0.9 can decode and display basic text and SPU based Kate streams.
+I have preliminary support for Kate streams for MPlayer, xine, and GStreamer
+(and thus all players that rely on them for decoding), which will be contributed
+to those projects once the Kate bitstream format is stable. The current diffs
+for those can be found in the diffs directory. See the README in the diffs
+directory for more information on those patches. If you want to run some of
+the example streams, you will have to patch GStreamer, xine, or MPlayer.
+
+
+This distribution is Copyright (C) 2008 Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing.
+
