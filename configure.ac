@@ -146,10 +146,13 @@ then
 fi
 AM_CONDITIONAL(HAVE_PNG,test "${HAVE_PNG}" = "yes")
 
+CWARNFLAGS_LIGHT="-Wall -W"
+CWARNFLAGS_FULL="$CWARNFLAGS_LIGHT"
+
 AC_ARG_ENABLE(more_warnings, [  --enable-more-warnings  Enable more warnings (default disabled)])
 if test "x$enable_more_warnings" = "xyes"
 then
-  CWARNFLAGS_LIGHT="-W -Wall -Wdeclaration-after-statement -Wcast-qual -Wcast-align"
+  CWARNFLAGS_LIGHT="$CWARNFLAGS_LIGHT -Wdeclaration-after-statement -Wcast-qual -Wcast-align"
   CWARNFLAGS_LIGHT="$CWARNFLAGS_LIGHT -Winit-self -Wcast-align -pedantic -Wformat=2 -Wunused"
   CWARNFLAGS_LIGHT="$CWARNFLAGS_LIGHT -Wstrict-aliasing=2 -Wpointer-arith -Wbad-function-cast -Waggregate-return"
 
