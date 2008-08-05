@@ -95,7 +95,6 @@ dist-hook: doc
 	mkdir -p $(distdir)/doc
 	cp -fR doc/* $(distdir)/doc
 	rm -f $(distdir)/doc/kate.doxygen
-	rm -f $(distdir)/TODO
 
 STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
 
