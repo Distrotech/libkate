@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="decoder"
+	Name="katedec"
 	ProjectGUID="{8CBC4209-9810-45DF-B096-E42297D8D9E2}"
-	RootNamespace="decoder"
+	RootNamespace="katedec"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -177,7 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\tools\decoder.c"
+				RelativePath="..\..\..\..\tools\katedec.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

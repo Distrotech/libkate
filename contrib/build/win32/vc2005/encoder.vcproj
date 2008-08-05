@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8,00"
-	Name="encoder"
+	Name="kateenc"
 	ProjectGUID="{2A00E176-2A37-42FF-BB10-4076D08DAE1C}"
-	RootNamespace="encoder"
+	RootNamespace="kateenc"
 	Keyword="Win32Proj"
 	>
 	<Platforms>
@@ -177,7 +177,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\tools\encoder.c"
+				RelativePath="..\..\..\..\tools\kateenc.c"
 				>
 			</File>
 			<File

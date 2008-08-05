@@ -8,12 +8,12 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "liboggkate", "liboggkate.vc
 		{341F9C67-A8CC-42D0-AE00-2462FD474149} = {341F9C67-A8CC-42D0-AE00-2462FD474149}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "encoder", "encoder.vcproj", "{2A00E176-2A37-42FF-BB10-4076D08DAE1C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kateenc", "kateenc.vcproj", "{2A00E176-2A37-42FF-BB10-4076D08DAE1C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DAB545BB-16D3-406F-81E9-9370637B2B1F} = {DAB545BB-16D3-406F-81E9-9370637B2B1F}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "decoder", "decoder.vcproj", "{8CBC4209-9810-45DF-B096-E42297D8D9E2}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "katedec", "katedec.vcproj", "{8CBC4209-9810-45DF-B096-E42297D8D9E2}"
 	ProjectSection(ProjectDependencies) = postProject
 		{DAB545BB-16D3-406F-81E9-9370637B2B1F} = {DAB545BB-16D3-406F-81E9-9370637B2B1F}
 	EndProjectSection
