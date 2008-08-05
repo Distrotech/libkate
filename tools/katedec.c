@@ -14,6 +14,7 @@
 #if defined WIN32 || defined _WIN32
 #include <io.h>
 #include <fcntl.h>
+#include <process.h>
 #endif
 #include <stdarg.h>
 #include <stdio.h>
