@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ogg/ogg.h>
+#include "common.h"
 
 /* All the libkate API is available from the main kate header file: */
 
