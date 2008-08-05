@@ -17,7 +17,9 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include <errno.h>
 #include <time.h>
 #include <ogg/ogg.h>

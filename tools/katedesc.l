@@ -10,10 +10,13 @@
 %{
 
 #define KATE_INTERNAL
+#include "kate_internal.h"
 
 #include <stdarg.h>
 #include <stdlib.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include <kate/kate.h>
 #include "katedesc.h"
 #include "katedesc.tab.h"

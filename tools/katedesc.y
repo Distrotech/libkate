@@ -10,15 +10,17 @@
 %{
 
 #define KATE_INTERNAL
+#include "kate_internal.h"
 
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
 #include <ctype.h>
 #include <kate/oggkate.h>
-#include "kate_internal.h"
 #include "kpng.h"
 #include "katedesc.h"
 #include "katedesc.tab.h"
