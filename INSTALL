@@ -3,7 +3,8 @@ libkate itself does not require any libraries apart from the usual
 system libraries (libc, etc).
 
 Recommended prerequisites:
-  libogg: available at http://www.xiph.org: for liboggkate and tools
+  libogg: available at http://www.xiph.org/: for liboggkate and tools
+  libpng: available at http://www.libpng.org/: for kateenc
 
 Optional dependencies:
   liboggz or ogg-tools: to build example streams
@@ -16,23 +17,21 @@ software to which they apply as well as their dependencies.
 Windows users without Cygwin or MSYS may find build files in the
 contrib/build/win32 tree, for Microsoft's VC2005 and VC2008 compilers.
 
-There is no configure machinery (yet).  Build with:
+Build with:
 
+$ ./configure
 $ make
-
-You may install it with one of:
-
-$ make install PREFIX=$HOME
 # make install
 
-Uninstall with one of:
+or:
 
-$ make uninstall PREFIX=$HOME
-# make uninstall
+$ ./configure --prefix=$HOME
+$ make
+$ make install
 
-See comments at the top of the Makefile for a list of variables that
-can be used to modify the behavior of the Makefile (including PREFIX,
-DESTDIR, command names, etc)
+Uninstall with:
+
+$ make uninstall
 
 
 If you do not have Flex or Bison, you will be able to build the tools,
