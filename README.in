@@ -24,21 +24,22 @@ http://wiki.xiph.org/index.php/OggKate
 
 For build instructions, see INSTALL.
 
-A sample encoder and decoder are included in this distribution.
+A sample encoder and decoder are included in this distribution, in the
+tools directory.
 
 To encode a Kate stream from a kate text file:
 
-$ ./tools/encoder -t kate -o output.kate.ogg input.kate
+$ kateenc -t kate -o output.kate.ogg input.kate
 
 
 To encode a Kate stream from a SubRip (.srt) format file:
 
-$ ./tools/encoder -t srt -o output.kate.ogg input.srt
+$ katedec -t srt -o output.kate.ogg input.srt
 
 
 To decode a Kate stream:
 
-$ ./tools/decoder -o output.kate input.kate.ogg
+$ katedec -o output.kate input.kate.ogg
 
 
 VLC 0.9 can decode and display basic text and SPU based Kate streams.
