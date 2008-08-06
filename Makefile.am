@@ -65,6 +65,9 @@ install-data-local: doc
             done \
 	  fi \
 	done
+	for f in README INSTALL AUTHORS COPYING THANKS ChangeLog; do \
+	  $(INSTALL_DATA) $$f $(DESTDIR)$(docdir); \
+	done
 
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)
