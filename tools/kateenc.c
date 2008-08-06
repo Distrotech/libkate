@@ -466,6 +466,10 @@ int main(int argc,char **argv)
   if (!output_filename || !strcmp(output_filename,"-")) {
 #if defined WIN32 || defined _WIN32
     _setmode(_fileno(stdout),_O_BINARY);
+#else
+#if defined __EMX__ || defined __OS2__
+    setmode(fileno(stdin),_O_BINARY);
+#endif
 #endif
     fout=stdout;
   }

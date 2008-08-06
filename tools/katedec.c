@@ -835,6 +835,10 @@ static kate_comment kc;
   if (!input_filename || !strcmp(input_filename,"-")) {
 #if defined WIN32 || defined _WIN32
     _setmode(_fileno(stdin),_O_BINARY);
+#else
+#if defined __EMX__ || defined __OS2__
+    setmode(fileno(stdin),_O_BINARY);
+#endif
 #endif
     fin=stdin;
   }
