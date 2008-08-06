@@ -34,9 +34,9 @@ noinst_HEADERS=\
   tools/kpng.h
 
 lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@
-lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@
+lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ --no-undefined
 lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@
-lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@
+lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ --no-undefined
 
 lib_liboggkate_la_LIBADD=@OGG_LIBS@
 
