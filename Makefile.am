@@ -41,7 +41,7 @@ lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@
 lib_liboggkate_la_LIBADD=@OGG_LIBS@
 
 if HAVE_OGG
-tools_kateenc_SOURCES=tools/kateenc.c tools/lex.katedesc.c tools/katedesc.tab.c
+tools_kateenc_SOURCES=tools/kateenc.c tools/kate_lexer.l tools/kate_parser.y
 if HAVE_PNG
 tools_kateenc_SOURCES+=tools/kpng.c
 endif
@@ -51,8 +51,11 @@ tools_katedec_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@
 tools_kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@ @PNG_CFLAGS@
 tools_katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@
 bin_PROGRAMS=tools/katedec tools/kateenc
-noinst_HEADERS+=tools/katedesc.h
+BUILT_SOURCES=tools/kate_parser.h
 endif
+
+AM_LFLAGS=-i -Pkatedesc_ -o$(LEX_OUTPUT_ROOT).c
+AM_YFLAGS=-v -p katedesc_ -d
 
 install-data-local: doc
 	$(mkinstalldirs) $(DESTDIR)$(docdir)
@@ -75,12 +78,6 @@ uninstall-local:
 clean-local:
 	if test -d doc/html; then rm -rf doc/html; fi
 	if test -d doc/latex; then rm -rf doc/latex; fi
-
-tools/lex.katedesc.c: tools/katedesc.l
-	@$(LEX) -i -Pkatedesc_ -o$@ $<
-
-tools/katedesc.tab.c: tools/katedesc.y
-	@$(YACC) -v -b katedesc_ -p katedesc_ -d -o $@ $<
 
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
 
