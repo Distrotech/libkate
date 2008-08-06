@@ -66,7 +66,7 @@ install-data-local: doc
 	  fi \
 	done
 	for f in README INSTALL AUTHORS COPYING THANKS ChangeLog; do \
-	  $(INSTALL_DATA) $$f $(DESTDIR)$(docdir); \
+	  $(INSTALL_DATA) $(top_srcdir)/$$f $(DESTDIR)$(docdir); \
 	done
 
 uninstall-local:
