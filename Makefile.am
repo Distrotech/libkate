@@ -59,12 +59,12 @@ AM_YFLAGS=-v -p katedesc_ -d
 
 install-data-local: doc
 	$(mkinstalldirs) $(DESTDIR)$(docdir)
-	for dir in doc/html doc/latex; do \
-	  if test -d $$dir; then \
+	for dir in $(top_srcdir)/doc/html; do \
+	  if test -d "$$dir"; then \
 	    b=`basename $$dir`; \
 	    $(mkinstalldirs) $(DESTDIR)$(docdir)/$$b; \
-	    for f in $$dir/*; do \
-	      $(INSTALL_DATA) $$f $(DESTDIR)$(docdir)/$$b; \
+	    for f in "$$dir/"*; do \
+	      $(INSTALL_DATA) "$$f" "$(DESTDIR)$(docdir)/$$b"; \
             done \
 	  fi \
 	done
