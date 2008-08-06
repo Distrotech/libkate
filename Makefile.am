@@ -162,8 +162,7 @@ endif
 
 EXTRA_DIST=\
   README INSTALL AUTHORS COPYING THANKS ChangeLog \
-  tools/katedesc.l tools/katedesc.y \
-  tools/lex.katedesc.c tools/katedesc.tab.c tools/katedesc.tab.h \
+  tools/katedesc.h \
   misc/pkgconfig/kate.pc.in misc/pkgconfig/kate-uninstalled.pc.in \
   misc/pkgconfig/oggkate.pc.in misc/pkgconfig/oggkate-uninstalled.pc.in \
   examples \

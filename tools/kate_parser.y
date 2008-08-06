@@ -25,7 +25,7 @@
 #include "kpng.h"
 #endif
 #include "katedesc.h"
-#include "katedesc.tab.h"
+#include "kate_parser.h"
 
 int nerrors=0;
 int nwarnings=0;

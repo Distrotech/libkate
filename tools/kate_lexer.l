@@ -19,7 +19,7 @@
 #endif
 #include <kate/kate.h>
 #include "katedesc.h"
-#include "katedesc.tab.h"
+#include "kate_parser.h"
 
 #define YY_DECL extern int katedesc_lex(YYSTYPE *lvalp)
 
