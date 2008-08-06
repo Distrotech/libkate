@@ -1,6 +1,6 @@
 
 
- libkate @VERSION@
+ libkate, a library for encoding and decoding Kate streams
  Kate bitstream 0.3
 
 
