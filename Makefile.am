@@ -41,17 +41,17 @@ lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@
 lib_liboggkate_la_LIBADD=@OGG_LIBS@
 
 if HAVE_OGG
-tools_kateenc_SOURCES=tools/kateenc.c tools/lex.katedesc.c tools/katedesc.tab.c tools/kpng.c
+tools_kateenc_SOURCES=tools/kateenc.c tools/lex.katedesc.c tools/katedesc.tab.c
+if HAVE_PNG
+tools_kateenc_SOURCES+=tools/kpng.c
+endif
 tools_katedec_SOURCES=tools/katedec.c
 tools_kateenc_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
 tools_katedec_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@
-tools_kateenc_CFLAGS=@CWARNFLAGS_LIGHT@
-tools_katedec_CFLAGS=@CWARNFLAGS_LIGHT@
-bin_PROGRAMS=tools/katedec
+tools_kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@ @PNG_CFLAGS@
+tools_katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@
+bin_PROGRAMS=tools/katedec tools/kateenc
 noinst_HEADERS+=tools/katedesc.h
-if HAVE_PNG
-bin_PROGRAMS+=tools/kateenc
-endif
 endif
 
 install-data-local: doc

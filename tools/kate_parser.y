@@ -21,7 +21,9 @@
 #endif
 #include <ctype.h>
 #include <kate/oggkate.h>
+#ifdef HAVE_PNG
 #include "kpng.h"
+#endif
 #include "katedesc.h"
 #include "katedesc.tab.h"
 
@@ -184,6 +186,7 @@ static void init_palette(void)
 
 static void load_palette(const char *filename)
 {
+#ifdef HAVE_PNG
   int ncolors;
   kate_color *palette=NULL;
   static char full_filename[4096];
@@ -197,6 +200,9 @@ static void load_palette(const char *filename)
 
   kpalette.palette->ncolors=ncolors;
   kpalette.palette->colors=palette;
+#else
+  yyerrorf("PNG support not compiled in: cannot load %s",filename);
+#endif
 }
 
 static void check_palette(const kate_palette *kp)
@@ -242,6 +248,7 @@ static void init_bitmap(void)
 
 static void load_bitmap(const char *filename,int paletted)
 {
+#ifdef HAVE_PNG
   int w,h;
   unsigned char *pixels=NULL;
 
@@ -283,6 +290,10 @@ static void load_bitmap(const char *filename,int paletted)
   }
 
   kbitmap.bitmap->palette=-1;
+#else
+  (void)paletted;
+  yyerrorf("PNG support not compiled in: cannot load %s",filename);
+#endif
 }
 
 static void check_bitmap(const kate_bitmap *kb)

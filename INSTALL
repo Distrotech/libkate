@@ -4,7 +4,7 @@ system libraries (libc, etc).
 
 Recommended prerequisites:
   libogg: available at http://www.xiph.org/: for liboggkate and tools
-  libpng: available at http://www.libpng.org/: for kateenc
+  libpng: available at http://www.libpng.org/: for PNG support in kateenc
 
 Optional dependencies:
   liboggz or ogg-tools: to build example streams

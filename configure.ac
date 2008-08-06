@@ -149,6 +149,10 @@ then
     [HAVE_PNG=no]
   )
 fi
+if test "x$HAVE_PNG" = "xyes"
+then
+  AC_DEFINE(HAVE_PNG, [1], [Define to 1 if libpng is available.])
+fi
 AM_CONDITIONAL(HAVE_PNG,test "${HAVE_PNG}" = "yes")
 
 CWARNFLAGS_LIGHT="-Wall -W"

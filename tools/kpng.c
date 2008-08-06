@@ -9,10 +9,16 @@
 
 /* adapted from example.c from the libpng distribution */
 
+#include "config.h"
+
 #include <stdio.h>
+#ifdef HAVE_STDLIB_H
 #include <stdlib.h>
-#include <errno.h>
+#endif
+#ifdef HAVE_STRING_H
 #include <string.h>
+#endif
+#include <errno.h>
 #include <png.h>
 #include "kate/kate.h"
 
