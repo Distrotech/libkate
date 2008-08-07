@@ -1,3 +1,5 @@
+SUBDIRS=. tools
+
 OGGDIR=built-streams
 kateincdir=$(includedir)/kate
 katepcdir=$(libdir)/pkgconfig
@@ -30,8 +32,7 @@ lib_liboggkate_la_SOURCES=\
 noinst_HEADERS=\
   src/kate_internal.h src/kate_config.h \
   src/kate_encode_state.h src/kate_decode_state.h \
-  src/kate_bitwise.h src/kate_fp.h src/kate_rle.h \
-  tools/kpng.h
+  src/kate_bitwise.h src/kate_fp.h src/kate_rle.h
 
 lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@
 lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ --no-undefined
@@ -39,23 +40,6 @@ lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@
 lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ --no-undefined
 
 lib_liboggkate_la_LIBADD=@OGG_LIBS@ lib/libkate.la
-
-if HAVE_OGG
-tools_kateenc_SOURCES=tools/kateenc.c tools/kate_lexer.l tools/kate_parser.y
-if HAVE_PNG
-tools_kateenc_SOURCES+=tools/kpng.c
-endif
-tools_katedec_SOURCES=tools/katedec.c
-tools_kateenc_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
-tools_katedec_LDADD=lib/liboggkate.la lib/libkate.la @OGG_LIBS@
-tools_kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@ @PNG_CFLAGS@
-tools_katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@
-bin_PROGRAMS=tools/katedec tools/kateenc
-BUILT_SOURCES=tools/kate_parser.h
-endif
-
-AM_LFLAGS=-i -Pkatedesc_ -o$(LEX_OUTPUT_ROOT).c
-AM_YFLAGS=-v -p katedesc_ -d
 
 install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(docdir)
@@ -68,7 +52,7 @@ install-data-local:
             done \
 	  fi \
 	done
-	for f in README INSTALL AUTHORS COPYING THANKS ChangeLog; do \
+	for f in README AUTHORS COPYING THANKS ChangeLog; do \
 	  $(INSTALL_DATA) $(top_srcdir)/$$f $(DESTDIR)$(docdir); \
 	done
 
@@ -164,7 +148,6 @@ endif
 
 EXTRA_DIST=\
   README INSTALL AUTHORS COPYING THANKS ChangeLog \
-  tools/katedesc.h \
   misc/pkgconfig/kate.pc.in misc/pkgconfig/kate-uninstalled.pc.in \
   misc/pkgconfig/oggkate.pc.in misc/pkgconfig/oggkate-uninstalled.pc.in \
   examples \
