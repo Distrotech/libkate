@@ -75,7 +75,7 @@ install-data-local:
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)
 
-maintainer-clean-local:
+distclean-local:
 	if test -d doc/html; then rm -rf doc/html; fi
 	if test -d doc/latex; then rm -rf doc/latex; fi
 
@@ -83,7 +83,7 @@ am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore
 
 .PHONY: doc
 if HAVE_DOXYGEN
-doc: doc/kate.doxygen
+doc: $(top_srcdir)/doc/kate.doxygen
 	doxygen doc/kate.doxygen
 else
 doc:
@@ -93,7 +93,7 @@ endif
 
 dist-hook: doc
 	mkdir -p $(distdir)/doc
-	cp -fR doc/* $(distdir)/doc
+	cp -fR $(top_srcdir)/doc/* $(distdir)/doc
 	rm -f $(distdir)/doc/kate.doxygen
 
 STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
@@ -111,12 +111,14 @@ check-local: tools/kateenc tools/katedec
          | $(GREP) -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
 	@! $(GREP) -E '[^_](malloc|realloc|free|calloc|memalign)\(' \
-           src/* include/kate/* \
-           tools/katedesc.h tools/kateenc.c tools/katedec.c tools/*.[ly] \
+           $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
+           $(top_srcdir)/tools/katedesc.h \
+	   $(top_srcdir)/tools/kateenc.c $(top_srcdir)/tools/katedec.c \
+	   $(top_srcdir)/tools/*.[ly] \
 	 | $(GREP) -v "^include/kate/kate.h:#define kate_"
 	@echo " Checking forgotten debug traces"
 	@! $(GREP) -E '[^sn]printf' \
-	  src/* include/kate/* tools/katedesc.h \
+	  src/* $(top_srcdir)/include/kate/* $(top_srcdir)/tools/katedesc.h \
 	| $(GREP) .
 if HAVE_OGG
 	@$(foreach stream, $(STREAMS), \
