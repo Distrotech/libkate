@@ -57,7 +57,7 @@ endif
 AM_LFLAGS=-i -Pkatedesc_ -o$(LEX_OUTPUT_ROOT).c
 AM_YFLAGS=-v -p katedesc_ -d
 
-install-data-local: doc
+install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(docdir)
 	for dir in $(top_srcdir)/doc/html; do \
 	  if test -d "$$dir"; then \
@@ -75,7 +75,7 @@ install-data-local: doc
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)
 
-clean-local:
+maintainer-clean-local:
 	if test -d doc/html; then rm -rf doc/html; fi
 	if test -d doc/latex; then rm -rf doc/latex; fi
 
