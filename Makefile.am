@@ -38,7 +38,7 @@ lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ --no-undefined
 lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@
 lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ --no-undefined
 
-lib_liboggkate_la_LIBADD=@OGG_LIBS@
+lib_liboggkate_la_LIBADD=@OGG_LIBS@ lib/libkate.la
 
 if HAVE_OGG
 tools_kateenc_SOURCES=tools/kateenc.c tools/kate_lexer.l tools/kate_parser.y
