@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#if defined WIN32 || defined _WIN32
+#if defined WIN32 || defined _WIN32 || defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
 #include <io.h>
 #include <fcntl.h>
 #endif
@@ -55,8 +55,8 @@ void set_binary_file(FILE *f)
 #if defined WIN32 || defined _WIN32
   _setmode(_fileno(f),_O_BINARY);
 #else
-#if defined __EMX__ || defined __OS2__
-    setmode(fileno(stdin),_O_BINARY);
+#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
+    setmode(fileno(f),_O_BINARY);
 #endif
 #endif
 }

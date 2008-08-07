@@ -11,9 +11,11 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if defined WIN32 || defined _WIN32
+#if defined WIN32 || defined _WIN32 || defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
 #include <io.h>
 #include <fcntl.h>
+#endif
+#if defined WIN32 || defined _WIN32
 #include <process.h>
 #endif
 #include <stdarg.h>
@@ -836,7 +838,7 @@ static kate_comment kc;
 #if defined WIN32 || defined _WIN32
     _setmode(_fileno(stdin),_O_BINARY);
 #else
-#if defined __EMX__ || defined __OS2__
+#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
     setmode(fileno(stdin),_O_BINARY);
 #endif
 #endif

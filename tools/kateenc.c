@@ -11,9 +11,11 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if defined WIN32 || defined _WIN32
+#if defined WIN32 || defined _WIN32 || defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
 #include <io.h>
 #include <fcntl.h>
+#endif
+#if defined WIN32 || defined _WIN32
 #include <process.h>
 #endif
 #ifdef HAVE_TIME_H
@@ -467,8 +469,8 @@ int main(int argc,char **argv)
 #if defined WIN32 || defined _WIN32
     _setmode(_fileno(stdout),_O_BINARY);
 #else
-#if defined __EMX__ || defined __OS2__
-    setmode(fileno(stdin),_O_BINARY);
+#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
+    setmode(fileno(stdout),_O_BINARY);
 #endif
 #endif
     fout=stdout;
