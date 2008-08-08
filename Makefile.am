@@ -5,7 +5,7 @@ kateincdir=$(includedir)/kate
 katepcdir=$(libdir)/pkgconfig
 
 lib_LTLIBRARIES=lib/libkate.la
-kateinc_HEADERS=include/kate/kate.h
+kateinc_HEADERS=include/kate/kate.h include/kate/kate_config.h
 katepc_DATA=misc/pkgconfig/kate.pc
 
 if HAVE_OGG
@@ -30,7 +30,7 @@ lib_liboggkate_la_SOURCES=\
   src/kate_ogg.c
 
 noinst_HEADERS=\
-  src/kate_internal.h src/kate_config.h \
+  src/kate_internal.h \
   src/kate_encode_state.h src/kate_decode_state.h \
   src/kate_bitwise.h src/kate_fp.h src/kate_rle.h
 

@@ -14,18 +14,7 @@
   The libkate public API.
   */
 
-#include <stddef.h>
-@INCLUDE_INT_HEADER@
-
-#ifdef KATE_INTERNAL
-#define kate_const
-#else
-#define kate_const const
-#endif
-
-typedef @INT32_T@ kate_int32_t;
-typedef @INT64_T@ kate_int64_t;
-typedef float kate_float;
+#include "kate/kate_config.h"
 
 /** \name API version */
 /** @{ */
@@ -39,16 +28,6 @@ typedef float kate_float;
 #define KATE_BITSTREAM_VERSION_MAJOR 0   /**< major version number of the highest bitstream version this version of libkate supports */
 #define KATE_BITSTREAM_VERSION_MINOR 3   /**< minor version number of the highest bitstream version this version of libkate supports */
 /** @} */
-
-#ifndef kate_malloc
-#define kate_malloc malloc
-#endif
-#ifndef kate_realloc
-#define kate_realloc realloc
-#endif
-#ifndef kate_free
-#define kate_free free
-#endif
 
 /** defines the character encoding used by text */
 typedef enum {

@@ -29,7 +29,8 @@
 #define KATE_LIMIT_LANGUAGE_LENGTH 1024
 #define KATE_LIMIT_TEXT_LENGTH 1048576
 
-#include "kate_config.h"
+#include "config.h"
+
 #include "kate/kate.h"
 
 #define kate_internal __attribute__((visibility("internal")))
