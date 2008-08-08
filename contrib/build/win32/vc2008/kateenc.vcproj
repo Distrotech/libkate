@@ -177,7 +177,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\tools\katedesc.tab.c"
+				RelativePath="..\..\..\..\tools\kate_lexer.c"
+				>
+			</File>
+			<File
+				RelativePath="..\..\..\..\tools\kate_parser.c"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -200,10 +204,6 @@
 				RelativePath="..\..\..\..\tools\kpng.c"
 				>
 			</File>
-			<File
-				RelativePath="..\..\..\..\tools\lex.katedesc.c"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -215,7 +215,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\tools\katedesc.tab.h"
+				RelativePath="..\..\..\..\tools\kate_parser.h"
 				>
 			</File>
 			<File
