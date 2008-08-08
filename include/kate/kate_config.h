@@ -45,6 +45,8 @@
 
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
 typedef int32_t kate_int32_t;
+#elif defined int32_t
+typedef int32_t kate_int32_t;
 #elif defined INT_MAX && INT_MAX==2147483647
 typedef int kate_int32_t;
 #elif defined SHRT_MAX && SHRT_MAX==2147483647
@@ -56,6 +58,8 @@ typedef long long int kate_int32_t;
 #endif
 
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
+typedef int64_t kate_int64_t;
+#elif defined int64_t
 typedef int64_t kate_int64_t;
 #elif defined INT_MAX && INT_MAX>2147483647
 typedef int kate_int64_t;
