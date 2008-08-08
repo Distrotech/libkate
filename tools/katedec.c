@@ -28,7 +28,7 @@
 #include <string.h>
 #endif
 #include <ogg/ogg.h>
-#include <kate/oggkate.h>
+#include "kate/oggkate.h"
 #include "kate_internal.h"
 
 enum { uninitialized, header_info, header_comment, data };

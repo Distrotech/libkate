@@ -30,7 +30,7 @@
 #endif
 #include <errno.h>
 #include <ogg/ogg.h>
-#include <kate/oggkate.h>
+#include "kate/oggkate.h"
 #include "katedesc.h"
 
 /* #define HAVE_LEX_DESTROY */

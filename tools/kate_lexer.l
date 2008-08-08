@@ -17,7 +17,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
-#include <kate/kate.h>
+#include "kate/kate.h"
 #include "katedesc.h"
 #include "kate_parser.h"
 

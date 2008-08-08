@@ -20,7 +20,7 @@
 #include <string.h>
 #endif
 #include <ctype.h>
-#include <kate/oggkate.h>
+#include "kate/oggkate.h"
 #ifdef HAVE_PNG
 #include "kpng.h"
 #endif
