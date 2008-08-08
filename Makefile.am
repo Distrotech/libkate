@@ -1,4 +1,4 @@
-SUBDIRS=. tools
+SUBDIRS=. tools doc
 
 OGGDIR=built-streams
 kateincdir=$(includedir)/kate
@@ -41,44 +41,7 @@ lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ --no-undefin
 
 lib_liboggkate_la_LIBADD=@OGG_LIBS@ lib/libkate.la
 
-install-data-local:
-	$(mkinstalldirs) $(DESTDIR)$(docdir)
-	for dir in $(top_srcdir)/doc/html; do \
-	  if test -d "$$dir"; then \
-	    b=`basename $$dir`; \
-	    $(mkinstalldirs) $(DESTDIR)$(docdir)/$$b; \
-	    for f in "$$dir/"*; do \
-	      $(INSTALL_DATA) "$$f" "$(DESTDIR)$(docdir)/$$b"; \
-            done \
-	  fi \
-	done
-	for f in README AUTHORS COPYING THANKS ChangeLog; do \
-	  $(INSTALL_DATA) $(top_srcdir)/$$f $(DESTDIR)$(docdir); \
-	done
-
-uninstall-local:
-	rm -rf $(DESTDIR)$(docdir)
-
-distclean-local:
-	if test -d doc/html; then rm -rf doc/html; fi
-	if test -d doc/latex; then rm -rf doc/latex; fi
-
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
-
-.PHONY: doc
-if HAVE_DOXYGEN
-doc: $(top_srcdir)/doc/kate.doxygen
-	doxygen doc/kate.doxygen
-else
-doc:
-	echo "doxygen not found, cannot build docs"
-	/bin/false
-endif
-
-dist-hook: doc
-	mkdir -p $(distdir)/doc
-	cp -fR $(top_srcdir)/doc/* $(distdir)/doc
-	rm -f $(distdir)/doc/kate.doxygen
 
 STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
 

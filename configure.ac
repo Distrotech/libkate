@@ -192,6 +192,7 @@ AC_SUBST([CWARNFLAGS_FULL])
 AC_CONFIG_FILES(
   [Makefile]
   [tools/Makefile]
+  [doc/Makefile]
   [include/kate/kate.h]
   [misc/pkgconfig/kate.pc]
   [misc/pkgconfig/kate-uninstalled.pc]
