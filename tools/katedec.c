@@ -728,7 +728,8 @@ static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
   if (write_bitmaps && ev->bitmap && ev->bitmap->bpp>0 && ev->palette) {
     static int n=0;
     static char filename[32];
-    sprintf(filename,"/tmp/kate-bitmap-%d",n++);
+    snprintf(filename,sizeof(filename),"/tmp/kate-bitmap-%d",n++);
+    filename[sizeof(filename)-1]=0;
     write_bitmap(filename,ev->bitmap,ev->palette);
   }
   if (ev->nmotions) {
