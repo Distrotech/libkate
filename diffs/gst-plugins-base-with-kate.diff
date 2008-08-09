@@ -1,9 +1,9 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-base/ext/ogg/gstoggmux.c gst-plugins-base/ext/ogg/gstoggmux.c
---- ORG/gst-plugins-base/ext/ogg/gstoggmux.c	2008-05-30 13:18:14.000000000 +0100
-+++ gst-plugins-base/ext/ogg/gstoggmux.c	2008-06-19 21:42:55.000000000 +0100
-@@ -111,7 +111,8 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-base/ext/ogg/gstoggmux.c NEW/gst-plugins-base/ext/ogg/gstoggmux.c
+--- ORG/gst-plugins-base/ext/ogg/gstoggmux.c	2008-08-09 15:44:25.000000000 +0100
++++ NEW/gst-plugins-base/ext/ogg/gstoggmux.c	2008-08-09 15:10:50.000000000 +0100
+@@ -106,7 +106,8 @@
      GST_STATIC_CAPS ("video/x-theora; "
-         "audio/x-vorbis; audio/x-flac; audio/x-speex; "
+         "audio/x-vorbis; audio/x-flac; audio/x-speex; audio/x-celt; "
          "application/x-ogm-video; application/x-ogm-audio; video/x-dirac; "
 -        "video/x-smoke; text/x-cmml, encoded = (boolean) TRUE")
 +        "video/x-smoke; text/x-cmml, encoded = (boolean) TRUE; "

@@ -1,14 +1,14 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac gst-plugins-bad/configure.ac
---- ORG/gst-plugins-bad/configure.ac	2008-06-17 18:16:13.000000000 +0100
-+++ gst-plugins-bad/configure.ac	2008-06-29 18:59:31.000000000 +0100
-@@ -642,6 +642,17 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac NEW/gst-plugins-bad/configure.ac
+--- ORG/gst-plugins-bad/configure.ac	2008-08-09 15:43:36.000000000 +0100
++++ NEW/gst-plugins-bad/configure.ac	2008-08-09 15:49:26.000000000 +0100
+@@ -662,6 +662,17 @@
    AC_SUBST(JACK_LIBS)
  ])
  
 +dnl *** kate ***
 +translit(dnm, m, l) AM_CONDITIONAL(USE_KATE, true)
 +AG_GST_CHECK_FEATURE(KATE, [Kate], kate, [
-+  PKG_CHECK_MODULES(KATE, kate >= 0.1.5, HAVE_KATE="yes", [
++  PKG_CHECK_MODULES(KATE, kate >= 0.1.7, HAVE_KATE="yes", [
 +    HAVE_KATE="no"
 +    AC_MSG_RESULT(no)
 +  ])
@@ -19,7 +19,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  dnl *** ladspa ***
  translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
  AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-@@ -1117,6 +1128,7 @@
+@@ -1160,6 +1171,7 @@
  AM_CONDITIONAL(USE_X264, false)
  AM_CONDITIONAL(USE_XVID, false)
  AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -27,7 +27,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  AM_CONDITIONAL(USE_WININET, false)
  
  fi dnl of EXT plugins
-@@ -1248,6 +1260,7 @@
+@@ -1291,6 +1303,7 @@
  ext/gsm/Makefile
  ext/ivorbis/Makefile
  ext/jack/Makefile
@@ -35,10 +35,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/ladspa/Makefile
  ext/libmms/Makefile
  ext/Makefile
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/ext/Makefile.am gst-plugins-bad/ext/Makefile.am
---- ORG/gst-plugins-bad/ext/Makefile.am	2008-06-17 18:16:14.000000000 +0100
-+++ gst-plugins-bad/ext/Makefile.am	2008-06-19 21:51:21.000000000 +0100
-@@ -124,6 +124,12 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/ext/Makefile.am NEW/gst-plugins-bad/ext/Makefile.am
+--- ORG/gst-plugins-bad/ext/Makefile.am	2008-08-09 15:43:48.000000000 +0100
++++ NEW/gst-plugins-bad/ext/Makefile.am	2008-08-09 15:33:26.000000000 +0100
+@@ -130,6 +130,12 @@
  JACK_DIR=
  endif
  
@@ -51,7 +51,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  if USE_LADSPA
  LADSPA_DIR = ladspa
  else
-@@ -315,6 +321,7 @@
+@@ -329,6 +335,7 @@
  	$(HERMES_DIR) \
  	$(IVORBIS_DIR) \
  	$(JACK_DIR) \
@@ -59,7 +59,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(LADSPA_DIR) \
  	$(LCS_DIR) \
  	$(LIBFAME_DIR) \
-@@ -357,6 +364,7 @@
+@@ -372,6 +379,7 @@
  	ivorbis \
  	ladspa \
  	jack \
@@ -67,10 +67,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	libmms \
  	dts \
  	divx \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/gst-plugins-bad.spec.in gst-plugins-bad/gst-plugins-bad.spec.in
---- ORG/gst-plugins-bad/gst-plugins-bad.spec.in	2008-05-02 16:57:42.000000000 +0100
-+++ gst-plugins-bad/gst-plugins-bad.spec.in	2008-06-19 21:51:21.000000000 +0100
-@@ -146,6 +146,7 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/gst-plugins-bad.spec.in NEW/gst-plugins-bad/gst-plugins-bad.spec.in
+--- ORG/gst-plugins-bad/gst-plugins-bad.spec.in	2008-08-09 15:44:10.000000000 +0100
++++ NEW/gst-plugins-bad/gst-plugins-bad.spec.in	2008-08-09 15:33:26.000000000 +0100
+@@ -144,6 +144,7 @@
  @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
  @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
  @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
@@ -78,9 +78,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  %changelog
  * Fri May 2 2008 Christian Schaller <christian.schaller at collabora dot co uk>
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/LICENSE_readme gst-plugins-bad/LICENSE_readme
---- ORG/gst-plugins-bad/LICENSE_readme	2004-11-09 10:18:19.000000000 +0000
-+++ gst-plugins-bad/LICENSE_readme	2008-06-19 21:51:21.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/LICENSE_readme NEW/gst-plugins-bad/LICENSE_readme
+--- ORG/gst-plugins-bad/LICENSE_readme	2008-08-09 15:44:10.000000000 +0100
++++ NEW/gst-plugins-bad/LICENSE_readme	2008-08-09 15:33:26.000000000 +0100
 @@ -93,6 +93,7 @@
  gsttheora        libtheora        (http://www.theora.org/)
  speex                             (http://www.speex.org/)
@@ -89,9 +89,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  Plugins based on libraries with other free licenses:
  
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/REQUIREMENTS gst-plugins-bad/REQUIREMENTS
---- ORG/gst-plugins-bad/REQUIREMENTS	2007-07-09 07:05:45.000000000 +0100
-+++ gst-plugins-bad/REQUIREMENTS	2008-06-19 21:51:21.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/REQUIREMENTS NEW/gst-plugins-bad/REQUIREMENTS
+--- ORG/gst-plugins-bad/REQUIREMENTS	2008-08-09 15:44:11.000000000 +0100
++++ NEW/gst-plugins-bad/REQUIREMENTS	2008-08-09 15:33:26.000000000 +0100
 @@ -118,9 +118,11 @@
  libmms		(for MMS protocol support)
  			(http://www.sf.net/projects/libmms)
@@ -106,9 +106,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  
  Optional (debian) packages:
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/tests/check/Makefile.am gst-plugins-bad/tests/check/Makefile.am
---- ORG/gst-plugins-bad/tests/check/Makefile.am	2008-06-06 10:32:36.000000000 +0100
-+++ gst-plugins-bad/tests/check/Makefile.am	2008-06-19 21:51:21.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/tests/check/Makefile.am NEW/gst-plugins-bad/tests/check/Makefile.am
+--- ORG/gst-plugins-bad/tests/check/Makefile.am	2008-08-09 15:44:17.000000000 +0100
++++ NEW/gst-plugins-bad/tests/check/Makefile.am	2008-08-09 15:34:31.000000000 +0100
 @@ -57,6 +57,12 @@
  check_timidity=
  endif
@@ -126,11 +126,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(check_neon)      \
  	$(check_ofa)        \
  	$(check_timidity)  \
-+ 	$(check_kate)  \
- 	elements/deinterleave \
- 	elements/interleave \
- 	elements/rganalysis \
-@@ -96,3 +103,6 @@
++	$(check_kate)  \
+ 	elements/selector \
+ 	elements/y4menc
+ 
+@@ -86,3 +93,6 @@
  elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
  elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
  
