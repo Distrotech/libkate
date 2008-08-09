@@ -41,13 +41,13 @@ AC_CHECK_HEADERS(
   ],
   [
     AC_TYPE_INT32_T
-    test "x$ac_cv_c_int32_t" == "xyes" && INT32_T="int32_t" || INT32_T=$ac_cv_c_int32_t
+    test "x$ac_cv_c_int32_t" = "xyes" && INT32_T="int32_t" || INT32_T=$ac_cv_c_int32_t
     AC_TYPE_UINT32_T
-    test "x$ac_cv_c_uint32_t" == "xyes" && UINT32_T="uint32_t" || INT32_T=$ac_cv_c_uint32_t
+    test "x$ac_cv_c_uint32_t" = "xyes" && UINT32_T="uint32_t" || INT32_T=$ac_cv_c_uint32_t
     AC_TYPE_INT64_T
-    test "x$ac_cv_c_int64_t" == "xyes" && INT64_T="int64_t" || INT64_T=$ac_cv_c_int64_t
+    test "x$ac_cv_c_int64_t" = "xyes" && INT64_T="int64_t" || INT64_T=$ac_cv_c_int64_t
     AC_TYPE_UINT64_T
-    test "x$ac_cv_c_uint64_t" == "xyes" && UINT64_T="uint64_t" || INT64_T=$ac_cv_c_uint64_t
+    test "x$ac_cv_c_uint64_t" = "xyes" && UINT64_T="uint64_t" || INT64_T=$ac_cv_c_uint64_t
   ]
 )
 
