@@ -1,6 +1,6 @@
 diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
 --- thoggen/src/th-disc-drive.c	2008-06-16 17:24:30.000000000 +0100
-+++ thoggen-with-kate/src/th-disc-drive.c	2008-07-13 22:09:45.000000000 +0100
++++ thoggen-with-kate/src/th-disc-drive.c	2008-08-10 07:57:08.000000000 +0100
 @@ -701,7 +701,21 @@
  		subp_attr_t *attr;
  		const gchar *lang_str;
@@ -84,6 +84,15 @@ diff -ru thoggen/src/th-disc-drive.c thoggen-with-kate/src/th-disc-drive.c
  			
  		/* Don't have a stream in this language yet? add it */
  		if (j == tinfo->num_subpicture_streams) {
+@@ -1199,7 +1236,7 @@
+ 				
+ 			++tinfo->num_subpicture_streams;
+ 				
+-			if (tinfo->num_subpicture_streams == MAX_AUDIO_STREAMS)
++			if (tinfo->num_subpicture_streams == MAX_SUBPICTURE_STREAMS)
+ 				return; /* bail out if more streams than expected/allowed */
+ 		}
+ 	}
 diff -ru thoggen/src/th-job.c thoggen-with-kate/src/th-job.c
 --- thoggen/src/th-job.c	2008-06-16 17:24:30.000000000 +0100
 +++ thoggen-with-kate/src/th-job.c	2008-07-19 11:36:27.000000000 +0100
