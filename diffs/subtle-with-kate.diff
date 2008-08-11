@@ -1,6 +1,6 @@
-diff -ru subtle/MediaInfo.py subtle-new-with-kate/MediaInfo.py
---- subtle/MediaInfo.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/MediaInfo.py	2008-07-14 22:54:07.000000000 +0100
+diff -ru /mnt/cdrom/svn/xiph/subtle/MediaInfo.py subtle/MediaInfo.py
+--- /mnt/cdrom/svn/xiph/subtle/MediaInfo.py	2008-08-08 16:52:37.000000000 +0100
++++ subtle/MediaInfo.py	2008-08-09 18:42:34.000000000 +0100
 @@ -37,12 +37,13 @@
  
  class MediaInfo:
@@ -16,45 +16,83 @@ diff -ru subtle/MediaInfo.py subtle-new-with-kate/MediaInfo.py
  
      def discover(self,path):
          d = discoverer.Discoverer(path)
-diff -ru subtle/Subtitles/Discoverer.py subtle-new-with-kate/Subtitles/Discoverer.py
---- subtle/Subtitles/Discoverer.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Discoverer.py	2008-06-30 20:59:45.000000000 +0100
-@@ -21,6 +21,7 @@
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Discoverer.py subtle/Subtitles/Discoverer.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtitles/Discoverer.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtitles/Discoverer.py	2008-08-09 19:37:23.000000000 +0100
+@@ -41,10 +41,10 @@
  
- import os
- from SubRip import SubRip
-+from Kate import KateLoader
+     for func in discover_funcs:
+         print "Testing this func: %s" % func
+-        handle = func(file)
+-        if handle is not None:
+-            print "I have found a handle: %s" % handle
+-            return handle(file)
++        handles = func(file)
++        if handles is not None:
++            print "I have found a handle list: %s" % handles
++            return handles
+     else:
+         print '----'            
  
- def discoverer(file):
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/Softni.py subtle/Subtitles/Formats/Softni.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/Softni.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtitles/Formats/Softni.py	2008-08-09 19:59:44.000000000 +0100
+@@ -53,6 +53,9 @@
+         file.
      """
-@@ -32,5 +33,12 @@
-     # TODO: For text based files we should check using
-     ## regex , not extensions
-     if extension == ".srt":
--        return SubRip(file)
-+        return { 'lone': SubRip(file) }
-+
-+    # Try Kate streams
-+    kate = KateLoader(file)
-+    subs = kate.get_subs()
-+    if subs:
-+        return subs
-+
-     return None
-diff -ru subtle/Subtitles/__init__.py subtle-new-with-kate/Subtitles/__init__.py
---- subtle/Subtitles/__init__.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/__init__.py	2008-06-30 21:16:12.000000000 +0100
-@@ -18,5 +18,5 @@
- #       along with this program; if not, write to the Free Software
- #       Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- #       MA 02110-1301, USA.
--__all__=["Subtitles", "SubRip","Discoverer","Line"]
-+__all__=["Subtitles", "SubRip", "Kate", "Discoverer","Line"]
  
-diff -ru subtle/Subtitles/Sub.py subtle-new-with-kate/Subtitles/Sub.py
---- subtle/Subtitles/Sub.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Sub.py	2008-07-26 12:11:59.000000000 +0100
-@@ -77,4 +77,12 @@
++    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
++    return
++
+     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
+     status = m.load()
+ 
+@@ -70,7 +73,7 @@
+     regex = re.compile(rawstr,  re.MULTILINE| re.VERBOSE)
+ 
+     if regex.search(data):
+-        return Softni
++        return Softni(file)
+     return
+     
+ class Softni(Subtitles):
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/SubRip.py subtle/Subtitles/Formats/SubRip.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/SubRip.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtitles/Formats/SubRip.py	2008-08-09 19:44:26.000000000 +0100
+@@ -45,6 +45,9 @@
+         file.
+     """ 
+ 
++    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
++    return
++
+     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
+     status = m.load()
+     
+@@ -64,7 +67,7 @@
+     print "BEGIN: Test for SubRip"
+     if regex.search(data):
+         print "END: Test for SubRip"
+-        return SubRip
++        return SubRip(file)
+     return
+ 
+ class SubRip(Subtitles):
+@@ -94,8 +97,8 @@
+     ## Save subtitles.
+     # Save subtitles to the file.
+     # \param FN - file name.
+-    # \param format - the store format of subtitles. (NOT USED YET)
+-    def subSave(self, FN, format):
++    # \param subs - the list of subtitles - for SRT, consists only of self
++    def subSave(self, FN, subs):
+         FUN=os.open(FN,os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
+         N=1
+         for i in self.subKeys:
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Sub.py subtle/Subtitles/Sub.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtitles/Sub.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtitles/Sub.py	2008-08-09 18:42:34.000000000 +0100
+@@ -79,4 +79,12 @@
              Set the subtitle text and this method will rearrange the
              structure of lines as well as all other attributes.
          """
@@ -67,33 +105,19 @@ diff -ru subtle/Subtitles/Sub.py subtle-new-with-kate/Subtitles/Sub.py
 +
 +    def getSubEndTime(self):
 +        return self.end_time
-diff -ru subtle/Subtitles/SubRip.py subtle-new-with-kate/Subtitles/SubRip.py
---- subtle/Subtitles/SubRip.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/SubRip.py	2008-07-01 07:21:47.000000000 +0100
-@@ -47,8 +47,8 @@
-     ## Save subtitles.
-     # Save subtitles to the file.
-     # \param FN - file name.
--    # \param format - the store format of subtitles. (NOT USED YET)
--    def subSave(self, FN, format):
-+    # \param subs - the list of subtitles - for SRT, consists only of self
-+    def subSave(self, FN, subs):
-         FUN=os.open(FN,os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
-         N=1
-         for i in self.subKeys:
-diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.py
---- subtle/Subtitles/Subtitles.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Subtitles.py	2008-07-26 12:12:21.000000000 +0100
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Subtitles.py subtle/Subtitles/Subtitles.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtitles/Subtitles.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtitles/Subtitles.py	2008-08-09 18:50:56.000000000 +0100
 @@ -41,6 +41,8 @@
          self.filename = FN
          # TODO: Support more subtitles types
          self.subType = None
 +        self.subLanguage = ""
 +        self.subCategory = ""
+         self.encoding = None
+         self.framerate = None
          return
- 
-     ## Delete subtitle.
-@@ -57,7 +59,7 @@
+@@ -59,7 +61,7 @@
      # \param Attrs - attributes of the subtitle.
      # \param isUpdate - to update (or not) keys array of "subs" list.
      def subAdd(self, STime, ETime, Text, Attrs, isUpdate=0):
@@ -102,7 +126,7 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
          TS.text=Text
          TS.start_time=STime
          TS.end_time=ETime
-@@ -76,7 +78,8 @@
+@@ -78,7 +80,8 @@
      # Update text for sub.
      def updateText(self, key, text):
          if key in self.subs.keys():
@@ -112,7 +136,7 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
          else:
              print "Subkey %s not found" % key
  
-@@ -103,6 +106,39 @@
+@@ -105,6 +108,39 @@
          return None
  
  
@@ -152,10 +176,10 @@ diff -ru subtle/Subtitles/Subtitles.py subtle-new-with-kate/Subtitles/Subtitles.
      ## Get subtitle supported types.
      # Get subtitle supported types
      # \return supported subtitle types 
-diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
---- subtle/Subtle.py	2008-06-30 11:32:29.000000000 +0100
-+++ subtle-new-with-kate/Subtle.py	2008-07-27 20:47:32.000000000 +0100
-@@ -246,8 +246,8 @@
+diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
+--- /mnt/cdrom/svn/xiph/subtle/Subtle.py	2008-08-08 16:52:38.000000000 +0100
++++ subtle/Subtle.py	2008-08-09 19:29:44.000000000 +0100
+@@ -254,8 +254,8 @@
              model, iter = result
              if self.subsListStore.iter_is_valid(iter):
                  cur, sTime, eTime = self.subsListStore.get(iter, 0, 1, 2)
@@ -166,7 +190,7 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
                                                      'New subtitle...'))
                  self.reorder_SubsListStore()
          return
-@@ -371,7 +371,39 @@
+@@ -379,7 +379,39 @@
          return None
  
  
@@ -206,24 +230,21 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
          """
              Save a stream. This will be renamed to cb_saveSub
              since we don't offer video editting (yet)
-@@ -447,8 +479,15 @@
-             iter = self.streamsTreeStore.append(None)
-             self.streamsTreeStore.set(iter, 0, "Subtitle: "+ sub.filename, 1, self.Subtitles.index(sub))
+@@ -460,6 +492,13 @@
              child = self.streamsTreeStore.append(iter)
--            self.streamsTreeStore.set(child, 0, "Type: " + sub.subType, \
-+            self.streamsTreeStore.set(child, 0, "Type: " + sub.getType(), \
+             self.streamsTreeStore.set(child, 0, "Encoding: " + sub.encoding, \
                      1, self.Subtitles.index(sub))
 +            child = self.streamsTreeStore.append(iter)
-+	    self.streamsTreeStore.set(child, 0, "Language: " + sub.getLanguage(), \
-+		    1, self.Subtitles.index(sub))
++ 	    self.streamsTreeStore.set(child, 0, "Language: " + sub.getLanguage(), \
++ 		    1, self.Subtitles.index(sub))
 +            child = self.streamsTreeStore.append(iter)
-+	    self.streamsTreeStore.set(child, 0, "Category: " + sub.getCategory(), \
-+		    1, self.Subtitles.index(sub))
++ 	    self.streamsTreeStore.set(child, 0, "Category: " + sub.getCategory(), \
++ 		    1, self.Subtitles.index(sub))
 +            child = self.streamsTreeStore.append(iter)
          for mInfo in self.media:
              iter = self.streamsTreeStore.append(None)
              self.streamsTreeStore.set(iter, 0, mInfo.source, 1, self.media.index(mInfo))
-@@ -509,15 +548,19 @@
+@@ -520,15 +559,19 @@
          self.TEST_SUB_URI = URI
          WND.hide()
  
@@ -252,15 +273,19 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
      
      def addMedia(self, mInfo):
          """
-@@ -530,30 +573,32 @@
+@@ -541,34 +584,37 @@
          # First, wait for media discovery 
          if mInfo.poll():
              return True 
 -        mInfo = mInfo.getMedia()
 -        if mInfo.MIME:
--            self.media.append(mInfo)
 +        mInfoMedia = mInfo.getMedia()
 +        if mInfoMedia.MIME:
+             # Set the subtitle framerate
+             if self.Subtitle:
+-                self.Subtitle.framerate = mInfo.framerate
+-            self.media.append(mInfo)
++                self.Subtitle.framerate = mInfoMedia.framerate
 +            self.media.append(mInfoMedia)
              self.updateStreamWindow()
              #Set videoWidget sizes according to media standards
@@ -283,16 +308,19 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 -                                            gtk.DIALOG_MODAL, \
 -                                            gtk.MESSAGE_ERROR, \
 -                                            gtk.BUTTONS_CLOSE, \
--                                            "This file format is not supported.")
+-                                            "This file format is not supported \
+-                                            or not detected.")
 -            result = errorDialog.run()
 -            if (result == gtk.RESPONSE_CLOSE):
 -                errorDialog.destroy()
++            # TODO: mInfo or mInfoMedia ?
 +            if mInfo.sub_count == 0:
 +                errorDialog = gtk.MessageDialog(self.windowMainWindow, \
 +                                                gtk.DIALOG_MODAL, \
 +                                                gtk.MESSAGE_ERROR, \
 +                                                gtk.BUTTONS_CLOSE, \
-+                                                "This file format is not supported.")
++                                                "This file format is not supported \
++                                                or not detected.")
 +                result = errorDialog.run()
 +                if (result == gtk.RESPONSE_CLOSE):
 +                    errorDialog.destroy()
@@ -300,8 +328,8 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
  
  
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ subtle-new-with-kate/Subtitles/Kate.py	2008-07-01 07:59:22.000000000 +0100
-@@ -0,0 +1,523 @@
++++ subtle/Subtitles/Formats/Kate.py	2008-08-11 20:51:02.000000000 +0100
+@@ -0,0 +1,619 @@
 +#!/usr/bin/env python
 +#
 +#       Kate.py
@@ -338,39 +366,41 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +import time
 +from UserString import UserString
 +import string
-+from Subtitles import Subtitles
++from .. Subtitles import Subtitles
++from Subtitles.Sub import *
 +
-+## \file Kate.py
-+# Documentation for Kate module of Subtle project.
-+#
-+# Information about the Kate codec may be found at:
-+# http://wiki.xiph.org/index.php/OggKate
-+#
-+# This module requires the GStreamer Kate plugin. At the time of this writing,
-+# the Kate plugin is not included within GStreamer yet. A patch to gst-plugins-bad
-+# is included in the libkate distribution (which is also needed), available at:
-+# http://libkate.googlecode.com/
-+#
-+# This module only handles text and timing, so any other information that may
-+# be present in a Kate stream (such as graphics, motions, etc) will be lost when
-+# saving it.
-+#
-+# Any number of Kate streams (eg, one for each of a set of languages) may be
-+# muxed in an Ogg container. This module supports loading and saving those, but
-+# Subtle does not yet support switching between those for edition. Nevertheless,
-+# all Kate streams will be saved back.
-+#
++"""
++    Documentation for Kate module of Subtle project.
++
++    Information about the Kate codec may be found at:
++    http://wiki.xiph.org/index.php/OggKate
++
++    This module requires the GStreamer Kate plugin. At the time of this writing,
++    the Kate plugin is not included within GStreamer yet. A patch to gst-plugins-bad
++    is included in the libkate distribution (which is also needed), available at:
++    http://libkate.googlecode.com/
++
++    This module only handles text and timing, so any other information that may
++    be present in a Kate stream (such as graphics, motions, etc) will be lost when
++    saving it.
++
++    Any number of Kate streams (eg, one for each of a set of languages) may be
++    muxed in an Ogg container. This module supports loading and saving those, but
++    Subtle does not yet support switching between those for edition. Nevertheless,
++    all Kate streams will be saved back.
++"""
 +
 +
-+## KateBase class.
-+# Class for loading/saving Kate streams.
 +class KateBase:
-+    ## Constructor
-+    # \param filename - the ogg stream to load kate streams from
-+    # \param save - True if saving, False if loading
-+    # \param subs - the list of subtitles we're saving, if saving, unused if loading
-+    # \param on_pad_added - the function to call when a new pad is added by the demuxer
-+    def __init__(self, filename, save=False, subs=None, on_pad_added=None):
++    """
++        Base class for loading/saving Kate streams.
++    """
++
++    def __init__(self, filename, save=False, play=True, subs=None, on_pad_added=None):
++        """
++            constructor: opens filename, calling on_pad_added for each pad found
++        """
++
 +        self.filename = filename
 +        self.ready = False
 +        self.error = False
@@ -389,7 +419,8 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +        bus.add_signal_watch()
 +        bus.connect('message::eos', self.__on_eos)
 +        bus.connect('message::error', self.__on_error)
-+        bus.connect('message', self.__on_msg)
++        #bus.connect('message', self.__on_msg)
++        #bus.enable_sync_message_emission()
 +        #bus.connect('sync-message', self.__on_sync_msg)
 +
 +        # add filesrc and oggdemux, which will dynamically branch into as many katedec as we need
@@ -405,6 +436,8 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +            self.parsefactories = self.find_parsers()
 +            self.parsers = []
 +
++            self.oggmux_sources = []
++
 +            self.oggmux = gst.element_factory_make('oggmux')
 +            self.pipeline.add(self.oggmux)
 +            self.filesink = gst.element_factory_make('filesink')
@@ -416,7 +449,7 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +        self.oggdemux.connect('pad-added', on_pad_added)
 +        self.oggdemux.connect('no-more-pads', self.__on_no_more_pads)
 +
-+        # start reading
++        # start reading, and listen for pads being added until no more pads or timeout
 +        self.pipeline.set_state(gst.STATE_PAUSED)
 +        probe_time = 0
 +        while not self.ready:
@@ -426,8 +459,14 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +                probe_time += 0.1
 +                time.sleep(0.1)
 +
++        # if saving, we just linked a pipeline with elements in the ready state, start them
++        if save and play:
++            self.oggmux_sources.append(self.oggmux)
++            self.oggmux_sources.append(self.filesink)
++            self.set_state(gst.STATE_PLAYING)
++
 +        # if we have Kate streams, stream the entire file
-+        if not self.error and self.get_num_kate_streams()>0:
++        if play and not self.error and self.get_num_kate_streams()>0:
 +            self.play()
 +
 +        # we're done, stop the pipeline
@@ -442,9 +481,31 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +                os.unlink(filename+'.subtle')
 +
 +#==============================================================================
++    def s2n(self,state):
++        if state==gst.STATE_NULL:
++           return 'NULL'
++        if state==gst.STATE_READY:
++           return 'READY'
++        if state==gst.STATE_PAUSED:
++           return 'PAUSED'
++        if state==gst.STATE_PLAYING:
++           return 'PLAYING'
++        return 'UNKNOWN'
++
++    def set_state(self,state):
++        for src in self.oggmux_sources:
++            #print 'setting state for %s: %s -> %s' % (src, self.s2n(src.get_state(gst.SECOND)), self.s2n(state))
++            src.set_state(state)
++
++#==============================================================================
 +    def play(self):
++        """
++            set the pipeline to play, to process the entire stream
++        """
++
 +        print 'Preparing to play'
 +        bus = self.pipeline.get_bus()
++
 +        ret = self.pipeline.set_state(gst.STATE_PLAYING)
 +        if ret != gst.STATE_CHANGE_ASYNC and ret != gst.STATE_CHANGE_SUCCESS:
 +            print 'Failed to set pipeline to playing'
@@ -470,6 +531,11 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +#==============================================================================
 +    def find_parsers(self):
++        """
++            finds all the parsers (from sample code from pygst), so we can
++            pipe non Kate streams
++        """
++
 +        registry = gst.registry_get_default()
 +        ret = {}
 +        for f in registry.get_feature_list(gst.ElementFactory):
@@ -484,6 +550,10 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +#==============================================================================
 +    def check_kate_plugin(self, pad_name):
++        """
++            Checks whether the Kate GStreamer plugin is available, and bails
++            out with an error message if not
++        """
 +        if not 'kate' in map(lambda p: p.get_name(), gst.registry_get_default().get_plugin_list()):
 +            msg = 'The Kate GStreamer plugin was not found\ncannot use Kate stream %s\n'
 +            print msg % pad_name
@@ -539,8 +609,8 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +    def __on_msg(self, bus, msg):
 +        if msg.structure is None:
 +            return
-+        name = msg.structure.get_name()
-+        print 'msg: %s' % name
++        #name = msg.structure.get_name()
++        #print 'msg: %s' % name
 +        #if msg.type == gst.MESSAGE_STATE_CHANGED:
 +        #    old, new, pen = msg.parse_state_changed()
 +        #    print '%r: state change: %r -> %r, %r pending' % (msg.src.get_path_string(), old, new, pen)
@@ -557,18 +627,27 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +
 +#==============================================================================
-+## KateSaver class.
-+# Class for saving Kate streams.
 +class KateSaver(KateBase):
-+    ## Constructor
-+    # \param filename - the ogg stream to load kate streams from
-+    # \param subs - the subtitles objects to save as Kate streams
++    """
++        Class for saving Kate streams.
++    """
++
 +    def __init__(self, filename, subs):
-+        KateBase.__init__(self, filename, True, subs, self.__on_pad_added)
++        """
++            constructor: saves the given subtitles as Kate streams to an Ogg file
++        """
++
++        KateBase.__init__(self, filename, True, True, subs, self.__on_pad_added)
 +
 +
 +#==============================================================================
 +    def __on_pad_added(self, element, pad):
++        """
++            Intercepts Kate streams we have previously loaded as subtitles and
++            replaces them with the subtitles.
++            Pipes all other streams (Kate and non Kate) through an appropriate parser, 
++        """
++
 +        parse_only = True
 +        caps = pad.get_caps()
 +        mime = caps[0].get_name()
@@ -584,6 +663,7 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +                # get next subtitles object
 +                sub = None
 +                for tmp in self.subs:
++                    #print "comparing serials %d and %d" % (tmp.getUserdata(), serial)
 +                    if tmp.getUserdata() == serial:
 +                        sub = tmp
 +                        break
@@ -616,13 +696,19 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +                    # the serial number will have been randomized, so reset it as userdata so we can save again
 +                    userdata = queue.get_pad('src').get_peer().get_name()
 +                    userdata = int(string.replace(userdata, 'sink_', '', 1))
-+                    print 'userdata: %d -> %d' % (sub.getUserdata(), userdata)
++                    #print 'userdata: %d -> %d' % (sub.getUserdata(), userdata)
 +                    sub.setUserdata(userdata)
 +
-+                    queue.set_state(gst.STATE_PLAYING)
-+                    kateenc.set_state(gst.STATE_PLAYING)
-+                    katesrc.set_state(gst.STATE_PLAYING)
++                    #queue.set_state(gst.STATE_READY)
++                    #kateenc.set_state(gst.STATE_READY)
++                    #katesrc.set_state(gst.STATE_READY)
++                    #fakesink.set_state(gst.STATE_READY)
 +                    fakesink.set_state(gst.STATE_PLAYING)
++
++                    self.oggmux_sources.append(queue)
++                    self.oggmux_sources.append(kateenc)
++                    self.oggmux_sources.append(katesrc)
++                    #self.oggmux_sources.append(fakesink)
 +
 +                else:
 +                    # we don't have a replacement for this one, so let it through as is
@@ -646,7 +732,8 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +                fakesink = gst.element_factory_make('fakesink')
 +                self.pipeline.add(fakesink)
 +                pad.link(fakesink.get_pad('sink'))
-+                fakesink.set_state(gst.STATE_PLAYING)
++                fakesink.set_state(gst.STATE_READY)
++                self.oggmux_sources.append(fakesink)
 +                return
 +
 +            # let the stream flow to the ogg muxer: link pad to a new pad from oggmux
@@ -667,32 +754,40 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +            parser.link(self.oggmux)
 +            self.parsers.append(parser)
 +
-+            parser.set_state(gst.STATE_PLAYING)
-+            queue.set_state(gst.STATE_PLAYING)
++            parser.set_state(gst.STATE_READY)
++            queue.set_state(gst.STATE_READY)
++            self.oggmux_sources.append(parser)
++            self.oggmux_sources.append(queue)
 +
 +
 +
 +
 +
-+## Kate class.
-+# A class representing a Kate subtitles stream.
 +class Kate(Subtitles):
 +    """
 +        This class handles the Kate subtitle format
 +    """
 +
-+    ## Load subtitles.
-+    # Load subtitles from file.
 +    def __init__(self, filename):
++        """
++            constructor: loads subtitles from a file
++        """
++
++        print 'Kate subtitles module init for %s' % filename
 +        Subtitles.__init__(self, filename)
++        self.encoding = "FIXME: I have no idea what this is for ? character encoding ?"
 +        self.subType = "Kate"
 +        self.subUserdata = None
 +
 +    def subSave(self, filename, subs):
-+        print 'TODO: save'
 +        kate = KateSaver(filename, subs)
 +
 +    def subInit(self, language, category, serial):
++        """
++            Sets up the subtitles object with information read from a Kate stream
++        """
++
++        print 'Kate subtitles module subInit for %s %s on %s' % (language, category, serial)
 +        self.subLanguage = language
 +        self.subCategory = category
 +        self.subUserdata = serial
@@ -705,9 +800,11 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +
 +
-+## KateSource class.
-+# A source element that send subtitles to the kateenc element.
 +class KateSource(gst.BaseSrc):
++    """
++        A source element that send subtitles to the kateenc element.
++    """
++
 +    __gsttemplates__ = (gst.PadTemplate("src", gst.PAD_SRC, gst.PAD_ALWAYS, gst.caps_from_string('text/x-pango-markup')))
 +
 +    def __init__(self, sub, name=None):
@@ -718,13 +815,13 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +        self.next_index=1
 +
 +    def do_create(self, offset, size):
-+        print 'do_create called with offset %d' % offset
++        #print 'do_create called with offset %d' % offset
 +        sub = self.sub.getSubByIndex(self.next_index)
 +        if sub != None:
 +            text = sub.getSubText()
 +            start_time = sub.getSubStartTime()
 +            end_time = sub.getSubEndTime()
-+            print 'Found sub at %d till %d: %s' % (start_time, end_time, text)
++            #print 'Found sub at %d till %d: %s' % (start_time, end_time, text)
 +            self.next_index += 1
 +            self.buffer = gst.Buffer(text)
 +            self.buffer.timestamp = start_time * gst.MSECOND
@@ -742,13 +839,17 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +
 +#==============================================================================
-+## KateLoader class.
-+# Class for loading Kate streams.
 +class KateLoader(KateBase):
-+    ## Constructor
-+    # \param filename - the ogg stream to load kate streams from
++    """
++        Class for loading Kate streams.
++    """
++
 +    def __init__(self, filename):
-+        KateBase.__init__(self, filename, False, None, self.__on_pad_added)
++        """
++            constructor: loads Kate streams for the given file
++        """
++
++        KateBase.__init__(self, filename, False, True, None, self.__on_pad_added)
 +
 +        # update the subtitles keys once they're all loaded
 +        for sub in self.subs:
@@ -757,6 +858,11 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +#==============================================================================
 +    def __on_pad_added(self, element, pad):
++        """
++            Creates Subtitles objects for any Kate stream encountered.
++            Other streams are ignored.
++        """
++
 +        caps = pad.get_caps()
 +        mime = caps[0].get_name()
 +        if mime == 'application/x-kate':
@@ -805,6 +911,10 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +#==============================================================================
 +    def __on_kate_event(self, pad, buffer):
++        """
++            Fills subtitles as a stream is read
++        """
++
 +        pad_name = self.padmap[pad]
 +        #print 'Kate event: %s on pad %s' % ( buffer, pad_name)
 +        subs = self.subs[pad_name]
@@ -822,6 +932,20 @@ diff -ru subtle/Subtle.py subtle-new-with-kate/Subtle.py
 +
 +        return gst.FLOW_OK
 +
++
++
++#==============================================================================
++def discover(file):
++    """
++        Every subtitle should have a discover function
++        and return true if it should handle the requested
++        file.
++    """ 
++
++    kate = KateLoader(file)
++    subs = kate.get_subs()
++    if subs:
++        return subs
 +
 +
 +__all__=["Kate", "KateLoader", "KateSaver"]
