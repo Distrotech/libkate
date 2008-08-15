@@ -43,14 +43,21 @@ lib_liboggkate_la_LIBADD=lib/libkate.la
 
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
 
-STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style png periodic granule
+STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style periodic granule
+if HAVE_PNG
+STREAMS+=png
+endif
 
 tmp_ogg1:="kate-check-1.kate.ogg"
 tmp_ogg2:="kate-check-2.kate.ogg"
 tmp_kate1:="kate-check-1.kate"
 tmp_kate2:="kate-check-2.kate"
 
+if HAVE_OGG
 check-local: tools/kateenc tools/katedec
+else
+check-local:
+endif
 	@echo " Checking Kate namespace"
 	@! /usr/bin/nm -a lib/.libs/*.a lib/.libs/*.so \
          | $(GREP) "^[0-9a-z]\{8\} [A-T] [^\.]" \
