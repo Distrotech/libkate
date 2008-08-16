@@ -24,6 +24,7 @@ uninstall-local:
 distclean-local:
 	if test -d html; then rm -rf html; fi
 	if test -d latex; then rm -rf latex; fi
+	if test -f .doc-dummy-target; then rm -f .doc-dummy-target; fi
 
 if HAVE_DOXYGEN
 .doc-dummy-target: kate.doxygen
