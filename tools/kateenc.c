@@ -539,7 +539,6 @@ int main(int argc,char **argv)
     }
   }
 
-
   if (!raw) ogg_stream_clear(&os);
   kate_clear(&k);
 
