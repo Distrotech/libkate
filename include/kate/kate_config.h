@@ -10,6 +10,7 @@
 #define _KATE_CONFIG_H_
 
 #include <stddef.h>
+#include <limits.h>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
