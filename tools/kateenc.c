@@ -87,6 +87,11 @@ static void poll_page(FILE *f)
 
 void write_headers(FILE *f)
 {
+  /* command line overrides */
+  if (language) kate_info_set_language(&ki,language);
+  if (category) kate_info_set_category(&ki,category);
+
+  /* warn if either language or category is missing */
   if (!ki.category || !*ki.category) {
     fprintf(stderr,"warning: no category defined\n");
   }
@@ -507,9 +512,6 @@ int main(int argc,char **argv)
   kate_info_init(&ki);
 
   kate_encode_init(&k,&ki);
-
-  if (language) kate_info_set_language(&ki,language);
-  if (category) kate_info_set_category(&ki,category);
 
   if (!raw) ogg_stream_init(&os,serial);
 
