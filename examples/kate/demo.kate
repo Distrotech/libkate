@@ -258,7 +258,7 @@ kate {
       a second line\n
       and the third and last one
     "
-    style "centerbox" { vcenter }
+    style "centerbox" { hleft vcenter }
     /* do some move-to-right and move-to-left at the end */
     motion {
       semantics text alignment
