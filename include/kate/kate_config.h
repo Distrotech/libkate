@@ -56,6 +56,8 @@ typedef short int kate_int32_t;
 typedef long int kate_int32_t;
 #elif defined LLONG_MAX && LLONG_MAX==2147483647
 typedef long long int kate_int32_t;
+#else
+#error No 32 bit signed integer found
 #endif
 
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
@@ -70,6 +72,17 @@ typedef short int kate_int64_t;
 typedef long int kate_int64_t;
 #elif defined LLONG_MAX && LLONG_MAX>2147483647
 typedef long long int kate_int64_t;
+#else
+#error No 64 bit signed integer found
+#endif
+
+#if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
+typedef uintptr_t kate_uintptr_t;
+#elif defined uintptr_t
+typedef uintptr_t kate_uintptr_t;
+#else
+#warning No suitable type for holding integer and pointer found, using unsigned long
+typedef unsigned long kate_uintptr_t;
 #endif
 
 typedef float kate_float;
