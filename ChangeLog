@@ -1,3 +1,6 @@
+0.1.8
+  build fixes for systems without <stdint.h>
+
 0.1.7
   autotools support
   tools renamed to kateenc and katedec, and now installed
