@@ -28,6 +28,7 @@ distclean-local:
 if HAVE_DOXYGEN
 .doc-dummy-target: kate.doxygen
 	doxygen kate.doxygen
+	touch .doc-dummy-target
 else
 .doc-dummy-target:
 	echo "doxygen not found, cannot build docs"
