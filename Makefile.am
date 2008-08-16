@@ -72,7 +72,8 @@ endif
 	 | $(GREP) -v "^include/kate/kate.h:#define kate_"
 	@echo " Checking forgotten debug traces"
 	@! $(GREP) -E '[^sn]printf' \
-	  src/* $(top_srcdir)/include/kate/* $(top_srcdir)/tools/katedesc.h \
+	  $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
+	  $(top_srcdir)/tools/katedesc.h \
 	| $(GREP) .
 if HAVE_OGG
 	@$(foreach stream, $(STREAMS), \
