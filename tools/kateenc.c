@@ -65,6 +65,7 @@ static unsigned char utf32lebom[4]={0xff,0xfe,0x00,0x00};
 static unsigned char utf32bebom[4]={0x00,0x00,0xfe,0xff};
 
 static const char *language=NULL;
+static const char *category=NULL;
 
 static void flush_page(FILE *f)
 {
@@ -86,6 +87,13 @@ static void poll_page(FILE *f)
 
 void write_headers(FILE *f)
 {
+  if (!ki.category || !*ki.category) {
+    fprintf(stderr,"warning: no category defined\n");
+  }
+  if (!ki.language || !*ki.language) {
+    fprintf(stderr,"warning: no language defined\n");
+  }
+
   while (1) {
     int ret=kate_ogg_encode_headers(&k,&kc,&op);
     if (ret<0) {
@@ -385,7 +393,8 @@ int main(int argc,char **argv)
           printf("   -o <filename>       set output filename\n");
           printf("   -t <type>           set input filename type\n");
           printf("       types can be: kate, srt, lrc\n");
-          printf("   -l <language>       set input filename language\n");
+          printf("   -l <language>       set stream language\n");
+          printf("   -c <category>       set stream category\n");
           printf("   -s <hex number>     set serial number of output stream\n");
           printf("   -r                  write raw Kate stream\n");
           exit(0);
@@ -413,6 +422,15 @@ int main(int argc,char **argv)
           }
           else {
             fprintf(stderr,"Only one language may be given\n");
+            exit(-1);
+          }
+          break;
+        case 'c':
+          if (!category) {
+            category=eat_arg(argc,argv,&n);
+          }
+          else {
+            fprintf(stderr,"Only one category may be given\n");
             exit(-1);
           }
           break;
@@ -491,6 +509,7 @@ int main(int argc,char **argv)
   kate_encode_init(&k,&ki);
 
   if (language) kate_info_set_language(&ki,language);
+  if (category) kate_info_set_category(&ki,category);
 
   if (!raw) ogg_stream_init(&os,serial);
 
