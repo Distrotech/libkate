@@ -94,7 +94,7 @@ video_theora_ogg:=$(shell ls video.theora.ogg 2> /dev/null || ls video.theora.og
 $(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/kateenc
 	@echo " Building Kate stream from $<"
 	@mkdir -p $(dir $@)
-	@$(LIBTOOL) --mode=execute ./tools/kateenc -s `echo $< | md5sum | cut -b1-8` -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
+	@$(LIBTOOL) --mode=execute ./tools/kateenc -s `echo $< | md5sum | cut -b1-8` -c test -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
 
 $(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg tools/kateenc
 if HAVE_OGG_MERGE
@@ -109,6 +109,8 @@ else
 endif
 
 streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).ogg)
+
+kate-streams: $(foreach stream, $(STREAMS), $(OGGDIR)/$(notdir $(basename $(stream))).kate.ogg)
 
 else
 streams:
