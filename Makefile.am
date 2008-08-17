@@ -103,7 +103,7 @@ if HAVE_OGG_MERGE
 	  echo "video.theora.ogv not found, Kate streams will not be merged with video."; \
 	else \
 	  echo " Merging video with Kate stream from $<"; \
-	  $(OGG_MERGE) -o $@ $(OGGDIR)/$(notdir $<) $(video_theora_ogg); \
+	  $(OGG_MERGE) -o $@ $(video_theora_ogg) $(OGGDIR)/$(notdir $<); \
 	fi
 else
 	echo "Building $@ needs either oggmerge or oggz-merge"
