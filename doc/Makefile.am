@@ -41,4 +41,7 @@ endif
 dist-hook: .doc-dummy-target
 	cp -fR * $(distdir)
 	rm -f $(distdir)/doc/kate.doxygen
+	for f in man/kateenc.1 man/katedec.1; do \
+	  if test -f "$(distdir)/doc/$$f"; then rm -f "$(distdir)/doc/$$f"; fi \
+	done
 
