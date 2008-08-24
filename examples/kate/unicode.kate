@@ -2,7 +2,6 @@
 kate {
   defs {
     timebase 0:0.5
-    language "en"
 
     define region "r1l" { percent position 10 10 size 40 10 }
     define region "r2l" { percent position 10 20 size 40 10 }

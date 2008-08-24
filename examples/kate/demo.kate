@@ -148,12 +148,6 @@ kate {
       }
     }
 
-    /* default language for the stream */
-    language "x-foo"
-
-    /* category - nothing specific here */
-    category "none"
-
     /* vorbis comments */
     comment "foo=bar"
     comment "baz=quux"
