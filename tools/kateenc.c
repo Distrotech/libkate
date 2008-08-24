@@ -323,13 +323,13 @@ static int convert_lrc(FILE *fin,FILE *fout)
 
   while (!feof(fin)) {
     ++line;
-    ret=sscanf(str,"[%u:%u.%u]%n\n",&m,&s,&ms,&offset);
+    ret=sscanf(str,"[%u:%u.%u]%n",&m,&s,&ms,&offset);
     if (ret!=3) {
       fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
       return -1;
     }
     t=hmsms2s(0,m,s,ms);
-    if (start_time>0.0 && !is_line_empty(text)) {
+    if (start_time>=0.0 && !is_line_empty(text)) {
       if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
       kate_ogg_encode_text(&k,start_time,t,text,strlen(text),&op);
       send_packet(fout);
