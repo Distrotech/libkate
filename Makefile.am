@@ -78,11 +78,11 @@ endif
 if HAVE_OGG
 	@$(foreach stream, $(STREAMS), \
 	  echo " Checking Kate stream $(stream)" && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg1) $(top_srcdir)/examples/kate/$(stream).kate && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate1) $(tmp_ogg1) && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
+	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg1) $(top_srcdir)/examples/kate/$(stream).kate && \
+	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate1) $(tmp_ogg1) && \
+	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -o $(tmp_ogg2) $(tmp_kate1) && \
 	  $(OGG_DIFF) $(tmp_ogg1) $(tmp_ogg2) && \
-	  $(LIBTOOL) --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate2) $(tmp_ogg2) && \
+	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate2) $(tmp_ogg2) && \
 	  cmp $(tmp_kate1) $(tmp_kate2) && \
 	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
 endif
@@ -95,7 +95,7 @@ video_theora_ogg:=$(shell ls video.theora.ogg 2> /dev/null || ls video.theora.og
 $(OGGDIR)/%.kate.ogg: examples/kate/%.kate tools/kateenc
 	@echo " Building Kate stream from $<"
 	@mkdir -p $(dir $@)
-	@$(LIBTOOL) --mode=execute ./tools/kateenc -s `echo $< | md5sum | cut -b1-8` -c test -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
+	@$(LIBTOOL) -dlopen lib/libkate.la --mode=execute ./tools/kateenc -s `echo $< | md5sum | cut -b1-8` -c test -l x-foo -t kate -o $(OGGDIR)/$(notdir $<).ogg $<
 
 $(OGGDIR)/%.ogg: $(OGGDIR)/%.kate.ogg tools/kateenc
 if HAVE_OGG_MERGE
