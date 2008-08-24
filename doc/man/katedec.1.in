@@ -1,0 +1,43 @@
+.TH "katedec" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+
+.SH NAME
+katedec - decodes Kate streams to a textual description
+
+.SH SYNOPSIS
+.B katedec
+[
+.B -hVv
+]
+[
+.B -o
+outfile
+]
+[
+infile
+]
+
+.SH DESCRIPTION
+.B katedec
+decodes Kate streams to libkate's custom description language. If the input stream contains more than
+one Kate stream, only the first one encountered will be decoded.
+
+.SH OPTIONS
+.IP -h
+Show command line help.
+.IP -V
+Show version information.
+.IP -v
+Increase verbosity.
+.IP -o outfile
+Write the output description file to the given file name (writes to stdout if not specified).
+
+.SH EXAMPLES
+
+Decodes a Kate stream to a textual description:
+
+    katedec -o output.kate input.ogg
+
+.SH SEE ALSO
+.PP
+\fBkateenc\fR(1)
+

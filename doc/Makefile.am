@@ -1,5 +1,7 @@
 LIBTOOLFLAGS=--silent
 
+man_MANS=man/kateenc.1 man/katedec.1
+
 # dependency to get doc to be built
 noinst_DATA = .doc-dummy-target
 

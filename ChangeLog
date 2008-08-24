@@ -1,6 +1,7 @@
 0.1.8
   various build fixes for particular system configurations
   new -c (category) option to kateenc
+  new man pages for kateenc and katedec
 
 0.1.7
   autotools support

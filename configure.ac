@@ -193,6 +193,7 @@ AC_CONFIG_FILES(
   [Makefile]
   [tools/Makefile]
   [doc/Makefile]
+  [doc/man/kateenc.1 doc/man/katedec.1]
   [include/kate/kate.h]
   [misc/pkgconfig/kate.pc]
   [misc/pkgconfig/kate-uninstalled.pc]

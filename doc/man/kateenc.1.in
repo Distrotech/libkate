@@ -1,0 +1,66 @@
+.TH "kateenc" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+
+.SH NAME
+kateenc - create Kate streams from text input
+
+.SH SYNOPSIS
+.B kateenc
+[
+.B -hVr
+]
+[
+.B -o
+outfile
+]
+[
+.B -l
+language
+]
+[
+.B -c
+category
+]
+[
+.B -s
+serial
+]
+.B -t
+filetype
+[
+infile
+]
+
+.SH DESCRIPTION
+.B kateenc
+creates Kate streams from input files (SubRip SRT subtitles, LRC lyrics, and libkate's custom description language).
+When saved to an Ogg stream (the default behavior), a Kate stream may then be merged with other Ogg streams (eg, a
+Theora video) using the oggz tools.
+
+.SH OPTIONS
+.IP -h
+Show command line help.
+.IP -V
+Show version information.
+.IP -r
+Write raw Kate streams (experimental) rather than Kate-in-Ogg.
+.IP -o outfile
+Write the output Kate stream to the given file name (writes to stdout if not specified).
+.IP -l language
+Sets the language for the stream (default is the language specified in the input, or none).
+.IP -c category
+Sets the category for the stream (default is the category specified in the input, or none).
+.IP -s serial
+Sets the serial number for the output Kate stream (does not apply to raw streams).
+.IP -t filetype
+Specifies the type of the input (srt, lrc, kate)
+
+.SH EXAMPLES
+
+Create a Kate stream for Welsh subtitles from a SubRip file:
+
+    kateenc -t srt -l cy -c subtitles -o output.ogg input.srt
+
+.SH SEE ALSO
+.PP
+\fBkatedec\fR(1)
+
