@@ -1,5 +1,5 @@
 0.1.8
-  build fixes for systems without <stdint.h>
+  various build fixes for particular system configurations
   new -c (category) option to kateenc
 
 0.1.7
