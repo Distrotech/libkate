@@ -41,6 +41,16 @@ liboggplay is a layer above liboggz that provides data format abstraction and
 stream synchronization.
 It can play simple text Kate streams.
 
+\subsection support-mkvtoolnix mkvtoolnix
+
+mkvtoolnix is a tool to manipulate Matroska streams.
+It can manipulate Kate streams in Matroska.
+
+
+
+
+
+
 \section support-if-patched Support needing patches
 
 \subsection support-vorbis-tools vorbis-tools
@@ -71,11 +81,6 @@ Theora and Vorbis.
 
 XMMS is the X multimedia system.
 If patched, it can display Kate lyrics in sync with a song.
-
-\subsection support-mkvtoolnix mkvtoolnix
-
-mkvtoolnix is a tool to manipulate Matroska streams.
-If patched, it can manipulate Kate streams in Matroska.
 
 \subsection support-annodex-browser-plugin the Annodex browser plugin
 
