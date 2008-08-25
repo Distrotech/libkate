@@ -55,7 +55,7 @@ void set_binary_file(FILE *f)
 #if defined WIN32 || defined _WIN32
   _setmode(_fileno(f),_O_BINARY);
 #else
-#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
+#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2 || defined __BORLANDC__
     setmode(fileno(f),_O_BINARY);
 #endif
 #endif

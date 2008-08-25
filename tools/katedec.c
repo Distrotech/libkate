@@ -879,7 +879,7 @@ static kate_comment kc;
 #if defined WIN32 || defined _WIN32
     _setmode(_fileno(stdin),_O_BINARY);
 #else
-#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
+#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2 || defined __BORLANDC__
     setmode(fileno(stdin),_O_BINARY);
 #endif
 #endif
