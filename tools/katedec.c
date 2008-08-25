@@ -765,6 +765,37 @@ static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
   return 0;
 }
 
+static unsigned long gen_fuzz(unsigned long *seed)
+{
+  return *seed=*seed*65521+0x9e370001UL;
+}
+
+static unsigned long gen_fuzz_n(unsigned long *seed,unsigned long n)
+{
+  return gen_fuzz(seed)%n;
+}
+
+static void fuzz_packet(unsigned long *seed,unsigned long nbytes,unsigned char *data)
+{
+  unsigned long n=gen_fuzz_n(seed,4),i;
+  if (n!=0) return;
+  n=gen_fuzz_n(seed,8);
+  for (i=0;i<n;++i) {
+    unsigned long offset=gen_fuzz_n(seed,nbytes);
+    data[offset]^=1;
+  }
+}
+
+static void fuzz_kate_packet(unsigned long *seed,kate_packet *kp)
+{
+  fuzz_packet(seed,kp->nbytes,kp->data);
+}
+
+static void fuzz_ogg_packet(unsigned long *seed,ogg_packet *op)
+{
+  fuzz_packet(seed,op->bytes,op->packet);
+}
+
 int main(int argc,char **argv)
 {
   size_t bytes_read;
@@ -782,6 +813,8 @@ int main(int argc,char **argv)
   char *buffer=NULL;
   ogg_int64_t bytes;
   int headers_written=0;
+  int fuzz=0;
+  unsigned long fuzz_seed=0;
 
 static ogg_sync_state oy;
 static ogg_stream_state os;
@@ -805,6 +838,7 @@ static kate_comment kc;
           printf("   -B                  write some bitmaps in /tmp (debug)\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
+          printf("   -f <number>         fuzz testing with given seed\n");
           exit(0);
         case 'o':
           if (!output_filename) {
@@ -820,6 +854,10 @@ static kate_comment kc;
           break;
         case 'B':
           write_bitmaps=1;
+          break;
+        case 'f':
+          fuzz=1;
+          fuzz_seed=strtoul(eat_arg(argc,argv,&n),NULL,10);
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
@@ -894,6 +932,7 @@ static kate_comment kc;
       const kate_event *ev=NULL;
       kate_packet kp;
       kate_packet_wrap(&kp,bytes,buffer);
+      if (fuzz) fuzz_kate_packet(&fuzz_seed,&kp);
       ret=kate_high_decode_packetin(&k,&kp,&ev);
       if (ret<0) {
         fprintf(stderr,"failed to decode raw kate packet (%d)\n",ret);
@@ -1006,6 +1045,7 @@ static kate_comment kc;
               }
             }
             else {
+              if (fuzz) fuzz_ogg_packet(&fuzz_seed,&op);
               ret=kate_ogg_decode_packetin(&k,&op);
               if (ret<0) {
                 fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
