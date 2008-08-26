@@ -1,3 +1,12 @@
+.\" Copyright (C) 2008 Vincent Penquerc'h.
+.\" This file is part of the Kate codec library.
+.\" Written by Vincent Penquerc'h.
+.\"
+.\" Use, distribution and reproduction of this library is governed
+.\" by a BSD style source license included with this source in the
+.\" file 'COPYING'. Please read these terms before distributing. */
+
+
 .TH "kateenc" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
