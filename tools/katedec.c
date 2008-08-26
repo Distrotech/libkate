@@ -835,10 +835,10 @@ static kate_comment kc;
           printf("usage: %s [options] [filename]\n",argv[0]);
           printf("   -V                  version\n");
           printf("   -v                  verbose\n");
-          printf("   -B                  write some bitmaps in /tmp (debug)\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
-          printf("   -f <number>         fuzz testing with given seed\n");
+          printf("   -B                  write some bitmaps in /tmp (debug)\n");
+          printf("   -f <number>         fuzz testing with given seed (debug)\n");
           exit(0);
         case 'o':
           if (!output_filename) {
