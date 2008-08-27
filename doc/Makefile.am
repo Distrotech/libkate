@@ -29,7 +29,7 @@ distclean-local:
 	if test -f .doc-dummy-target; then rm -f .doc-dummy-target; fi
 
 if HAVE_DOXYGEN
-.doc-dummy-target: kate.doxygen
+.doc-dummy-target: $(top_srcdir)/doc/kate.doxygen
 	doxygen kate.doxygen
 	touch .doc-dummy-target
 else
@@ -44,4 +44,11 @@ dist-hook: .doc-dummy-target
 	for f in man/kateenc.1 man/katedec.1; do \
 	  if test -f "$(distdir)/doc/$$f"; then rm -f "$(distdir)/doc/$$f"; fi \
 	done
+
+.PHONY: force-doc
+force-doc: rm-doc-dummy-target .doc-dummy-target
+
+.PHONY: rm-doc-dummy-target
+rm-doc-dummy-target:
+	rm -f .doc-dummy-target
 

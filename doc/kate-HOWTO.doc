@@ -1,0 +1,60 @@
+/* Copyright (C) 2008 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page HOWTO
+
+
+\section HOWTO-text-subtitles Text movie subtitles
+
+Kate streams can carry Unicode text (that is, text that can represent
+pretty much any existing language/script). If several Kate streams are
+multiplexed along with a video, subtitles in various languages can be
+made for that movie.
+
+An easy way to create such subtitles is to use ffmpeg2theora, which
+can create Kate streams from SubRip (.srt) format files, a simple but
+common text subtitles format. ffmpeg2theora 0.21 or later is needed.
+
+At its simplest:
+
+ffmpeg2theora -o video-with-subtitles.ogg --subtitles subtitles.srt \
+  video-without-subtitles.avi 
+
+Several languages may be created and tagged with their language code
+for easy selection in a media player:
+
+ffmpeg2theora -o video-with-subtitles.ogg video-without-subtitles.avi \
+  --subtitles japanese-subtitles.srt --subtitles-language ja \
+  --subtitles welsh-subtitles.srt --subtitles-language cy \
+  --subtitles english-subtitles.srt --subtitles-language en_GB
+
+Alternatively, kateenc (which comes with the libkate distribution) can
+create Kate streams from SubRip files as well. These can then be merged
+with a video with oggz-tools:
+
+kateenc -t srt -c subtitles -l it -o subtitles.ogg italian-subtitles.srt
+oggz merge -o movie-with-subtitles.ogg movie-without-subtitles.ogg subtitles.ogg
+
+
+
+\section HOWTO-DVD-subtitles
+
+DVD subtitles are not text, but images. Thoggen, a DVD ripper program,
+can convert these subtitles to Kate streams (at the time of writing,
+Thoggen and GStreamer have not applied the necessary patches for this
+to be possible out of the box, so patching them will be required).
+
+When configuring how to rip DVD tracks, any subtitles will be detected
+by Thoggen, and selecting them in the GUI will cause them to be saved as
+Kate tracks along with the movie.
+
+
+*/
