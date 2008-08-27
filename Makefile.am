@@ -119,6 +119,10 @@ streams:
 
 endif
 
+.PHONY: force-doc
+force-doc:
+	$(MAKE) -C doc force-doc
+
 EXTRA_DIST=\
   README INSTALL AUTHORS COPYING THANKS ChangeLog \
   misc/pkgconfig/kate.pc.in misc/pkgconfig/kate-uninstalled.pc.in \
