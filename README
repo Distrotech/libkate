@@ -22,6 +22,10 @@ More information can be found at the xiph wiki:
 
 http://wiki.xiph.org/index.php/OggKate
 
+libtiger, a rendering library for Kate streams using Pango and Cairo, is at:
+
+http://libtiger.googlecode.com/
+
 For build instructions, see INSTALL.
 
 A sample encoder and decoder are included in this distribution, in the
