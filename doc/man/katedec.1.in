@@ -7,39 +7,36 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "katedec" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+.TH "KATEDEC" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
-katedec - decodes Kate streams to a textual description.
+katedec \- decodes Kate streams to a textual description
 
 .SH SYNOPSIS
 .B katedec
-[
-.B -hVv
-]
-[
-.B -o
-outfile
-]
-[
-infile
-]
+.B "[\-hVv]"
+.BI "[\-o " outfile ]
+[ infile ]
 
 .SH DESCRIPTION
 .B katedec
 decodes Kate streams to libkate's custom description language.
 
 .SH OPTIONS
-.IP -h
+.TP
+\fB\-h\fR
 Show command line help.
-.IP -V
+.TP
+\fB\-V\fR
 Show version information.
-.IP -v
+.TP
+\fB\-v\fR
 Increase verbosity.
-.IP -o outfile
+.TP
+\fB\-o\fR outfile
 Write the output description file to the given file name (writes to stdout if not specified).
 If a printf style field is present in the name, the argument passed will be an increasing
-counter, so mutliple files may be written (eg, -o output%d.kate will generate files named
+counter, so mutliple files may be written (eg, \-o output%d.kate will generate files named
 output0.kate, output1.kate, output2.kate, etc, for each Kate stream in the input. Care is
 advised in the choice of formatting.
 
@@ -47,11 +44,11 @@ advised in the choice of formatting.
 
 Decodes a Kate stream to a textual description:
 
-    katedec -o output.kate input.ogg
+    katedec \-o output.kate input.ogg
 
 Decodes several multiplexed Kate streams:
 
-    katedec -o output%d.kate input.ogg
+    katedec \-o output%d.kate input.ogg
 
 .SH SEE ALSO
 .PP

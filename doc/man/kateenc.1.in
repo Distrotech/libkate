@@ -7,37 +7,20 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "kateenc" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+.TH "KATEENC" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
-kateenc - create Kate streams from text input
+kateenc \- create Kate streams from text input
 
 .SH SYNOPSIS
 .B kateenc
-[
-.B -hVr
-]
-[
-.B -o
-outfile
-]
-[
-.B -l
-language
-]
-[
-.B -c
-category
-]
-[
-.B -s
-serial
-]
-.B -t
-filetype
-[
-infile
-]
+.B "[\-hVr]"
+.BI "[\-o " outfile ]
+.BI "[\-l " language ]
+.BI "[\-c " category ]
+.BI "[\-s " serial ]
+.BI "\-t " filetype
+[ infile ]
 
 .SH DESCRIPTION
 .B kateenc
@@ -46,28 +29,36 @@ When saved to an Ogg stream (the default behavior), a Kate stream may then be me
 Theora video) using the oggz tools.
 
 .SH OPTIONS
-.IP -h
+.TP
+\fB\-h\fR
 Show command line help.
-.IP -V
+.TP
+\fB\-V\fR
 Show version information.
-.IP -r
-Write raw Kate streams (experimental) rather than Kate-in-Ogg.
-.IP -o outfile
+.TP
+\fB\-r\fR
+Write raw Kate streams (experimental) rather than Kate\-in\-Ogg.
+.TP
+\fB\-o\fR outfile
 Write the output Kate stream to the given file name (writes to stdout if not specified).
-.IP -l language
+.TP
+\fB\-l\fR language
 Sets the language for the stream (default is the language specified in the input, or none).
-.IP -c category
+.TP
+\fB\-c\fR category
 Sets the category for the stream (default is the category specified in the input, or none).
-.IP -s serial
+.TP
+\fB\-s\fR serial
 Sets the serial number for the output Kate stream (does not apply to raw streams).
-.IP -t filetype
+.TP
+\fB\-t\fR filetype
 Specifies the type of the input (srt, lrc, kate)
 
 .SH EXAMPLES
 
 Create a Kate stream for Welsh subtitles from a SubRip file:
 
-    kateenc -t srt -l cy -c subtitles -o output.ogg input.srt
+    kateenc \-t srt \-l cy \-c subtitles \-o output.ogg input.srt
 
 .SH SEE ALSO
 .PP
