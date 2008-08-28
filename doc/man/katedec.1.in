@@ -10,7 +10,7 @@
 .TH "katedec" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
-katedec - decodes Kate streams to a textual description
+katedec - decodes Kate streams to a textual description.
 
 .SH SYNOPSIS
 .B katedec
@@ -27,8 +27,7 @@ infile
 
 .SH DESCRIPTION
 .B katedec
-decodes Kate streams to libkate's custom description language. If the input stream contains more than
-one Kate stream, only the first one encountered will be decoded.
+decodes Kate streams to libkate's custom description language.
 
 .SH OPTIONS
 .IP -h
@@ -39,12 +38,20 @@ Show version information.
 Increase verbosity.
 .IP -o outfile
 Write the output description file to the given file name (writes to stdout if not specified).
+If a printf style field is present in the name, the argument passed will be an increasing
+counter, so mutliple files may be written (eg, -o output%d.kate will generate files named
+output0.kate, output1.kate, output2.kate, etc, for each Kate stream in the input. Care is
+advised in the choice of formatting.
 
 .SH EXAMPLES
 
 Decodes a Kate stream to a textual description:
 
     katedec -o output.kate input.ogg
+
+Decodes several multiplexed Kate streams:
+
+    katedec -o output%d.kate input.ogg
 
 .SH SEE ALSO
 .PP

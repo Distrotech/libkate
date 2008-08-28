@@ -1,3 +1,6 @@
+0.1.9
+  katedec can now decode multiple Kate streams in an Ogg stream
+
 0.1.8
   various build fixes for particular system configurations
   new -c (category) option to kateenc
