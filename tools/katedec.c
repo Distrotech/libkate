@@ -56,6 +56,8 @@ static char *get_filename(const char *basename,unsigned long n)
   if (!basename) return NULL;
   percent=strchr(basename,'%');
   if (!percent) {
+    /* if we don't have a %, we can't handle more than one stream */
+    if (n>0) return NULL;
     len=strlen(basename);
     filename=kate_malloc(len+1);
     memcpy(filename,basename,len+1);
@@ -1027,10 +1029,28 @@ int main(int argc,char **argv)
       ogg_sync_wrote(&oy,bytes_read);
 
       while (ogg_sync_pageout(&oy,&og)>0) {
-        if (ogg_page_bos(&og)) {
+        if (ogg_page_bos(&og)) do {
           kate_stream *ks;
           kate_streams=(kate_stream*)kate_realloc(kate_streams,(n_kate_streams+1)*sizeof(kate_stream));
           ks=&kate_streams[n_kate_streams];
+          ks->filename=NULL;
+          if (!output_filename || !strcmp(output_filename,"-")) {
+            ks->fout=stdout;
+          }
+          else {
+            ks->filename=get_filename(output_filename,n_kate_streams);
+            if (!ks->filename) {
+              /* get_filename returns NULL when it can't generate a filename because no format field
+                 was given in the output filename and we have more than one Kate stream */
+              fprintf(stderr,"more than one Kate stream, and output file is not multiple, new Kate stream will be ignored\n");
+              break;
+            }
+            ks->fout=fopen(ks->filename,"w");
+            if (!ks->fout) {
+              fprintf(stderr,"%s: %s\n",ks->filename,strerror(errno));
+              exit(-1);
+            }
+          }
           ogg_stream_init(&ks->os,ogg_page_serialno(&og));
           ret=kate_info_init(&ks->ki);
           if (ret<0) {
@@ -1044,19 +1064,8 @@ int main(int argc,char **argv)
             break;
           }
           ks->init=header_info;
-          ks->filename=get_filename(output_filename,n_kate_streams);
-          if (!output_filename || !strcmp(output_filename,"-")) {
-            ks->fout=stdout;
-          }
-          else {
-            ks->fout=fopen(ks->filename,"w");
-            if (!ks->fout) {
-              fprintf(stderr,"%s: %s\n",ks->filename,strerror(errno));
-              exit(-1);
-            }
-          }
           ++n_kate_streams;
-        }
+        } while(0);
         for (n=0;n<n_kate_streams;++n) {
           ret=ogg_stream_pagein(&kate_streams[n].os,&og);
           if (ret>=0) {
