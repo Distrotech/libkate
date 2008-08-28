@@ -1,4 +1,5 @@
 0.1.9
+  fix event id not being reset for each event
   katedec can now decode multiple Kate streams in an Ogg stream
 
 0.1.8
