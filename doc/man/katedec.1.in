@@ -16,6 +16,7 @@ katedec \- decodes Kate streams to a textual description
 .B katedec
 .B "[\-hVv]"
 .BI "[\-o " outfile ]
+.BI "[\-t " type ]
 [ infile ]
 
 .SH DESCRIPTION
@@ -39,6 +40,11 @@ If a printf style field is present in the name, the argument passed will be an i
 counter, so mutliple files may be written (eg, \-o output%d.kate will generate files named
 output0.kate, output1.kate, output2.kate, etc, for each Kate stream in the input. Care is
 advised in the choice of formatting.
+.TP
+\fB\-t\fR type
+Set the output format type:
+    kate: Kate description format
+    srt: SubRip format (non text information will be lost)
 
 .SH EXAMPLES
 

@@ -43,6 +43,7 @@ typedef struct {
   int init;
   char *filename;
   FILE *fout;
+  int event_index;
 } kate_stream;
 
 static int write_bitmaps=0;
@@ -515,7 +516,7 @@ static void write_canvas_size(FILE *f,const kate_info *ki,size_t indent)
   kate_free(sindent);
 }
 
-static void write_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
+static void write_kate_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
 {
   size_t n;
   int c;
@@ -656,11 +657,13 @@ static void print_version(void)
   printf("Kate reference decoder - %s\n",kate_get_version_string());
 }
 
-static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
+static void output_kate_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos,int event_index)
 {
   const kate_info *ki=ev->ki;
   float t0=ev->start_time;
   float t1=ev->end_time;
+
+  (void)event_index;
   fprintf(fout,"  event {\n");
   if (ev->id>=0) {
     fprintf(fout,"    id %d\n",ev->id);
@@ -786,6 +789,21 @@ static void output_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos)
   fprintf(fout,"\n");
 }
 
+static void output_srt_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos,int event_index)
+{
+  float t0=ev->start_time;
+  float t1=ev->end_time;
+
+  (void)granpos;
+  fprintf(fout,"%d\n",event_index+1);
+  fprintf(fout,"%02d:%02d:%#02.4g --> %02d:%02d:%#02.4g\n",
+    time_hours(t0),time_minutes(t0),time_seconds(t0),
+    time_hours(t1),time_minutes(t1),time_seconds(t1)
+  );
+  fprintf(fout,"%s\n",ev->text);
+  fprintf(fout,"\n");
+}
+
 static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
 {
   size_t ret;
@@ -836,6 +854,7 @@ int main(int argc,char **argv)
   int eos=0;
   const char *input_filename=NULL;
   const char *output_filename=NULL;
+  const char *output_filename_type=NULL;
   FILE *fin;
   int verbose=0;
   int arg;
@@ -853,6 +872,10 @@ int main(int argc,char **argv)
   ogg_sync_state oy;
   ogg_page og;
   ogg_packet op;
+  void (*write_start_function)(FILE*);
+  void (*write_end_function)(FILE*);
+  void (*write_headers_function)(FILE*,const kate_info*,const kate_comment*);
+  void (*write_event_function)(FILE*,const kate_event*,ogg_int64_t,int);
 
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
@@ -867,6 +890,7 @@ int main(int argc,char **argv)
           printf("   -v                  verbose\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
+          printf("   -t <type>           set output format (kate (default), srt\n");
           printf("   -B                  write some bitmaps in /tmp (debug)\n");
           printf("   -f <number>         fuzz testing with given seed (debug)\n");
           exit(0);
@@ -889,6 +913,15 @@ int main(int argc,char **argv)
           fuzz=1;
           fuzz_seed=strtoul(eat_arg(argc,argv,&arg),NULL,10);
           break;
+        case 't':
+          if (!output_filename_type) {
+            output_filename_type=eat_arg(argc,argv,&arg);
+          }
+          else {
+            fprintf(stderr,"Only one output type may be given\n");
+            exit(-1);
+          }
+          break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[arg]);
           exit(-1);
@@ -903,6 +936,23 @@ int main(int argc,char **argv)
         exit(-1);
       }
     }
+  }
+
+  if (!output_filename_type || !strcmp(output_filename_type,"kate")) {
+    write_start_function=&write_kate_start;
+    write_headers_function=&write_kate_headers;
+    write_end_function=&write_kate_end;
+    write_event_function=&output_kate_event;
+  }
+  else if (!strcmp(output_filename_type,"srt")) {
+    write_start_function=NULL;
+    write_headers_function=NULL;
+    write_end_function=NULL;
+    write_event_function=&output_srt_event;
+  }
+  else {
+    fprintf(stderr,"Invalid format type: %s\n",output_filename_type);
+    exit(-1);
   }
 
   if (!input_filename || !strcmp(input_filename,"-")) {
@@ -936,6 +986,7 @@ int main(int argc,char **argv)
     /* raw Kate stream */
     kate_state k;
     FILE *fout;
+    int event_index=0;
 
     if (!output_filename || !strcmp(output_filename,"-")) {
       fout=stdout;
@@ -973,16 +1024,17 @@ int main(int argc,char **argv)
         exit(-1);
       }
       if (k.ki->probe<0 && !headers_written) {
-        write_kate_start(fout);
-        write_headers(fout,k.ki,NULL);
+        if (write_start_function) (*write_start_function)(fout);
+        if (write_headers_function) (*write_headers_function)(fout,k.ki,NULL);
         headers_written=1;
       }
       if (ret>0) {
-        write_kate_end(fout);
+        if (write_end_function) (*write_end_function)(fout);
         break; /* last packet decoded */
       }
       if (ev) {
-        output_event(fout,ev,-1);
+        if (write_event_function) (*write_event_function)(fout,ev,-1,event_index);
+        ++event_index;
       }
 
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
@@ -1064,6 +1116,7 @@ int main(int argc,char **argv)
             break;
           }
           ks->init=header_info;
+          ks->event_index=0;
           ++n_kate_streams;
         } while(0);
         for (n=0;n<n_kate_streams;++n) {
@@ -1083,11 +1136,11 @@ int main(int argc,char **argv)
                     /* we're done parsing headers, go for data */
                     if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\", encoding %d)\n",
                        ogg_page_serialno(&og),kate_streams[n].ki.language,kate_streams[n].ki.text_encoding);
-                    write_kate_start(kate_streams[n].fout);
+                    if (write_start_function) (*write_start_function)(kate_streams[n].fout);
 
                     kate_decode_init(&kate_streams[n].k,&kate_streams[n].ki);
                     kate_streams[n].init=data;
-                    write_headers(kate_streams[n].fout,&kate_streams[n].ki,&kate_streams[n].kc);
+                    if (write_headers_function) (*write_headers_function)(kate_streams[n].fout,&kate_streams[n].ki,&kate_streams[n].kc);
                   }
                 }
                 else {
@@ -1110,7 +1163,7 @@ int main(int argc,char **argv)
                 }
                 else if (ret>0) {
                   /* we're done */
-                  write_kate_end(kate_streams[n].fout);
+                  if (write_end_function) (*write_end_function)(kate_streams[n].fout);
                   eos=1;
                   break;
                 }
@@ -1124,7 +1177,8 @@ int main(int argc,char **argv)
                     /* printf("No event to go with this packet\n"); */
                   }
                   else if (ret==0) {
-                    output_event(kate_streams[n].fout,ev,granpos);
+                    if (write_event_function) (*write_event_function)(kate_streams[n].fout,ev,granpos,kate_streams[n].event_index);
+                    ++kate_streams[n].event_index;
                   }
                 }
               }
