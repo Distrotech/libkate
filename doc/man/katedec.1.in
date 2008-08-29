@@ -52,9 +52,9 @@ Decodes a Kate stream to a textual description:
 
     katedec \-o output.kate input.ogg
 
-Decodes several multiplexed Kate streams:
+Decodes several multiplexed Kate streams to SubRip files:
 
-    katedec \-o output%d.kate input.ogg
+    katedec \-t srt \-o output%d.kate input.ogg
 
 .SH SEE ALSO
 .PP
