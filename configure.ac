@@ -1,4 +1,4 @@
-AC_INIT([libkate],[0.1.8])
+AC_INIT([libkate],[0.1.9])
 
 AC_CONFIG_SRCDIR([include/kate/kate.h.in])
 AC_CONFIG_AUX_DIR([misc/autotools])
@@ -10,7 +10,7 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([include/config.h])
 
-LIBKATE_SHARED_VERSION="1:1:0"
+LIBKATE_SHARED_VERSION="1:2:0"
 LIBOGGKATE_SHARED_VERSION="1:0:0"
 
 AC_PROG_CC_C_O
