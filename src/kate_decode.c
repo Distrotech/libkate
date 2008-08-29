@@ -588,7 +588,7 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
   if (!colors) return KATE_E_OUT_OF_MEMORY;
 
   for (n=0;n<kp->ncolors;++n) {
-    int ret=kate_decode_color(colors+n,kpb);
+    ret=kate_decode_color(colors+n,kpb);
     if (ret<0) {
       kate_free(colors);
       return ret;
