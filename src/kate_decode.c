@@ -74,6 +74,8 @@ static kate_int32_t kate_read32(kate_pack_buffer *kpb)
 
 static kate_int32_t kate_read32v(kate_pack_buffer *kpb)
 {
+  /* an error (negative) will be returned as negative, propagating the error
+     to the caller even though the expected range for 4 bits is 0-15 */
   int smallv=kate_pack_read(kpb,4);
   if (smallv==15) {
     int sign=kate_pack_read1(kpb);
@@ -92,13 +94,15 @@ static kate_int64_t kate_read64(kate_pack_buffer *kpb)
   return (0xffffffff&(kate_int64_t)vl)|(((kate_int64_t)vh)<<32);
 }
 
-static void kate_warp(kate_pack_buffer *kpb)
+static int kate_warp(kate_pack_buffer *kpb)
 {
   while (1) {
     kate_int32_t bits=kate_read32v(kpb);
     if (!bits) break;
+    if (bits<0) return KATE_E_BAD_PACKET;
     kate_pack_adv(kpb,bits);
   }
+  return 0;
 }
 
 static int kate_decode_check_magic(kate_pack_buffer *kpb)
@@ -299,8 +303,7 @@ static int kate_decode_region(const kate_info *ki,kate_region *kr,kate_pack_buff
     kr->clip=0;
   }
 
-  kate_warp(kpb);
-  return 0;
+  return kate_warp(kpb);
 }
 
 static int kate_decode_regions_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -323,7 +326,8 @@ static int kate_decode_regions_packet(kate_info *ki,kate_pack_buffer *kpb)
     if (ret<0) return KMG_ERROR(ret);
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -401,9 +405,7 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     ks->font=NULL;
   }
 
-  kate_warp(kpb);
-
-  return 0;
+  return kate_warp(kpb);
 }
 
 static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -426,7 +428,8 @@ static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
     if (ret<0) return KMG_ERROR(ret);
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -445,7 +448,8 @@ static int kate_decode_curve(const kate_info *ki,kate_curve *kc,kate_pack_buffer
 
   kc->type=kate_pack_read(kpb,8);
   kc->npts=kate_read32v(kpb);
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return ret;
   if (!ki->no_limits && kc->npts>KATE_LIMIT_CURVE_POINTS) return KATE_E_LIMIT;
   kc->pts=(kate_float*)kate_malloc(kc->npts*2*sizeof(kate_float));
   if (!kc->pts) return KATE_E_OUT_OF_MEMORY;
@@ -483,7 +487,8 @@ static int kate_decode_curves_packet(kate_info *ki,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -528,7 +533,8 @@ static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buff
   km->y_mapping=kate_pack_read(kpb,8);
   km->semantics=kate_pack_read(kpb,8);
   km->periodic=kate_pack_read1(kpb);
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   return KMG_OK();
 }
@@ -556,7 +562,8 @@ static int kate_decode_motions_packet(kate_info *ki,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -571,6 +578,7 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
 {
   kate_color *colors;
   size_t n;
+  int ret;
 
   if (!ki || !kp || !kpb) return KATE_E_INVALID_PARAMETER;
 
@@ -586,7 +594,8 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
       return ret;
     }
   }
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return ret;
 
   kp->colors=colors;
 
@@ -616,7 +625,8 @@ static int kate_decode_palettes_packet(kate_info *ki,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -686,7 +696,8 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return ret;
 
   kb->pixels=pixels;
 
@@ -716,7 +727,8 @@ static int kate_decode_bitmaps_packet(kate_info *ki,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -734,9 +746,8 @@ static int kate_decode_font_range(const kate_info *ki,kate_font_range *kfr,kate_
   kfr->first_code_point=kate_read32v(kpb);
   kfr->last_code_point=kate_read32v(kpb);
   kfr->first_bitmap=kate_read32v(kpb);
-  kate_warp(kpb);
 
-  return 0;
+  return kate_warp(kpb);
 }
 
 static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -811,7 +822,8 @@ static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
 
   ret=kate_check_eop(kpb);
   if (ret<0) return KMG_ERROR(ret);
@@ -1103,7 +1115,8 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     }
   }
 
-  kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) goto error;
 
   if (ev->text_markup_type!=kate_markup_none && k->ki->remove_markup) {
     ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);

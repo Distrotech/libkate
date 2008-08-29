@@ -1,4 +1,5 @@
 0.1.9
+  defend against corrupt streams
   fix some encoding properties not being reset for each event
   katedec can now decode multiple Kate streams in an Ogg stream
   katedec can now output srt format files
