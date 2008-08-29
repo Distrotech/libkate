@@ -16,21 +16,40 @@
 #include "kate/kate.h"
 #include "kate_encode_state.h"
 
+static void kate_encode_state_init_helper(kate_encode_state *kes)
+{
+  kes->id=-1;
+
+  kes->motions=NULL;
+  kes->destroy_motions=NULL;
+  kes->motion_indices=NULL;
+  kes->nmotions=0;
+
+  kes->overrides.region_index=-1;
+  kes->overrides.region=NULL;
+  kes->overrides.style_index=-1;
+  kes->overrides.style=NULL;
+  kes->overrides.secondary_style_index=-1;
+  kes->overrides.secondary_style=NULL;
+
+  kes->overrides.palette_index=-1;
+  kes->overrides.palette=NULL;
+  kes->overrides.bitmap_index=-1;
+  kes->overrides.bitmap=NULL;
+
+  kes->overrides.language=NULL;
+
+  kes->overrides.font_mapping_index=-1;
+}
+
 kate_encode_state *kate_encode_state_create(void)
 {
   kate_encode_state *kes=(kate_encode_state*)kate_malloc(sizeof(kate_encode_state));
   if (kes) {
     kate_pack_writeinit(&kes->kpb);
 
-    kes->id=-1;
-
     kes->granulepos=0;
     kes->packetno=-1;
-
-    kes->nmotions=0;
-    kes->motions=NULL;
-    kes->destroy_motions=NULL;
-    kes->motion_indices=NULL;
 
     kes->furthest_granule=0;
 
@@ -39,12 +58,7 @@ kate_encode_state *kate_encode_state_create(void)
     kes->ntimings=0;
     kes->timings=NULL;
 
-    kes->overrides.language=NULL;
-    kes->overrides.region=NULL;
-    kes->overrides.style=NULL;
-    kes->overrides.palette=NULL;
-    kes->overrides.bitmap=NULL;
-    kes->overrides.secondary_style=NULL;
+    kate_encode_state_init_helper(kes);
   }
   return kes;
 }
@@ -55,42 +69,23 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
 
   if (kes->motions) {
     kate_motion_destroy(ki,kes->motions,kes->destroy_motions,kes->nmotions,0);
-    kes->motions=NULL;
   }
   if (kes->destroy_motions) {
     kate_free(kes->destroy_motions);
-    kes->destroy_motions=NULL;
   }
   if (kes->motion_indices) {
     kate_free(kes->motion_indices);
-    kes->motion_indices=NULL;
   }
-  kes->nmotions=0;
 
   if (kes->overrides.language) {
     kate_free(kes->overrides.language);
-    kes->overrides.language=NULL;
   }
+
   kes->overrides.text_encoding=ki->text_encoding;
   kes->overrides.text_directionality=ki->text_directionality;
   kes->overrides.text_markup_type=ki->text_markup_type;
 
-  kes->id=-1;
-
-  kes->overrides.region_index=-1;
-  kes->overrides.region=NULL;
-  kes->overrides.style_index=-1;
-  kes->overrides.style=NULL;
-  kes->overrides.secondary_style_index=-1;
-  kes->overrides.secondary_style=NULL;
-
-  kes->overrides.font_mapping_index=-1;
-
-  kes->overrides.palette_index=-1;
-  kes->overrides.palette=NULL;
-
-  kes->overrides.bitmap_index=-1;
-  kes->overrides.bitmap=NULL;
+  kate_encode_state_init_helper(kes);
 
   return 0;
 }

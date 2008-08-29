@@ -1,5 +1,5 @@
 0.1.9
-  fix event id not being reset for each event
+  fix some encoding properties not being reset for each event
   katedec can now decode multiple Kate streams in an Ogg stream
   katedec can now output srt format files
 
