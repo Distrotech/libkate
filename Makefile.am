@@ -59,7 +59,7 @@ else
 check-local:
 endif
 	@echo " Checking Kate namespace"
-	@! /usr/bin/nm -a lib/.libs/*.a lib/.libs/*.so \
+	@! $(LIBTOOL) --mode execute /usr/bin/nm -B lib/.libs/*.{a,so} \
          | $(GREP) "^[0-9a-z]\{8\} [A-T] [^\.]" \
 	 | $(GREP) -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
          | $(GREP) -v "^.\{11\}kate_"
