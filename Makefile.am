@@ -61,7 +61,7 @@ check-local:
 endif
 	@echo " Checking Kate namespace"
 	@! $(LIBTOOL) --mode execute /usr/bin/nm -B lib/.libs/*.{a,so} \
-         | $(GREP) "^[0-9a-z]\{8\} [A-T] [^\.]" \
+         | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
 	 | $(GREP) -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
          | $(GREP) -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
