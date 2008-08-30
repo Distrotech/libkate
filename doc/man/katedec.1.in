@@ -36,10 +36,15 @@ Increase verbosity.
 .TP
 \fB\-o\fR outfile
 Write the output description file to the given file name (writes to stdout if not specified).
-If a printf style field is present in the name, the argument passed will be an increasing
-counter, so mutliple files may be written (eg, \-o output%d.kate will generate files named
-output0.kate, output1.kate, output2.kate, etc, for each Kate stream in the input. Care is
-advised in the choice of formatting.
+It is possible to write to multiple files (eg, if the input contains several Kate streams)
+by passing printf style formatting tags in the filename. Tags are two character strings
+starting with a '%' character, followed by the tag itself. Known tags are:
+  %    replaced by a verbatim % character
+  l    replaced by the stream language
+  c    replaced by the stream category
+  s    replaced by the stream serial number, in hexadecimal format
+  i    replaced by the index of the stream in the input file, starting from 0
+
 .TP
 \fB\-t\fR type
 Set the output format type:
@@ -54,7 +59,7 @@ Decodes a Kate stream to a textual description:
 
 Decodes several multiplexed Kate streams to SubRip files:
 
-    katedec \-t srt \-o output%d.kate input.ogg
+    katedec \-t srt \-o output.%l.kate input.ogg
 
 .SH SEE ALSO
 .PP

@@ -43,31 +43,75 @@ typedef struct {
   int init;
   char *filename;
   FILE *fout;
+  unsigned int stream_index;
   int event_index;
 } kate_stream;
 
 static int write_bitmaps=0;
 
-static char *get_filename(const char *basename,unsigned long n)
+static void fcats(char **ptr,const char *s,size_t s_len)
 {
-  size_t len;
-  char *percent;
-  char *filename;
+  if (s && *s) {
+    size_t ptr_len=(*ptr)?strlen(*ptr):0;
+    *ptr=(char*)realloc(*ptr,ptr_len+s_len+1);
+    memcpy((*ptr)+ptr_len,s,s_len);
+    (*ptr)[ptr_len+s_len]=0;
+  }
+}
+
+static void fcat(char **ptr,const char *s)
+{
+  if (s && *s) {
+    fcats(ptr,s,strlen(s));
+  }
+}
+
+static char *get_filename(const char *basename,const kate_stream *ks)
+{
+  char tmp[32];
+  char *filename=NULL;
+  const char *ptr=basename;
 
   if (!basename) return NULL;
-  percent=strchr(basename,'%');
-  if (!percent) {
-    /* if we don't have a %, we can't handle more than one stream */
-    if (n>0) return NULL;
-    len=strlen(basename);
-    filename=kate_malloc(len+1);
-    memcpy(filename,basename,len+1);
-    return filename;
+  while (*ptr) {
+    const char *percent=strchr(ptr,'%');
+    if (!percent) {
+      fcat(&filename,ptr);
+      return filename;
+    }
+    if (percent>ptr) {
+      fcats(&filename,ptr,percent-ptr);
+    }
+    ptr=percent+1;
+    if (!*ptr) {
+      fprintf(stderr,"absent format tag in filename\n");
+      exit(-1);
+    }
+    switch (*ptr) {
+      case '%':
+        fcats(&filename,"%",1);
+        break;
+      case 'c':
+        fcat(&filename,ks->ki.category);
+        break;
+      case 'l':
+        fcat(&filename,ks->ki.language);
+        break;
+      case 's':
+        snprintf(tmp,sizeof(tmp),"%08x",(ogg_uint32_t)ks->os.serialno);
+        fcat(&filename,tmp);
+        break;
+      case 'i':
+        snprintf(tmp,sizeof(tmp),"%d",ks->stream_index);
+        fcat(&filename,tmp);
+        break;
+      default:
+        fprintf(stderr,"unknown format tag in filename: %c\n",*ptr);
+        exit(-1);
+        break;
+    }
+    ++ptr;
   }
-  len=strlen(basename)+64;
-  filename=kate_malloc(len+1);
-  snprintf(filename,len,basename,n);
-  filename[len]=0;
   return filename;
 }
 
@@ -868,6 +912,7 @@ int main(int argc,char **argv)
   unsigned long fuzz_seed=0;
   size_t n;
   size_t n_kate_streams=0;
+  unsigned int n_streams=0;
   kate_stream *kate_streams=NULL;
   ogg_sync_state oy;
   ogg_page og;
@@ -1086,23 +1131,6 @@ int main(int argc,char **argv)
           kate_streams=(kate_stream*)kate_realloc(kate_streams,(n_kate_streams+1)*sizeof(kate_stream));
           ks=&kate_streams[n_kate_streams];
           ks->filename=NULL;
-          if (!output_filename || !strcmp(output_filename,"-")) {
-            ks->fout=stdout;
-          }
-          else {
-            ks->filename=get_filename(output_filename,n_kate_streams);
-            if (!ks->filename) {
-              /* get_filename returns NULL when it can't generate a filename because no format field
-                 was given in the output filename and we have more than one Kate stream */
-              fprintf(stderr,"more than one Kate stream, and output file is not multiple, new Kate stream will be ignored\n");
-              break;
-            }
-            ks->fout=fopen(ks->filename,"w");
-            if (!ks->fout) {
-              fprintf(stderr,"%s: %s\n",ks->filename,strerror(errno));
-              exit(-1);
-            }
-          }
           ogg_stream_init(&ks->os,ogg_page_serialno(&og));
           ret=kate_info_init(&ks->ki);
           if (ret<0) {
@@ -1117,16 +1145,18 @@ int main(int argc,char **argv)
           }
           ks->init=header_info;
           ks->event_index=0;
+          ks->stream_index=n_streams++;
           ++n_kate_streams;
         } while(0);
         for (n=0;n<n_kate_streams;++n) {
-          ret=ogg_stream_pagein(&kate_streams[n].os,&og);
+          kate_stream *ks=kate_streams+n;
+          ret=ogg_stream_pagein(&ks->os,&og);
           if (ret>=0) {
             ogg_int64_t granpos=ogg_page_granulepos(&og);
-            while (ogg_stream_packetout(&kate_streams[n].os,&op)) {
+            while (ogg_stream_packetout(&ks->os,&op)) {
               if (verbose>=2) printf("Got packet: %ld bytes\n",op.bytes);
-              if (kate_streams[n].init<data) {
-                ret=kate_ogg_decode_headerin(&kate_streams[n].ki,&kate_streams[n].kc,&op);
+              if (ks->init<data) {
+                ret=kate_ogg_decode_headerin(&ks->ki,&ks->kc,&op);
                 if (ret>=0) {
                   /* we found a Kate bitstream */
                   if (op.packetno==0) {
@@ -1134,24 +1164,43 @@ int main(int argc,char **argv)
                   }
                   if (ret>0) {
                     /* we're done parsing headers, go for data */
-                    if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\" \"%s\", encoding %d)\n",
-                       ogg_page_serialno(&og),
-                       kate_streams[n].ki.language,
-                       kate_streams[n].ki.category,
-                       kate_streams[n].ki.text_encoding);
-                    if (write_start_function) (*write_start_function)(kate_streams[n].fout);
+                    if (verbose>=1) {
+                      printf("Bitstream %08x is Kate (\"%s\" \"%s\", encoding %d)\n",
+                        ogg_page_serialno(&og),
+                        ks->ki.language,
+                        ks->ki.category,
+                        ks->ki.text_encoding);
+                    }
+                    if (!output_filename || !strcmp(output_filename,"-")) {
+                      ks->fout=stdout;
+                    }
+                    else {
+                      ks->filename=get_filename(output_filename,ks);
+                      if (!ks->filename) {
+                        /* get_filename returns NULL when it can't generate a filename because no format field
+                           was given in the output filename and we have more than one Kate stream */
+                        fprintf(stderr,"more than one Kate stream, and output file is not multiple, new Kate stream will be ignored\n");
+                        break;
+                      }
+                      ks->fout=fopen(ks->filename,"w");
+                      if (!ks->fout) {
+                        fprintf(stderr,"%s: %s\n",ks->filename,strerror(errno));
+                        exit(-1);
+                      }
+                    }
+                    if (write_start_function) (*write_start_function)(ks->fout);
 
-                    kate_decode_init(&kate_streams[n].k,&kate_streams[n].ki);
+                    kate_decode_init(&ks->k,&ks->ki);
                     kate_streams[n].init=data;
-                    if (write_headers_function) (*write_headers_function)(kate_streams[n].fout,&kate_streams[n].ki,&kate_streams[n].kc);
+                    if (write_headers_function) (*write_headers_function)(ks->fout,&ks->ki,&ks->kc);
                   }
                 }
                 else {
                   if (ret!=KATE_E_NOT_KATE) {
                     fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
                   }
-                  kate_info_clear(&kate_streams[n].ki);
-                  kate_comment_clear(&kate_streams[n].kc);
+                  kate_info_clear(&ks->ki);
+                  kate_comment_clear(&ks->kc);
                   if (n!=n_kate_streams-1) {
                     memmove(kate_streams+n,kate_streams+n+1,(n_kate_streams-1-n)*sizeof(kate_stream));
                   }
@@ -1160,19 +1209,19 @@ int main(int argc,char **argv)
               }
               else {
                 if (fuzz) fuzz_ogg_packet(&fuzz_seed,&op);
-                ret=kate_ogg_decode_packetin(&kate_streams[n].k,&op);
+                ret=kate_ogg_decode_packetin(&ks->k,&op);
                 if (ret<0) {
                   fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
                 }
                 else if (ret>0) {
                   /* we're done */
-                  if (write_end_function) (*write_end_function)(kate_streams[n].fout);
+                  if (write_end_function) (*write_end_function)(ks->fout);
                   eos=1;
                   break;
                 }
                 else {
                   const kate_event *ev=NULL;
-                  ret=kate_decode_eventout(&kate_streams[n].k,&ev);
+                  ret=kate_decode_eventout(&ks->k,&ev);
                   if (ret<0) {
                     fprintf(stderr,"error in kate_decode_eventout: %d\n",ret);
                   }
@@ -1180,8 +1229,8 @@ int main(int argc,char **argv)
                     /* printf("No event to go with this packet\n"); */
                   }
                   else if (ret==0) {
-                    if (write_event_function) (*write_event_function)(kate_streams[n].fout,ev,granpos,kate_streams[n].event_index);
-                    ++kate_streams[n].event_index;
+                    if (write_event_function) (*write_event_function)(ks->fout,ev,granpos,ks->event_index);
+                    ++ks->event_index;
                   }
                 }
               }
