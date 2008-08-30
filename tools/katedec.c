@@ -882,7 +882,7 @@ int main(int argc,char **argv)
       switch (argv[arg][1]) {
         case 'V':
           print_version();
-          break;
+          exit(0);
         case 'h':
           print_version();
           printf("usage: %s [options] [filename]\n",argv[0]);
