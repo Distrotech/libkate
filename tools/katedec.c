@@ -1134,8 +1134,11 @@ int main(int argc,char **argv)
                   }
                   if (ret>0) {
                     /* we're done parsing headers, go for data */
-                    if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\", encoding %d)\n",
-                       ogg_page_serialno(&og),kate_streams[n].ki.language,kate_streams[n].ki.text_encoding);
+                    if (verbose>=1) printf("Bitstream %08x is Kate (\"%s\" \"%s\", encoding %d)\n",
+                       ogg_page_serialno(&og),
+                       kate_streams[n].ki.language,
+                       kate_streams[n].ki.category,
+                       kate_streams[n].ki.text_encoding);
                     if (write_start_function) (*write_start_function)(kate_streams[n].fout);
 
                     kate_decode_init(&kate_streams[n].k,&kate_streams[n].ki);
