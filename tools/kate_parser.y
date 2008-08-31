@@ -180,8 +180,10 @@ static void init_palette(void)
 {
   kpalette.palette=(kate_palette*)kate_malloc(sizeof(kate_palette));
   if (!kpalette.palette) { yyerror("out of memory"); exit(-1); }
-  kpalette.palette->ncolors=0;
-  kpalette.palette->colors=NULL;
+  if (kate_palette_init(kpalette.palette)<0) {
+    yyerror("palette init failed");
+    exit(-1);
+  }
 }
 
 static void load_palette(const char *filename)
@@ -202,6 +204,7 @@ static void load_palette(const char *filename)
   kpalette.palette->colors=palette;
 #else
   yyerrorf("PNG support not compiled in: cannot load %s",filename);
+  exit(-1);
 #endif
 }
 
@@ -239,11 +242,10 @@ static void init_bitmap(void)
 {
   kbitmap.bitmap=(kate_bitmap*)kate_malloc(sizeof(kate_bitmap));
   if (!kbitmap.bitmap) { yyerror("out of memory"); exit(-1); }
-  kbitmap.bitmap->width=0;
-  kbitmap.bitmap->height=0;
-  kbitmap.bitmap->bpp=0;
-  kbitmap.bitmap->palette=-1;
-  kbitmap.bitmap->pixels=NULL;
+  if (kate_bitmap_init(kbitmap.bitmap)<0) {
+    yyerror("bitmap init failed");
+    exit(-1);
+  }
 }
 
 static void load_bitmap(const char *filename,int paletted)
@@ -293,6 +295,7 @@ static void load_bitmap(const char *filename,int paletted)
 #else
   (void)paletted;
   yyerrorf("PNG support not compiled in: cannot load %s",filename);
+  exit(-1);
 #endif
 }
 
@@ -523,11 +526,20 @@ static void set_font_height(kd_style *style,kate_float s,kate_space_metric metri
 
 static void set_font(kd_style *style,const char *font)
 {
-  size_t len=strlen(font);
+  size_t len;
+  if (!font) {
+    yyerror("Internal error: no font");
+    exit(-1);
+  }
+  len=strlen(font);
   if (style->font) {
     yyerror("Font already set");
   }
   style->font=(char*)kate_malloc(len+1);
+  if (!style->font) {
+    yyerror("out of memory");
+    exit(-1);
+  }
   strcpy(style->font,font);
 }
 
@@ -607,24 +619,34 @@ static void init_curve(void)
   kcurve.idx=0;
   kcurve.curve=(kate_curve*)kate_malloc(sizeof(kate_curve));
   if (!kcurve.curve) { yyerror("out of memory"); exit(-1); }
-  kcurve.curve->type=kate_curve_none;
-  kcurve.curve->npts=0;
-  kcurve.curve->pts=NULL;
+  if (kate_curve_init(kcurve.curve)<0) {
+    yyerror("error initializing curve");
+    exit(-1);
+  }
 }
 
 static void init_curve_from(int idx)
 {
   const kate_curve *from=ki.curves[idx];
+  if (!from || !from->pts) {
+    yyerror("invalid curve to init from");
+    exit(-1);
+  }
   init_curve();
   memcpy(kcurve.curve,from,sizeof(kate_curve));
   kcurve.curve->pts=(kate_float*)kate_malloc(kcurve.curve->npts*2*sizeof(kate_float));
+  if (!kcurve.curve->pts) {
+    yyerror("out of memory");
+    exit(-1);
+  }
   memcpy(kcurve.curve->pts,from->pts,kcurve.curve->npts*2*sizeof(kate_float));
 }
 
 static void init_curve_points(int npts)
 {
   if (!kcurve.curve) { yyerror("internal error: curve not initialized"); exit(-1); }
-  if (n_curve_pts<0) katedesc_error("Curve type must be specified before the points");
+  if (n_curve_pts<0) { katedesc_error("Curve type must be specified before the points"); exit(-1); }
+  if (npts<=0) { katedesc_error("Number of points cannot be negative or zero"); exit(-1); }
   kcurve.curve->npts=npts;
   kcurve.curve->pts=(kate_float*)kate_malloc(npts*2*sizeof(kate_float));
   if (!kcurve.curve->pts) {
@@ -671,8 +693,8 @@ static void init_palette_colors(int ncolors)
 static void init_bitmap_pixels(int width,int height,int bpp)
 {
   if (!kbitmap.bitmap) { yyerror("internal error: bitmap not initialized"); exit(-1); }
-  if (width==0 || height==0) yyerror("Bitmap dimensions must not be zero");
-  if (bpp==0) yyerror("Bitmap bit depth must not be zero");
+  if (width<=0 || height<=0) yyerror("Bitmap dimensions must be positive");
+  if (bpp<=0) yyerror("Bitmap bit depth must be positive");
   if (bpp>8) yyerrorf("Bitmap bit depth must not be more than 8 (is %d)",bpp);
   kbitmap.bitmap->type=kate_bitmap_type_paletted;
   kbitmap.bitmap->width=width;
@@ -690,7 +712,7 @@ static void init_bitmap_pixels(int width,int height,int bpp)
 static void init_png_bitmap_pixels(int width,int height,int size)
 {
   if (!kbitmap.bitmap) { yyerror("internal error: bitmap not initialized"); exit(-1); }
-  if (width==0 || height==0) yyerror("Bitmap dimensions must not be zero");
+  if (width<=0 || height<=0) yyerror("Bitmap dimensions must be positive");
   kbitmap.bitmap->type=kate_bitmap_type_png;
   kbitmap.bitmap->width=width;
   kbitmap.bitmap->height=height;
@@ -710,6 +732,10 @@ static void set_color(kate_color *kc,uint32_t c)
   int g=(c>>16)&0xff;
   int b=(c>>8)&0xff;
   int a=(c>>0)&0xff;
+  if (!kc) {
+    yyerror("Internal error: null color");
+    exit(-1);
+  }
   if (r<0 || r>255) yyerrorf("red component (%d) must be between 0 and 255",r);
   if (g<0 || g>255) yyerrorf("green component (%d) must be between 0 and 255",g);
   if (b<0 || b>255) yyerrorf("blue component (%d) must be between 0 and 255",b);
@@ -722,6 +748,10 @@ static void set_color(kate_color *kc,uint32_t c)
 
 static void init_event(kd_event *ev)
 {
+  if (!ev) {
+    yyerror("Internal error: null event");
+    exit(-1);
+  }
   ev->t0=ev->t1=ev->duration=(kate_float)-1.0;
   ev->text=NULL;
   ev->text_markup_type=kate_markup_none;
@@ -743,6 +773,11 @@ static void kd_encode_set_id(kate_state *kstate,unsigned int id)
 static int add_entity(const char *entity,char **text,size_t *wlen0)
 {
   int count=0;
+
+  if (!entity || !text || !wlen0) {
+    yyerror("internal error: add_entity passed null parameter");
+    exit(-1);
+  }
 
   /* write out the entity */
   while (*entity) {
@@ -851,10 +886,18 @@ static char *expand_numeric_entities(const char *text)
 
 static char *getline(const char **text)
 {
-  size_t rlen0=strlen(*text)+1;
+  size_t rlen0;
   int newline,in_newline=0;
-  const char *start_of_line=*text;
+  const char *start_of_line;
   int c;
+
+  if (!text || !*text) {
+    yyerror("error: getline passed invalid text pointer");
+    exit(-1);
+  }
+
+  rlen0=strlen(*text)+1;
+  start_of_line=*text;
 
   while (1) {
     const char *ptr=*text;
@@ -915,9 +958,16 @@ static void trimend(char *line,size_t rlen0,int *eol)
 static char *trimline(const char *line)
 {
   char *trimmed;
-  size_t rlen0=strlen(line)+1;
+  size_t rlen0;
   int c;
   int eol=0;
+
+  if (!line) {
+    yyerror("error: trimline passed null line");
+    exit(-1);
+  }
+
+  rlen0=strlen(line)+1;
 
   /* first seek to the first non whitespace character in the line */
   while (1) {
@@ -967,8 +1017,16 @@ static char *trimtext(const char *text)
 static char *trimtext_pre(const char *text)
 {
   /* in pre, we just kill a new line at start and one at the end, if any */
-  size_t len=strlen(text);
-  char *newtext=(char*)kate_malloc(len+1);
+  size_t len;
+  char *newtext;
+
+  if (!text) {
+    yyerror("error: trimtext_pre passed null text");
+    exit(-1);
+  }
+
+  len=strlen(text);
+  newtext=(char*)kate_malloc(len+1);
 
   /* start */
   if (*text=='\n') {
@@ -990,7 +1048,7 @@ static char *trimtext_pre(const char *text)
 static void backslash_n_to_newline(char *text)
 {
   char *ptr=text;
-  while ((ptr=strstr(ptr,"\\n"))) {
+  while (ptr && (ptr=strstr(ptr,"\\n"))) {
     *ptr='\n';
     memmove(ptr+1,ptr+2,strlen(ptr+2)+1);
   }
@@ -1191,14 +1249,14 @@ static void init_motion(void)
   kmotion=kmotions[nkmotions-1].motion;
   if (!kmotion) { yyerror("out of memory"); exit(-1); }
 
-  kmotion->ncurves=0;
-  kmotion->curves=NULL;
-  kmotion->durations=NULL;
-  kmotion->x_mapping=kate_motion_mapping_none;
-  kmotion->y_mapping=kate_motion_mapping_none;
+  if (kate_motion_init(kmotion)<0) {
+    yyerror("failed to init motion");
+    exit(-1);
+  }
   kmotion->semantics=(kate_motion_semantics)-1;
-  kmotion->periodic=0;
 }
+
+// code check
 
 static void add_curve_to_motion(kate_motion *kmotion,kate_float duration)
 {

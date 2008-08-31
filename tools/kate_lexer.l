@@ -285,18 +285,27 @@ void add_macro(const char *name,const char *body)
 {
   size_t nlen,blen;
 
-  if (!name || !body) katedesc_error("name and body cannot be null");
+  if (!name || !body) {
+    katedesc_error("name and body cannot be null");
+    exit(-1);
+  }
 
   ++nmacros;
   macro_names=(char**)kate_realloc(macro_names,nmacros*sizeof(char*));
   macro_bodies=(char**)kate_realloc(macro_bodies,nmacros*sizeof(char*));
-  if (!macro_names || !macro_bodies) katedesc_error("out of memory");
+  if (!macro_names || !macro_bodies) {
+    katedesc_error("out of memory");
+    exit(-1);
+  }
 
   nlen=strlen(name);
   blen=strlen(body);
   macro_names[nmacros-1]=kate_malloc(nlen+1);
   macro_bodies[nmacros-1]=kate_malloc(blen+1);
-  if (!macro_names[nmacros-1] || !macro_bodies[nmacros-1]) katedesc_error("out of memory");
+  if (!macro_names[nmacros-1] || !macro_bodies[nmacros-1]) {
+    katedesc_error("out of memory");
+    exit(-1);
+  }
   strcpy(macro_names[nmacros-1],name);
   strcpy(macro_bodies[nmacros-1],body);
 }
@@ -304,6 +313,10 @@ void add_macro(const char *name,const char *body)
 static const char *find_macro(const char *name)
 {
   size_t n;
+  if (!name) {
+    katedesc_error("macro name cannot be null");
+    exit(-1);
+  }
   for (n=0;n<nmacros;++n) {
     if (!strcmp(macro_names[n],name)) return macro_bodies[n];
   }
@@ -325,6 +338,10 @@ void free_macros(void)
 static int get_nlines(const char *text)
 {
   int text_nlines=0;
+  if (!text) {
+    katedesc_error("null text");
+    return 0;
+  }
   while (*text) if (*text++=='\n') ++text_nlines;
   return text_nlines;
 }
