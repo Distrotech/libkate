@@ -77,8 +77,8 @@ AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes)
 AC_CHECK_PROG(HAVE_DOXYGEN,doxygen,yes)
 AM_CONDITIONAL(HAVE_DOXYGEN,test "${HAVE_DOXYGEN}" = "yes")
 
-AC_ARG_ENABLE(valgrind, [  --enable-valgrind       Run the tests with Valgrind (default autodetect)])
-if test "x$enable_valgrind" != "xno"
+AC_ARG_ENABLE(valgrind, [  --enable-valgrind       Run the tests with Valgrind (default disabled)])
+if test "x$enable_valgrind" == "xyes"
 then
   AC_PATH_PROG(VALGRIND,valgrind,)
   if test "x$VALGRIND" != "x"
