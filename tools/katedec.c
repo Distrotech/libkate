@@ -53,7 +53,7 @@ static void fcats(char **ptr,const char *s,size_t s_len)
 {
   if (s && *s) {
     size_t ptr_len=(*ptr)?strlen(*ptr):0;
-    *ptr=(char*)realloc(*ptr,ptr_len+s_len+1);
+    *ptr=(char*)kate_realloc(*ptr,ptr_len+s_len+1);
     memcpy((*ptr)+ptr_len,s,s_len);
     (*ptr)[ptr_len+s_len]=0;
   }
