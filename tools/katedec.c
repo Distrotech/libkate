@@ -66,7 +66,17 @@ static void fcat(char **ptr,const char *s)
   }
 }
 
-static char *get_filename(const char *basename,const kate_stream *ks)
+static int is_filename_used(const char *filename,const kate_stream *streams,size_t nstreams)
+{
+  size_t n;
+  for (n=0;n<nstreams;++n) {
+    const kate_stream *ks=streams+n;
+    if (ks->filename && !strcmp(filename,ks->filename)) return 1;
+  }
+  return 0;
+}
+
+static char *get_filename(const char *basename,const kate_stream *ks,const kate_stream *streams,size_t nstreams)
 {
   char tmp[32];
   char *filename=NULL;
@@ -77,7 +87,7 @@ static char *get_filename(const char *basename,const kate_stream *ks)
     const char *percent=strchr(ptr,'%');
     if (!percent) {
       fcat(&filename,ptr);
-      return filename;
+      break;
     }
     if (percent>ptr) {
       fcats(&filename,ptr,percent-ptr);
@@ -112,6 +122,12 @@ static char *get_filename(const char *basename,const kate_stream *ks)
     }
     ++ptr;
   }
+
+  if (is_filename_used(filename,streams,nstreams)) {
+    kate_free(filename);
+    return NULL;
+  }
+
   return filename;
 }
 
@@ -1037,7 +1053,7 @@ int main(int argc,char **argv)
       fout=stdout;
     }
     else {
-      char *filename=get_filename(output_filename,0);
+      char *filename=get_filename(output_filename,0,kate_streams,n_kate_streams);
       fout=fopen(filename,"w");
       if (!fout) {
         fprintf(stderr,"%s: %s\n",filename,strerror(errno));
@@ -1131,6 +1147,7 @@ int main(int argc,char **argv)
           kate_streams=(kate_stream*)kate_realloc(kate_streams,(n_kate_streams+1)*sizeof(kate_stream));
           ks=&kate_streams[n_kate_streams];
           ks->filename=NULL;
+          ks->fout=NULL;
           ogg_stream_init(&ks->os,ogg_page_serialno(&og));
           ret=kate_info_init(&ks->ki);
           if (ret<0) {
@@ -1174,14 +1191,26 @@ int main(int argc,char **argv)
                         ks->ki.text_encoding);
                     }
                     if (!output_filename || !strcmp(output_filename,"-")) {
+                      size_t n;
+                      int stdout_already_used=0;
+                      for (n=0;n<n_kate_streams;++n) {
+                        if (kate_streams[n].fout==stdout) {
+                          stdout_already_used=1;
+                          break;
+                        }
+                      }
+                      if (stdout_already_used) {
+                        fprintf(stderr,"Cannot write two Kate streams to the same output, new Kate stream will be ignored\n");
+                        break;
+                      }
                       ks->fout=stdout;
                     }
                     else {
-                      ks->filename=get_filename(output_filename,ks);
+                      ks->filename=get_filename(output_filename,ks,kate_streams,n_kate_streams);
                       if (!ks->filename) {
                         /* get_filename returns NULL when it can't generate a filename because no format field
                            was given in the output filename and we have more than one Kate stream */
-                        fprintf(stderr,"more than one Kate stream, and output file is not multiple, new Kate stream will be ignored\n");
+                        fprintf(stderr,"Cannot write two Kate streams to the same output, new Kate stream will be ignored\n");
                         break;
                       }
                       ks->fout=fopen(ks->filename,"w");
