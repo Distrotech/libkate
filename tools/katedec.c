@@ -1135,12 +1135,14 @@ int main(int argc,char **argv)
           ret=kate_info_init(&ks->ki);
           if (ret<0) {
             fprintf(stderr,"failed to init info\n");
+            ogg_stream_clear(&ks->os);
             break;
           }
           kate_info_no_limits(&ks->ki,1);
           ret=kate_comment_init(&ks->kc);
           if (ret<0) {
             fprintf(stderr,"failed to init comments\n");
+            ogg_stream_clear(&ks->os);
             break;
           }
           ks->init=header_info;
@@ -1199,6 +1201,7 @@ int main(int argc,char **argv)
                   if (ret!=KATE_E_NOT_KATE) {
                     fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
                   }
+                  ogg_stream_clear(&ks->os);
                   kate_info_clear(&ks->ki);
                   kate_comment_clear(&ks->kc);
                   if (n!=n_kate_streams-1) {
