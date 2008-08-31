@@ -258,13 +258,15 @@ static int convert_srt(FILE *fin,FILE *fout)
         break;
       case need_text:
         if (*str=='\n') {
-          if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
+          if (*text && text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
           kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
           send_packet(fout);
           need=need_id;
         }
         else {
-          strcat(text,str);
+          size_t len=strlen(text);
+          strncpy(text+len,str,sizeof(text)-len);
+          text[sizeof(text)-1]=0;
         }
         break;
     }
