@@ -86,7 +86,6 @@ int kate_ogg_decode_headerin(kate_info *ki,kate_comment *kc,ogg_packet *op)
 {
   kate_packet kp;
   if (!op) return KATE_E_INVALID_PARAMETER;
-  if (op->bytes>0 && ((op->packet[0]&~0x80)!=op->packetno)) return KATE_E_BAD_PACKET;
   kate_packet_wrap_ogg(&kp,op);
   return kate_decode_headerin(ki,kc,&kp);
 }
