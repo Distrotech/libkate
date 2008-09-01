@@ -61,9 +61,10 @@ check-local:
 endif
 	@echo " Checking Kate namespace"
 	@! $(LIBTOOL) --mode execute /usr/bin/nm -B lib/.libs/*.{a,so} \
-         | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
+	 | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
 	 | $(GREP) -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
-         | $(GREP) -v "^.\{11\}kate_"
+	 | $(GREP) -vE " _(rest|save)[fg]pr_[0-9]*(|_x)$$" \
+	 | $(GREP) -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
 	@! $(GREP) -E '[^_](malloc|realloc|free|calloc|memalign)\(' \
            $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \

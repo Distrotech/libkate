@@ -3,6 +3,7 @@
   fix some encoding properties not being reset for each event
   katedec can now decode multiple Kate streams in an Ogg stream
   katedec can now output srt format files
+  fix make check on PPC archs
 
 0.1.8
   various build fixes for particular system configurations
