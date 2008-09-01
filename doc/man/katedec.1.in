@@ -7,7 +7,7 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "KATEDEC" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+.TH "KATEDEC" 1 "01 september 2008" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
 katedec \- decodes Kate streams to a textual description
@@ -37,8 +37,8 @@ Increase verbosity.
 \fB\-o\fR outfile
 Write the output description file to the given file name (writes to stdout if not specified).
 It is possible to write to multiple files (eg, if the input contains several Kate streams)
-by passing printf style formatting tags in the filename. Tags are two character strings
-starting with a '%' character, followed by the tag itself. Known tags are:
+by passing printf style formatting tags in the filename. Formatting tags are strings starting
+with a '%' character, followed by the tag itself. Known tags are:
   %    replaced by a verbatim % character
   l    replaced by the stream language
   c    replaced by the stream category
