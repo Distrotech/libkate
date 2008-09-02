@@ -231,6 +231,10 @@ static int convert_srt(FILE *fin,FILE *fout)
     ++line;
     switch (need) {
       case need_id:
+        /* allow more than one blank line between events */
+        if (!strcmp(str,"\n")) {
+          break;
+        }
         ret=sscanf(str,"%d\n",&id);
         if (ret!=1) {
           fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
