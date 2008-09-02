@@ -1,3 +1,6 @@
+0.1.10
+  katedec does not unlink output files for no good reason anymore :)
+
 0.1.9
   defend against corrupt streams and pathological input
   fix some encoding properties not being reset for each event
