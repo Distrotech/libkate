@@ -45,6 +45,7 @@ typedef struct {
   FILE *fout;
   unsigned int stream_index;
   int event_index;
+  int ret;
 } kate_stream;
 
 static int write_bitmaps=0;
@@ -1048,6 +1049,7 @@ int main(int argc,char **argv)
     kate_state k;
     FILE *fout;
     int event_index=0;
+    int ret;
 
     if (!output_filename || !strcmp(output_filename,"-")) {
       fout=stdout;
@@ -1164,13 +1166,14 @@ int main(int argc,char **argv)
           }
           ks->init=header_info;
           ks->event_index=0;
+          ks->ret=0;
           ks->stream_index=n_streams++;
           ++n_kate_streams;
         } while(0);
         for (n=0;n<n_kate_streams;++n) {
           kate_stream *ks=kate_streams+n;
-          ret=ogg_stream_pagein(&ks->os,&og);
-          if (ret>=0) {
+          int pagein_ret=ogg_stream_pagein(&ks->os,&og);
+          if (pagein_ret>=0) {
             ogg_int64_t granpos=ogg_page_granulepos(&og);
             while (ogg_stream_packetout(&ks->os,&op)) {
               if (verbose>=2) printf("Got packet: %ld bytes\n",op.bytes);
@@ -1229,6 +1232,7 @@ int main(int argc,char **argv)
                 else {
                   if (ret!=KATE_E_NOT_KATE) {
                     fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
+                    ks->ret=ret;
                   }
                   ogg_stream_clear(&ks->os);
                   kate_info_clear(&ks->ki);
@@ -1244,6 +1248,7 @@ int main(int argc,char **argv)
                 ret=kate_ogg_decode_packetin(&ks->k,&op);
                 if (ret<0) {
                   fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
+                  ks->ret=ret;
                 }
                 else if (ret>0) {
                   /* we're done */
@@ -1256,6 +1261,7 @@ int main(int argc,char **argv)
                   ret=kate_decode_eventout(&ks->k,&ev);
                   if (ret<0) {
                     fprintf(stderr,"error in kate_decode_eventout: %d\n",ret);
+                    ks->ret=ret;
                   }
                   else if (ret>0) {
                     /* printf("No event to go with this packet\n"); */
@@ -1288,7 +1294,7 @@ int main(int argc,char **argv)
       kate_comment_clear(&kate_streams[n].kc);
       if (kate_streams[n].fout!=stdout) {
         fclose(kate_streams[n].fout);
-        if (ret<0) unlink(kate_streams[n].filename);
+        if (kate_streams[n].ret<0) unlink(kate_streams[n].filename);
         kate_free(kate_streams[n].filename);
       }
     }
