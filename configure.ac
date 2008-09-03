@@ -1,4 +1,4 @@
-AC_INIT([libkate],[0.1.10])
+AC_INIT([libkate],[0.1.11])
 
 AC_CONFIG_SRCDIR([include/kate/kate.h.in])
 AC_CONFIG_AUX_DIR([misc/autotools])
@@ -120,7 +120,7 @@ AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 
 VERSION_MAJOR=${VERSION:0:1}
 VERSION_MINOR=${VERSION:2:1}
-VERSION_PATCH=${VERSION:4:1}
+VERSION_PATCH=${VERSION:4:2}
 
 if test "x$HAVE_PKG_CONFIG" = "xyes"
 then
