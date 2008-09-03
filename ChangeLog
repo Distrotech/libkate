@@ -1,3 +1,6 @@
+0.1.11
+  fix version number being truncated
+
 0.1.10
   katedec does not unlink output files for no good reason anymore :)
 
