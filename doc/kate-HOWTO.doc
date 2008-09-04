@@ -43,6 +43,8 @@ with a video with oggz-tools:
 kateenc -t srt -c subtitles -l it -o subtitles.ogg italian-subtitles.srt
 oggz merge -o movie-with-subtitles.ogg movie-without-subtitles.ogg subtitles.ogg
 
+This second method can also be used to add subtitles to a video which
+is already encoded to Theora, as it will not transcode the video again.
 
 
 \section HOWTO-DVD-subtitles
