@@ -32,6 +32,7 @@ AC_PROG_LEX
 AC_PROG_YACC
 AC_PROG_GREP
 AC_PROG_NM
+AC_PROG_SED
 
 AC_C_CONST
 AC_C_INLINE
@@ -118,9 +119,9 @@ else
 fi
 AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 
-VERSION_MAJOR=${VERSION:0:1}
-VERSION_MINOR=${VERSION:2:1}
-VERSION_PATCH=${VERSION:4:2}
+VERSION_MAJOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\1/'`
+VERSION_MINOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\2/'`
+VERSION_PATCH=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\3/'`
 
 if test "x$HAVE_PKG_CONFIG" = "xyes"
 then
