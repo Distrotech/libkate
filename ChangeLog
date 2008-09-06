@@ -1,5 +1,6 @@
 0.1.12
   katedec now write srt times using the more widespread ',' instead of '.'
+  build system improvements
 
 0.1.11
   fix version number being truncated
