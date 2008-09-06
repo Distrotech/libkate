@@ -1256,8 +1256,6 @@ static void init_motion(void)
   kmotion->semantics=(kate_motion_semantics)-1;
 }
 
-// code check
-
 static void add_curve_to_motion(kate_motion *kmotion,kate_float duration)
 {
   kmotion->ncurves++;
@@ -1272,6 +1270,10 @@ static void add_curve_to_motion(kate_motion *kmotion,kate_float duration)
     kcurve.curve=NULL;
   }
   else {
+    if (kcurve.idx>=ki.ncurves) {
+      yyerror("Internal error: curve index out of range");
+      exit(-1);
+    }
     kmotion->curves[kmotion->ncurves-1]=ki.curves[kcurve.idx];
   }
 
@@ -1280,10 +1282,13 @@ static void add_curve_to_motion(kate_motion *kmotion,kate_float duration)
 
 static size_t get_num_glyphs(const char *text)
 {
-  size_t len0=strlen(text)+1;
+  size_t len0;
   size_t nglyphs=0;
   int intag=0,c;
 
+  if (!text) { yyerror("Internal error: get_num_glyphs got NULL text"); exit(-1); }
+
+  len0=strlen(text)+1;
   while ((c=kate_text_get_character(kate_utf8,&text,&len0))>0) {
     if (c=='<') intag++;
     if (!intag) ++nglyphs;
@@ -1300,7 +1305,10 @@ static void init_simple_glyph_pointer_motion(void)
 
 static int get_glyph_pointer_offset(unsigned int pointer_id)
 {
-  if (pointer_id<1 || pointer_id>4) yyerrorf("Only glyph pointers 1-4 are available (trying to set %d)",pointer_id);
+  if (pointer_id<1 || pointer_id>4) {
+    yyerrorf("Only glyph pointers 1-4 are available (trying to set %d)",pointer_id);
+    exit(-1);
+  }
   return (kate_motion_semantics)(kate_motion_semantics_glyph_pointer_1+pointer_id-1);
 }
 
@@ -1338,7 +1346,10 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
     for (n=0;n<kmotion->ncurves;++n) dt-=kmotion->durations[n];
   }
 
-  if (dt<(kate_float)0.0) yyerrorf("duration (%f) must not be negative\n",dt);
+  if (dt<(kate_float)0.0) {
+    yyerrorf("duration (%f) must not be negative\n",dt);
+    exit(-1);
+  }
 
   /* add a pause before the next jump */
   if (pause_fraction>(kate_float)0.0) {
@@ -1427,6 +1438,15 @@ static void set_style_morph(kd_event *ev,int from,int to)
 {
   int ret;
 
+  if (!ev) {
+    yyerror("internal error: no event");
+    exit(-1);
+  }
+  if (from<0 || to<0) {
+    yyerror("error: style index cannot be negative");
+    exit(-1);
+  }
+
   if (ev->style_index>=0 || ev->style) { yyerror("style already set"); return; }
   ev->style_index=from;
   ret=kate_encode_set_style_index(&k,from);
@@ -1440,7 +1460,14 @@ static void set_style_morph(kd_event *ev,int from,int to)
 
 static void clear_event(kd_event *ev)
 {
-  if (ev->text) kate_free(ev->text);
+  if (!ev) {
+    yyerror("internal error: no event");
+    exit(-1);
+  }
+  if (ev->text) {
+    kate_free(ev->text);
+    ev->text=NULL;
+  }
   clear_motions();
 }
 
@@ -1451,9 +1478,15 @@ static void kd_finalize_simple_timed_glyph_motion(kate_motion *kmotion)
   kate_float t0=ev->t0,t1=ev->t1;
   kate_float duration_so_far;
   size_t n;
+  int sets;
+
+  if (!kmotion) {
+    yyerror("internal error: kd_finalize_simple_timed_glyph_motion passed NULL motion");
+    exit(-1);
+  }
 
   /* for this helper motion, we require the timing of the event to be known in advance */
-  int sets=0;
+  sets=0;
   if (t0>=(kate_float)0.0) ++sets;
   if (t1>=(kate_float)0.0) ++sets;
   if (duration>=(kate_float)0.0) ++sets;
@@ -1469,18 +1502,29 @@ static void kd_finalize_simple_timed_glyph_motion(kate_motion *kmotion)
   for (n=0;n<kmotion->ncurves;++n) duration_so_far+=kmotion->durations[n];
   if (duration_so_far>duration) {
     yyerrorf("Simple timed glyph motion lasts longer than its event (motion %f, event %f)",duration_so_far,duration);
+    exit(-1);
   }
   add_glyph_pause(duration-duration_so_far,(kate_float)1.0);
 }
 
 static void set_motion_mapping(kate_motion *kmotion,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping)
 {
+  if (!kmotion) {
+    yyerror("internal error: set_motion_mapping passed NULL motion");
+    exit(-1);
+  }
+
   kmotion->x_mapping=x_mapping;
   kmotion->y_mapping=y_mapping;
 }
 
 static void set_motion_semantics(kate_motion *kmotion,kate_motion_semantics semantics)
 {
+  if (!kmotion) {
+    yyerror("internal error: set_motion_semantics passed NULL motion");
+    exit(-1);
+  }
+
   if (kmotion->semantics!=(kate_motion_semantics)-1) { yyerror("semantics is already defined"); return; }
   kmotion->semantics=semantics;
 }
@@ -1492,7 +1536,7 @@ static kate_motion_semantics kd_get_marker_position_semantics(int n)
     case 2: return kate_motion_semantics_marker2_position;
     case 3: return kate_motion_semantics_marker3_position;
     case 4: return kate_motion_semantics_marker4_position;
-    default: yyerrorf("Invalid marker number: %d (only 1-4 are supported)",n);
+    default: yyerrorf("Invalid marker number: %d (only 1-4 are supported)",n); exit(-1);
   }
   return kate_motion_semantics_marker4_position;
 }
@@ -1504,7 +1548,7 @@ static kate_motion_semantics kd_get_glyph_pointer_semantics(int n)
     case 2: return kate_motion_semantics_glyph_pointer_2;
     case 3: return kate_motion_semantics_glyph_pointer_3;
     case 4: return kate_motion_semantics_glyph_pointer_4;
-    default: yyerrorf("Invalid glyph pointer number: %d (only 1-4 are supported)",n);
+    default: yyerrorf("Invalid glyph pointer number: %d (only 1-4 are supported)",n); exit(-1);
   }
   return kate_motion_semantics_glyph_pointer_4;
 }
@@ -1513,11 +1557,16 @@ static void kd_add_event_motion(kate_motion *kmotion)
 {
   int ret;
 
+  if (!kmotion) {
+    yyerror("internal error: kd_add_event_motion passed NULL motion");
+    exit(-1);
+  }
+
   check_motion(kmotion);
   ret=kate_encode_add_motion(&k,kmotion,1);
   if (ret<0) {
     yyerrorf("failed to add motion: %d",ret);
-    return;
+    exit(-1);
   }
   clear_motions();
 }
@@ -1526,12 +1575,12 @@ static void kd_add_event_motion_index(size_t idx)
 {
   int ret;
 
-  if (idx>=ki.nmotions) { yyerrorf("Motion index %u out of range (%u motions available)",idx,ki.nmotions); return; }
+  if (idx>=ki.nmotions) { yyerrorf("Motion index %u out of range (%u motions available)",idx,ki.nmotions); exit(-1); }
 
   ret=kate_encode_add_motion_index(&k,idx);
   if (ret<0) {
     yyerrorf("failed to add motion: %d",ret);
-    return;
+    exit(-1);
   }
   clear_motions();
 }
@@ -1573,12 +1622,14 @@ static void set_font_range_code_point_string(int *cp,const char *s)
 
 static void set_font_range_first_code_point_string(const char *s)
 {
+  if (!s) { yyerror("internal error: no string"); exit(-1); }
   if (!krange) { yyerror("internal error: no font range"); exit(-1); }
   set_font_range_code_point_string(&krange->first_code_point,s);
 }
 
 static void set_font_range_last_code_point_string(const char *s)
 {
+  if (!s) { yyerror("internal error: no string"); exit(-1); }
   if (!krange) { yyerror("internal error: no font range"); exit(-1); }
   set_font_range_code_point_string(&krange->last_code_point,s);
 }
@@ -1600,6 +1651,8 @@ static void set_font_range_first_bitmap(int idx)
   if (!krange) { yyerror("internal error: no font range"); exit(-1); }
   krange->first_bitmap=idx;
 }
+
+// code check
 
 static void add_font_range(kate_info *ki,const char *name,kate_font_range *kfr)
 {
