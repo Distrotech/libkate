@@ -693,7 +693,7 @@ static int time_minutes(kate_float t)
   return t/60;
 }
 
-static kate_float time_seconds(kate_float t)
+static kate_float time_float_seconds(kate_float t)
 {
   int h,m;
 
@@ -702,6 +702,22 @@ static kate_float time_seconds(kate_float t)
   m=(int)(t/60);
   t-=m*60;
   return t;
+}
+
+static int time_seconds(kate_float t)
+{
+  int h,m;
+
+  h=(int)(t/3600);
+  t-=h*3600;
+  m=(int)(t/60);
+  t-=m*60;
+  return t;
+}
+
+static int time_milliseconds(kate_float t)
+{
+  return (int)(1000*(t-(float)(int)t));
 }
 
 static const char *eat_arg(int argc,char **argv,int *n)
@@ -734,13 +750,13 @@ static void output_kate_event(FILE *fout,const kate_event *ev,ogg_int64_t granpo
     kate_granule_split_time(ki,granpos,&base,&offset);
     fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
       (long long)granpos,
-      time_hours(base),time_minutes(base),time_seconds(base),
-      time_hours(offset),time_minutes(offset),time_seconds(offset)
+      time_hours(base),time_minutes(base),time_float_seconds(base),
+      time_hours(offset),time_minutes(offset),time_float_seconds(offset)
     );
   }
   fprintf(fout,"    %02d:%02d:%02.8g --> %02d:%02d:%02.8g\n",
-    time_hours(t0),time_minutes(t0),time_seconds(t0),
-    time_hours(t1),time_minutes(t1),time_seconds(t1)
+    time_hours(t0),time_minutes(t0),time_float_seconds(t0),
+    time_hours(t1),time_minutes(t1),time_float_seconds(t1)
   );
   if (ev->language) {
     fprintf(fout,"    language \"%s\"\n",ev->language);
@@ -857,9 +873,9 @@ static void output_srt_event(FILE *fout,const kate_event *ev,ogg_int64_t granpos
 
   (void)granpos;
   fprintf(fout,"%d\n",event_index+1);
-  fprintf(fout,"%02d:%02d:%#02.4g --> %02d:%02d:%#02.4g\n",
-    time_hours(t0),time_minutes(t0),time_seconds(t0),
-    time_hours(t1),time_minutes(t1),time_seconds(t1)
+  fprintf(fout,"%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n",
+    time_hours(t0),time_minutes(t0),time_seconds(t0),time_milliseconds(t0),
+    time_hours(t1),time_minutes(t1),time_seconds(t1),time_milliseconds(t1)
   );
   fprintf(fout,"%s\n",ev->text);
   fprintf(fout,"\n");
