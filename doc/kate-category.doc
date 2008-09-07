@@ -24,18 +24,21 @@ a string, albeit non localized.
 If using custom categories for your own use, you may use category names
 prefixed by "x-". These are reserved for private use.
 
-\li \c subtitles Movie (or other) subtitles, as (possibly formatted) text.
+\li \c subtitles Movie (or other) subtitles, as text, possibly including
+simple inline markup.
 
 For instance, ffmpeg2theora can create such streams, which can be played
 back by VLC, MPlayer (if patched), the Annodex browser plugin (if patched),
 and any player using GStreamer (if patched).
 
-\li \c spu-subtitles Movie (or other) subtitles, as DVD style images.
+\li \c spu-subtitles Movie (or other) subtitles, as DVD style images, with
+on screen positioning and size information.
 
 For instance, Thoggen (if patched) can create such streams, which can be
 played back by VLC, and MPlayer (if patched).
 
-\li \c lyrics Song lyrics (typically in the language they are sung in)
+\li \c lyrics Song lyrics (typically in the language they are sung in) as
+plain text.
 
 For instance, oggenc (if patched) can create such streams, which can be
 played back by XMMS (if patched).
