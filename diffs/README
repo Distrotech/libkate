@@ -33,13 +33,6 @@ an acompanying stream.
 
 
 
- * file(1) (magic.diff)
-
-This adds magic for Kate bitstreams, reporting bitstream version, character
-encoding, language, and category.
-
-
-
  * libshout (libshout-svn-with-kate.diff)
 
 This adds support for Kate bitstreams.
