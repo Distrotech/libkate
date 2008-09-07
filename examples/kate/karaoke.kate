@@ -5,8 +5,8 @@ kate {
     define region "r1" { percent position 10 10 size 80 15 }
     define region "r2" { percent position 10 30 size 80 15 }
     define region "r3" { percent position 10 50 size 80 15 }
-    define style "karaoke1" { text color 100 200 100 200 }
-    define style "karaoke2" { text color 100 100 100 200 }
+    define style "karaoke1" { text color 100 200 100 255 }
+    define style "karaoke2" { text color 100 100 100 255 }
   }
 
   event {
