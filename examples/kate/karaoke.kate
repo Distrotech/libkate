@@ -33,7 +33,7 @@ kate {
     0:5.0 --> 0:10.00
     region "r2"
     text "Il n'a jamais, jamais\nconnu de loi"
-    //    01   5  8   2   6   0     2  5  8   2
+    //    01   5  8   2   6   0   3  6  9   3
     simple_timed_glyph_style_morph {
       from style "karaoke1" to style "karaoke2"
       pause for 0:1.0
