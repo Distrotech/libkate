@@ -46,6 +46,10 @@ $ make check
 There are samples in the examples directory, see the README file there.
 To build those:
 
+$ make kate-streams
+
+Alternatively, to build Kate streams interleaved with a Theora video:
+
 $ make streams
 
 You will need a recent version of either liboggz or ogg-tools.
