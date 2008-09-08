@@ -1,4 +1,5 @@
 0.1.12
+  kateenc can be given comments on the command line to add to the output stream
   katedec now write srt times using the more widespread ',' instead of '.'
   build system improvements
 

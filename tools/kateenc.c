@@ -383,12 +383,16 @@ int main(int argc,char **argv)
   const char *output_filename=NULL;
   const char *output_filename_type=NULL;
   uint32_t serial;
+  const char *comment;
   FILE *fin,*fout;
 
   srand(time(NULL)^getpid());
   serial=rand();
 
   packetno=0;
+
+  kate_comment_init(&kc);
+  kate_info_init(&ki);
 
   for (n=1;n<argc;++n) {
     if (argv[n][0]=='-') {
@@ -408,6 +412,7 @@ int main(int argc,char **argv)
           printf("   -c <category>       set stream category\n");
           printf("   -s <hex number>     set serial number of output stream\n");
           printf("   -r                  write raw Kate stream\n");
+          printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
           exit(0);
         case 'o':
           if (!output_filename) {
@@ -450,6 +455,19 @@ int main(int argc,char **argv)
           break;
         case 'r':
           raw=1;
+          break;
+        case 'C':
+          comment=eat_arg(argc,argv,&n);
+          /* check there's a = sign though */
+          if (!strchr(comment,'=')) {
+            fprintf(stderr,"comments must be of the form tag=value\n");
+            exit(-1);
+          }
+          ret=kate_comment_add(&kc,comment);
+          if (ret<0) {
+            fprintf(stderr,"error adding comment \"%s\": %d\n",comment,ret);
+            exit(-1);
+          }
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
@@ -513,9 +531,6 @@ int main(int argc,char **argv)
       exit(-1);
     }
   }
-
-  kate_comment_init(&kc);
-  kate_info_init(&ki);
 
   kate_encode_init(&k,&ki);
 

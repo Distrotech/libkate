@@ -19,6 +19,7 @@ kateenc \- create Kate streams from text input
 .BI "[\-l " language ]
 .BI "[\-c " category ]
 .BI "[\-s " serial ]
+.BI "[\-C " tag=value ]
 .BI "\-t " filetype
 [ infile ]
 
@@ -50,6 +51,11 @@ Sets the category for the stream (default is the category specified in the input
 .TP
 \fB\-s\fR serial
 Sets the serial number for the output Kate stream (does not apply to raw streams).
+.TP
+\fB\-C\fR tag=value
+Adds a comment to encode into the output Kate stream. The comment must be of the form
+tag=value. Note that you might have to escape or quote the comment for it to be seen as
+a single command line parameter.
 .TP
 \fB\-t\fR filetype
 Specifies the type of the input (srt, lrc, kate)
