@@ -1652,11 +1652,10 @@ static void set_font_range_first_bitmap(int idx)
   krange->first_bitmap=idx;
 }
 
-// code check
-
 static void add_font_range(kate_info *ki,const char *name,kate_font_range *kfr)
 {
   int ret;
+  if (!ki || !kfr) { yyerror("internal error: no kate_info or kate_font_range"); exit(-1); }
   if (!krange) { yyerror("internal error: no font range"); exit(-1); }
   if (krange->first_code_point<0) yyerror("first code point not set");
   if (krange->last_code_point<0) yyerror("last code point not set");
@@ -1726,6 +1725,10 @@ static void add_font_range_to_mapping(void)
   if (!kmapping) { yyerror("internal error: no font mapping"); exit(-1); }
 
   kmapping->ranges=(kate_font_range**)kate_realloc(kmapping->ranges,(kmapping->nranges+1)*sizeof(kate_font_range*));
+  if (!kmapping->ranges) {
+    yyerror("error: out of memory");
+    exit(-1);
+  }
   kmapping->ranges[kmapping->nranges]=krange;
   ++kmapping->nranges;
 
@@ -1738,6 +1741,7 @@ static void add_font_range_to_mapping(void)
 static void add_font_mapping(kate_info *ki,const char *name,kate_font_mapping *kfm)
 {
   int ret;
+  if (!ki) { yyerror("internal error: no kate_info"); exit(-1); }
   if (!kfm) { yyerror("internal error: no font mapping"); exit(-1); }
   if (kfm->nranges==0) yyerror("font mapping has no ranges");
   ret=kate_info_add_font_mapping(ki,kfm);
@@ -1768,6 +1772,7 @@ static void kd_encode_text(kate_state *kstate,kd_event *ev)
 {
   int ret;
 
+  if (!ev) { yyerror("internal error: no event"); exit(-1); }
   ret=kate_encode_set_markup_type(kstate,ev->text_markup_type);
   if (ret<0) {
     yyerrorf("failed to set text markup type: %d",ret);
@@ -1785,7 +1790,9 @@ static void kd_encode_text(kate_state *kstate,kd_event *ev)
 
 static void kd_encode_set_language(kate_state *kstate,const char *s)
 {
-  int ret=kate_encode_set_language(kstate,s);
+  int ret;
+  if (!s) { yyerror("internal error: no language string"); exit(-1); }
+  ret=kate_encode_set_language(kstate,s);
   if (ret<0) yyerrorf("failed to set event language override: %d",ret);
 }
 
@@ -1801,7 +1808,9 @@ static uint32_t make_color_alpha(uint32_t c,uint32_t a)
 
 static void record_macro_name(const char *name)
 {
-  size_t len=strlen(name);
+  size_t len;
+  if (!name) { yyerror("internal error: no macro name"); exit(-1); }
+  len=strlen(name);
   if (temp_macro_name) kate_free(temp_macro_name);
   temp_macro_name=kate_malloc(len+1);
   if (!temp_macro_name) { yyerror("out of memory"); exit(-1); }
@@ -1810,11 +1819,14 @@ static void record_macro_name(const char *name)
 
 static void add_temp_macro(const char *body)
 {
+  if (!body) { yyerror("internal error: no macro body"); exit(-1); }
   if (!temp_macro_name) { yyerror("internal error - unknown macro name"); return; }
   add_macro(temp_macro_name,body);
   kate_free(temp_macro_name);
   temp_macro_name=NULL;
 }
+
+// code check
 
 static void set_granule_rate(int numerator,int denominator)
 {
