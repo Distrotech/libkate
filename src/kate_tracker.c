@@ -229,7 +229,7 @@ static int kate_tracker_update_property_at(const kate_tracker *kin,kate_float t,
 
   km=kate_tracker_find_motion(kin,semantics);
   if (km) {
-    // TODO: could be precalculated
+    /* TODO: could be precalculated */
     kate_float duration=kin->event->end_time-kin->event->start_time;
     ret=kate_motion_get_point(km,duration,t,x,y);
     if (ret<0) return ret;
