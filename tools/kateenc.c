@@ -415,7 +415,7 @@ int main(int argc,char **argv)
           printf("   -l <language>       set stream language\n");
           printf("   -c <category>       set stream category\n");
           printf("   -s <hex number>     set serial number of output stream\n");
-          printf("   -r                  write raw Kate stream\n");
+          printf("   -r                  write raw Kate stream (experimental)\n");
           printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
           exit(0);
         case 'o':
