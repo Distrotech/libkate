@@ -193,6 +193,15 @@ static int convert_kate(FILE *fin,FILE *fout)
   return 0;
 }
 
+static int is_line_empty(const char *s)
+{
+  while (*s) {
+    if (!strchr(" \t\r\n",*s)) return 0;
+    ++s;
+  }
+  return 1;
+}
+
 static int convert_srt(FILE *fin,FILE *fout)
 {
   enum { need_id, need_timing, need_text };
@@ -232,7 +241,7 @@ static int convert_srt(FILE *fin,FILE *fout)
     switch (need) {
       case need_id:
         /* allow more than one blank line between events */
-        if (!strcmp(str,"\n")) {
+        if (is_line_empty(str)) {
           break;
         }
         ret=sscanf(str,"%d\n",&id);
@@ -241,8 +250,7 @@ static int convert_srt(FILE *fin,FILE *fout)
           return -1;
         }
         if (id!=last_seen_id+1) {
-          fprintf(stderr,"Error at line %d: non consecutive ids: %s\n",line,str);
-          return -1;
+          fprintf(stderr,"Warning at line %d: non consecutive ids: %s\n",line,str);
         }
         last_seen_id=id;
         need=need_timing;
@@ -250,19 +258,24 @@ static int convert_srt(FILE *fin,FILE *fout)
         break;
       case need_timing:
         ret=sscanf(str,"%d:%d:%d%*[,.]%d --> %d:%d:%d%*[,.]%d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1);
-        if (ret!=8) {
+        if (ret!=8 || (h0|m0|s0|ms0)<0 || (h1|m1|s1|ms1)<0) {
           fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
           return -1;
         }
         else {
           t0=hmsms2s(h0,m0,s0,ms0);
           t1=hmsms2s(h1,m1,s1,ms1);
+          if (t1<t0) {
+            fprintf(stderr,"Error at line %d: end time must not be less than start time\n",line);
+            return -1;
+          }
         }
         need=need_text;
         break;
       case need_text:
-        if (*str=='\n') {
-          if (*text && text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
+        if (is_line_empty(str)) {
+          size_t len=strlen(text);
+          if (len>0 && text[len-1]=='\n') text[--len]=0;
           kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
           send_packet(fout);
           need=need_id;
@@ -277,15 +290,6 @@ static int convert_srt(FILE *fin,FILE *fout)
     fgets2(str,sizeof(str),fin,1);
   }
   return 0;
-}
-
-static int is_line_empty(const char *s)
-{
-  while (*s) {
-    if (!strchr(" \t\r\n",*s)) return 0;
-    ++s;
-  }
-  return 1;
 }
 
 static int convert_lrc(FILE *fin,FILE *fout)
