@@ -1,4 +1,5 @@
 0.1.12
+  granule rate numerator and denominator are now unsigned
   kateenc can be given comments on the command line to add to the output stream
   some improvements in srt parsing
   katedec now write srt times using the more widespread ',' instead of '.'

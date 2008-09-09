@@ -61,6 +61,22 @@ typedef long long int kate_int32_t;
 #endif
 
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
+typedef uint32_t kate_uint32_t;
+#elif defined uint32_t
+typedef uint32_t kate_uint32_t;
+#elif defined UINT_MAX && UINT_MAX==4294967295u
+typedef unsigned int kate_uint32_t;
+#elif defined USHRT_MAX && USHRT_MAX==4294967295u
+typedef short unsigned int kate_uint32_t;
+#elif defined ULONG_MAX && ULONG_MAX==4294967295ul
+typedef long unsigned int kate_uint32_t;
+#elif defined ULLONG_MAX && ULLONG_MAX==4294967295ull
+typedef long long unsigned int kate_uint32_t;
+#else
+#error No 32 bit unsigned integer found
+#endif
+
+#if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
 typedef int64_t kate_int64_t;
 #elif defined int64_t
 typedef int64_t kate_int64_t;

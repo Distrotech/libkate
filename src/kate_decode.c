@@ -212,7 +212,10 @@ static int kate_decode_info_header(kate_info *ki,kate_pack_buffer *kpb)
   if (ki->granule_shift>=64) return KMG_ERROR(KATE_E_BAD_PACKET);
   if (ki->gps_numerator==0) return KMG_ERROR(KATE_E_BAD_PACKET);
   if (ki->gps_denominator==0) return KMG_ERROR(KATE_E_BAD_PACKET);
+  /*
+  should not be needed anymore, calculations on these should be ok with full 32 bit range
   if ((ki->gps_numerator^ki->gps_denominator)<0) return KMG_ERROR(KATE_E_BAD_PACKET);
+  */
 
   len=16;
   language=(char*)KMG_MALLOC(len);

@@ -255,8 +255,8 @@ typedef struct kate_info {
   unsigned char granule_shift;                   /**< how many low granpos bits are used for the offset */
   unsigned char pad1[2];
 
-  kate_int32_t gps_numerator;                    /**< granules per second numerator */
-  kate_int32_t gps_denominator;                  /**< granules per second denominator */
+  kate_uint32_t gps_numerator;                   /**< granules per second numerator */
+  kate_uint32_t gps_denominator;                 /**< granules per second denominator */
 
   kate_const char *language;                     /**< based on RFC 3066, 15 character + terminating zero max */
 

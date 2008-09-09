@@ -74,15 +74,15 @@ int kate_info_init(kate_info *ki)
   return 0;
 }
 
-static void kate_make_fraction(kate_float resolution,kate_int32_t *numerator,kate_int32_t *denominator)
+static void kate_make_fraction(kate_float resolution,kate_uint32_t *numerator,kate_uint32_t *denominator)
 {
   if (resolution<1) {
-    *numerator=(kate_int32_t)(1000/resolution+(kate_float)0.5);
+    *numerator=(kate_uint32_t)(1000/resolution+(kate_float)0.5);
     *denominator=1000;
   }
   else {
     *numerator=1000;
-    *denominator=(kate_int32_t)(resolution*1000+(kate_float)0.5);
+    *denominator=(kate_uint32_t)(resolution*1000+(kate_float)0.5);
   }
 }
 
