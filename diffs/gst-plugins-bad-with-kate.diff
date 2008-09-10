@@ -1,7 +1,7 @@
 diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac NEW/gst-plugins-bad/configure.ac
 --- ORG/gst-plugins-bad/configure.ac	2008-08-09 15:43:36.000000000 +0100
-+++ NEW/gst-plugins-bad/configure.ac	2008-08-09 15:49:26.000000000 +0100
-@@ -662,6 +662,17 @@
++++ NEW/gst-plugins-bad/configure.ac	2008-09-10 08:44:09.000000000 +0100
+@@ -662,6 +662,30 @@
    AC_SUBST(JACK_LIBS)
  ])
  
@@ -14,12 +14,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ])
 +  AC_SUBST(KATE_CFLAGS)
 +  AC_SUBST(KATE_LIBS)
++  PKG_CHECK_MODULES(TIGER, tiger >= 0.1.2,
++    [
++      HAVE_TIGER="yes"
++      AC_DEFINE(HAVE_TIGER, 1, [Define if libtiger is available])
++    ],
++    [
++      HAVE_TIGER="no"
++      AC_MSG_RESULT(no)
++    ]
++  )
++  AM_CONDITIONAL(USE_TIGER, test "x$HAVE_TIGER" = "xyes")
++  AC_SUBST(TIGER_CFLAGS)
++  AC_SUBST(TIGER_LIBS)
 +])
 +
  dnl *** ladspa ***
  translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
  AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-@@ -1160,6 +1171,7 @@
+@@ -1160,6 +1184,7 @@
  AM_CONDITIONAL(USE_X264, false)
  AM_CONDITIONAL(USE_XVID, false)
  AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -27,7 +40,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  AM_CONDITIONAL(USE_WININET, false)
  
  fi dnl of EXT plugins
-@@ -1291,6 +1303,7 @@
+@@ -1291,6 +1316,7 @@
  ext/gsm/Makefile
  ext/ivorbis/Makefile
  ext/jack/Makefile
@@ -35,6 +48,131 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/ladspa/Makefile
  ext/libmms/Makefile
  ext/Makefile
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
+--- ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-08-09 15:43:37.000000000 +0100
++++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-08-24 19:39:30.000000000 +0100
+@@ -33,6 +33,10 @@
+     <xi:include href="xml/element-ivorbisdec.xml" />
+     <xi:include href="xml/element-jackaudiosrc.xml" />
+     <xi:include href="xml/element-jackaudiosink.xml" />
++    <xi:include href="xml/element-kateenc.xml" />
++    <xi:include href="xml/element-katedec.xml" />
++    <xi:include href="xml/element-kateparse.xml" />
++    <xi:include href="xml/element-katetag.xml" />
+     <xi:include href="xml/element-metadatademux.xml" />
+     <xi:include href="xml/element-metadatamux.xml" />
+     <xi:include href="xml/element-modplug.xml" />
+@@ -47,6 +51,7 @@
+     <xi:include href="xml/element-speexresample.xml" />
+     <xi:include href="xml/element-stereo.xml" />
+     <!--xi:include href="xml/element-theoradecexp.xml" /-->
++    <xi:include href="xml/element-tiger.xml" />
+     <xi:include href="xml/element-timidity.xml" />
+     <xi:include href="xml/element-twolame.xml" />
+     <xi:include href="xml/element-trm.xml" />
+@@ -85,6 +90,7 @@
+     <xi:include href="xml/plugin-gstrtpmanager.xml" />
+     <xi:include href="xml/plugin-h264parse.xml" />
+     <xi:include href="xml/plugin-jack.xml" />
++    <xi:include href="xml/plugin-kate.xml" />
+     <xi:include href="xml/plugin-ladspa.xml" />
+     <xi:include href="xml/plugin-metadata.xml" />
+     <xi:include href="xml/plugin-mms.xml" />
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt
+--- ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-08-09 15:43:37.000000000 +0100
++++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-08-24 19:42:30.000000000 +0100
+@@ -261,6 +261,76 @@
+ </SECTION>
+ 
+ <SECTION>
++<FILE>element-katedec</FILE>
++<TITLE>katedec</TITLE>
++GstKateDec
++<SUBSECTION Standard>
++GstKateDecClass
++GST_KATE_DEC
++GST_KATE_DEC_CLASS
++GST_IS_KATE_DEC
++GST_IS_KATE_DEC_CLASS
++GST_TYPE_KATE_DEC
++gst_kate_dec_get_type
++</SECTION>
++
++<SECTION>
++<FILE>element-kateenc</FILE>
++<TITLE>kateenc</TITLE>
++GstKateEnc
++<SUBSECTION Standard>
++GstKateEncClass
++GST_KATE_ENC
++GST_KATE_ENC_CLASS
++GST_IS_KATE_ENC
++GST_IS_KATE_ENC_CLASS
++GST_TYPE_KATE_ENC
++gst_kate_enc_get_type
++</SECTION>
++
++<SECTION>
++<FILE>element-kateparse</FILE>
++<TITLE>kateparse</TITLE>
++GstKateParse
++<SUBSECTION Standard>
++GstKateParseClass
++GST_KATE_PARSE
++GST_KATE_PARSE_CLASS
++GST_IS_KATE_PARSE
++GST_IS_KATE_PARSE_CLASS
++GST_TYPE_KATE_PARSE
++gst_kate_parse_get_type
++</SECTION>
++
++<SECTION>
++<FILE>element-katetag</FILE>
++<TITLE>katetag</TITLE>
++GstKateTag
++<SUBSECTION Standard>
++GstKateTagClass
++GST_KATE_TAG
++GST_KATE_TAG_CLASS
++GST_IS_KATE_TAG
++GST_IS_KATE_TAG_CLASS
++GST_TYPE_KATE_TAG
++gst_kate_tag_get_type
++</SECTION>
++
++<SECTION>
++<FILE>element-tiger</FILE>
++<TITLE>tiger</TITLE>
++GstKateTiger
++<SUBSECTION Standard>
++GstKateTigerClass
++GST_KATE_TIGER
++GST_KATE_TIGER_CLASS
++GST_IS_KATE_TIGER
++GST_IS_KATE_TIGER_CLASS
++GST_TYPE_KATE_TIGER
++gst_kate_tiger_get_type
++</SECTION>
++
++<SECTION>
+ <FILE>gstbasemetadata</FILE>
+ <TITLE>GstBaseMetadata</TITLE>
+ GstBaseMetadata
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/Makefile.am NEW/gst-plugins-bad/docs/plugins/Makefile.am
+--- ORG/gst-plugins-bad/docs/plugins/Makefile.am	2008-08-09 15:43:37.000000000 +0100
++++ NEW/gst-plugins-bad/docs/plugins/Makefile.am	2008-08-24 19:45:45.000000000 +0100
+@@ -104,6 +104,11 @@
+ 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
+ 	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
+ 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
++	$(top_srcdir)/ext/kate/gstkateenc.h \
++	$(top_srcdir)/ext/kate/gstkatedec.h \
++	$(top_srcdir)/ext/kate/gstkateparse.h \
++	$(top_srcdir)/ext/kate/gstkatetag.h \
++	$(top_srcdir)/ext/kate/gstkatetiger.h \
+ 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
+ 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
+ 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
 diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/ext/Makefile.am NEW/gst-plugins-bad/ext/Makefile.am
 --- ORG/gst-plugins-bad/ext/Makefile.am	2008-08-09 15:43:48.000000000 +0100
 +++ NEW/gst-plugins-bad/ext/Makefile.am	2008-08-09 15:33:26.000000000 +0100
