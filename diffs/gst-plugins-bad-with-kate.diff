@@ -50,7 +50,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/Makefile
 diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
 --- ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-08-09 15:43:37.000000000 +0100
-+++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-08-24 19:39:30.000000000 +0100
++++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-09-11 08:09:45.000000000 +0100
 @@ -33,6 +33,10 @@
      <xi:include href="xml/element-ivorbisdec.xml" />
      <xi:include href="xml/element-jackaudiosrc.xml" />
@@ -276,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.c	2008-07-05 16:10:40.000000000 +0100
-@@ -0,0 +1,135 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-07 19:48:26.000000000 +0100
+@@ -0,0 +1,151 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -336,11 +336,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#include "gstkateenc.h"
 +#include "gstkateparse.h"
 +#include "gstkatetag.h"
++#ifdef HAVE_TIGER
++#include "gstkatetiger.h"
++#endif
 +
 +GST_DEBUG_CATEGORY (gst_katedec_debug);
 +GST_DEBUG_CATEGORY (gst_kateenc_debug);
 +GST_DEBUG_CATEGORY (gst_kateparse_debug);
 +GST_DEBUG_CATEGORY (gst_katetag_debug);
++#ifdef HAVE_TIGER
++GST_DEBUG_CATEGORY (gst_katetiger_debug);
++#endif
 +
 +
 +static GstStaticCaps kate_caps = GST_STATIC_CAPS (GST_KATE_MIME_TYPE);
@@ -386,6 +392,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      0, "Kate parser");
 +  GST_DEBUG_CATEGORY_INIT (gst_katetag_debug, "katetag",
 +      0, "Kate tagger");
++#ifdef HAVE_TIGER
++  GST_DEBUG_CATEGORY_INIT (gst_katetiger_debug, "tiger",
++      0, "Kate Tiger renderer");
++#endif
 +
 +  if (!gst_element_register (plugin, "katedec",
 +      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
@@ -403,6 +413,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      GST_RANK_NONE, GST_TYPE_KATE_TAG))
 +    return FALSE;
 +
++#ifdef HAVE_TIGER
++  if (!gst_element_register (plugin, "tiger",
++      GST_RANK_NONE, GST_TYPE_KATE_TIGER))
++    return FALSE;
++#endif
++
 +  return TRUE;
 +}
 +
@@ -414,8 +430,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.c	2008-07-26 19:43:36.000000000 +0100
-@@ -0,0 +1,542 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatedec.c	2008-09-10 08:30:06.000000000 +0100
+@@ -0,0 +1,306 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -499,7 +515,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#include <string.h>
 +
 +#include <gst/gst.h>
-+#include <gst/tag/tag.h>
 +
 +#include "gstkate.h"
 +#include "gstkatedec.h"
@@ -516,12 +531,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +enum
 +{
-+  ARG_0,
-+  ARG_REMOVE_MARKUP,
-+  ARG_LANGUAGE,
-+  ARG_CATEGORY,
-+  ARG_ORIGINAL_CANVAS_WIDTH,
-+  ARG_ORIGINAL_CANVAS_HEIGHT,
++  ARG_REMOVE_MARKUP = DECODER_BASE_ARG_COUNT
 +};
 +
 +static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -547,15 +557,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static GstFlowReturn gst_kate_dec_chain (GstPad * pad, GstBuffer * buf);
 +static GstStateChangeReturn gst_kate_dec_change_state (GstElement * element,
 +    GstStateChange transition);
-+static gboolean gst_kate_dec_sink_query(GstPad * pad, GstQuery * query);
++static gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query);
 +
 +static void
 +gst_kate_dec_base_init (gpointer gclass)
 +{
 +  static GstElementDetails element_details = {
-+    "Kate bitstream decoder",
++    "Kate stream text decoder",
 +    "Codec/Decoder/Subtitle",
-+    "Decodes Kate text bitstreams",
++    "Decodes Kate text streams",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
 +  };
 +  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
@@ -580,27 +590,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_dec_set_property);
 +  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_dec_get_property);
 +
++  gst_kate_util_install_decoder_base_properties (gobject_class);
++
 +  g_object_class_install_property (gobject_class, ARG_REMOVE_MARKUP,
 +      g_param_spec_boolean ("remove-markup", "Remove markup", "Remove markup from decoded text ?",
 +          FALSE, G_PARAM_READWRITE));
-+
-+  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
-+      g_param_spec_string ("language", "Language", "The language of the stream",
-+          "", G_PARAM_READABLE));
-+
-+  g_object_class_install_property (gobject_class, ARG_CATEGORY,
-+      g_param_spec_string ("category", "Category", "The category of the stream",
-+          "", G_PARAM_READABLE));
-+
-+  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_WIDTH,
-+      g_param_spec_int ("original-canvas-width", "Original canvas width (0 is unspecified)",
-+          "The canvas width this stream was authored for",
-+          0, G_MAXINT, 0, G_PARAM_READABLE));
-+
-+  g_object_class_install_property (gobject_class, ARG_ORIGINAL_CANVAS_HEIGHT,
-+      g_param_spec_int ("original-canvas-height", "Original canvas height",
-+          "The canvas height this stream was authored for (0 is unspecified)",
-+          0, G_MAXINT, 0, G_PARAM_READABLE));
 +
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_dec_change_state);
 +}
@@ -614,26 +608,21 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_init (GstKateDec * dec,
 +    GstKateDecClass * gclass)
 +{
-+  GST_DEBUG_OBJECT(dec, "gst_kate_dec_init");
++  GST_DEBUG_OBJECT (dec, "gst_kate_dec_init");
 +
 +  dec->sinkpad = gst_pad_new_from_static_template ( &sink_factory, "sink");
-+  gst_pad_set_chain_function (dec->sinkpad, GST_DEBUG_FUNCPTR(gst_kate_dec_chain));
++  gst_pad_set_chain_function (dec->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_dec_chain));
 +  gst_pad_set_query_function (dec->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_dec_sink_query));
-+  gst_pad_use_fixed_caps(dec->sinkpad);
-+  gst_pad_set_caps(dec->sinkpad, gst_static_pad_template_get_caps(&sink_factory));
++  gst_pad_use_fixed_caps (dec->sinkpad);
++  gst_pad_set_caps (dec->sinkpad, gst_static_pad_template_get_caps (&sink_factory));
 +  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
 +
 +  dec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
 +  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
 +
-+  dec->remove_markup = FALSE;
-+  dec->language = NULL;
-+  dec->category = NULL;
-+  dec->original_canvas_width = 0;
-+  dec->original_canvas_height = 0;
-+  dec->initialized = FALSE;
++  gst_kate_util_decode_base_init (&dec->decoder);
 +
-+  dec->tags = NULL;
++  dec->remove_markup = FALSE;
 +}
 +
 +static void
@@ -657,20 +646,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case ARG_REMOVE_MARKUP:
 +      g_value_set_boolean (value, kd->remove_markup);
 +      break;
-+    case ARG_LANGUAGE:
-+      g_value_set_string (value, kd->language);
-+      break;
-+    case ARG_CATEGORY:
-+      g_value_set_string (value, kd->category);
-+      break;
-+    case ARG_ORIGINAL_CANVAS_WIDTH:
-+      g_value_set_int (value, kd->original_canvas_width);
-+      break;
-+    case ARG_ORIGINAL_CANVAS_HEIGHT:
-+      g_value_set_int (value, kd->original_canvas_height);
-+      break;
 +    default:
-+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      if (!gst_kate_util_decoder_base_get_property (&kd->decoder, object, prop_id, value, pspec)) {
++        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      }
 +      break;
 +  }
 +}
@@ -685,94 +664,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_chain (GstPad * pad, GstBuffer * buf)
 +{
 +  GstKateDec *kd = GST_KATE_DEC (gst_pad_get_parent (pad));
-+  kate_packet kp;
 +  const kate_event *ev = NULL;
-+  int ret;
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +
-+  GST_LOG_OBJECT (kd, "got packet, %u bytes, type %02x",
-+      GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (buf)==0 ? -1 : GST_BUFFER_DATA (buf)[0]);
-+  kate_packet_wrap (&kp, GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (buf));
-+  ret = kate_high_decode_packetin (&kd->k, &kp, &ev);
-+  if (ret < 0) {
-+    GST_WARNING_OBJECT (kd, "kate_high_decode_packetin failed (%d)", ret);
++  rflow = gst_kate_util_decoder_base_chain_kate_packet (&kd->decoder, GST_ELEMENT_CAST (kd), pad, buf, kd->srcpad, &ev);
++  if (rflow != GST_FLOW_OK) {
 +    gst_object_unref (kd);
 +    gst_buffer_unref (buf);
-+    return GST_FLOW_ERROR;
-+  }
-+  else if (ret>0) {
-+    GST_DEBUG_OBJECT (kd, "kate_high_decode_packetin has received EOS packet");
-+    // gst_pad_push_event (kd->srcpad, gst_event_new_eos ());
-+    gst_object_unref (kd);
-+    gst_buffer_unref (buf);
-+    return GST_FLOW_OK;
-+  }
-+
-+  /* headers may be interesting to retrieve information from */
-+  if (GST_BUFFER_SIZE (buf) > 0) switch (GST_BUFFER_DATA (buf)[0]) {
-+    GstCaps *caps;
-+
-+    case 0x80: /* ID header */
-+      GST_INFO_OBJECT (kd, "Parsed ID header: language %s, category %s", kd->k.ki->language, kd->k.ki->category);
-+      caps = gst_caps_new_simple (kd->remove_markup ? "text/plain" : "text/x-pango-markup", NULL);
-+      gst_pad_set_caps (kd->srcpad, caps);
-+      gst_caps_unref (caps);
-+      if (kd->k.ki->language && *kd->k.ki->language) {
-+        GstTagList *tags = gst_tag_list_new ();
-+        if (tags) {
-+          gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE, kd->k.ki->language, NULL);
-+          // TODO: category - where should it go ?
-+          kd->tags = gst_tag_list_merge (kd->tags, tags, GST_TAG_MERGE_REPLACE);
-+          gst_tag_list_free (tags);
-+        }
-+      }
-+
-+      /* update properties */
-+      if (kd->language) g_free (kd->language);
-+      kd->language = g_strdup (kd->k.ki->language);
-+      if (kd->category) g_free (kd->category);
-+      kd->category = g_strdup (kd->k.ki->category);
-+      kd->original_canvas_width = kd->k.ki->original_canvas_width;
-+      kd->original_canvas_height = kd->k.ki->original_canvas_height;
-+
-+      break;
-+
-+    case 0x81: /* Vorbis comments header */
-+      GST_INFO_OBJECT (kd, "Parsed comments header");
-+      {
-+        gchar *encoder = NULL;
-+        GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, (const guint8*)"\201kate\0\0\0\0", 9, &encoder);
-+        if (list) {
-+          kd->tags = gst_tag_list_merge (kd->tags, list, GST_TAG_MERGE_REPLACE);
-+          gst_tag_list_free (list);
-+        }
-+
-+        if (!kd->tags) {
-+          GST_ERROR_OBJECT (kd, "failed to decode comment header");
-+          kd->tags = gst_tag_list_new ();
-+        }
-+        if (encoder) {
-+          gst_tag_list_add (kd->tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, encoder, NULL);
-+          g_free (encoder);
-+        }
-+        gst_tag_list_add (kd->tags, GST_TAG_MERGE_REPLACE, GST_TAG_CODEC, "kate", NULL);
-+        gst_tag_list_add (kd->tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER_VERSION, kd->k.ki->bitstream_version_major, NULL);
-+
-+        if (kd->initialized) {
-+          gst_element_found_tags_for_pad (GST_ELEMENT_CAST (kd), kd->srcpad, kd->tags);
-+          kd->tags = NULL;
-+        }
-+        else {
-+          /* Only push them as messages for the time being. *
-+           * They will be pushed on the pad once the decoder is initialized */
-+          gst_element_post_message (GST_ELEMENT_CAST (kd),
-+              gst_message_new_tag (GST_OBJECT (kd), gst_tag_list_copy (kd->tags)));
-+        }
-+      }
-+      break;
-+
-+    default:
-+      break;
++    return rflow;
 +  }
 +
 +  if (ev) {
@@ -799,7 +698,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    buffer = gst_buffer_new_and_alloc (len+1);
 +    if (buffer) {
 +      /* allocate and copy the NULs, but don't include them in passed size */
-+      memcpy(GST_BUFFER_DATA (buffer), escaped, len+1);
++      memcpy (GST_BUFFER_DATA (buffer), escaped, len+1);
 +      GST_BUFFER_SIZE (buffer) = len;
 +      GST_BUFFER_TIMESTAMP (buffer) = ev->start_time*GST_SECOND;
 +      GST_BUFFER_DURATION (buffer) = (ev->end_time-ev->start_time)*GST_SECOND;
@@ -828,139 +727,20 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_dec_change_state (GstElement * element, GstStateChange transition)
 +{
 +  GstKateDec *kd = GST_KATE_DEC (element);
-+  GstStateChangeReturn res;
-+  int ret;
-+
-+  switch (transition) {
-+    case GST_STATE_CHANGE_NULL_TO_READY:
-+      break;
-+    case GST_STATE_CHANGE_READY_TO_PAUSED:
-+      GST_DEBUG_OBJECT (kd, "READY -> PAUSED, initializing kate state");
-+      ret = kate_high_decode_init (&kd->k);
-+      if (ret < 0) {
-+        GST_WARNING_OBJECT (kd, "failed to initialize kate state: %d", ret);
-+      }
-+      kd->initialized = TRUE;
-+      break;
-+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-+      break;
-+    default:
-+      break;
-+  }
-+
-+  res = parent_class->change_state (element, transition);
-+
-+  switch (transition) {
-+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-+      break;
-+    case GST_STATE_CHANGE_PAUSED_TO_READY:
-+      GST_DEBUG_OBJECT (kd, "PAUSED -> READY, clearing kate state");
-+      if (kd->initialized) {
-+        kate_high_decode_clear (&kd->k);
-+        kd->initialized = FALSE;
-+      }
-+      break;
-+    case GST_STATE_CHANGE_READY_TO_NULL:
-+      break;
-+    default:
-+      break;
-+  }
-+
-+  return res;
++  return gst_kate_decoder_base_change_state (&kd->decoder, element, parent_class, transition);
 +}
 +
-+static GstClockTime
-+gst_kate_dec_granule_time(kate_state *k, gint64 granulepos)
++gboolean gst_kate_dec_sink_query (GstPad * pad, GstQuery * query)
 +{
-+  if (granulepos == -1)
-+    return -1;
-+
-+  return kate_granule_time(k->ki, granulepos) * GST_SECOND;
-+}
-+
-+/*
-+conversions on the sink:
-+  - default is granules at num/den rate (subject to the granule shift)
-+  - default -> time is possible
-+  - bytes do not mean anything, packets can be any number of bytes, and we
-+    have no way to know the number of bytes emitted without decoding
-+conversions on the source:
-+  - nothing
-+*/
-+
-+static gboolean
-+gst_kate_dec_convert(GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
-+{
-+  GstKateDec *kd;
-+  gboolean res = FALSE;
-+
-+  if (src_fmt == *dest_fmt) {
-+    *dest_val = src_val;
-+    return TRUE;
-+  }
-+
-+  kd = GST_KATE_DEC (gst_pad_get_parent (pad));
-+
-+  if (!kd->initialized) {
-+    GST_WARNING_OBJECT (kd, "not initialized yet");
-+    gst_object_unref (kd);
-+    return FALSE;
-+  }
-+
-+  if (src_fmt == GST_FORMAT_BYTES || *dest_fmt == GST_FORMAT_BYTES) {
-+    GST_WARNING_OBJECT (kd, "unsupported format");
-+    gst_object_unref (kd);
-+    return FALSE;
-+  }
-+
-+  switch (src_fmt) {
-+    case GST_FORMAT_DEFAULT:
-+      switch (*dest_fmt) {
-+        case GST_FORMAT_TIME:
-+          *dest_val = gst_kate_dec_granule_time (&kd->k, src_val);
-+          res = TRUE;
-+          break;
-+        default:
-+          res = FALSE;
-+          break;
-+      }
-+      break;
-+    default:
-+      res = FALSE;
-+      break;
-+  }
-+
-+  if (!res) {
-+    GST_WARNING_OBJECT (kd, "unsupported format");
-+  }
-+
++  GstKateDec *kd = GST_KATE_DEC (gst_pad_get_parent (pad));
++  gboolean res = gst_kate_decoder_base_sink_query (&kd->decoder, GST_ELEMENT_CAST (kd), pad, query);
 +  gst_object_unref (kd);
 +  return res;
 +}
 +
-+static gboolean gst_kate_dec_sink_query(GstPad * pad, GstQuery * query)
-+{
-+  switch (GST_QUERY_TYPE(query)) {
-+    case GST_QUERY_CONVERT:
-+      {
-+        GstFormat src_fmt, dest_fmt;
-+        gint64 src_val, dest_val;
-+
-+        gst_query_parse_convert(query, &src_fmt, &src_val, &dest_fmt, &dest_val);
-+        if (!gst_kate_dec_convert(pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
-+          return gst_pad_query_default(pad, query);
-+        }
-+        gst_query_set_convert(query, src_fmt, src_val, dest_fmt, dest_val);
-+        return TRUE;
-+      }
-+    default:
-+      return gst_pad_query_default(pad, query);
-+  }
-+}
-+
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatedec.h	2008-07-26 19:43:01.000000000 +0100
-@@ -0,0 +1,98 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatedec.h	2008-08-23 19:05:39.000000000 +0100
+@@ -0,0 +1,91 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -1009,8 +789,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#ifndef __GST_KATE_DEC_H__
 +#define __GST_KATE_DEC_H__
 +
-+#include <gst/gst.h>
 +#include <kate/kate.h>
++#include <gst/gst.h>
++#include "gstkateutil.h"
 +
 +G_BEGIN_DECLS
 +
@@ -1036,17 +817,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstPad *sinkpad;
 +  GstPad *srcpad;
 +
-+  kate_state k;
-+
-+  gchar *language;
-+  gchar *category;
-+  gint original_canvas_width;
-+  gint original_canvas_height;
-+
-+  GstTagList *tags;
++  GstKateDecoderBase decoder;
 +
 +  gboolean remove_markup;
-+  gboolean initialized;
 +};
 +
 +struct _GstKateDecClass 
@@ -1060,8 +833,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.c	2008-07-25 08:26:32.000000000 +0100
-@@ -0,0 +1,1541 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-10 08:29:53.000000000 +0100
+@@ -0,0 +1,1565 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -1126,7 +899,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * <para>
 + * This encodes a DVD SPU track to a Kate stream:
 + * <programlisting>
-+ * gst-launch filesrc location=test.vob ! dvddemux ! dvdsubparse ! kateenc ! oggmux ! filesink location=test.ogg
++ * gst-launch dvdreadsrc ! dvddemux ! dvdsubparse ! kateenc ! oggmux ! filesink location=test.ogg
 + * </programlisting>
 + * </para>
 + * </refsect2>
@@ -1202,13 +975,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    const GValue * value, GParamSpec * pspec);
 +static void gst_kate_enc_get_property (GObject * object, guint prop_id,
 +    GValue * value, GParamSpec * pspec);
++static void gst_kate_enc_dispose (GObject * object);
 +
 +static GstFlowReturn gst_kate_enc_chain (GstPad * pad, GstBuffer * buf);
 +static GstStateChangeReturn gst_kate_enc_change_state (GstElement * element,
 +    GstStateChange transition);
-+static gboolean gst_kate_enc_sink_event(GstPad * pad, GstEvent * event);
++static gboolean gst_kate_enc_sink_event (GstPad * pad, GstEvent * event);
 +static const GstQueryType * gst_kate_enc_source_query_type (GstPad * pad);
-+static gboolean gst_kate_enc_source_query(GstPad * pad, GstQuery * query);
++static gboolean gst_kate_enc_source_query (GstPad * pad, GstQuery * query);
 +static void gst_kate_enc_add_interfaces (GType kateenc_type);
 +
 +GST_BOILERPLATE_FULL (GstKateEnc, gst_kate_enc, GstElement,
@@ -1218,9 +992,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_enc_base_init (gpointer gclass)
 +{
 +  static const GstElementDetails element_details = {
-+    "Kate bitstream encoder",
++    "Kate stream encoder",
 +    "Codec/Encoder/Subtitle",
-+    "Encodes Kate text bitstreams",
++    "Encodes Kate streams from text or subpictures",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
 +  };
 +  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
@@ -1246,6 +1020,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_enc_set_property);
 +  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_enc_get_property);
++  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_kate_enc_dispose);
 +
 +  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
 +      g_param_spec_string ("language", "Language", "Set the language of the stream",
@@ -1306,10 +1081,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_enc_init (GstKateEnc * ke,
 +    GstKateEncClass * gclass)
 +{
-+  GST_DEBUG_OBJECT(ke, "gst_kate_enc_init");
++  GST_DEBUG_OBJECT (ke, "gst_kate_enc_init");
 +
 +  ke->sinkpad = gst_pad_new_from_static_template ( &sink_factory, "sink");
-+  gst_pad_set_chain_function (ke->sinkpad, GST_DEBUG_FUNCPTR(gst_kate_enc_chain));
++  gst_pad_set_chain_function (ke->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_enc_chain));
 +  gst_pad_set_event_function (ke->sinkpad, GST_DEBUG_FUNCPTR (gst_kate_enc_sink_event));
 +  gst_element_add_pad (GST_ELEMENT (ke), ke->sinkpad);
 +
@@ -1335,6 +1110,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
++gst_kate_enc_dispose (GObject * object)
++{
++  GstKateEnc *ke = GST_KATE_ENC (object);
++
++  GST_LOG_OBJECT (ke, "disposing");
++
++  if (ke->language) {
++    g_free (ke->language);
++    ke->language = NULL;
++  }
++  if (ke->category) {
++    g_free (ke->category);
++    ke->category = NULL;
++  }
++
++  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
++}
++
++static void
 +gst_kate_enc_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec)
 +{
@@ -1344,37 +1138,37 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  switch (prop_id) {
 +    case ARG_LANGUAGE:
 +      if (ke->language) {
-+        g_free(ke->language);
++        g_free (ke->language);
 +        ke->language = NULL;
 +      }
 +      str = g_value_get_string (value);
-+      if (str) ke->language = g_strdup(str);
++      if (str) ke->language = g_strdup (str);
 +      break;
 +    case ARG_CATEGORY:
 +      if (ke->category) {
-+        g_free(ke->category);
++        g_free (ke->category);
 +        ke->category = NULL;
 +      }
 +      str = g_value_get_string (value);
-+      if (str) ke->category = g_strdup(str);
++      if (str) ke->category = g_strdup (str);
 +      break;
 +    case ARG_GRANULE_RATE_NUM:
-+      ke->granule_rate_numerator = g_value_get_int(value);
++      ke->granule_rate_numerator = g_value_get_int (value);
 +      break;
 +    case ARG_GRANULE_RATE_DEN:
-+      ke->granule_rate_denominator = g_value_get_int(value);
++      ke->granule_rate_denominator = g_value_get_int (value);
 +      break;
 +    case ARG_GRANULE_SHIFT:
-+      ke->granule_rate_denominator = g_value_get_int(value);
++      ke->granule_rate_denominator = g_value_get_int (value);
 +      break;
 +    case ARG_KEEPALIVE_MIN_TIME:
-+      ke->keepalive_min_time = g_value_get_float(value);
++      ke->keepalive_min_time = g_value_get_float (value);
 +      break;
 +    case ARG_ORIGINAL_CANVAS_WIDTH:
-+      ke->original_canvas_width = g_value_get_int(value);
++      ke->original_canvas_width = g_value_get_int (value);
 +      break;
 +    case ARG_ORIGINAL_CANVAS_HEIGHT:
-+      ke->original_canvas_height = g_value_get_int(value);
++      ke->original_canvas_height = g_value_get_int (value);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1421,7 +1215,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +/* GstElement vmethod implementations */
 +
-+static GstBuffer *gst_kate_enc_create_buffer(GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
++static GstBuffer *gst_kate_enc_create_buffer (GstKateEnc *ke, kate_packet *kp, kate_int64_t granpos, GstClockTime timestamp, GstClockTime duration, gboolean header)
 +{
 +  GstBuffer *buffer;
 +
@@ -1449,13 +1243,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return buffer;
 +}
 +
-+static GstFlowReturn gst_kate_enc_push_buffer(GstKateEnc *ke, GstBuffer *buffer)
++static GstFlowReturn gst_kate_enc_push_buffer (GstKateEnc *ke, GstBuffer *buffer)
 +{
 +  GstFlowReturn rflow;
 +
-+  ke->last_timestamp = GST_BUFFER_TIMESTAMP(buffer);
-+  if (GST_BUFFER_TIMESTAMP(buffer)+GST_BUFFER_DURATION(buffer) > ke->latest_end_time) {
-+    ke->latest_end_time = GST_BUFFER_TIMESTAMP(buffer)+GST_BUFFER_DURATION(buffer);
++  ke->last_timestamp = GST_BUFFER_TIMESTAMP (buffer);
++  if (GST_BUFFER_TIMESTAMP (buffer)+GST_BUFFER_DURATION (buffer) > ke->latest_end_time) {
++    ke->latest_end_time = GST_BUFFER_TIMESTAMP (buffer)+GST_BUFFER_DURATION (buffer);
 +  }
 +
 +  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
@@ -1553,7 +1347,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      }
 +      kate_packet_clear (&kp);
 +
-+      headers = g_list_append(headers, buffer);
++      headers = g_list_append (headers, buffer);
 +    }
 +    else if (ret>0) {
 +      GST_LOG_OBJECT (ke, "Last header encoded");
@@ -1597,7 +1391,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    }
 +  }
 +
-+  g_list_free(headers);
++  g_list_free (headers);
 +
 +  return rflow;
 +}
@@ -1692,7 +1486,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    }
 +    entry = GST_READ_UINT32_BE (ptr);
 +    GST_LOG_OBJECT (ke, "Color/contrast change entry header is %08x", entry);
-+    nchanges = CLAMP((ptr[2] >> 4), 1, 8);
++    nchanges = CLAMP ((ptr[2] >> 4), 1, 8);
 +    ptr += 4;
 +    nbytes_left -= 4;
 +    if (entry == 0x0fffffff) {
@@ -1748,7 +1542,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_enc_crop_bitmap(GstKateEnc *ke, kate_bitmap *kb,guint16 *dx,guint16 *dy)
++gst_kate_enc_crop_bitmap (GstKateEnc *ke, kate_bitmap *kb,guint16 *dx,guint16 *dy)
 +{
 +  int top, bottom, left, right;
 +  guint8 zero = 0;
@@ -1828,9 +1622,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  kb->height = h;
 +}
 +
-+#define CHECK(x) do { guint16 _=(x); if ((_)>sz) { GST_WARNING_OBJECT (ke, "SPU overflow"); return GST_FLOW_ERROR; } } while (0)
-+#define ADVANCE(x) do { guint16 _=(x); ptr+=(_); sz-=(_); } while (0)
-+#define IGNORE(x) do { guint16 __=(x); CHECK(__); ADVANCE(__); } while (0)
++#define CHECK(x) do { guint16 _ = (x); if ((_) > sz) { GST_WARNING_OBJECT (ke, "SPU overflow"); return GST_FLOW_ERROR; } } while (0)
++#define ADVANCE(x) do { guint16 _ = (x); ptr += (_); sz -= (_); } while (0)
++#define IGNORE(x) do { guint16 __ = (x); CHECK (__); ADVANCE (__); } while (0)
 +
 +static GstFlowReturn
 +gst_kate_enc_decode_command_sequence (GstKateEnc *ke, GstBuffer *buf, guint16 command_sequence_offset)
@@ -1848,7 +1642,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  CHECK (2);
 +  date = GST_KATE_UINT16_BE (ptr);
 +  ADVANCE (2);
-+  GST_DEBUG_OBJECT (ke, "date %u\n", date);
++  GST_DEBUG_OBJECT(ke, "date %u\n", date);
 +
 +  CHECK (2);
 +  next_command_sequence = GST_KATE_UINT16_BE (ptr);
@@ -1871,34 +1665,34 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        break;
 +      case SPU_CMD_SET_COLOR: /* 0x03 */
 +        GST_DEBUG_OBJECT (ke, "[3] SET COLOR");
-+        CHECK(2);
++        CHECK (2);
 +        gst_kate_enc_decode_colormap (ke, ptr);
-+        ADVANCE(2);
++        ADVANCE (2);
 +        break;
 +      case SPU_CMD_SET_ALPHA: /* 0x04 */
 +        GST_DEBUG_OBJECT (ke, "[4] SET ALPHA");
-+        CHECK(2);
++        CHECK (2);
 +        gst_kate_enc_decode_alpha (ke, ptr);
-+        ADVANCE(2);
++        ADVANCE (2);
 +        break;
 +      case SPU_CMD_SET_DAREA: /* 0x05 */
 +        GST_DEBUG_OBJECT (ke, "[5] SET DISPLAY AREA");
-+        CHECK(6);
++        CHECK (6);
 +        gst_kate_enc_decode_area (ke, ptr);
-+        ADVANCE(6);
++        ADVANCE (6);
 +        break;
 +      case SPU_CMD_DSPXA: /* 0x06 */
 +        GST_DEBUG_OBJECT (ke, "[6] SET PIXEL ADDRESSES");
-+        CHECK(4);
++        CHECK (4);
 +        gst_kate_enc_decode_pixaddr (ke, ptr);
 +        GST_DEBUG_OBJECT (ke, "  -> first pixel address %u", ke->spu_pix_data[0]);
 +        GST_DEBUG_OBJECT (ke, "  -> second pixel address %u", ke->spu_pix_data[1]);
-+        ADVANCE(4);
++        ADVANCE (4);
 +        break;
 +      case SPU_CMD_CHG_COLCON: /* 0x07 */
 +        GST_DEBUG_OBJECT (ke, "[7] CHANGE COLOR/CONTRAST");
-+        CHECK(2);
-+        ADVANCE(gst_kate_enc_decode_colcon (ke, ptr));
++        CHECK (2);
++        ADVANCE (gst_kate_enc_decode_colcon (ke, ptr));
 +        break;
 +      case SPU_CMD_END: /* 0xff */
 +        GST_DEBUG_OBJECT (ke, "[0xff] END");
@@ -1920,7 +1714,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static inline int
-+gst_kate_enc_clamp(int value)
++gst_kate_enc_clamp (int value)
 +{
 +  if (value<0) return 0;
 +  if (value>255) return 255;
@@ -1928,7 +1722,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
-+gst_kate_enc_yuv2rgb(int y,int u,int v,int *r,int *g,int *b)
++gst_kate_enc_yuv2rgb (int y,int u,int v,int *r,int *g,int *b)
 +{
 +#if 0
 +    *r = gst_kate_enc_clamp (y + 1.371 * v);
@@ -2002,6 +1796,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  size_t max_nybbles[2];
 +  GstFlowReturn rflow;
 +  guint16 next_command_sequence;
++  guint16 code;
 +
 +  /* before decoding anything, initialize to sensible defaults */
 +  memset (ke->spu_colormap, 0, sizeof (ke->spu_colormap));
@@ -2058,11 +1853,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    for (x=0; x<kb->width; ) {
 +      if (nybble_offset[y&1] >= max_nybbles[y&1]) {
 +        GST_DEBUG_OBJECT (ke, "RLE overflow, clearing the remainder");
-+        memset(kb->pixels+n, 0, kb->width-x);
++        memset (kb->pixels+n, 0, kb->width-x);
 +        n += kb->width-x;
 +        break;
 +      }
-+      guint16 code = gst_kate_enc_get_rle_code (pixptr[y&1], &nybble_offset[y&1]);
++      code = gst_kate_enc_get_rle_code (pixptr[y&1], &nybble_offset[y&1]);
 +      if (code == 0) {
 +        memset (kb->pixels+n, 0, kb->width-x);
 +        n += kb->width-x;
@@ -2125,15 +1920,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstKateEnc *ke = GST_KATE_ENC (gst_pad_get_parent (pad));
 +  kate_packet kp;
 +  GstFlowReturn rflow = GST_FLOW_OK;
-+  GstClockTime start = GST_BUFFER_TIMESTAMP(buf);
-+  GstClockTime duration = GST_BUFFER_DURATION(buf);
-+  GstClockTime stop = GST_BUFFER_TIMESTAMP(buf)+duration;
++  GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
++  GstClockTime duration = GST_BUFFER_DURATION (buf);
++  GstClockTime stop = GST_BUFFER_TIMESTAMP (buf)+duration;
 +  GstCaps *caps;
 +  const gchar *mime_type = NULL;
 +  int ret;
 +  gboolean packet_ready = FALSE;
 +
-+  GST_DEBUG_OBJECT (ke, "got packet, %u bytes", GST_BUFFER_SIZE(buf));
++  GST_DEBUG_OBJECT (ke, "got packet, %u bytes", GST_BUFFER_SIZE (buf));
 +
 +  /* get the type of the data we're being sent */
 +  caps = GST_PAD_CAPS (pad);
@@ -2163,10 +1958,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
 +#if 0
 +          {
-+            FILE *f=fopen("/tmp/bad-spu","w");
++            FILE *f=fopen ("/tmp/bad-spu","w");
 +            if (f) {
-+              fwrite(GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
-+              fclose(f);
++              fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
++              fclose (f);
 +            }
 +          }
 +#endif
@@ -2179,30 +1974,31 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        }
 +        else {
 +          /* timestamp offsets are hidden in the SPU packets */
-+          start = GST_BUFFER_TIMESTAMP(buf) + GST_KATE_STM_TO_GST (ke->show_time);
-+          stop = GST_BUFFER_TIMESTAMP(buf) + GST_KATE_STM_TO_GST (ke->hide_time);
++          start = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->show_time);
++          stop = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->hide_time);
 +          t0 = start/(double)GST_SECOND;
 +          t1 = stop/(double)GST_SECOND;
 +
-+          GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE(buf), t0, t1);
-+          ret = kate_encode_set_region(&ke->k, &kregion);
++          GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE (buf), t0, t1);
++          ret = kate_encode_set_region (&ke->k, &kregion);
 +          if (ret < 0) {
 +            GST_WARNING_OBJECT (ke, "Failed to set event region (%d)", ret);
 +          }
 +          else {
-+            ret = kate_encode_set_palette(&ke->k, &kpalette);
++            ret = kate_encode_set_palette (&ke->k, &kpalette);
 +            if (ret < 0) {
 +              GST_WARNING_OBJECT (ke, "Failed to set event palette (%d)", ret);
 +            }
 +            else {
-+              ret = kate_encode_set_bitmap(&ke->k, &kbitmap);
++              ret = kate_encode_set_bitmap (&ke->k, &kbitmap);
 +              if (ret < 0) {
 +                GST_WARNING_OBJECT (ke, "Failed to set event bitmap (%d)", ret);
 +              }
 +              else {
-+                ret = kate_encode_text(&ke->k, t0, t1, "", 0, &kp);
-+                if (ret >= 0)
++                ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
++                if (ret >= 0) {
 +                  packet_ready = TRUE;
++                }
 +              }
 +            }
 +          }
@@ -2222,10 +2018,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          GST_WARNING_OBJECT (ke, "Failed to set markup type (%d)", ret);
 +        }
 +        else {
-+          const char *text = (const char*) GST_BUFFER_DATA(buf);
-+          size_t text_len = GST_BUFFER_SIZE(buf);
-+          GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f", (int)text_len, (int)text_len, GST_BUFFER_DATA(buf), GST_BUFFER_SIZE(buf), t0, t1);
-+          ret = kate_encode_text(&ke->k, t0, t1, text, text_len, &kp);
++          const char *text = (const char*) GST_BUFFER_DATA (buf);
++          size_t text_len = GST_BUFFER_SIZE (buf);
++          GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f", (int)text_len, (int)text_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), t0, t1);
++          ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
 +          if (ret >= 0)
 +            packet_ready = TRUE;
 +        }
@@ -2317,7 +2113,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +  }
 +
-+  res = GST_ELEMENT_CLASS(parent_class)->change_state (element, transition);
++  res = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 +  if (res == GST_STATE_CHANGE_FAILURE) {
 +    GST_WARNING_OBJECT (ke, "Parent failed to change state");
 +    return res;
@@ -2329,9 +2125,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case GST_STATE_CHANGE_PAUSED_TO_READY:
 +      GST_DEBUG_OBJECT (ke, "PAUSED -> READY, clearing kate state");
 +      if (ke->initialized) {
-+        kate_clear(&ke->k);
-+        kate_info_clear(&ke->ki);
-+        kate_comment_clear(&ke->kc);
++        kate_clear (&ke->k);
++        kate_info_clear (&ke->ki);
++        kate_comment_clear (&ke->kc);
 +        ke->initialized = FALSE;
 +        ke->last_timestamp = 0;
 +        ke->latest_end_time = 0;
@@ -2349,14 +2145,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static GstClockTime
-+gst_kate_enc_granule_time(kate_state *k, gint64 granulepos)
++gst_kate_enc_granule_time (kate_state *k, gint64 granulepos)
 +{
 +  float t;
 +
 +  if (granulepos == -1)
 +    return -1;
 +
-+  t = kate_granule_time(k->ki, granulepos);
++  t = kate_granule_time (k->ki, granulepos);
 +  return t*GST_SECOND;
 +}
 +
@@ -2371,7 +2167,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +*/
 +
 +static gboolean
-+gst_kate_enc_convert(GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
++gst_kate_enc_convert (GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
 +{
 +  GstKateEnc *ke;
 +  gboolean res = FALSE;
@@ -2384,14 +2180,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke = GST_KATE_ENC (gst_pad_get_parent (pad));
 +
 +  if (!ke->initialized) {
-+    GST_WARNING_OBJECT(ke, "not initialized yet");
-+    gst_object_unref(ke);
++    GST_WARNING_OBJECT (ke, "not initialized yet");
++    gst_object_unref (ke);
 +    return FALSE;
 +  }
 +
 +  if (src_fmt == GST_FORMAT_BYTES || *dest_fmt == GST_FORMAT_BYTES) {
-+    GST_WARNING_OBJECT(ke, "unsupported format");
-+    gst_object_unref(ke);
++    GST_WARNING_OBJECT (ke, "unsupported format");
++    gst_object_unref (ke);
 +    return FALSE;
 +  }
 +
@@ -2399,7 +2195,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case GST_FORMAT_DEFAULT:
 +      switch (*dest_fmt) {
 +        case GST_FORMAT_TIME:
-+          *dest_val = gst_kate_enc_granule_time(&ke->k, src_val);
++          *dest_val = gst_kate_enc_granule_time (&ke->k, src_val);
 +          res = TRUE;
 +          break;
 +        default:
@@ -2413,10 +2209,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +
 +  if (!res) {
-+    GST_WARNING_OBJECT(ke, "unsupported format");
++    GST_WARNING_OBJECT (ke, "unsupported format");
 +  }
 +
-+  gst_object_unref(ke);
++  gst_object_unref (ke);
 +  return res;
 +}
 +
@@ -2433,7 +2229,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +#endif
 +
-+static gboolean gst_kate_enc_source_query(GstPad * pad, GstQuery * query)
++static gboolean gst_kate_enc_source_query (GstPad * pad, GstQuery * query)
 +{
 +  GstKateEnc *ke;
 +  gboolean res = FALSE;
@@ -2461,12 +2257,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +  }
 +
-+  gst_object_unref(ke);
++  gst_object_unref (ke);
 +
 +  return res;
 +}
 +
-+static gboolean gst_kate_enc_sink_event(GstPad * pad, GstEvent * event)
++static gboolean gst_kate_enc_sink_event (GstPad * pad, GstEvent * event)
 +{
 +  GstKateEnc *ke = GST_KATE_ENC (gst_pad_get_parent (pad));
 +  GstStructure *structure;
@@ -2492,8 +2288,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +            GST_DEBUG_OBJECT (ke, "ts %f, last %f (min %f)", t, ke->last_timestamp/(double)GST_SECOND, ke->keepalive_min_time);
 +            if (ke->keepalive_min_time > 0.0f && t-ke->last_timestamp/(double)GST_SECOND >= ke->keepalive_min_time) {
 +              kate_packet kp;
++              int ret;
 +              GST_DEBUG_OBJECT (ke, "keepalive at %f", t);
-+              int ret = kate_encode_keepalive (&ke->k, t, &kp);
++              ret = kate_encode_keepalive (&ke->k, t, &kp);
 +              if (ret<0) {
 +                GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %d", ret);
 +              }
@@ -2599,12 +2396,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +  }
 +
-+  gst_object_unref(ke);
++  gst_object_unref (ke);
 +  return ret;
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateenc.h	2008-07-19 11:27:22.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkateenc.h	2008-08-09 15:33:26.000000000 +0100
 @@ -0,0 +1,120 @@
 +/*
 + * GStreamer
@@ -2727,7 +2524,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_ENC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkate.h	2008-06-19 21:51:21.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkate.h	2008-08-09 15:33:26.000000000 +0100
 @@ -0,0 +1,55 @@
 +/*
 + * GStreamer
@@ -2785,7 +2582,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.c	2008-07-05 17:03:46.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkateparse.c	2008-09-10 08:30:20.000000000 +0100
 @@ -0,0 +1,590 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
@@ -2859,7 +2656,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#define GST_CAT_DEFAULT gst_kateparse_debug
 +
 +static const GstElementDetails gst_kate_parse_details = {
-+  "Kate parser",
++  "Kate stream parser",
 +  "Codec/Parser/Subtitle",
 +  "parse raw kate streams",
 +  "ogg.k.ogg.k <ogg.k.ogg.k at googlemail dot com>"
@@ -3378,7 +3175,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return ret;
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateparse.h	2008-06-19 21:51:21.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkateparse.h	2008-08-09 15:33:26.000000000 +0100
 @@ -0,0 +1,79 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -3460,8 +3257,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatetag.c	2008-07-26 08:52:02.000000000 +0100
-@@ -0,0 +1,322 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatetag.c	2008-09-10 08:30:32.000000000 +0100
+@@ -0,0 +1,343 @@
 +/*
 + * GStreamer
 + * Copyright (C) 2006 James Livingston <doclivingston@gmail.com>
@@ -3502,7 +3299,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + * </para>
 + * <para>
 + * Applications can set the tags to write using the #GstTagSetter interface.
-+ * Tags contained within the kate bitstream will be picked up
++ * Tags contained within the kate stream will be picked up
 + * automatically (and merged according to the merge mode set via the tag
 + * setter interface).
 + * </para>
@@ -3563,6 +3360,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    const GValue * value, GParamSpec * pspec);
 +static void gst_kate_tag_get_property (GObject * object, guint prop_id,
 +    GValue * value, GParamSpec * pspec);
++static void gst_kate_tag_dispose (GObject * object);
 +
 +
 +#define _do_init(type)                                                          \
@@ -3606,6 +3404,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_tag_set_property);
 +  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_tag_get_property);
++  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_kate_tag_dispose);
 +
 +  g_object_class_install_property (gobject_class, ARG_LANGUAGE,
 +      g_param_spec_string ("language", "Language", "Set the language of the stream",
@@ -3635,6 +3434,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  kt->category = NULL;
 +  kt->original_canvas_width = -1;
 +  kt->original_canvas_height = -1;
++}
++
++static void
++gst_kate_tag_dispose (GObject * object)
++{
++  GstKateTag *kt = GST_KATE_TAG (object);
++
++  GST_LOG_OBJECT (kt, "disposing");
++
++  if (kt->language) {
++    g_free (kt->language);
++    kt->language = NULL;
++  }
++  if (kt->category) {
++    g_free (kt->category);
++    kt->category = NULL;
++  }
++
++  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 +}
 +
 +static void
@@ -3785,7 +3603,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkatetag.h	2008-07-26 08:43:46.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkatetag.h	2008-08-09 15:33:26.000000000 +0100
 @@ -0,0 +1,68 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -3856,8 +3674,609 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TAG_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateutil.c	2008-07-05 17:01:59.000000000 +0100
-@@ -0,0 +1,62 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-10 08:31:14.000000000 +0100
+@@ -0,0 +1,494 @@
++/*
++ * GStreamer
++ * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
++ * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
++ * Copyright 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ * 
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
++ * which case the following provisions apply instead of the ones
++ * mentioned above:
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++/**
++ * SECTION:element-tiger
++ * @see_also: katedec
++ *
++ * <refsect2>
++ * <para>
++ * This element decodes and renders Kate streams
++ * <ulink url="http://libkate.googlecode.com/">Kate</ulink> is a free codec
++ * for text based data, such as subtitles. Any number of kate streams can be
++ * embedded in an Ogg stream.
++ * </para>
++ * <para>
++ * libkate (see above url) and <ulink url="http://libtiger.googlecode.com/">libtiger</ulink>
++ * are needed to build this element.
++ * </para>
++ * <title>Example pipeline</title>
++ * <para>
++ * This pipeline renders a Kate stream on top of a Theora video multiplexed
++ * in the same stream:
++ * <programlisting>
++ * gst-launch \
++ *   filesrc location=video.ogg ! oggdemux name=demux \
++ *   demux. ! queue ! theoradec ! ffmpegcolorspace ! tiger name=tiger \
++ *   demux. ! queue ! kateparse ! tiger. \
++ *   tiger. ! fakesink silent=TRUE
++ * </programlisting>
++ * </para>
++ * </refsect2>
++ */
++
++#ifdef HAVE_CONFIG_H
++#include "config.h"
++#endif
++
++#include <string.h>
++
++#include <gst/gst.h>
++#include <gst/video/video.h>
++
++#include "gstkate.h"
++#include "gstkatetiger.h"
++
++GST_DEBUG_CATEGORY_EXTERN (gst_katetiger_debug);
++#define GST_CAT_DEFAULT gst_katetiger_debug
++
++/* Filter signals and args */
++enum
++{
++  /* FILL ME */
++  LAST_SIGNAL
++};
++
++enum
++{
++  ARG_DEFAULT_FONT_DESC = DECODER_BASE_ARG_COUNT,
++  ARG_DEFAULT_FONT_RED,
++  ARG_DEFAULT_FONT_GREEN,
++  ARG_DEFAULT_FONT_BLUE,
++};
++
++static GstStaticPadTemplate kate_sink_factory = GST_STATIC_PAD_TEMPLATE ("kate_sink",
++    GST_PAD_SINK,
++    GST_PAD_ALWAYS,
++    GST_STATIC_CAPS (GST_KATE_MIME_TYPE)
++    );
++
++static GstStaticPadTemplate video_sink_factory = GST_STATIC_PAD_TEMPLATE ("video_sink",
++    GST_PAD_SINK,
++    GST_PAD_ALWAYS,
++    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=(int)32, depth=(int)24")
++    );
++
++static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
++    GST_PAD_SRC,
++    GST_PAD_ALWAYS,
++    GST_STATIC_CAPS ("video/x-raw-rgb, bpp=(int)32, depth=(int)24")
++    );
++
++GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement,
++    GST_TYPE_ELEMENT);
++
++static void gst_kate_tiger_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec);
++static void gst_kate_tiger_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec);
++static void gst_kate_tiger_dispose(GObject * object);
++
++static GstFlowReturn gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf);
++static GstFlowReturn gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf);
++static GstStateChangeReturn gst_kate_tiger_change_state (GstElement * element,
++    GstStateChange transition);
++static gboolean gst_kate_tiger_kate_sink_query (GstPad * pad, GstQuery * query);
++static gboolean gst_kate_tiger_kate_event (GstPad * pad, GstEvent * event);
++static gboolean gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps);
++
++static void
++gst_kate_tiger_base_init (gpointer gclass)
++{
++  static GstElementDetails element_details = {
++    "Kate stream renderer",
++    "Codec/Decoder/Video/Overlay",
++    "Decodes and renders Kate streams on top of a video",
++    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
++  };
++  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
++
++  gst_element_class_add_pad_template (element_class,
++      gst_static_pad_template_get (&src_factory));
++  gst_element_class_add_pad_template (element_class,
++      gst_static_pad_template_get (&kate_sink_factory));
++  gst_element_class_add_pad_template (element_class,
++      gst_static_pad_template_get (&video_sink_factory));
++  gst_element_class_set_details (element_class, &element_details);
++}
++
++/* initialize the plugin's class */
++static void
++gst_kate_tiger_class_init (GstKateTigerClass * klass)
++{
++  GObjectClass *gobject_class;
++  GstElementClass *gstelement_class;
++
++  gobject_class = (GObjectClass *) klass;
++  gstelement_class = (GstElementClass *) klass;
++
++  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_kate_tiger_get_property);
++  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_kate_tiger_set_property);
++  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_kate_tiger_dispose);
++
++  gst_kate_util_install_decoder_base_properties (gobject_class);
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_DESC,
++      g_param_spec_string ("default-font-desc", "Default font description",
++                           "Default font description (Pango style) to render text with",
++          "", G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_RED,
++      g_param_spec_int ("default-font-red", "Default font color (red component)",
++                        "Default font color (red component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_GREEN,
++      g_param_spec_int ("default-font-green", "Default font color (green component)",
++                        "Default font color (green component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_BLUE,
++      g_param_spec_int ("default-font-blue", "Default font color (blue component)",
++                        "Default font color (blue component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_tiger_change_state);
++}
++
++/* initialize the new element
++ * instantiate pads and add them to element
++ * set functions
++ * initialize structure
++ */
++static void
++gst_kate_tiger_init (GstKateTiger * tiger,
++    GstKateTigerClass * gclass)
++{
++  GST_DEBUG_OBJECT (tiger, "gst_kate_tiger_init");
++
++  tiger->katesinkpad = gst_pad_new_from_static_template ( &kate_sink_factory, "kate_sink");
++  gst_pad_set_chain_function (tiger->katesinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_chain));
++  gst_pad_set_query_function (tiger->katesinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_sink_query));
++  gst_pad_use_fixed_caps (tiger->katesinkpad);
++  gst_pad_set_caps (tiger->katesinkpad, gst_static_pad_template_get_caps (&kate_sink_factory));
++  gst_pad_set_event_function (tiger->katesinkpad, gst_kate_tiger_kate_event);
++  gst_element_add_pad (GST_ELEMENT (tiger), tiger->katesinkpad);
++
++  tiger->videosinkpad = gst_pad_new_from_static_template ( &video_sink_factory, "video_sink");
++  gst_pad_set_chain_function (tiger->videosinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_video_chain));
++  //gst_pad_set_query_function (tiger->videosinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_video_sink_query));
++  gst_pad_use_fixed_caps (tiger->videosinkpad);
++  gst_pad_set_caps (tiger->videosinkpad, gst_static_pad_template_get_caps (&video_sink_factory));
++  gst_pad_set_setcaps_function (tiger->videosinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_video_set_caps));
++  gst_element_add_pad (GST_ELEMENT (tiger), tiger->videosinkpad);
++
++  tiger->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
++  gst_element_add_pad (GST_ELEMENT (tiger), tiger->srcpad);
++
++  gst_kate_util_decode_base_init (&tiger->decoder);
++
++  tiger->tr = NULL;
++
++  tiger->default_font_desc = NULL;
++  tiger->default_font_r = 255;
++  tiger->default_font_g = 255;
++  tiger->default_font_b = 255;
++
++  tiger->video_width = 0;
++  tiger->video_height = 0;
++}
++
++static void
++gst_kate_tiger_dispose (GObject * object)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (object);
++
++  GST_LOG_OBJECT (tiger, "disposing");
++
++  if (tiger->default_font_desc) {
++    g_free (tiger->default_font_desc);
++    tiger->default_font_desc = NULL;
++  }
++
++  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
++}
++
++static void
++gst_kate_tiger_set_property (GObject * object, guint prop_id,
++    const GValue * value, GParamSpec * pspec)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (object);
++  const char *str;
++
++  switch (prop_id) {
++    case ARG_DEFAULT_FONT_DESC:
++      if (tiger->default_font_desc) {
++        g_free(tiger->default_font_desc);
++        tiger->default_font_desc = NULL;
++      }
++      str = g_value_get_string (value);
++      if (str) {
++        tiger->default_font_desc = g_strdup(str);
++        if (tiger->tr) tiger_renderer_set_default_font_desc (tiger->tr, tiger->default_font_desc);
++      }
++      break;
++    case ARG_DEFAULT_FONT_RED:
++      tiger->default_font_r = g_value_get_int (value);
++      break;
++    case ARG_DEFAULT_FONT_GREEN:
++      tiger->default_font_g = g_value_get_int (value);
++      break;
++    case ARG_DEFAULT_FONT_BLUE:
++      tiger->default_font_b = g_value_get_int (value);
++      break;
++    default:
++      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      break;
++  }
++}
++
++static void
++gst_kate_tiger_get_property (GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (object);
++
++  switch (prop_id) {
++    case ARG_DEFAULT_FONT_DESC:
++      g_value_set_string (value, tiger->default_font_desc ? tiger->default_font_desc : "");
++      break;
++    case ARG_DEFAULT_FONT_RED:
++      g_value_set_int (value, tiger->default_font_r);
++      break;
++    case ARG_DEFAULT_FONT_GREEN:
++      g_value_set_int (value, tiger->default_font_g);
++      break;
++    case ARG_DEFAULT_FONT_BLUE:
++      g_value_set_int (value, tiger->default_font_b);
++      break;
++    default:
++      if (!gst_kate_util_decoder_base_get_property (&tiger->decoder, object, prop_id, value, pspec)) {
++        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
++      }
++      break;
++  }
++}
++
++/* GstElement vmethod implementations */
++
++/* chain function
++ * this function does the actual processing
++ */
++
++static GstFlowReturn
++gst_kate_tiger_kate_chain (GstPad * pad, GstBuffer * buf)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
++  const kate_event *ev = NULL;
++  GstFlowReturn rflow = GST_FLOW_OK;
++
++  GST_LOG_OBJECT (tiger, "Got kate buffer");
++
++  rflow = gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder, GST_ELEMENT_CAST (tiger), pad, buf, tiger->srcpad, &ev);
++  if (rflow != GST_FLOW_OK) {
++    gst_object_unref (tiger);
++    gst_buffer_unref (buf);
++    return rflow;
++  }
++
++  if (ev) {
++    int ret = tiger_renderer_add_event (tiger->tr, ev->ki, ev);
++    GST_INFO_OBJECT (tiger, "adding event for %p from %f to %f: %p, \"%s\"", ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
++    if (ret < 0) {
++      GST_WARNING_OBJECT (tiger, "failed to add Kate event to Tiger renderer: %d", ret);
++    }
++  }
++
++  gst_object_unref (tiger);
++  gst_buffer_unref (buf);
++  return rflow;
++}
++
++static gboolean
++gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
++  GstStructure *s;
++  gint w, h;
++
++  s = gst_caps_get_structure (caps, 0);
++
++  if (!gst_structure_get_int (s, "width", &w) || !gst_structure_get_int (s, "height", &h)) {
++    gst_object_unref (tiger);
++    return FALSE;
++  }
++
++  tiger->video_width = w;
++  tiger->video_height = h;
++
++  GST_INFO_OBJECT (tiger, "video sink: %d %d", w, h);
++
++  gst_object_unref (tiger);
++  return TRUE;
++}
++
++static GstFlowReturn
++gst_kate_tiger_video_chain (GstPad * pad, GstBuffer * buf)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
++  GstFlowReturn rflow = GST_FLOW_OK;
++  unsigned char *ptr;
++  int ret;
++
++  GST_LOG_OBJECT (tiger, "got video frame, %u bytes", GST_BUFFER_SIZE (buf));
++
++  /* draw on it */
++  buf = gst_buffer_make_writable (buf);
++  ptr = GST_BUFFER_DATA (buf);
++  ret = tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width, tiger->video_height, tiger->video_width*4); // TODO: stride ?
++  if (ret < 0) {
++    GST_WARNING_OBJECT (tiger, "Tiger renderer failed to set buffer to video frame: %d", ret);
++  }
++  else {
++    kate_float t = GST_BUFFER_TIMESTAMP (buf) / (gdouble) GST_SECOND;
++    ret = tiger_renderer_update (tiger->tr, t, 1);
++    if (ret < 0) {
++      GST_WARNING_OBJECT (tiger, "Tiger renderer failed to update: %d", ret);
++    }
++    else {
++      ret = tiger_renderer_render (tiger->tr);
++      if (ret < 0) {
++        GST_WARNING_OBJECT (tiger, "Tiger renderer failed to render to video frame: %d", ret);
++      }
++      else {
++        GST_LOG_OBJECT (tiger, "Tiger renderer rendered on video frame at %f", t);
++      }
++    }
++  }
++
++  rflow = gst_pad_push (tiger->srcpad, buf);
++
++  gst_object_unref (tiger);
++  return rflow;
++}
++
++static GstStateChangeReturn
++gst_kate_tiger_change_state (GstElement * element, GstStateChange transition)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (element);
++  GstStateChangeReturn res;
++
++  switch (transition) {
++    case GST_STATE_CHANGE_PAUSED_TO_READY:
++      GST_DEBUG_OBJECT (tiger, "PAUSED -> READY, clearing kate state");
++      if (tiger->tr) {
++        tiger_renderer_destroy (tiger->tr);
++        tiger->tr = NULL;
++      }
++      break;
++    default:
++      break;
++  }
++
++  res = gst_kate_decoder_base_change_state (&tiger->decoder, element, parent_class, transition);
++
++  switch (transition) {
++    case GST_STATE_CHANGE_READY_TO_PAUSED:
++      GST_DEBUG_OBJECT (tiger, "READY -> PAUSED, initializing kate state");
++      if (tiger->decoder.initialized) {
++        int ret = tiger_renderer_create (&tiger->tr);
++        if (ret < 0) {
++          GST_WARNING_OBJECT (tiger, "failed to create tiger renderer: %d", ret);
++        }
++        else {
++          tiger_renderer_set_default_font_desc (tiger->tr, tiger->default_font_desc);
++          tiger_renderer_set_default_font_color (tiger->tr, tiger->default_font_r/255.0, tiger->default_font_g/255.0, tiger->default_font_b/255.0, 1.0);
++        }
++      }
++      break;
++    default:
++      break;
++  }
++
++  return res;
++}
++
++static gboolean
++gst_kate_tiger_kate_event (GstPad * pad, GstEvent * event)
++{
++  GstKateTiger *tiger = (GstKateTiger *) (gst_object_get_parent (GST_OBJECT (pad)));
++  gboolean res = TRUE;
++
++  g_return_val_if_fail (tiger != NULL, FALSE);
++
++  switch (GST_EVENT_TYPE (event)) {
++    case GST_EVENT_NEWSEGMENT:
++      GST_INFO_OBJECT (tiger, "New segment on Kate pad");
++      gst_event_unref (event);
++      break;
++    case GST_EVENT_EOS:
++      /* we ignore this, it just means we don't have anymore Kate packets, but
++         the Tiger renderer will still draw (if appropriate) on incoming video */
++      GST_INFO_OBJECT (tiger, "EOS on Kate pad");
++      gst_event_unref (event);
++      break;
++    default:
++      res = gst_pad_event_default (pad, event);
++      break;
++  }
++
++  gst_object_unref (tiger);
++
++  return res;
++}
++
++gboolean gst_kate_tiger_kate_sink_query (GstPad * pad, GstQuery * query)
++{
++  GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
++  gboolean res = gst_kate_decoder_base_sink_query (&tiger->decoder, GST_ELEMENT_CAST (tiger), pad, query);
++  gst_object_unref (tiger);
++  return res;
++}
++
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-09-09 22:38:17.000000000 +0100
+@@ -0,0 +1,101 @@
++/*
++ * GStreamer
++ * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
++ * Copyright 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
++ * Copyright 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
++ * 
++ * Permission is hereby granted, free of charge, to any person obtaining a
++ * copy of this software and associated documentation files (the "Software"),
++ * to deal in the Software without restriction, including without limitation
++ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
++ * and/or sell copies of the Software, and to permit persons to whom the
++ * Software is furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
++ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
++ * DEALINGS IN THE SOFTWARE.
++ *
++ * Alternatively, the contents of this file may be used under the
++ * GNU Lesser General Public License Version 2.1 (the "LGPL"), in
++ * which case the following provisions apply instead of the ones
++ * mentioned above:
++ *
++ * This library is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Library General Public
++ * License as published by the Free Software Foundation; either
++ * version 2 of the License, or (at your option) any later version.
++ *
++ * This library is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Library General Public License for more details.
++ *
++ * You should have received a copy of the GNU Library General Public
++ * License along with this library; if not, write to the
++ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
++ * Boston, MA 02111-1307, USA.
++ */
++
++#ifndef __GST_KATE_TIGER_H__
++#define __GST_KATE_TIGER_H__
++
++#include <kate/kate.h>
++#include <tiger/tiger.h>
++#include <gst/gst.h>
++#include "gstkateutil.h"
++
++G_BEGIN_DECLS
++
++/* #defines don't like whitespacey bits */
++#define GST_TYPE_KATE_TIGER \
++  (gst_kate_tiger_get_type())
++#define GST_KATE_TIGER(obj) \
++  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_KATE_TIGER,GstKateTiger))
++#define GST_KATE_TIGER_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_KATE,GstKateTigerClass))
++#define GST_IS_KATE_TIGER(obj) \
++  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_KATE_TIGER))
++#define GST_IS_KATE_TIGER_CLASS(klass) \
++  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_KATE_TIGER))
++
++typedef struct _GstKateTiger      GstKateTiger;
++typedef struct _GstKateTigerClass GstKateTigerClass;
++
++struct _GstKateTiger
++{
++  GstElement element;
++
++  GstPad *katesinkpad;
++  GstPad *videosinkpad;
++  GstPad *srcpad;
++
++  GstKateDecoderBase decoder;
++
++  tiger_renderer *tr;
++
++  gchar *default_font_desc;
++  guchar default_font_r;
++  guchar default_font_g;
++  guchar default_font_b;
++
++  gint video_width;
++  gint video_height;
++};
++
++struct _GstKateTigerClass 
++{
++  GstElementClass parent_class;
++};
++
++GType gst_kate_tiger_get_type (void);
++
++G_END_DECLS
++
++#endif /* __GST_KATE_TIGER_H__ */
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkateutil.c	2008-08-24 18:30:20.000000000 +0100
+@@ -0,0 +1,341 @@
 +/* GStreamer
 + * Copyright (C) 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
 + *
@@ -3881,8 +4300,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#  include "config.h"
 +#endif
 +
++#include <gst/tag/tag.h>
 +#include "gstkate.h"
-+#include "gstkateparse.h"
++#include "gstkateutil.h"
 +
 +
 +GstCaps *gst_kate_util_set_header_on_caps (GstElement *element, GstCaps *caps, GList *headers)
@@ -3901,7 +4321,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  while (headers) {
 +    GValue value = { 0 };
 +    GstBuffer *buffer = headers->data;
-+    g_assert(buffer);
++    g_assert (buffer);
 +    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_IN_CAPS);
 +    g_value_init (&value, GST_TYPE_BUFFER);
 +    /* as in theoraenc, we need to copy to avoid circular references */
@@ -3920,9 +4340,287 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return caps;
 +}
 +
++void
++gst_kate_util_install_decoder_base_properties (GObjectClass *gobject_class)
++{
++  g_object_class_install_property (gobject_class, ARG_DEC_BASE_LANGUAGE,
++      g_param_spec_string ("language", "Language", "The language of the stream",
++          "", G_PARAM_READABLE));
++
++  g_object_class_install_property (gobject_class, ARG_DEC_BASE_CATEGORY,
++      g_param_spec_string ("category", "Category", "The category of the stream",
++          "", G_PARAM_READABLE));
++
++  g_object_class_install_property (gobject_class, ARG_DEC_BASE_ORIGINAL_CANVAS_WIDTH,
++      g_param_spec_int ("original-canvas-width", "Original canvas width (0 is unspecified)",
++          "The canvas width this stream was authored for",
++          0, G_MAXINT, 0, G_PARAM_READABLE));
++
++  g_object_class_install_property (gobject_class, ARG_DEC_BASE_ORIGINAL_CANVAS_HEIGHT,
++      g_param_spec_int ("original-canvas-height", "Original canvas height",
++          "The canvas height this stream was authored for (0 is unspecified)",
++          0, G_MAXINT, 0, G_PARAM_READABLE));
++}
++
++void
++gst_kate_util_decode_base_init (GstKateDecoderBase *decoder)
++{
++  if (!decoder) return;
++
++  decoder->language = NULL;
++  decoder->category = NULL;
++  decoder->original_canvas_width = 0;
++  decoder->original_canvas_height = 0;
++  decoder->tags = NULL;
++  decoder->initialized = FALSE;
++}
++
++gboolean
++gst_kate_util_decoder_base_get_property (GstKateDecoderBase *decoder,
++    GObject * object, guint prop_id,
++    GValue * value, GParamSpec * pspec)
++{
++  gboolean res = TRUE;
++  switch (prop_id) {
++    case ARG_DEC_BASE_LANGUAGE:
++      g_value_set_string (value, decoder->language);
++      break;
++    case ARG_DEC_BASE_CATEGORY:
++      g_value_set_string (value, decoder->category);
++      break;
++    case ARG_DEC_BASE_ORIGINAL_CANVAS_WIDTH:
++      g_value_set_int (value, decoder->original_canvas_width);
++      break;
++    case ARG_DEC_BASE_ORIGINAL_CANVAS_HEIGHT:
++      g_value_set_int (value, decoder->original_canvas_height);
++      break;
++    default:
++      res = FALSE;
++      break;
++  }
++  return res;
++}
++
++GstFlowReturn
++gst_kate_util_decoder_base_chain_kate_packet (GstKateDecoderBase *decoder, GstElement *element, GstPad * pad, GstBuffer * buf, GstPad *srcpad, const kate_event **ev)
++{
++  kate_packet kp;
++  int ret;
++  GstFlowReturn rflow = GST_FLOW_OK;
++
++  GST_DEBUG_OBJECT (element, "got kate packet, %u bytes, type %02x",
++      GST_BUFFER_SIZE (buf), GST_BUFFER_SIZE (buf)==0 ? -1 : GST_BUFFER_DATA (buf)[0]);
++  kate_packet_wrap (&kp, GST_BUFFER_SIZE (buf), GST_BUFFER_DATA (buf));
++  ret = kate_high_decode_packetin (&decoder->k, &kp, ev);
++  if (ret < 0) {
++    GST_WARNING_OBJECT (element, "kate_high_decode_packetin failed (%d)", ret);
++    return GST_FLOW_ERROR;
++  }
++  else if (ret>0) {
++    GST_DEBUG_OBJECT (element, "kate_high_decode_packetin has received EOS packet");
++    return GST_FLOW_OK;
++  }
++
++  /* headers may be interesting to retrieve information from */
++  if (GST_BUFFER_SIZE (buf) > 0) switch (GST_BUFFER_DATA (buf)[0]) {
++    GstCaps *caps;
++
++    case 0x80: /* ID header */
++      GST_INFO_OBJECT (element, "Parsed ID header: language %s, category %s", decoder->k.ki->language, decoder->k.ki->category);
++      caps = gst_caps_new_simple ("text/x-pango-markup", NULL);
++      gst_pad_set_caps (srcpad, caps);
++      gst_caps_unref (caps);
++      if (decoder->k.ki->language && *decoder->k.ki->language) {
++        GstTagList *tags = gst_tag_list_new ();
++        if (tags) {
++          gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LANGUAGE_CODE, decoder->k.ki->language, NULL);
++          // TODO: category - where should it go ?
++          decoder->tags = gst_tag_list_merge (decoder->tags, tags, GST_TAG_MERGE_REPLACE);
++          gst_tag_list_free (tags);
++        }
++      }
++
++      /* update properties */
++      if (decoder->language) g_free (decoder->language);
++      decoder->language = g_strdup (decoder->k.ki->language);
++      if (decoder->category) g_free (decoder->category);
++      decoder->category = g_strdup (decoder->k.ki->category);
++      decoder->original_canvas_width = decoder->k.ki->original_canvas_width;
++      decoder->original_canvas_height = decoder->k.ki->original_canvas_height;
++
++      break;
++
++    case 0x81: /* Vorbis comments header */
++      GST_INFO_OBJECT (element, "Parsed comments header");
++      {
++        gchar *encoder = NULL;
++        GstTagList *list = gst_tag_list_from_vorbiscomment_buffer (buf, (const guint8*)"\201kate\0\0\0\0", 9, &encoder);
++        if (list) {
++          decoder->tags = gst_tag_list_merge (decoder->tags, list, GST_TAG_MERGE_REPLACE);
++          gst_tag_list_free (list);
++        }
++
++        if (!decoder->tags) {
++          GST_ERROR_OBJECT (element, "failed to decode comment header");
++          decoder->tags = gst_tag_list_new ();
++        }
++        if (encoder) {
++          gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER, encoder, NULL);
++          g_free (encoder);
++        }
++        gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE, GST_TAG_CODEC, "kate", NULL);
++        gst_tag_list_add (decoder->tags, GST_TAG_MERGE_REPLACE, GST_TAG_ENCODER_VERSION, decoder->k.ki->bitstream_version_major, NULL);
++
++        if (decoder->initialized) {
++          gst_element_found_tags_for_pad (element, srcpad, decoder->tags);
++          decoder->tags = NULL;
++        }
++        else {
++          /* Only push them as messages for the time being. *
++           * They will be pushed on the pad once the decoder is initialized */
++          gst_element_post_message (element,
++              gst_message_new_tag (GST_OBJECT (element), gst_tag_list_copy (decoder->tags)));
++        }
++      }
++      break;
++
++    default:
++      break;
++  }
++
++  return rflow;
++}
++
++GstStateChangeReturn
++gst_kate_decoder_base_change_state (GstKateDecoderBase *decoder, GstElement * element, GstElementClass *parent_class, GstStateChange transition)
++{
++  GstStateChangeReturn res;
++  int ret;
++
++  switch (transition) {
++    case GST_STATE_CHANGE_NULL_TO_READY:
++      break;
++    case GST_STATE_CHANGE_READY_TO_PAUSED:
++      GST_DEBUG_OBJECT (element, "READY -> PAUSED, initializing kate state");
++      ret = kate_high_decode_init (&decoder->k);
++      if (ret < 0) {
++        GST_WARNING_OBJECT (element, "failed to initialize kate state: %d", ret);
++      }
++      decoder->initialized = TRUE;
++      break;
++    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
++      break;
++    default:
++      break;
++  }
++
++  res = parent_class->change_state (element, transition);
++
++  switch (transition) {
++    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
++      break;
++    case GST_STATE_CHANGE_PAUSED_TO_READY:
++      GST_DEBUG_OBJECT (element, "PAUSED -> READY, clearing kate state");
++      if (decoder->initialized) {
++        kate_high_decode_clear (&decoder->k);
++        decoder->initialized = FALSE;
++      }
++      break;
++    case GST_STATE_CHANGE_READY_TO_NULL:
++      break;
++    default:
++      break;
++  }
++
++  return res;
++}
++
++static GstClockTime
++gst_kate_util_granule_time (kate_state *k, gint64 granulepos)
++{
++  if (granulepos == -1)
++    return -1;
++
++  return kate_granule_time (k->ki, granulepos) * GST_SECOND;
++}
++
++/*
++conversions on the sink:
++  - default is granules at num/den rate (subject to the granule shift)
++  - default -> time is possible
++  - bytes do not mean anything, packets can be any number of bytes, and we
++    have no way to know the number of bytes emitted without decoding
++conversions on the source:
++  - nothing
++*/
++
++gboolean
++gst_kate_decoder_base_convert (GstKateDecoderBase *decoder, GstElement *element, GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val)
++{
++  gboolean res = FALSE;
++
++  if (src_fmt == *dest_fmt) {
++    *dest_val = src_val;
++    return TRUE;
++  }
++
++  if (!decoder->initialized) {
++    GST_WARNING_OBJECT (element, "not initialized yet");
++    return FALSE;
++  }
++
++  if (src_fmt == GST_FORMAT_BYTES || *dest_fmt == GST_FORMAT_BYTES) {
++    GST_WARNING_OBJECT (element, "unsupported format");
++    return FALSE;
++  }
++
++  switch (src_fmt) {
++    case GST_FORMAT_DEFAULT:
++      switch (*dest_fmt) {
++        case GST_FORMAT_TIME:
++          *dest_val = gst_kate_util_granule_time (&decoder->k, src_val);
++          res = TRUE;
++          break;
++        default:
++          res = FALSE;
++          break;
++      }
++      break;
++    default:
++      res = FALSE;
++      break;
++  }
++
++  if (!res) {
++    GST_WARNING_OBJECT (element, "unsupported format");
++  }
++
++  return res;
++}
++
++gboolean gst_kate_decoder_base_sink_query (GstKateDecoderBase *decoder, GstElement *element, GstPad * pad, GstQuery * query)
++{
++  switch (GST_QUERY_TYPE (query)) {
++    case GST_QUERY_CONVERT:
++      {
++        GstFormat src_fmt, dest_fmt;
++        gint64 src_val, dest_val;
++
++        gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
++        if (!gst_kate_decoder_base_convert (decoder, element, pad, src_fmt, src_val, &dest_fmt, &dest_val)) {
++          return gst_pad_query_default (pad, query);
++        }
++        gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
++        return TRUE;
++      }
++    default:
++      return gst_pad_query_default (pad, query);
++  }
++}
++
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/gstkateutil.h	2008-07-05 17:02:07.000000000 +0100
-@@ -0,0 +1,33 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateutil.h	2008-08-23 20:38:14.000000000 +0100
+@@ -0,0 +1,65 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
 + * Copyright (C) <2008> ogg.k.ogg.k <ogg.k.ogg.k at googlemail dot com>
@@ -3947,53 +4645,97 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#ifndef __GST_KATE_UTIL_H__
 +#define __GST_KATE_UTIL_H__
 +
++#include <kate/kate.h>
 +#include <gst/gst.h>
 +
 +G_BEGIN_DECLS
 +
++enum {
++  ARG_DEC_BASE_0,
++  ARG_DEC_BASE_LANGUAGE,
++  ARG_DEC_BASE_CATEGORY,
++  ARG_DEC_BASE_ORIGINAL_CANVAS_WIDTH,
++  ARG_DEC_BASE_ORIGINAL_CANVAS_HEIGHT,
++  DECODER_BASE_ARG_COUNT
++};
++
++typedef struct {
++  kate_state k;
++
++  gboolean initialized;
++
++  GstTagList *tags;
++
++  gchar *language;
++  gchar *category;
++
++  gint original_canvas_width;
++  gint original_canvas_height;
++
++} GstKateDecoderBase;
++
 +extern GstCaps *gst_kate_util_set_header_on_caps (GstElement *element, GstCaps *caps, GList *headers);
++extern void gst_kate_util_decode_base_init(GstKateDecoderBase *decoder);
++extern void gst_kate_util_install_decoder_base_properties(GObjectClass *gobject_class);
++extern gboolean gst_kate_util_decoder_base_get_property (GstKateDecoderBase *decoder, GObject * object, guint prop_id, GValue * value, GParamSpec * pspec);
++extern GstFlowReturn gst_kate_util_decoder_base_chain_kate_packet(GstKateDecoderBase *decoder, GstElement *element, GstPad * pad, GstBuffer * buffer, GstPad *srcpad, const kate_event **ev);
++extern GstStateChangeReturn gst_kate_decoder_base_change_state (GstKateDecoderBase *decoder, GstElement * element, GstElementClass *parent_class, GstStateChange transition);
++extern gboolean gst_kate_decoder_base_convert(GstKateDecoderBase *decoder, GstElement *element, GstPad *pad, GstFormat src_fmt, gint64 src_val, GstFormat *dest_fmt, gint64 *dest_val);
++extern gboolean gst_kate_decoder_base_sink_query(GstKateDecoderBase *decoder, GstElement *element, GstPad * pad, GstQuery * query);
 +
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_UTIL_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/Makefile.am	2008-07-05 16:59:08.000000000 +0100
-@@ -0,0 +1,14 @@
++++ NEW/gst-plugins-bad/ext/kate/Makefile.am	2008-08-24 19:24:39.000000000 +0100
+@@ -0,0 +1,19 @@
 +# plugindir is set in configure
 +
 +plugin_LTLIBRARIES = libgstkate.la
 +
 +# sources used to compile this plug-in
 +libgstkate_la_SOURCES = gstkate.c gstkatedec.c gstkateenc.c gstkateparse.c gstkatetag.c gstkateutil.c
++if USE_TIGER
++libgstkate_la_SOURCES += gstkatetiger.c
++endif
 +
 +# flags used to compile this plugin
-+libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)
-+libgstkate_la_LIBADD = $(GST_PLUGIN_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_LIBS) $(KATE_LIBS)
++libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(TIGER_CFLAGS) $(KATE_CFLAGS)
++libgstkate_la_LIBADD = $(GST_PLUGIN_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_LIBS) $(TIGER_LIBS) $(KATE_LIBS)
 +libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 +
 +# headers we need but don't want installed
-+noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h
++noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatetiger.h
++
++EXTRA_DIST=README
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/ext/kate/README	2008-07-16 19:18:16.000000000 +0100
-@@ -0,0 +1,16 @@
++++ NEW/gst-plugins-bad/ext/kate/README	2008-09-10 08:32:32.000000000 +0100
+@@ -0,0 +1,23 @@
 +Kate is a free codec for text based data, which can also carry images.
 +It is typically used to create overlays on a video.
++
++libkate (see below) is required to build this plugin.
++libtiger (see below) is optional.
 +
 +The Kate plugin contains various elements to manipulate Kate streams:
 +
 + - katedec: decodes Kate streams (text only for now)
 + - kateenc: encodes Kate streams from text and SPU images
 + - kateparse: parses Kate streams
-+ - katetag: allows changing metadata in a Kate stream
++ - katetag: allows changing metadata in Kate streams
++ - tiger: renders Kate streams using libtiger
 +
 +More information about Kate can be found at:
 +http://wiki.xiph.org/index.php/OggKate
 +
-+libkate, a codec for Kate streans, can be found at:
++libkate, a codec for Kate streams, can be found at:
 +http://libkate.googlecode.com/
 +
++libtiger, a rendering library for Kate streams, can be found at:
++http://libtiger.googlecode.com/
++
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ gst-plugins-bad/tests/check/elements/kate.c	2008-07-26 19:52:39.000000000 +0100
++++ NEW/gst-plugins-bad/tests/check/elements/kate.c	2008-08-09 15:33:26.000000000 +0100
 @@ -0,0 +1,804 @@
 +/* GStreamer
 + *
