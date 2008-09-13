@@ -66,14 +66,14 @@ endif
 	 | $(GREP) -vE " _(rest|save)[fg]pr_[0-9]*(|_x)$$" \
 	 | $(GREP) -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
-	@! $(GREP) -E '[^_](malloc|realloc|free|calloc|memalign)\(' \
+	@! $(GREP) -EHn '[^_](malloc|realloc|free|calloc|memalign)\(' \
            $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
            $(top_srcdir)/tools/katedesc.h \
 	   $(top_srcdir)/tools/kateenc.c $(top_srcdir)/tools/katedec.c \
 	   $(top_srcdir)/tools/*.[ly] \
 	 | $(GREP) -v "^include/kate/kate.h:#define kate_"
 	@echo " Checking forgotten debug traces"
-	@! $(GREP) -E '[^sn]printf' \
+	@! $(GREP) -EHn '[^sn]printf' \
 	  $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
 	  $(top_srcdir)/tools/katedesc.h \
 	| $(GREP) .
