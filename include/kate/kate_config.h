@@ -40,10 +40,6 @@
 #define kate_free free
 #endif
 
-#if !defined HAVE_ATTRIBUTE
-#define __attribute__(x)
-#endif
-
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
 typedef int32_t kate_int32_t;
 #elif defined int32_t

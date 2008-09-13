@@ -33,6 +33,10 @@
 
 #include "kate/kate.h"
 
+#if !defined HAVE_ATTRIBUTE
+#define __attribute__(x)
+#endif
+
 #define kate_internal __attribute__((visibility("internal")))
 
 /* granule operations */
