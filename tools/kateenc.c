@@ -326,9 +326,9 @@ static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,s
       kc->pts[0]=ptr;
       kc->pts[1]=(kate_float)0;
 
-      new_curves=(kate_curve**)realloc(km->curves,(km->ncurves+1)*sizeof(kate_curve*));
+      new_curves=(kate_curve**)kate_realloc(km->curves,(km->ncurves+1)*sizeof(kate_curve*));
       if (new_curves) km->curves=new_curves;
-      new_durations=(kate_float*)realloc(km->durations,(km->ncurves+1)*sizeof(kate_float));
+      new_durations=(kate_float*)kate_realloc(km->durations,(km->ncurves+1)*sizeof(kate_float));
       if (new_durations) km->durations=new_durations;
 
       if (new_curves && new_durations) {
@@ -383,7 +383,7 @@ static kate_motion *process_enhanced_lrc_tags(char *str,kate_float start_time,ka
 
       /* if this is the first tag in this line, create a kate motion */
       if (!km) {
-        km=(kate_motion*)malloc(sizeof(kate_motion));
+        km=(kate_motion*)kate_malloc(sizeof(kate_motion));
         if (!km) {
           fprintf(stderr,"Error: failed to allocate memory - enhanced LRC tag will be ignored\n");
         }
@@ -415,7 +415,7 @@ static void add_kate_karaoke_style(kate_info *ki,unsigned char r,unsigned char g
 
     if (!ki) return;
 
-    ks=(kate_style*)malloc(sizeof(kate_style));
+    ks=(kate_style*)kate_malloc(sizeof(kate_style));
     if (ks) {
       kate_style_init(ks);
       ks->text_color.r = r;
