@@ -615,6 +615,7 @@ extern int kate_packet_clear(kate_packet *kp);
 #define KATE_E_LIMIT (-8)                /**< a limit was exceeded (eg, string too long, pixel value above bpp, etc) */
 #define KATE_E_VERSION (-9)              /**< we do not understand that bitstream version */
 #define KATE_E_NOT_KATE (-10)            /**< the packet is not a Kate packet */
+#define KATE_E_BAD_TAG (-11)             /**< a tag does not comply with the Vorbis comment rules */
 /** @} */
 
 #endif

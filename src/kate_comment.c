@@ -59,6 +59,18 @@ int kate_comment_clear(kate_comment *kc)
   return 0;
 }
 
+static int kate_comment_check_tag(const char *tag,size_t len)
+{
+  if (!tag) return KATE_E_INVALID_PARAMETER;
+
+  if (len==0) return KATE_E_BAD_TAG;
+  while (len--) {
+    int c=*tag++;
+    if (c<0x20 || c>0x7d || c=='=') return KATE_E_BAD_TAG;
+  }
+  return 0;
+}
+
 /**
   \ingroup comments
   Adds a comment to the kate_comment structure.
@@ -75,8 +87,17 @@ int kate_comment_add_length(kate_comment *kc,const char *comment,size_t len)
 {
   int *cl;
   char **uc;
+  const char *equals;
+  int ret;
 
   if (!kc || !comment) return KATE_E_INVALID_PARAMETER;
+
+  equals=memchr(comment,'=',len);
+  if (!equals) return KATE_E_BAD_TAG;
+  ret=kate_comment_check_tag(comment,equals-comment);
+  if (ret<0) return ret;
+  ret=kate_text_validate(kate_utf8,equals,len-(equals-comment));
+  if (ret<0) return ret;
 
   uc=kate_realloc(kc->user_comments,(kc->comments+1)*sizeof(char*));
   if (!uc) return KATE_E_OUT_OF_MEMORY;
