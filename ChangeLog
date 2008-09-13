@@ -1,3 +1,6 @@
+0.1.13
+  karaoke timing info is now extracted from enhanced lrc files
+
 0.1.12
   granule rate numerator and denominator are now unsigned
   kateenc can be given comments on the command line to add to the output stream
