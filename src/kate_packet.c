@@ -75,7 +75,10 @@ int kate_packet_clear(kate_packet *kp)
 {
   if (!kp) return KATE_E_INVALID_PARAMETER;
 
-  if (kp->data) kate_free(kp->data);
+  if (kp->data) {
+    kate_free(kp->data);
+    kp->data=NULL;
+  }
 
   return 0;
 }
