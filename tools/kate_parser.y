@@ -1603,16 +1603,16 @@ static kate_motion_semantics kd_get_marker_position_semantics(int n)
   return kate_motion_semantics_marker4_position;
 }
 
-static kate_motion_semantics kd_get_marker_frame_semantics(int n)
+static kate_motion_semantics kd_get_marker_bitmap_semantics(int n)
 {
   switch (n) {
-    case 1: return kate_motion_semantics_marker1_frame;
-    case 2: return kate_motion_semantics_marker2_frame;
-    case 3: return kate_motion_semantics_marker3_frame;
-    case 4: return kate_motion_semantics_marker4_frame;
+    case 1: return kate_motion_semantics_marker1_bitmap;
+    case 2: return kate_motion_semantics_marker2_bitmap;
+    case 3: return kate_motion_semantics_marker3_bitmap;
+    case 4: return kate_motion_semantics_marker4_bitmap;
     default: yyerrorf("Invalid marker number: %d (only 1-4 are supported)",n); exit(-1);
   }
-  return kate_motion_semantics_marker4_frame;
+  return kate_motion_semantics_marker4_bitmap;
 }
 
 static kate_motion_semantics kd_get_glyph_pointer_semantics(int n)
@@ -1627,16 +1627,16 @@ static kate_motion_semantics kd_get_glyph_pointer_semantics(int n)
   return kate_motion_semantics_glyph_pointer_4;
 }
 
-static kate_motion_semantics kd_get_glyph_pointer_frame_semantics(int n)
+static kate_motion_semantics kd_get_glyph_pointer_bitmap_semantics(int n)
 {
   switch (n) {
-    case 1: return kate_motion_semantics_glyph_pointer_1_frame;
-    case 2: return kate_motion_semantics_glyph_pointer_2_frame;
-    case 3: return kate_motion_semantics_glyph_pointer_3_frame;
-    case 4: return kate_motion_semantics_glyph_pointer_4_frame;
+    case 1: return kate_motion_semantics_glyph_pointer_1_bitmap;
+    case 2: return kate_motion_semantics_glyph_pointer_2_bitmap;
+    case 3: return kate_motion_semantics_glyph_pointer_3_bitmap;
+    case 4: return kate_motion_semantics_glyph_pointer_4_bitmap;
     default: yyerrorf("Invalid glyph pointer number: %d (only 1-4 are supported)",n); exit(-1);
   }
-  return kate_motion_semantics_glyph_pointer_4_frame;
+  return kate_motion_semantics_glyph_pointer_4_bitmap;
 }
 
 static void kd_add_event_motion(kate_motion *kmotion)
@@ -2395,8 +2395,8 @@ kd_motion_semantics: TIME { $$=kate_motion_semantics_time; }
                    | VERTICAL MARGINS { $$=kate_motion_semantics_vertical_margins; }
                    | BITMAP POSITION { $$=kate_motion_semantics_bitmap_position; }
                    | BITMAP SIZE { $$=kate_motion_semantics_bitmap_size; }
-                   | MARKER UNUMBER FRAME { $$=kd_get_marker_frame_semantics($2); }
-                   | GLYPH POINTER UNUMBER FRAME { $$=kd_get_glyph_pointer_frame_semantics($3); }
+                   | MARKER UNUMBER BITMAP { $$=kd_get_marker_bitmap_semantics($2); }
+                   | GLYPH POINTER UNUMBER BITMAP { $$=kd_get_glyph_pointer_bitmap_semantics($3); }
                    | USER UNUMBER {
                        if ($2<kate_motion_semantics_user) yyerrorf("invalid value for user motion semantics (%u), should be 128 or more",$2);
                        $$=(kate_motion_semantics)$2;

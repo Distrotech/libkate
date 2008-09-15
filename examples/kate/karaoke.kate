@@ -27,7 +27,7 @@ kate {
       glyph 26 at 4.756512
     }
     motion {
-      semantics glyph pointer 1 frame
+      semantics glyph pointer 1 bitmap
       curve { linear 9 points { 0 0   1 0   2 0   3 0   4 0   3 0   2 0   1 0   0 0 } } for 1
       periodic
     }

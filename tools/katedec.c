@@ -232,14 +232,14 @@ static const char *semantics2text(kate_motion_semantics d)
     case kate_motion_semantics_vertical_margins: return "vertical margins";
     case kate_motion_semantics_bitmap_position: return "bitmap position";
     case kate_motion_semantics_bitmap_size: return "bitmap size";
-    case kate_motion_semantics_marker1_frame: return "marker 1 frame";
-    case kate_motion_semantics_marker2_frame: return "marker 2 frame";
-    case kate_motion_semantics_marker3_frame: return "marker 3 frame";
-    case kate_motion_semantics_marker4_frame: return "marker 4 frame";
-    case kate_motion_semantics_glyph_pointer_1_frame: return "glyph pointer 1 frame";
-    case kate_motion_semantics_glyph_pointer_2_frame: return "glyph pointer 2 frame";
-    case kate_motion_semantics_glyph_pointer_3_frame: return "glyph pointer 3 frame";
-    case kate_motion_semantics_glyph_pointer_4_frame: return "glyph pointer 4 frame";
+    case kate_motion_semantics_marker1_bitmap: return "marker 1 bitmap";
+    case kate_motion_semantics_marker2_bitmap: return "marker 2 bitmap";
+    case kate_motion_semantics_marker3_bitmap: return "marker 3 bitmap";
+    case kate_motion_semantics_marker4_bitmap: return "marker 4 bitmap";
+    case kate_motion_semantics_glyph_pointer_1_bitmap: return "glyph pointer 1 bitmap";
+    case kate_motion_semantics_glyph_pointer_2_bitmap: return "glyph pointer 2 bitmap";
+    case kate_motion_semantics_glyph_pointer_3_bitmap: return "glyph pointer 3 bitmap";
+    case kate_motion_semantics_glyph_pointer_4_bitmap: return "glyph pointer 4 bitmap";
     default: snprintf(tmp,sizeof(tmp),"user %u",d); return tmp;
   }
   return "invalid";

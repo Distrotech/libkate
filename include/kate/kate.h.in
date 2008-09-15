@@ -170,14 +170,14 @@ typedef enum kate_motion_semantics {
   kate_motion_semantics_vertical_margins,        /**< controls the size of the top and bottom margins */
   kate_motion_semantics_bitmap_position,         /**< controls the position of the background image */
   kate_motion_semantics_bitmap_size,             /**< controls the size of the background image */
-  kate_motion_semantics_marker1_frame,           /**< controls the frame of the image used for marker 1 */
-  kate_motion_semantics_marker2_frame,           /**< controls the frame of the image used for marker 2 */
-  kate_motion_semantics_marker3_frame,           /**< controls the frame of the image used for marker 3 */
-  kate_motion_semantics_marker4_frame,           /**< controls the frame of the image used for marker 4 */
-  kate_motion_semantics_glyph_pointer_1_frame,  /**< controls the frame of the image used for glyph pointer 1 */
-  kate_motion_semantics_glyph_pointer_2_frame,  /**< controls the frame of the image used for glyph pointer 2 */
-  kate_motion_semantics_glyph_pointer_3_frame,  /**< controls the frame of the image used for glyph pointer 3 */
-  kate_motion_semantics_glyph_pointer_4_frame,  /**< controls the frame of the image used for glyph pointer 4 */
+  kate_motion_semantics_marker1_bitmap,          /**< controls the bitmap of the image used for marker 1 */
+  kate_motion_semantics_marker2_bitmap,          /**< controls the bitmap of the image used for marker 2 */
+  kate_motion_semantics_marker3_bitmap,          /**< controls the bitmap of the image used for marker 3 */
+  kate_motion_semantics_marker4_bitmap,          /**< controls the bitmap of the image used for marker 4 */
+  kate_motion_semantics_glyph_pointer_1_bitmap,  /**< controls the bitmap of the image used for glyph pointer 1 */
+  kate_motion_semantics_glyph_pointer_2_bitmap,  /**< controls the bitmap of the image used for glyph pointer 2 */
+  kate_motion_semantics_glyph_pointer_3_bitmap,  /**< controls the bitmap of the image used for glyph pointer 3 */
+  kate_motion_semantics_glyph_pointer_4_bitmap,  /**< controls the bitmap of the image used for glyph pointer 4 */
 
   /* more semantics may be added in future versions */
 
@@ -401,8 +401,8 @@ typedef struct kate_tracker {
     unsigned int vmargins:1;                    /**< if set, the tracker has vertical margin information */
     unsigned int bitmap_pos:1;                  /**< if set, the tracker has bitmap position information */
     unsigned int bitmap_size:1;                 /**< if set, the tracker has bitmap size information */
-    unsigned int marker_frame:4;                /**< if set, the tracker has frame information for the marker bitmap */
-    unsigned int glyph_pointer_frame:4;         /**< if set, the tracker has frame information for the glyph pointer bitmap */
+    unsigned int marker_bitmap:4;               /**< if set, the tracker has bitmap information for the marker bitmap */
+    unsigned int glyph_pointer_bitmap:4;        /**< if set, the tracker has bitmap information for the glyph pointer bitmap */
     /* 32 bits */
     unsigned int pad0:32;
     /* 64 bits */
@@ -481,11 +481,11 @@ typedef struct kate_tracker {
   kate_float bitmap_size_x;                     /**< the horizontal bitmap size (eg, width) */
   kate_float bitmap_size_y;                     /**< the vertical bitmap size (eg, height) */
 
-  /* has.marker_frame&(1<<n) */
-  const kate_bitmap *marker_frame[4];           /**< index of the frame for the marker bitmap */
+  /* has.marker_bitmap&(1<<n) */
+  const kate_bitmap *marker_bitmap[4];          /**< index of the bitmap for the marker bitmap */
 
-  /* has.glyph_pointer_frame&(1<<n) */
-  const kate_bitmap *glyph_pointer_frame[4];    /**< index of the frame for the glyph pointer bitmap */
+  /* has.glyph_pointer_bitmap&(1<<n) */
+  const kate_bitmap *glyph_pointer_bitmap[4];   /**< index of the bitmap for the glyph pointer bitmap */
 
   /* internal */
   size_t nglyphs;

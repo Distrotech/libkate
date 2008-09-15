@@ -495,13 +495,13 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     if (ret==0) {
       kin->has.glyph_pointer|=(1<<n);
       /* we don't have to bother looking for a bitmap frame if there's no glyph pointer */
-      semantics=(kate_motion_semantics)(kate_motion_semantics_glyph_pointer_1_frame+n);
+      semantics=(kate_motion_semantics)(kate_motion_semantics_glyph_pointer_1_bitmap+n);
       ret=kate_tracker_update_property(kin,semantics,&frame,&dummy);
       if (ret==0) {
         const kate_bitmap *kb=kate_tracker_find_bitmap(kin,frame);
         if (kb) {
-          kin->glyph_pointer_frame[n]=kb;
-          kin->has.glyph_pointer_frame|=(1<<n);
+          kin->glyph_pointer_bitmap[n]=kb;
+          kin->has.glyph_pointer_bitmap|=(1<<n);
         }
       }
     }
@@ -514,13 +514,13 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     if (ret==0) {
       kin->has.marker_pos|=(1<<n);
       /* we don't have to bother looking for a bitmap frame if there's no marker position */
-      semantics=(kate_motion_semantics)(kate_motion_semantics_marker1_frame+n);
+      semantics=(kate_motion_semantics)(kate_motion_semantics_marker1_bitmap+n);
       ret=kate_tracker_update_property(kin,semantics,&frame,&dummy);
       if (ret==0) {
         const kate_bitmap *kb=kate_tracker_find_bitmap(kin,frame);
         if (kb) {
-          kin->marker_frame[n]=kb;
-          kin->has.marker_frame|=(1<<n);
+          kin->marker_bitmap[n]=kb;
+          kin->has.marker_bitmap|=(1<<n);
         }
       }
     }
