@@ -85,6 +85,9 @@ static int n_curve_pts=-1;
 static int n_palette_colors=-1;
 static int n_bitmap_pixels=-1;
 
+static kate_float karaoke_base_height=(kate_float)0;
+static kate_float karaoke_top_height=(kate_float)0;
+
 typedef struct kd_event {
   kate_float t0;
   kate_float t1;
@@ -1348,6 +1351,8 @@ static void init_simple_glyph_pointer_motion(void)
 {
   init_motion();
   kmotion->semantics=kate_motion_semantics_glyph_pointer_1;
+  karaoke_base_height=(kate_float)0;
+  karaoke_top_height=(kate_float)0;
 }
 
 static int get_glyph_pointer_offset(unsigned int pointer_id)
@@ -1369,6 +1374,12 @@ static kate_float get_last_glyph_x(const kate_motion *km)
   return kc->pts[kc->npts*2-2]; /* -1 would be y */
 }
 
+static kate_float compute_karaoke_height(float y)
+{
+  /* turn height (bottom to top) to screen coordinates (top to bottom): negate */
+  return -(karaoke_base_height*(1-y)+karaoke_top_height*y);
+}
+
 static void add_glyph_pause(kate_float dt,kate_float y)
 {
   init_curve();
@@ -1377,7 +1388,7 @@ static void add_glyph_pause(kate_float dt,kate_float y)
   kcurve.curve->pts=(kate_float*)kate_malloc(kcurve.curve->npts*2*sizeof(kate_float));
   if (!kcurve.curve->pts) { yyerror("out of memory"); exit(-1); }
   kcurve.curve->pts[0]=get_last_glyph_x(kmotion);
-  kcurve.curve->pts[1]=y;
+  kcurve.curve->pts[1]=compute_karaoke_height(y);
   add_curve_to_motion(kmotion,dt);
 }
 
@@ -1417,7 +1428,7 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
     if (!kcurve.curve->pts) { yyerror("out of memory"); exit(-1); }
     /* directly at the end position */
     kcurve.curve->pts[0]=x1;
-    kcurve.curve->pts[1]=ystart;
+    kcurve.curve->pts[1]=compute_karaoke_height(ystart);
   }
   else {
     kcurve.curve->type=kate_curve_catmull_rom_spline;
@@ -1427,18 +1438,18 @@ static void add_glyph_transition(unsigned int glyph,kate_float dt,kate_float yst
 
     /* start position */
     kcurve.curve->pts[0]=kcurve.curve->pts[2]=x0;
-    kcurve.curve->pts[1]=kcurve.curve->pts[3]=ystart;
+    kcurve.curve->pts[1]=kcurve.curve->pts[3]=compute_karaoke_height(ystart);
 
     /* the interpolated points */
     for (n=2;n<kcurve.curve->npts-2;++n) {
       kate_float t=(n-1)/(kate_float)(kcurve.curve->npts-2-1);
       kcurve.curve->pts[n*2]=kcurve.curve->pts[n*2+2]=x1*t+x0*((kate_float)1.0-t);
-      kcurve.curve->pts[n*2+1]=kcurve.curve->pts[n*2+3]=ytop;
+      kcurve.curve->pts[n*2+1]=kcurve.curve->pts[n*2+3]=compute_karaoke_height(ytop);
     }
 
     /* end position */
     kcurve.curve->pts[kcurve.curve->npts*2-4]=kcurve.curve->pts[kcurve.curve->npts*2-2]=x1;
-    kcurve.curve->pts[kcurve.curve->npts*2-3]=kcurve.curve->pts[kcurve.curve->npts*2-1]=ystart;
+    kcurve.curve->pts[kcurve.curve->npts*2-3]=kcurve.curve->pts[kcurve.curve->npts*2-1]=compute_karaoke_height(ystart);
   }
 
   add_curve_to_motion(kmotion,dt);
@@ -2409,9 +2420,10 @@ kd_simple_timed_glyph_marker_defs: kd_simple_timed_glyph_marker_defs kd_simple_t
 
 kd_simple_timed_glyph_marker_def: GLYPH POINTER UNUMBER { kmotion->semantics=get_glyph_pointer_offset($3); }
                                 | 'Y' MAPPING kd_motion_mapping { kmotion->y_mapping=$3; }
-                                | PAUSE FOR timespec { add_glyph_pause($3,(kate_float)1.0); }
-                                | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,(kate_float)1.0,(kate_float)2.0,0,(kate_float)0.0); }
-                                | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,(kate_float)1.0,(kate_float)2.0,1,(kate_float)0.0); }
+                                | HEIGHT FROM float TO float { karaoke_base_height=$3; karaoke_top_height=$5; }
+                                | PAUSE FOR timespec { add_glyph_pause($3,(kate_float)0.0); }
+                                | GLYPH UNUMBER IN timespec { add_glyph_transition($2,$4,(kate_float)0.0,(kate_float)1.0,0,(kate_float)0.0); }
+                                | GLYPH UNUMBER AT timespec { add_glyph_transition($2,$4,(kate_float)0.0,(kate_float)1.0,1,(kate_float)0.0); }
                                 ;
 
 kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs kd_simple_timed_glyph_style_morph_def
