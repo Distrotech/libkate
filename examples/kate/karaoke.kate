@@ -13,18 +13,20 @@ kate {
     // 10 seconds
     0:0.0 --> 0:5.00
     region "r1"
-    text "L'amour est enfant\nde boh&#e8;me"
-    //    0 2   6   0  3   7     9  2   6
+    style { font size 16 }
+    text "L'amour est enfant de boh&#e8;me"
+    //    0 2   6   0  3   7  0  3  4    7
     simple_timed_glyph_marker {
+      height from 32 to 48
       pause for 0:1.0
       glyph 2 at 1.246029
       glyph 6 at 1.773831
       glyph 10 at 2.337319
       glyph 13 at 3.178846
       glyph 17 at 3.417869
-      glyph 19 at 3.913005
-      glyph 22 at 4.434370
-      glyph 26 at 4.756512
+      glyph 20 at 3.913005
+      glyph 24 at 4.434370
+      glyph 27 at 4.756512
     }
     motion {
       semantics glyph pointer 1 bitmap
