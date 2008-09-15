@@ -1,4 +1,5 @@
 0.1.13
+  glyph pointers and markers can now have a custom animated image
   karaoke timing info is now extracted from enhanced lrc files
   comments are now validated against Vorbis comment rules
 
