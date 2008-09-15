@@ -34,6 +34,10 @@ typedef struct kate_encode_state {
   int *destroy_motions;
   size_t *motion_indices;
 
+  size_t nbitmaps;
+  const kate_bitmap **bitmaps;
+  size_t *bitmap_indices;
+
   int eos;
 
   size_t ntimings;
@@ -63,6 +67,8 @@ extern kate_encode_state *kate_encode_state_create(void) kate_internal;
 extern int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki) kate_internal;
 extern int kate_encode_state_add_motion(kate_encode_state *kes,kate_motion *km,int destroy) kate_internal;
 extern int kate_encode_state_add_motion_index(kate_encode_state *kes,size_t motion) kate_internal;
+extern int kate_encode_state_add_bitmap(kate_encode_state *kes,const kate_bitmap *kb) kate_internal;
+extern int kate_encode_state_add_bitmap_index(kate_encode_state *kes,size_t bitmap) kate_internal;
 extern int kate_encode_state_destroy(kate_encode_state *kes) kate_internal;
 
 extern int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_float end) kate_internal;

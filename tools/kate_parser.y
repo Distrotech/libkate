@@ -77,6 +77,9 @@ static char **motion_names=NULL;
 static char **font_range_names=NULL;
 static char **font_mapping_names=NULL;
 
+static size_t n_local_bitmaps=0;
+static char **local_bitmap_names=NULL;
+
 static int open_ended_curve=0;
 static int n_curve_pts=-1;
 static int n_palette_colors=-1;
@@ -324,9 +327,53 @@ static void add_bitmap(kate_info *ki,const char *name,kate_bitmap *kb)
   }
 }
 
+static void add_local_bitmap(kate_state *k,const char *name,kate_bitmap *kb)
+{
+  int ret;
+
+  check_bitmap(kb);
+
+  ret=kate_encode_add_bitmap(k,kb);
+  if (ret<0) {
+    yyerrorf("Failed to register bitmap: %d",ret);
+  }
+  else {
+    ++n_local_bitmaps;
+    local_bitmap_names=(char**)kate_realloc(local_bitmap_names,n_local_bitmaps*sizeof(char*));
+    if (!local_bitmap_names) {
+      yyerror("Out of memory");
+      exit(-1);
+    }
+    local_bitmap_names[n_local_bitmaps-1]=name?dupstring(name):NULL;
+  }
+}
+
+static void add_local_bitmap_index(kate_state *k,const char *name,size_t idx)
+{
+  int ret;
+
+  ret=kate_encode_add_bitmap_index(k,idx);
+  if (ret<0) {
+    yyerrorf("Failed to register bitmap: %d",ret);
+  }
+  else {
+    ++n_local_bitmaps;
+    local_bitmap_names=(char**)kate_realloc(local_bitmap_names,n_local_bitmaps*sizeof(char*));
+    if (!local_bitmap_names) {
+      yyerror("Out of memory");
+      exit(-1);
+    }
+    local_bitmap_names[n_local_bitmaps-1]=name?dupstring(name):NULL;
+  }
+}
+
 static int find_bitmap(const kate_info *ki,const char *name)
 {
-  return find_item(name,ki->nbitmaps,bitmap_names);
+  int ret=find_item(name,ki->nbitmaps,bitmap_names);
+  if (ret>=0) return ret;
+  ret=find_item(name,n_local_bitmaps,local_bitmap_names);
+  if (ret>=0) return ret+ki->nbitmaps;
+  return ret;
 }
 
 static void check_style(const kate_style *ks)
@@ -1458,6 +1505,20 @@ static void set_style_morph(kd_event *ev,int from,int to)
   if (ret<0) yyerrorf("failed to set secondary_style index: %d",ret);
 }
 
+static void clear_local_bitmaps(void)
+{
+  size_t n;
+
+  if (local_bitmap_names) {
+    for (n=0;n<n_local_bitmaps;++n) {
+      if (local_bitmap_names[n]) kate_free(local_bitmap_names[n]);
+    }
+    kate_free(local_bitmap_names);
+    local_bitmap_names=NULL;
+  }
+  n_local_bitmaps=0;
+}
+
 static void clear_event(kd_event *ev)
 {
   if (!ev) {
@@ -1469,6 +1530,7 @@ static void clear_event(kd_event *ev)
     ev->text=NULL;
   }
   clear_motions();
+  clear_local_bitmaps();
 }
 
 static void kd_finalize_simple_timed_glyph_motion(kate_motion *kmotion)
@@ -1541,6 +1603,18 @@ static kate_motion_semantics kd_get_marker_position_semantics(int n)
   return kate_motion_semantics_marker4_position;
 }
 
+static kate_motion_semantics kd_get_marker_frame_semantics(int n)
+{
+  switch (n) {
+    case 1: return kate_motion_semantics_marker1_frame;
+    case 2: return kate_motion_semantics_marker2_frame;
+    case 3: return kate_motion_semantics_marker3_frame;
+    case 4: return kate_motion_semantics_marker4_frame;
+    default: yyerrorf("Invalid marker number: %d (only 1-4 are supported)",n); exit(-1);
+  }
+  return kate_motion_semantics_marker4_frame;
+}
+
 static kate_motion_semantics kd_get_glyph_pointer_semantics(int n)
 {
   switch (n) {
@@ -1551,6 +1625,18 @@ static kate_motion_semantics kd_get_glyph_pointer_semantics(int n)
     default: yyerrorf("Invalid glyph pointer number: %d (only 1-4 are supported)",n); exit(-1);
   }
   return kate_motion_semantics_glyph_pointer_4;
+}
+
+static kate_motion_semantics kd_get_glyph_pointer_frame_semantics(int n)
+{
+  switch (n) {
+    case 1: return kate_motion_semantics_glyph_pointer_1_frame;
+    case 2: return kate_motion_semantics_glyph_pointer_2_frame;
+    case 3: return kate_motion_semantics_glyph_pointer_3_frame;
+    case 4: return kate_motion_semantics_glyph_pointer_4_frame;
+    default: yyerrorf("Invalid glyph pointer number: %d (only 1-4 are supported)",n); exit(-1);
+  }
+  return kate_motion_semantics_glyph_pointer_4_frame;
 }
 
 static void kd_add_event_motion(kate_motion *kmotion)
@@ -1865,6 +1951,7 @@ static void cleanup_memory(void)
   cleanup_names(palette_names,ki.npalettes);
   cleanup_names(font_range_names,ki.nfont_ranges);
   cleanup_names(font_mapping_names,ki.nfont_mappings);
+  cleanup_names(local_bitmap_names,n_local_bitmaps);
 
   free_macros();
 }
@@ -1910,6 +1997,7 @@ static void cleanup_memory(void)
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT CANVAS
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
 %token <number> HORIZONTAL VERTICAL CLIP PRE MARKUP
+%token <number> LOCAL
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -2241,6 +2329,8 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
             | PALETTE { init_palette(); } '{' kd_palette_defs '}' { set_event_palette(&kevent,kpalette.palette); }
             | BITMAP kd_bitmap_name_or_index { set_event_bitmap_index(&kevent,$2); }
             | BITMAP { init_bitmap(); } '{' kd_bitmap_defs '}' { set_event_bitmap(&kevent,kbitmap.bitmap); }
+            | DEFINE LOCAL BITMAP kd_opt_name {init_bitmap();} '{' kd_bitmap_defs '}' { add_local_bitmap(&k,$4,kbitmap.bitmap); }
+            | DEFINE LOCAL BITMAP kd_opt_name '=' kd_bitmap_name_or_index { add_local_bitmap_index(&k,$4,$6); }
             ;
 
 kd_optional_secondary: SECONDARY { $$=1; }
@@ -2305,6 +2395,8 @@ kd_motion_semantics: TIME { $$=kate_motion_semantics_time; }
                    | VERTICAL MARGINS { $$=kate_motion_semantics_vertical_margins; }
                    | BITMAP POSITION { $$=kate_motion_semantics_bitmap_position; }
                    | BITMAP SIZE { $$=kate_motion_semantics_bitmap_size; }
+                   | MARKER UNUMBER FRAME { $$=kd_get_marker_frame_semantics($2); }
+                   | GLYPH POINTER UNUMBER FRAME { $$=kd_get_glyph_pointer_frame_semantics($3); }
                    | USER UNUMBER {
                        if ($2<kate_motion_semantics_user) yyerrorf("invalid value for user motion semantics (%u), should be 128 or more",$2);
                        $$=(kate_motion_semantics)$2;

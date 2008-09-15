@@ -232,6 +232,14 @@ static const char *semantics2text(kate_motion_semantics d)
     case kate_motion_semantics_vertical_margins: return "vertical margins";
     case kate_motion_semantics_bitmap_position: return "bitmap position";
     case kate_motion_semantics_bitmap_size: return "bitmap size";
+    case kate_motion_semantics_marker1_frame: return "marker 1 frame";
+    case kate_motion_semantics_marker2_frame: return "marker 2 frame";
+    case kate_motion_semantics_marker3_frame: return "marker 3 frame";
+    case kate_motion_semantics_marker4_frame: return "marker 4 frame";
+    case kate_motion_semantics_glyph_pointer_1_frame: return "glyph pointer 1 frame";
+    case kate_motion_semantics_glyph_pointer_2_frame: return "glyph pointer 2 frame";
+    case kate_motion_semantics_glyph_pointer_3_frame: return "glyph pointer 3 frame";
+    case kate_motion_semantics_glyph_pointer_4_frame: return "glyph pointer 4 frame";
     default: snprintf(tmp,sizeof(tmp),"user %u",d); return tmp;
   }
   return "invalid";
@@ -773,6 +781,23 @@ static void output_kate_event(FILE *fout,const kate_event *ev,ogg_int64_t granpo
   fprintf(fout," \"");
   write_text(fout,ev->text,ev->len0,ev->text_markup_type);
   fprintf(fout,"\"\n");
+
+  if (ev->nbitmaps>0) {
+    size_t n;
+    for (n=0;n<ev->nbitmaps;++n) {
+      const kate_bitmap *kb=ev->bitmaps[n];
+      int idx=kate_find_bitmap(ki,kb);
+      if (idx<0) {
+        fprintf(fout,"    define local bitmap {\n");
+        write_bitmap_defs(fout,kb,6);
+        fprintf(fout,"    }\n");
+      }
+      else {
+        fprintf(fout,"    define local bitmap = %d\n",idx);
+      }
+    }
+  }
+
   if (ev->region) {
     int idx=kate_find_region(ki,ev->region);
     if (idx<0) {

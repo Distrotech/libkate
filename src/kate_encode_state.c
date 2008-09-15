@@ -25,6 +25,10 @@ static void kate_encode_state_init_helper(kate_encode_state *kes)
   kes->motion_indices=NULL;
   kes->nmotions=0;
 
+  kes->bitmaps=NULL;
+  kes->bitmap_indices=NULL;
+  kes->nbitmaps=0;
+
   kes->overrides.region_index=-1;
   kes->overrides.region=NULL;
   kes->overrides.style_index=-1;
@@ -75,6 +79,10 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
   }
   if (kes->motion_indices) {
     kate_free(kes->motion_indices);
+  }
+
+  if (kes->bitmaps) {
+    kate_free(kes->bitmaps);
   }
 
   if (kes->overrides.language) {
@@ -130,6 +138,40 @@ int kate_encode_state_add_motion_index(kate_encode_state *kes,size_t motion)
   return kate_encode_state_add_motion_or_index(kes,NULL,motion,0);
 }
 
+static int kate_encode_state_add_bitmap_or_index(kate_encode_state *kes,const kate_bitmap *kb,size_t bitmap)
+{
+  const kate_bitmap **bitmaps;
+  size_t *bitmap_indices;
+
+  if (!kes) return KATE_E_INVALID_PARAMETER;
+
+  bitmaps=(const kate_bitmap**)kate_realloc(kes->bitmaps,(kes->nbitmaps+1)*sizeof(const kate_bitmap*));
+  if (!bitmaps) return KATE_E_OUT_OF_MEMORY;
+  kes->bitmaps=bitmaps;
+
+  bitmap_indices=(size_t*)kate_realloc(kes->bitmap_indices,(kes->nbitmaps+1)*sizeof(size_t));
+  if (!bitmap_indices) return KATE_E_OUT_OF_MEMORY;
+  kes->bitmap_indices=bitmap_indices;
+
+  kes->bitmaps[kes->nbitmaps]=kb;
+  kes->bitmap_indices[kes->nbitmaps]=bitmap;
+  ++kes->nbitmaps;
+
+  return 0;
+}
+
+int kate_encode_state_add_bitmap(kate_encode_state *kes,const kate_bitmap *kb)
+{
+  if (!kes || !kb) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_state_add_bitmap_or_index(kes,kb,0);
+}
+
+int kate_encode_state_add_bitmap_index(kate_encode_state *kes,size_t bitmap)
+{
+  if (!kes) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_state_add_bitmap_or_index(kes,NULL,bitmap);
+}
+
 int kate_encode_state_destroy(kate_encode_state *kes)
 {
   if (!kes) return KATE_E_INVALID_PARAMETER;
@@ -139,6 +181,8 @@ int kate_encode_state_destroy(kate_encode_state *kes)
   if (kes->motions) kate_free(kes->motions);
   if (kes->destroy_motions) kate_free(kes->destroy_motions);
   if (kes->motion_indices) kate_free(kes->motion_indices);
+  if (kes->bitmaps) kate_free(kes->bitmaps);
+  if (kes->bitmap_indices) kate_free(kes->bitmap_indices);
   if (kes->overrides.language) kate_free(kes->overrides.language);
   kate_free(kes);
 

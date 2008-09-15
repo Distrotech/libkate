@@ -26,6 +26,16 @@ kate {
       glyph 22 at 4.434370
       glyph 26 at 4.756512
     }
+    motion {
+      semantics glyph pointer 1 frame
+      curve { linear 9 points { 0 0   1 0   2 0   3 0   4 0   3 0   2 0   1 0   0 0 } } for 1
+      periodic
+    }
+    define local bitmap { source "ball_blue.png" }
+    define local bitmap { source "ball_blue-0.92.png" }
+    define local bitmap { source "ball_blue-0.75.png" }
+    define local bitmap { source "ball_blue-0.57.png" }
+    define local bitmap { source "ball_blue-0.5.png" }
   }
 
   event {

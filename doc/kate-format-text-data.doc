@@ -54,10 +54,17 @@ Bitstream version 0.2 starts making use of this warp:
 \li if the next bit is set, a \ref format_bitmap "bitmap" definition to use for this event.
 \li if the next bit is set, 8 bits representing the type of \ref #kate_markup_type "markup" to use to interpret the text in this event.
 
+Bitstream version 0.4 makes further use of this warp:
+\li a \ref format_32v "variable length integer" representing the number of bitmaps associated with this event.
+For this many bitmaps:
+\li a bit being 1 is the bitmap is a reference to one already present in the stream headers
+\li if the bitmap is already present in the stream headers, a \ref format_32v "variable length integer" representing its index in the stream headers.
+\li if the bitmap is not already present in the stream headers, a \ref format_bitmap "bitmap" definition.
+
 \note
-Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that bitstream 0.2
-will contain a second warp after the one used above. Similarly, if this second warp becomes used in future revisions
-of the bitstream, a third one will automatically be used.
+Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that bitstream 0.3
+will contain a third warp after the one used above. Similarly, if this warp becomes used in future revisions
+of the bitstream, another one will automatically be used.
 
 Next, the data ends.
 

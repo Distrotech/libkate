@@ -258,6 +258,22 @@ static unsigned char kate_float_to_color_component(kate_float c)
   return v;
 }
 
+static const kate_bitmap *kate_tracker_find_bitmap(const kate_tracker *kin,kate_float frame)
+{
+  size_t idx=(size_t)(frame+(kate_float)0.5);
+  if (kin->event->nbitmaps>0) {
+    if (idx<kin->event->nbitmaps) {
+      return kin->event->bitmaps[idx];
+    }
+  }
+  else {
+    if (idx<kin->ki->nbitmaps) {
+      return kin->ki->bitmaps[idx];
+    }
+  }
+  return NULL;
+}
+
 /**
   \ingroup tracker
   Tracks changes in an event at the given time.
@@ -282,6 +298,7 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   int ret;
   kate_float r,g,b,a;
   kate_float dummy;
+  kate_float frame;
 
   if (!kin) return KATE_E_INVALID_PARAMETER;
   if (!kin->event) return KATE_E_INIT;
@@ -475,14 +492,38 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
   for (n=0;n<4;++n) {
     kate_motion_semantics semantics=(kate_motion_semantics)(kate_motion_semantics_glyph_pointer_1+n);
     ret=kate_tracker_update_property(kin,semantics,&kin->glyph_pointer[n],&kin->glyph_height[n]);
-    if (ret==0) kin->has.glyph_pointer|=(1<<n);
+    if (ret==0) {
+      kin->has.glyph_pointer|=(1<<n);
+      /* we don't have to bother looking for a bitmap frame if there's no glyph pointer */
+      semantics=(kate_motion_semantics)(kate_motion_semantics_glyph_pointer_1_frame+n);
+      ret=kate_tracker_update_property(kin,semantics,&frame,&dummy);
+      if (ret==0) {
+        const kate_bitmap *kb=kate_tracker_find_bitmap(kin,frame);
+        if (kb) {
+          kin->glyph_pointer_frame[n]=kb;
+          kin->has.glyph_pointer_frame|=(1<<n);
+        }
+      }
+    }
   }
 
   /* update marker position */
   for (n=0;n<4;++n) {
     kate_motion_semantics semantics=(kate_motion_semantics)(kate_motion_semantics_marker1_position+n);
     ret=kate_tracker_update_property(kin,semantics,&kin->marker_x[n],&kin->marker_y[n]);
-    if (ret==0) kin->has.marker_pos|=(1<<n);
+    if (ret==0) {
+      kin->has.marker_pos|=(1<<n);
+      /* we don't have to bother looking for a bitmap frame if there's no marker position */
+      semantics=(kate_motion_semantics)(kate_motion_semantics_marker1_frame+n);
+      ret=kate_tracker_update_property(kin,semantics,&frame,&dummy);
+      if (ret==0) {
+        const kate_bitmap *kb=kate_tracker_find_bitmap(kin,frame);
+        if (kb) {
+          kin->marker_frame[n]=kb;
+          kin->has.marker_frame|=(1<<n);
+        }
+      }
+    }
   }
 
   /* update draw position */

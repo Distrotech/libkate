@@ -1118,6 +1118,40 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     }
   }
 
+  if (((k->ki->bitstream_version_major<<8)|k->ki->bitstream_version_minor)>=0x0004) {
+    /* 0.4 adds a warp for bitmaps */
+    kate_bitmap **bitmaps=NULL;
+    size_t nbitmaps=0;
+
+    kate_read32v(kpb); /* the size of the warp */
+
+    len=kate_read32v(kpb);
+    if (len<0) goto error_bad_packet;
+    if (len>0) {
+      if (!k->ki->no_limits && len>KATE_LIMIT_BITMAPS) goto error_limit;
+      bitmaps=(kate_bitmap**)KMG_MALLOC(len*sizeof(kate_bitmap*));
+      if (!bitmaps) goto error_out_of_memory;
+      nbitmaps=0;
+      for (n=0;n<len;++n) {
+        if (kate_pack_read1(kpb)) {
+          size_t idx=kate_read32v(kpb);
+          if (idx>=k->ki->nbitmaps) goto error_bad_packet;
+          bitmaps[n]=k->ki->bitmaps[idx];
+        }
+        else {
+          bitmaps[n]=KMG_MALLOC(sizeof(kate_bitmap));
+          if (!bitmaps[n]) goto error_out_of_memory;
+          ret=kate_decode_bitmap(k->ki,bitmaps[n],kpb);
+          if (ret<0) goto error;
+        }
+        ++nbitmaps;
+      }
+    }
+
+    ev->bitmaps=bitmaps;
+    ev->nbitmaps=nbitmaps;
+  }
+
   ret=kate_warp(kpb);
   if (ret<0) goto error;
 

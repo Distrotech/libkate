@@ -41,6 +41,9 @@ static int kate_event_init(kate_event *ev,const kate_info *ki)
   ev->palette=NULL;
   ev->bitmap=NULL;
 
+  ev->nbitmaps=0;
+  ev->bitmaps=NULL;
+
   /* internal */
   ev->ki=ki;
   ev->trackers=0;
@@ -66,6 +69,8 @@ kate_event *kate_event_create(const kate_info *ki)
 
 int kate_event_destroy(kate_event *ev)
 {
+  size_t n;
+
   if (!ev) return KATE_E_INVALID_PARAMETER;
   if (!ev->ki) return KATE_E_INIT;
   if (ev->trackers) return KATE_E_INIT;
@@ -92,6 +97,15 @@ int kate_event_destroy(kate_event *ev)
   if (ev->palette && kate_find_palette(ev->ki,ev->palette)<0) {
     kate_free(ev->palette->colors);
     kate_free(ev->palette);
+  }
+
+  if (ev->bitmaps) {
+    for (n=0;n<ev->nbitmaps;++n) {
+      if (ev->bitmaps[n] && kate_find_bitmap(ev->ki,ev->bitmaps[n])<0) {
+        kate_free(ev->bitmaps[n]->pixels);
+        kate_free(ev->bitmaps[n]);
+      }
+    }
   }
   if (ev->bitmap && kate_find_bitmap(ev->ki,ev->bitmap)<0) {
     kate_free(ev->bitmap->pixels);

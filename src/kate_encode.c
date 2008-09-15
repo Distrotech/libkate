@@ -765,6 +765,7 @@ static inline int kate_check_granule(kate_state *k,kate_int64_t *granulepos)
 static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
 {
   kate_encode_state *kes;
+  size_t n;
   int ret=0;
 
   if (!k || !kpb) return KATE_E_INVALID_PARAMETER;
@@ -801,7 +802,7 @@ static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
   }
   else kate_pack_write1(kpb,0);
 
-  {
+  if (ret==0) {
     /* bitstream 0.2: add palette, bitmap, markup type */
     kate_pack_buffer warp;
     kate_open_warp(&warp);
@@ -818,6 +819,27 @@ static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
       WRITE_OVERRIDE(&warp,text_markup_type,k->ki->text_markup_type,kate_pack_write(&warp,kes->overrides.text_markup_type,8));
     }
     else kate_pack_write1(&warp,0);
+    kate_close_warp(&warp,kpb);
+  }
+
+  if (ret==0) {
+    /* bitstream 0.4: add bitmaps */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write32v(&warp,kes->nbitmaps);
+    for(n=0;n<kes->nbitmaps;++n) {
+      if (kes->bitmaps[n]==NULL) {
+        /* we have an index into the bitmaps header */
+        kate_pack_write1(&warp,1);
+        kate_write32v(&warp,kes->bitmap_indices[n]);
+      }
+      else {
+        /* we have a fully defined bitmap */
+        kate_pack_write1(&warp,0);
+        ret=kate_encode_bitmap(kes->bitmaps[n],&warp);
+        if (ret<0) break;
+      }
+    }
     kate_close_warp(&warp,kpb);
   }
 
@@ -1066,6 +1088,40 @@ int kate_encode_add_motion_index(kate_state *k,size_t motion)
   if (!k->kes) return KATE_E_INIT;
 
   return kate_encode_state_add_motion_index(k->kes,motion);
+}
+
+/**
+  \ingroup encoding
+  Adds a bitmap to the currently encoded event.
+  \param k the kate_state to add the bitmap to
+  \param kb the bitmap to add
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_add_bitmap(kate_state *k,const kate_bitmap *kb)
+{
+  if (!k || !kb) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  return kate_encode_state_add_bitmap(k->kes,kb);
+}
+
+/**
+  \ingroup encoding
+  Adds a bitmap to the currently encoded event by its index into the list of predefined bitmaps.
+  \param k the kate_state to add the bitmap to
+  \param bitmap the index of the bitmap to add
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_add_bitmap_index(kate_state *k,size_t bitmap)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->ki) return KATE_E_INIT;
+  if (bitmap>=k->ki->nbitmaps) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  return kate_encode_state_add_bitmap_index(k->kes,bitmap);
 }
 
 /**
