@@ -106,6 +106,7 @@ int kate_event_destroy(kate_event *ev)
         kate_free(ev->bitmaps[n]);
       }
     }
+    kate_free(ev->bitmaps);
   }
   if (ev->bitmap && kate_find_bitmap(ev->ki,ev->bitmap)<0) {
     kate_free(ev->bitmap->pixels);

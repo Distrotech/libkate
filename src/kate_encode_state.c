@@ -84,6 +84,9 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
   if (kes->bitmaps) {
     kate_free(kes->bitmaps);
   }
+  if (kes->bitmap_indices) {
+    kate_free(kes->bitmap_indices);
+  }
 
   if (kes->overrides.language) {
     kate_free(kes->overrides.language);
