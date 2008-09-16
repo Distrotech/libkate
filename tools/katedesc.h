@@ -22,6 +22,8 @@ extern void write_headers(FILE *f);
 extern void send_packet(FILE *f);
 extern void cancel_packet(void);
 
+extern void cleanup_lexer(void);
+
 extern int nlines;
 
 extern char *katedesc_text;

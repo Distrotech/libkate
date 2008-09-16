@@ -354,3 +354,12 @@ static void process_nlines(const char *text)
   }
 }
 
+void cleanup_lexer(void)
+{
+#ifdef FLEX_SCANNER
+#if (YY_FLEX_MAJOR_VERSION+0)*0x10000+(YY_FLEX_MINOR_VERSION+0)*0x100+(YY_FLEX_SUBMINOR_VERSION+0)>=0x020509
+  katedesc_lex_destroy();
+#endif
+#endif
+}
+

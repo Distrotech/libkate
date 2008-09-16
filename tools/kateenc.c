@@ -35,17 +35,11 @@
 #include "kate/oggkate.h"
 #include "katedesc.h"
 
-/* #define HAVE_LEX_DESTROY */
-
 extern int katedesc_parse(void);
 extern int katedesc_restart(FILE*);
 extern FILE *katedesc_in;
 extern FILE *katedesc_out;
 extern int nerrors;
-
-#ifdef HAVE_LEX_DESTROY
-extern int katedesc_lex_destroy(void);
-#endif
 
 ogg_stream_state os;
 ogg_packet op;
@@ -186,9 +180,7 @@ static int convert_kate(FILE *fin,FILE *fout)
   katedesc_restart(katedesc_in);
   nerrors=0;
   katedesc_parse();
-#ifdef HAVE_LEX_DESTROY
-  katedesc_lex_destroy();
-#endif
+  cleanup_lexer();
   if (nerrors>0) return -1;
   return 0;
 }
