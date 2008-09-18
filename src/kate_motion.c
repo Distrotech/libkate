@@ -49,8 +49,18 @@ static kate_float kate_bspline(kate_float t,const kate_float *pts,int k0,int k1,
          )/6;
 }
 
-/* t will be between 0 and 1 */
-static int kate_curve_get_point(const kate_curve *kc,kate_float t,kate_float *x,kate_float *y)
+/**
+  Returns the point defined by the given curve at the given time.
+  t will be between 0 and 1
+  \param kc the curve to get the point from
+  \param t the time at which the point should be taken (between 0 and motion duration)
+  \param x a pointer to the first coordinate of the computed point (may be NULL)
+  \param y a pointer to the second coordinate of the computed point (may be NULL)
+  \returns 0 success
+  \returns 1 no point at this time in the curve
+  \returns KATE_E_* error
+  */
+int kate_curve_get_point(const kate_curve *kc,kate_float t,kate_float *x,kate_float *y)
 {
   int nsegs,n;
   kate_float T,t0,t1;
