@@ -471,6 +471,9 @@ static void check_curve(const kate_curve *kc)
   }
   if (kc->npts<minpts) yyerrorf("Curve does not have enough points for this type (has %d, min pts %d)",kc->npts,minpts);
   if (kc->npts>maxpts) yyerrorf("Curve has too many points for this type (has %d, max pts %d)",kc->npts,maxpts);
+  if (kc->type==kate_curve_bezier_cubic_spline) {
+    if ((kc->npts-1)%3) yyerrorf("Cubic Bezier splines should have 1+3n points");
+  }
 }
 
 static void add_curve(kate_info *ki,const char *name,kate_curve *kc)
