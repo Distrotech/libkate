@@ -121,7 +121,7 @@ int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *f
   return 0;
 }
 
-static int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping,kate_float *x,kate_float *y)
+int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping,kate_float *x,kate_float *y)
 {
   if (!kin || !x || !y) return KATE_E_INVALID_PARAMETER;
 

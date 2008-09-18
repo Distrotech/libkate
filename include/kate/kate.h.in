@@ -604,6 +604,7 @@ extern int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int w
 extern int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *from,const kate_style *to);
 extern int kate_tracker_get_text_path_position(kate_tracker *kin,size_t glyph,int *x,int *y);
 extern int kate_tracker_update_property_at_duration(const kate_tracker *kin,kate_float duration,kate_float t,kate_motion_semantics semantics,kate_float *x,kate_float *y);
+extern int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping,kate_float *x,kate_float *y);
 
 /** \defgroup font Font */
 extern int kate_font_get_index_from_code_point(const kate_font_mapping *kfm,int c);
