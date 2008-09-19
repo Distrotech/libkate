@@ -178,6 +178,7 @@ typedef enum kate_motion_semantics {
   kate_motion_semantics_glyph_pointer_2_bitmap,  /**< controls the bitmap of the image used for glyph pointer 2 */
   kate_motion_semantics_glyph_pointer_3_bitmap,  /**< controls the bitmap of the image used for glyph pointer 3 */
   kate_motion_semantics_glyph_pointer_4_bitmap,  /**< controls the bitmap of the image used for glyph pointer 4 */
+  kate_motion_semantics_draw_width,              /**< controls the width of the drawn line */
 
   /* more semantics may be added in future versions */
 
@@ -404,8 +405,9 @@ typedef struct kate_tracker {
     unsigned int bitmap_size:1;                 /**< if set, the tracker has bitmap size information */
     unsigned int marker_bitmap:4;               /**< if set, the tracker has bitmap information for the marker bitmap */
     unsigned int glyph_pointer_bitmap:4;        /**< if set, the tracker has bitmap information for the glyph pointer bitmap */
-    /* 32 bits */
-    unsigned int pad0:32;
+    unsigned int draw_width:1;                  /**< if set, the tracker has draw line width information */
+    /* 33 bits */
+    unsigned int pad0:31;
     /* 64 bits */
   } has;                                        /**< bitfield describing what information the tracker has */
 
@@ -488,10 +490,13 @@ typedef struct kate_tracker {
   /* has.glyph_pointer_bitmap&(1<<n) */
   const kate_bitmap *glyph_pointer_bitmap[4];   /**< index of the bitmap for the glyph pointer bitmap */
 
+  /* has.draw_width */
+  kate_float draw_width;                        /**< width of the drawn line */
+
   /* internal */
   size_t nglyphs;
 
-  uintptr_t pad[20];
+  uintptr_t pad[19];
 
 } kate_tracker;
 

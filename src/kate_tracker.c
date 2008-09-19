@@ -570,6 +570,10 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     kin->has.draw_color=1;
   }
 
+  /* update draw width */
+  ret=kate_tracker_update_property(kin,kate_motion_semantics_draw_width,&kin->draw_width,&dummy);
+  if (ret==0) kin->has.draw_width=1;
+
   return 0;
 }
 

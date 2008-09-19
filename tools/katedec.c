@@ -240,6 +240,7 @@ static const char *semantics2text(kate_motion_semantics d)
     case kate_motion_semantics_glyph_pointer_2_bitmap: return "glyph pointer 2 bitmap";
     case kate_motion_semantics_glyph_pointer_3_bitmap: return "glyph pointer 3 bitmap";
     case kate_motion_semantics_glyph_pointer_4_bitmap: return "glyph pointer 4 bitmap";
+    case kate_motion_semantics_draw_width: return "draw width";
     default: snprintf(tmp,sizeof(tmp),"user %u",d); return tmp;
   }
   return "invalid";

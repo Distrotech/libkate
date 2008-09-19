@@ -4,6 +4,11 @@ kate {
   }
   event {
     motion {
+      semantics draw width
+      curve { linear points { 1 0 10 0 } } for 10%
+      curve { linear points { 10 0 1 0 } } for 10%
+    }
+    motion {
       semantics draw
       mapping frame
       curve {

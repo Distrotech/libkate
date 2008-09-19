@@ -2445,6 +2445,7 @@ kd_motion_semantics: TIME { $$=kate_motion_semantics_time; }
                    | BITMAP SIZE { $$=kate_motion_semantics_bitmap_size; }
                    | MARKER UNUMBER BITMAP { $$=kd_get_marker_bitmap_semantics($2); }
                    | GLYPH POINTER UNUMBER BITMAP { $$=kd_get_glyph_pointer_bitmap_semantics($3); }
+                   | DRAW WIDTH { $$=kate_motion_semantics_draw_width; }
                    | USER UNUMBER {
                        if ($2<kate_motion_semantics_user) yyerrorf("invalid value for user motion semantics (%u), should be 128 or more",$2);
                        $$=(kate_motion_semantics)$2;
