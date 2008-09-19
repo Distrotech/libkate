@@ -1967,23 +1967,20 @@ static void add_temp_macro(const char *body)
   temp_macro_name=NULL;
 }
 
-// code check
-
-static void set_granule_rate(int numerator,int denominator)
+static void set_granule_rate(unsigned int numerator,unsigned int denominator)
 {
   ki.gps_numerator=numerator;
   ki.gps_denominator=denominator;
 }
 
-static void set_granule_shift(int granule_shift)
+static void set_granule_shift(unsigned int granule_shift)
 {
-  if (granule_shift<0 || granule_shift>=64) yyerror("granule shift out of range (0-64)\n");
+  if (granule_shift>=64) yyerror("granule shift out of range (0-64)\n");
   ki.granule_shift=granule_shift;
 }
 
-static void set_canvas_size(int width,int height)
+static void set_canvas_size(unsigned int width,unsigned int height)
 {
-  if (width<0 || height<0) yyerror("canvas size cannot be negative\n");
   kate_info_set_original_canvas_size(&ki,width,height);
 }
 
