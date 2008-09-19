@@ -79,6 +79,7 @@ static char **font_mapping_names=NULL;
 
 static size_t n_local_bitmaps=0;
 static char **local_bitmap_names=NULL;
+static kate_bitmap **local_bitmaps=NULL;
 
 static int open_ended_curve=0;
 static int n_curve_pts=-1;
@@ -370,6 +371,12 @@ static void add_local_bitmap(kate_state *k,const char *name,kate_bitmap *kb)
       exit(-1);
     }
     local_bitmap_names[n_local_bitmaps-1]=name?dupstring(name):NULL;
+    local_bitmaps=(kate_bitmap**)kate_realloc(local_bitmaps,n_local_bitmaps*sizeof(kate_bitmap*));
+    if (!local_bitmaps) {
+      yyerror("Out of memory");
+      exit(-1);
+    }
+    local_bitmaps[n_local_bitmaps-1]=kb;
   }
 }
 
@@ -389,6 +396,12 @@ static void add_local_bitmap_index(kate_state *k,const char *name,size_t idx)
       exit(-1);
     }
     local_bitmap_names[n_local_bitmaps-1]=name?dupstring(name):NULL;
+    local_bitmaps=(kate_bitmap**)kate_realloc(local_bitmaps,n_local_bitmaps*sizeof(kate_bitmap*));
+    if (!local_bitmaps) {
+      yyerror("Out of memory");
+      exit(-1);
+    }
+    local_bitmaps[n_local_bitmaps-1]=NULL;
   }
 }
 
@@ -1548,9 +1561,15 @@ static void clear_local_bitmaps(void)
   if (local_bitmap_names) {
     for (n=0;n<n_local_bitmaps;++n) {
       if (local_bitmap_names[n]) kate_free(local_bitmap_names[n]);
+      if (local_bitmaps[n]) {
+        kate_free(local_bitmaps[n]->pixels);
+        kate_free(local_bitmaps[n]);
+      }
     }
     kate_free(local_bitmap_names);
     local_bitmap_names=NULL;
+    kate_free(local_bitmaps);
+    local_bitmaps=NULL;
   }
   n_local_bitmaps=0;
 }
