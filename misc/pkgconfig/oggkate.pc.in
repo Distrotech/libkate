@@ -7,7 +7,7 @@ includedir=@includedir@
 Name: Kate
 Description: liboggkate is an interface between libkate and libogg
 Version: @VERSION@
-URL: http://wiki.xiph.org/index.php/OggKate
+URL: http://libkate.googlecode.com/
 Requires: kate ogg >= 1.1.2
 Conflicts: 
 Libs: -L${libdir} -loggkate
