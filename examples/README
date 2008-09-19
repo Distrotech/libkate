@@ -1,29 +1,38 @@
 This is a list of the examples in this directory.
 
+Type `make kate-streams' to build them to Ogg/Kate streams.
+
 Type `make streams' to build them to Ogg/Kate streams interleaved with
 video. This needs a Theora stream named video.theora.ogg in the base
-directory (symlink any Theora to it, 640x480 size should be fine, dark
-background suggested). This also needs either oggz_tools, or a patch
-oggmerge (from ogg-tools). Both of these packages can be found at the
-Xiph website: http://www.xiph.org.
+directory (symlink any Theora stream to it, 640x480 size should be fine,
+a dark background is suggested). This also needs either oggz_tools, or
+a patch oggmerge (from ogg-tools). Both of these packages can be found
+at the Xiph website: http://www.xiph.org/.
 
 Note that the oggmerge patch found in the diffs directory is needed to
 merge the Kate streams to the Theora streams.
 
-To view the resulting streams, xine needs to be patched as well. The
-patch for xine is also in the diffs directory.
-The Kate decoder can decode a stream back to a form that may be used
-again as input to the encoder (though information like macros, etc,
-will be lost).
-
 Built streams are placed in the built-streams directory.
+
+Several players can play the resulting streams, though most will need
+patching. Out of the box, only VLC can play Kate streams, though only
+simple text and SPU based streams are supported by VLC. For full
+featured playback, either the Tiger GStreamer element or liboggplay
+are recommended, though none are committed upstream yet. Another option
+is to patch xine. The patch for xine is also in the diffs directory.
+
+The katedec Kate decoder (found in the tools subdirectory) can decode
+a stream back to a form that may be used again as input to the encoder
+(though information like macros, etc, will be lost - it is a bit like
+getting preprocessed C code - you get the raw code).
 
 
 minimal.kate
   very simple text only stream, no styles, only timing information
 
 karaoke.kate
-  bare bones karaoke-like example, a marker moves above the text
+  bare bones karaoke-like example, a marker moves above the text,
+  and text color change with time.
 
 unicode.kate
   texts in various scripts - needs fonts with characters from several
