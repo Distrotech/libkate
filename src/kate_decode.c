@@ -699,6 +699,13 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     }
   }
 
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0004) {
+    /* 0.4 adds a warp for x/y offset */
+    kate_read32v(kpb); /* the size of the warp */
+    kb->x_offset=kate_read32v(kpb);
+    kb->y_offset=kate_read32v(kpb);
+  }
+
   ret=kate_warp(kpb);
   if (ret<0) return ret;
 

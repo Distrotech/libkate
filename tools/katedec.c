@@ -514,6 +514,9 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
       fprintf(stderr,"Error: unknown bitmap type: %d\n",kb->type);
       break;
   }
+  if (kb->x_offset || kb->y_offset) {
+    fprintf(f,"%soffset %d %d\n",sindent,kb->x_offset,kb->y_offset);
+  }
   if (kb->palette>=0) fprintf(f,"%sdefault palette %d\n",sindent,kb->palette);
 
   kate_free(sindent);

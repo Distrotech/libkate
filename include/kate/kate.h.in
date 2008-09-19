@@ -228,7 +228,8 @@ typedef struct kate_bitmap {
   int palette;                                   /**< index of the default palette to use */
   unsigned char *pixels;                         /**< pixels, rows first, one byte per pixel regardless of bpp */
   size_t size;                                   /**< for raw bitmaps, number of bytes in pixels */
-  uintptr_t pad1[2];
+  int x_offset;                                  /**< the horizontal offset to the logical origin of the bitmap */
+  int y_offset;                                  /**< the vertical offset to the logical origin of the bitmap */
 } kate_bitmap;
 
 /** defines a set of images to map to a range of Unicode code points */

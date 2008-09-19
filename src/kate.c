@@ -195,7 +195,7 @@ int kate_bitmap_init(kate_bitmap *kb)
     -1,
     NULL,
     0,
-    {0,0}
+    0,0
   };
 
   if (!kb) return KATE_E_INVALID_PARAMETER;

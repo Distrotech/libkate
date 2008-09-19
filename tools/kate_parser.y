@@ -254,6 +254,28 @@ static void init_bitmap(void)
   }
 }
 
+static int compute_bitmap_x_offset(kate_float percent)
+{
+  if (kbitmap.bitmap->width) {
+    return (int)(kbitmap.bitmap->width*percent/100+0.5);
+  }
+  else {
+    yyerror("Bitmap width must be known before specifying offset as a percentage");
+    return 0;
+  }
+}
+
+static int compute_bitmap_y_offset(kate_float percent)
+{
+  if (kbitmap.bitmap->height) {
+    return (int)(kbitmap.bitmap->height*percent/100+0.5);
+  }
+  else {
+    yyerror("Bitmap height must be known before specifying offset as a percentage");
+    return 0;
+  }
+}
+
 static void load_bitmap(const char *filename,int paletted)
 {
 #ifdef HAVE_PNG
@@ -2049,6 +2071,7 @@ static void cleanup_memory(void)
 %type <number> kd_simple_timed_glyph_marker_defs kd_simple_timed_glyph_marker_def
 %type <number> kd_simple_timed_glyph_style_morph_defs kd_simple_timed_glyph_style_morph_def
 %type <number> kd_opt_comma
+%type <number> bitmap_x_offset bitmap_y_offset
 %type <fp> float60
 %type <unumber> unumber60
 %type <dynstring> strings
@@ -2176,6 +2199,7 @@ kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER { init_bitmap_pixels($1,$3,$5); }
                }
              | SOURCE STRING { load_bitmap($2,0); }
              | DEFAULT PALETTE kd_palette_name_or_index { kbitmap.bitmap->palette=$3; }
+             | OFFSET bitmap_x_offset bitmap_y_offset { kbitmap.bitmap->x_offset=$2; kbitmap.bitmap->y_offset=$3; }
              ;
 
 kd_color: UNUMBER UNUMBER UNUMBER { $$=make_color($1,$2,$3,255); }
@@ -2284,6 +2308,16 @@ float: FLOAT { $$=$1; }
      | UNUMBER { $$=(kate_float)$1; }
      | NUMBER { $$=(kate_float)$1; }
      ;
+
+bitmap_x_offset: UNUMBER { $$=$1; }
+               | NUMBER { $$=$1; }
+               | float '%' { $$=compute_bitmap_x_offset($1); }
+               ;
+
+bitmap_y_offset: UNUMBER { $$=$1; }
+               | NUMBER { $$=$1; }
+               | float '%' { $$=compute_bitmap_y_offset($1); }
+               ;
 
 timespec: UNUMBER ':' unumber60 ':' float60 { $$=$1*3600+$3*60+$5; }
         | UNUMBER ':' float60 { $$=$1*60+$3; }

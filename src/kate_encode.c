@@ -647,6 +647,15 @@ static int kate_encode_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
 
   if (ret<0) return ret;
 
+  {
+    /* bitstream 0.4: x/y offsets */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write32v(&warp,kb->x_offset);
+    kate_write32v(&warp,kb->y_offset);
+    kate_close_warp(&warp,kpb);
+  }
+
   kate_warp(kpb);
 
   return 0;

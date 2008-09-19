@@ -1,6 +1,7 @@
 0.1.13
   bitstream 0.4
   glyph pointers and markers can now have a custom animated image
+  bitmaps now have a logical position (x/y offset)
   better height control for karaoke use of the glyph pointer
   karaoke timing info is now extracted from enhanced lrc files
   comments are now validated against Vorbis comment rules

@@ -12,6 +12,7 @@ kate {
         0 1 1 1 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+62" {
       8x8x1 {
@@ -24,6 +25,7 @@ kate {
         1 1 0 1 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+63" {
       8x8x1 {
@@ -36,6 +38,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+64" {
       8x8x1 {
@@ -48,6 +51,7 @@ kate {
         0 1 1 1 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+65" {
       8x8x1 {
@@ -60,6 +64,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+66" {
       8x8x1 {
@@ -72,6 +77,7 @@ kate {
         1 1 1 1 0 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+67" {
       8x8x1 {
@@ -84,6 +90,7 @@ kate {
         0 0 0 0 1 1 0 0 
         1 1 1 1 1 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+68" {
       8x8x1 {
@@ -96,6 +103,7 @@ kate {
         1 1 1 0 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+69" {
       8x8x1 {
@@ -108,6 +116,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6a" {
       8x8x1 {
@@ -120,6 +129,7 @@ kate {
         1 1 0 0 1 1 0 0 
         0 1 1 1 1 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6b" {
       8x8x1 {
@@ -132,6 +142,7 @@ kate {
         1 1 1 0 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6c" {
       8x8x1 {
@@ -144,6 +155,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6d" {
       8x8x1 {
@@ -156,6 +168,7 @@ kate {
         1 1 0 1 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6e" {
       8x8x1 {
@@ -168,6 +181,7 @@ kate {
         1 1 0 0 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+6f" {
       8x8x1 {
@@ -180,6 +194,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+70" {
       8x8x1 {
@@ -192,6 +207,7 @@ kate {
         0 1 1 0 0 0 0 0 
         1 1 1 1 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+71" {
       8x8x1 {
@@ -204,6 +220,7 @@ kate {
         0 0 0 0 1 1 0 0 
         0 0 0 1 1 1 1 0 
       }
+      offset 3 6
     }
     define bitmap "U+72" {
       8x8x1 {
@@ -216,6 +233,7 @@ kate {
         1 1 1 1 0 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+73" {
       8x8x1 {
@@ -228,6 +246,7 @@ kate {
         1 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+74" {
       8x8x1 {
@@ -240,6 +259,7 @@ kate {
         0 0 0 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+75" {
       8x8x1 {
@@ -252,6 +272,7 @@ kate {
         0 1 1 1 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+76" {
       8x8x1 {
@@ -264,6 +285,7 @@ kate {
         0 0 1 1 0 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+77" {
       8x8x1 {
@@ -276,6 +298,7 @@ kate {
         0 1 1 0 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+78" {
       8x8x1 {
@@ -288,6 +311,7 @@ kate {
         1 1 0 0 0 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+79" {
       8x8x1 {
@@ -300,6 +324,7 @@ kate {
         0 0 0 0 1 1 0 0 
         1 1 1 1 1 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+7a" {
       8x8x1 {
@@ -312,6 +337,7 @@ kate {
         1 1 1 1 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+30" {
       8x8x1 {
@@ -324,6 +350,7 @@ kate {
         0 1 1 1 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+31" {
       8x8x1 {
@@ -336,6 +363,7 @@ kate {
         1 1 1 1 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+32" {
       8x8x1 {
@@ -348,6 +376,7 @@ kate {
         1 1 1 1 1 1 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+33" {
       8x8x1 {
@@ -360,6 +389,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+34" {
       8x8x1 {
@@ -372,6 +402,7 @@ kate {
         0 0 0 1 1 1 1 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+35" {
       8x8x1 {
@@ -384,6 +415,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+36" {
       8x8x1 {
@@ -396,6 +428,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+37" {
       8x8x1 {
@@ -408,6 +441,7 @@ kate {
         0 0 1 1 0 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+38" {
       8x8x1 {
@@ -420,6 +454,7 @@ kate {
         0 1 1 1 1 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define bitmap "U+39" {
       8x8x1 {
@@ -432,6 +467,7 @@ kate {
         0 1 1 1 0 0 0 0 
         0 0 0 0 0 0 0 0 
       }
+      offset 3 6
     }
     define font range "8x8-lowercase" {
       first code point 0x61
@@ -447,8 +483,8 @@ kate {
       range "8x8-lowercase"
       range "8x8-numbers"
     }
-  define region { percent position 20 20 size 60 20 }
-  define region { percent position 20 60 size 60 20 }
+    define region { percent position 20 20 size 60 20 }
+    define region { percent position 20 60 size 60 20 }
   }
   event { 00:0.1 --> 10:0 region 0 text "A line with a font mapping" font mapping 0 }
   event { 00:0.1 --> 10:0 region 1 text "A line without a font mapping" }

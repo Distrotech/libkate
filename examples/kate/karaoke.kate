@@ -33,11 +33,11 @@ kate {
       curve { linear 9 points { 0 0   1 0   2 0   3 0   4 0   3 0   2 0   1 0   0 0 } } for 1
       periodic
     }
-    define local bitmap { source "ball_blue.png" }
-    define local bitmap { source "ball_blue-0.92.png" }
-    define local bitmap { source "ball_blue-0.75.png" }
-    define local bitmap { source "ball_blue-0.57.png" }
-    define local bitmap { source "ball_blue-0.5.png" }
+    define local bitmap { source "ball_blue.png" offset 50% 50% }
+    define local bitmap { source "ball_blue-0.92.png" offset 50% 50% }
+    define local bitmap { source "ball_blue-0.75.png" offset 50% 50% }
+    define local bitmap { source "ball_blue-0.57.png" offset 50% 50% }
+    define local bitmap { source "ball_blue-0.5.png" offset 50% 50% }
   }
 
   event {

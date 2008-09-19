@@ -48,6 +48,10 @@ If the number of bits per pixel is greater than zero (deprecated):
 
 Next, we have a \ref format_warp "warp".
 
+Bitstream version 0.4 starts making use of this warp:
+\li a \ref format_32v "variable length integer" representing the horizontal offset to the logical center of the bitmap.
+\li a \ref format_32v "variable length integer" representing the vertical offset to the logical center of the bitmap.
+
 Next, the data ends.
 
 */

@@ -201,6 +201,7 @@ pre                          {return PRE;}
 markup                       {return MARKUP;}
 canvas                       {return CANVAS;}
 local                        {return LOCAL;}
+offset                       {return OFFSET;}
 
 
 left_to_right|l2r|ltr|ltr_ttb|l2r_t2b        {return L2R_T2B;}
