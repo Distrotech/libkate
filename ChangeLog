@@ -1,4 +1,5 @@
 0.1.13
+  bitstream 0.4
   glyph pointers and markers can now have a custom animated image
   better height control for karaoke use of the glyph pointer
   karaoke timing info is now extracted from enhanced lrc files
@@ -46,6 +47,7 @@
   the encoder can now read .lrc (lyrics) files
 
 0.1.5
+  bitstream 0.3
   new kate_encode_get_granule api function
   space metrics can now be expressed in millionths
   the info header can now hold the original canvas size
@@ -62,6 +64,7 @@
   fix 64 bit warnings
 
 0.1.2
+  bitstream 0.2
   background image
   text can now be escaped for markup if needed
   all PNG images can now be read as raw images
@@ -76,4 +79,5 @@
   Several fixes for bugs found with valgrind
 
 0.1.0
+  bitstream 0.1
   First released version
