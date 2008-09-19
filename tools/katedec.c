@@ -494,7 +494,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
       for (p=0;p<kb->size;++p) {
         if (p%16==0) fprintf(f,"%s",sindent);
         fprintf(f," %3d",kb->pixels[p]);
-        if (p%16==15) fprintf(f,"\n");
+        if (p%16==15 || p==kb->size-1) fprintf(f,"\n");
       }
       fprintf(f,"%s}\n",sindent);
       break;
