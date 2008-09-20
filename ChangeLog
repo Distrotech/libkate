@@ -1,4 +1,4 @@
-0.1.13
+0.2.0
   bitstream 0.4
   glyph pointers and markers can now have a custom animated image
   bitmaps now have a logical position (x/y offset)
