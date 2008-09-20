@@ -33,7 +33,7 @@
 
 #include "kate/kate.h"
 
-#if !defined __GNUC__ || (((__GNUC__&0x100)+__GNUC_MINOR__+0)<0x0303)
+#if !defined __GNUC__ || (((__GNUC__*0x100)+(__GNUC_MINOR__+0))<0x0303)
 #define __attribute__(x)
 #endif
 
