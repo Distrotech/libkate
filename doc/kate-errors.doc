@@ -33,6 +33,7 @@ These are the error codes that the libkate API can return:
 \li \c KATE_E_LIMIT An limit was exceeded (a string too long, a pixel value above what can fit in a bitmap's bit depth, etc)
 \li \c KATE_E_VERSION The bitstream version is not supported by this version of libkate
 \li \c KATE_E_NOT_KATE The packet passed the the libkate API is not a Kate packet
+\li \c KATE_E_BAD_TAG A tag passed to the comment API does not comply with Vorbis comment rules
 
 
 */
