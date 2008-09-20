@@ -413,6 +413,9 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     kate_read32v(kpb); /* the size of the warp */
     ks->wrap_mode=kate_read32v(kpb);
   }
+  else {
+    ks->wrap_mode=kate_wrap_word;
+  }
 
   return kate_warp(kpb);
 }
@@ -710,6 +713,10 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     kate_read32v(kpb); /* the size of the warp */
     kb->x_offset=kate_read32v(kpb);
     kb->y_offset=kate_read32v(kpb);
+  }
+  else {
+    kb->x_offset=0;
+    kb->y_offset=0;
   }
 
   ret=kate_warp(kpb);
@@ -1163,6 +1170,10 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
 
     ev->bitmaps=bitmaps;
     ev->nbitmaps=nbitmaps;
+  }
+  else {
+    ev->bitmaps=NULL;
+    ev->nbitmaps=0;
   }
 
   ret=kate_warp(kpb);
