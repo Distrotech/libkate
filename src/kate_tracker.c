@@ -10,6 +10,9 @@
 #define KATE_INTERNAL
 #include "kate_internal.h"
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -17,6 +20,10 @@
 
 static const kate_color default_text_color={255,255,255,255};
 static const kate_color default_background_color={0,0,0,0};
+
+typedef struct kate_tracker_internal {
+  size_t nglyphs;
+} kate_tracker_internal;
 
 /**
   \ingroup tracker
@@ -28,20 +35,25 @@ static const kate_color default_background_color={0,0,0,0};
   */
 int kate_tracker_init(kate_tracker *kin,const kate_info *ki,kate_const kate_event *ev)
 {
+  kate_tracker_internal *internal;
   const char *text;
   size_t rlen0;
 
   if (!kin || !ki || !ev) return KATE_E_INVALID_PARAMETER;
 
+  internal=(kate_tracker_internal*)kate_malloc(sizeof(kate_tracker_internal));
+  if (!internal) return KATE_E_OUT_OF_MEMORY;
+
   kin->ki=ki;
   kin->event=ev;
+  kin->internal=internal;
   kate_event_track(kin->event);
 
-  kin->nglyphs=0;
+  kin->internal->nglyphs=0;
   text=kin->event->text;
   rlen0=kin->event->len0;
   while (kate_text_get_character(kin->event->text_encoding,&text,&rlen0)>0)
-    ++kin->nglyphs;
+    ++kin->internal->nglyphs;
 
   return 0;
 }
@@ -57,7 +69,9 @@ int kate_tracker_clear(kate_tracker *kin)
 {
   if (!kin) return KATE_E_INVALID_PARAMETER;
   if (!kin->event) return KATE_E_INIT;
+  if (!kin->internal) return KATE_E_INIT;
 
+  kate_free(kin->internal);
   kate_event_release(kin->event);
 
   return 0;
@@ -593,12 +607,12 @@ int kate_tracker_get_text_path_position(kate_tracker *kin,size_t glyph,int *x,in
   int ret;
 
   if (!kin || !x || !y) return KATE_E_INVALID_PARAMETER;
-  if (glyph>=kin->nglyphs) return KATE_E_INVALID_PARAMETER;
+  if (glyph>=kin->internal->nglyphs) return KATE_E_INVALID_PARAMETER;
   if (!kin->has.path) return KATE_E_INVALID_PARAMETER;
 
   t=0;
-  if (kin->nglyphs>1) {
-    t=kin->path_start+glyph*(kin->path_end-kin->path_start)/(kin->nglyphs-1);
+  if (kin->internal->nglyphs>1) {
+    t=kin->path_start+glyph*(kin->path_end-kin->path_start)/(kin->internal->nglyphs-1);
   }
   ret=kate_tracker_update_property_at_duration(kin,1,t,kate_motion_semantics_text_path,&dx,&dy);
   if (ret==0) {

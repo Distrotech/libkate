@@ -385,6 +385,8 @@ typedef struct kate_event {
   uintptr_t pad1[10];
 } kate_event;
 
+struct kate_tracker_internal; /* internal */
+
 /** this keeps track of changes during an event's lifetime */
 typedef struct kate_tracker {
   const kate_info *ki;                          /**< the kate_info associated with this tracker */
@@ -501,7 +503,7 @@ typedef struct kate_tracker {
   kate_float draw_width;                        /**< width of the drawn line */
 
   /* internal */
-  size_t nglyphs;
+  struct kate_tracker_internal *internal;
 
   uintptr_t pad[19];
 
