@@ -408,6 +408,12 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     ks->font=NULL;
   }
 
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0004) {
+    /* 0.4 adds a warp for wrap mode */
+    kate_read32v(kpb); /* the size of the warp */
+    ks->wrap_mode=kate_read32v(kpb);
+  }
+
   return kate_warp(kpb);
 }
 

@@ -5,6 +5,7 @@
   better height control for karaoke use of the glyph pointer
   karaoke timing info is now extracted from enhanced lrc files
   line width can now be controlled (via a motion)
+  add text wrapping property to style
   comments are now validated against Vorbis comment rules
   more validity checks in the encoder and API
 

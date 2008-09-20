@@ -148,6 +148,7 @@ int kate_style_init(kate_style *ks)
     0,
     0,
     0,
+    kate_wrap_word,
     0,
     NULL,
     {0,0,0,0,0,0,0,0,0}

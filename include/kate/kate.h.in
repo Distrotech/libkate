@@ -68,6 +68,12 @@ typedef struct kate_color {
   unsigned char a;               /**< alpha component, 0 (fully transparent) to 255 (fully opaque) */
 } kate_color;
 
+/** defines how to wrap text if necessary */
+typedef enum {
+  kate_wrap_word,                /**< allow wrapping at word boundaries */
+  kate_wrap_none                 /**< forbid wrapping */
+} kate_wrap_mode;
+
 /** defines a style to display text */
 typedef struct kate_style {
   kate_float halign;                 /**< horizontal alignment, -1 for left, +1 for right, other values inter/extrapolate */
@@ -92,7 +98,8 @@ typedef struct kate_style {
   unsigned int underline:1;          /**< display underlined text */
   unsigned int strike:1;             /**< display striked text */
   unsigned int justify:1;            /**< display justified text */
-  unsigned int pad0:27;
+  unsigned int wrap_mode:2;          /**< how to wrap text if necessary */
+  unsigned int pad0:25;
 
   kate_const char *font;             /**< name of the font to use */
 

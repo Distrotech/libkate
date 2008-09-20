@@ -2049,7 +2049,7 @@ static void cleanup_memory(void)
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT CANVAS
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
 %token <number> HORIZONTAL VERTICAL CLIP PRE MARKUP
-%token <number> LOCAL
+%token <number> LOCAL WRAP WORD
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -2094,6 +2094,7 @@ static void cleanup_memory(void)
 %type <number> kd_optional_secondary
 %type <number> directionality
 %type <number> kd_opt_space_metric
+%type <number> kd_wrap_mode
 
 %%
 
@@ -2148,6 +2149,7 @@ kd_style_def: HALIGN float { kstyle.halign=$2; }
             | UNDERLINE { kstyle.underline=1; }
             | STRIKE { kstyle.strike=1; }
             | JUSTIFY { kstyle.justify=1; }
+            | WRAP kd_wrap_mode { kstyle.wrap_mode=$2; }
             | FONT STRING { set_font(&kstyle,$2); }
             | FONT SIZE float kd_opt_space_metric { set_font_size(&kstyle,$3,$4); }
             | FONT WIDTH float kd_opt_space_metric { set_font_width(&kstyle,$3,$4); }
@@ -2223,6 +2225,10 @@ kd_color: UNUMBER UNUMBER UNUMBER { $$=make_color($1,$2,$3,255); }
         | COLORSPEC { $$=make_color_alpha($1,255); }
         | COLORSPEC ALPHA UNUMBER { $$=make_color_alpha($1,$3); }
         ;
+
+kd_wrap_mode: NONE { $$=kate_wrap_none; }
+            | WORD { $$=kate_wrap_word; }
+            ;
 
 kd_curvetype: NONE { $$=kate_curve_none; }
             | STATIC { $$=kate_curve_static; }

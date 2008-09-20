@@ -30,7 +30,7 @@ kate {
     define style { $bg italics bold }
     define style { $bg font width 40 font height 10 }
     define style { $bg font width 10 font height 40 }
-    define style { $bg }
+    define style { $bg wrap none }
     define style { $bg font "monospace" }
     define style { $bg font "helvetica" }
     define style { $bg }

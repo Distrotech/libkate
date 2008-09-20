@@ -388,6 +388,14 @@ static int kate_encode_style(const kate_style *ks,kate_pack_buffer *kpb)
     kate_close_warp(&warp,kpb);
   }
 
+  {
+    /* bitstream 0.4: add nowrap */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write32v(&warp,ks->wrap_mode);
+    kate_close_warp(&warp,kpb);
+  }
+
   kate_warp(kpb);
 
   return 0;

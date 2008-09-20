@@ -271,6 +271,15 @@ static const char *directionality2text(kate_text_directionality d)
   return "invalid";
 }
 
+static const char *wrap2text(kate_wrap_mode w)
+{
+  switch (w) {
+    case kate_wrap_word: return "word";
+    case kate_wrap_none: return "none";
+  }
+  return "invalid";
+}
+
 static void write_text(FILE *f,const char *text,size_t len0,kate_markup_type text_markup_type)
 {
   while (1) {
@@ -359,6 +368,7 @@ static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
     if (ks->underline) fprintf(f,"%sunderline\n",sindent);
     if (ks->strike) fprintf(f,"%sstrike\n",sindent);
     if (ks->justify) fprintf(f,"%sjustify\n",sindent);
+    fprintf(f,"%swrap %s\n",sindent,wrap2text(ks->wrap_mode));
   }
 
   kate_free(sindent);
