@@ -1,6 +1,6 @@
 diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac NEW/gst-plugins-bad/configure.ac
 --- ORG/gst-plugins-bad/configure.ac	2008-09-13 11:26:03.000000000 +0100
-+++ NEW/gst-plugins-bad/configure.ac	2008-09-13 11:33:59.000000000 +0100
++++ NEW/gst-plugins-bad/configure.ac	2008-09-18 13:23:44.000000000 +0100
 @@ -807,6 +807,30 @@
    AC_SUBST(JP2K_LIBS)
  ])
@@ -14,7 +14,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ])
 +  AC_SUBST(KATE_CFLAGS)
 +  AC_SUBST(KATE_LIBS)
-+  PKG_CHECK_MODULES(TIGER, tiger >= 0.1.2,
++  PKG_CHECK_MODULES(TIGER, tiger >= 0.2.0,
 +    [
 +      HAVE_TIGER="yes"
 +      AC_DEFINE(HAVE_TIGER, 1, [Define if libtiger is available])
@@ -276,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,151 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-16 10:11:14.000000000 +0100
+@@ -0,0 +1,159 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -397,8 +397,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      0, "Kate Tiger renderer");
 +#endif
 +
++  /* if we have don't build tiger, we'll want to autoplug and convert to
++     text, but if we do build tiger, we'll want to use it preferentially
++     as it can play non text streams too */
 +  if (!gst_element_register (plugin, "katedec",
-+      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
++#ifdef HAVE_TIGER
++      GST_RANK_NONE,
++#else
++      GST_RANK_PRIMARY,
++#endif
++      GST_TYPE_KATE_DEC))
 +    return FALSE;
 +
 +  if (!gst_element_register (plugin, "kateenc",
@@ -841,8 +849,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,1569 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-17 21:10:21.000000000 +0100
+@@ -0,0 +1,1758 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -948,6 +956,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ARG_KEEPALIVE_MIN_TIME,
 +  ARG_ORIGINAL_CANVAS_WIDTH,
 +  ARG_ORIGINAL_CANVAS_HEIGHT,
++  ARG_DEFAULT_SPU_DURATION,
 +};
 +
 +/* taken off the dvdsubdec element */
@@ -964,6 +973,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +#define GST_KATE_STM_TO_GST(stm) ((GST_MSECOND * 1024 * (stm)) / 90)
 +
 +#define DEFAULT_KEEPALIVE_MIN_TIME 2.5f
++#define DEFAULT_DEFAULT_SPU_DURATION 1.5f
 +
 +#define GST_KATE_SPU_MIME_TYPE "video/x-dvd-subpicture"
 +
@@ -1068,6 +1078,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          "Set minimum time to emit keepalive packets (0 disables keepalive packets)",
 +          0.0f, FLT_MAX, DEFAULT_KEEPALIVE_MIN_TIME, G_PARAM_READWRITE));
 +
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_SPU_DURATION,
++      g_param_spec_float ("default-spu-duration", "Default SPU duration",
++          "Set the assumed max duration (in seconds) of SPUs with no duration specified",
++          0.0f, FLT_MAX, DEFAULT_DEFAULT_SPU_DURATION, G_PARAM_READWRITE));
++
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_enc_change_state);
 +}
 +
@@ -1105,7 +1120,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke->headers_sent = FALSE;
 +  ke->last_timestamp = 0;
 +  ke->latest_end_time = 0;
-+  ke->last_timestamp = 0;
 +  ke->language = NULL;
 +  ke->category = NULL;
 +  ke->granule_rate_numerator = 1000;
@@ -1114,7 +1128,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ke->original_canvas_width = 0;
 +  ke->original_canvas_height = 0;
 +  ke->keepalive_min_time = DEFAULT_KEEPALIVE_MIN_TIME;
++  ke->default_spu_duration = DEFAULT_DEFAULT_SPU_DURATION;
 +  memcpy (ke->spu_clut, gst_kate_enc_default_clut, sizeof (gst_kate_enc_default_clut));
++  ke->delayed_spu = FALSE;
 +}
 +
 +static void
@@ -1178,6 +1194,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case ARG_ORIGINAL_CANVAS_HEIGHT:
 +      ke->original_canvas_height = g_value_get_int (value);
 +      break;
++    case ARG_DEFAULT_SPU_DURATION:
++      ke->default_spu_duration = g_value_get_float (value);
++      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
@@ -1214,6 +1233,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +    case ARG_ORIGINAL_CANVAS_HEIGHT:
 +      g_value_set_int (value, ke->original_canvas_height);
++      break;
++    case ARG_DEFAULT_SPU_DURATION:
++      g_value_set_float (value, ke->default_spu_duration);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1618,7 +1640,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  w = right-left+1;
 +  h = bottom-top+1;
-+  GST_LOG_OBJECT (ke, "cropped from %zu %zu to %zu %zu\n", kb->width, kb->height, w, h);
++  GST_LOG_OBJECT (ke, "cropped from %zu %zu to %zu %zu", kb->width, kb->height, w, h);
 +  *dx += left;
 +  *dy += top;
 +  n = 0;
@@ -1642,6 +1664,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  const guint8 *ptr;
 +  guint16 sz;
 +
++  if (command_sequence_offset >= GST_BUFFER_SIZE (buf)) {
++    GST_WARNING_OBJECT (ke, "Command sequence offset %u is out of range %u", command_sequence_offset, GST_BUFFER_SIZE (buf));
++    return GST_FLOW_ERROR;
++  }
++
 +  ptr = GST_BUFFER_DATA (buf) + command_sequence_offset;
 +  sz = GST_BUFFER_SIZE (buf) - command_sequence_offset;
 +
@@ -1650,7 +1677,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  CHECK (2);
 +  date = GST_KATE_UINT16_BE (ptr);
 +  ADVANCE (2);
-+  GST_DEBUG_OBJECT(ke, "date %u\n", date);
++  GST_DEBUG_OBJECT(ke, "date %u", date);
 +
 +  CHECK (2);
 +  next_command_sequence = GST_KATE_UINT16_BE (ptr);
@@ -1818,7 +1845,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  CHECK (2);
 +  packet_size = GST_KATE_UINT16_BE (ptr);
 +  ADVANCE (2);
-+  GST_DEBUG_OBJECT (ke, "packet size %u (GstBuffer size %u)\n", packet_size, GST_BUFFER_SIZE (buf));
++  GST_DEBUG_OBJECT (ke, "packet size %u (GstBuffer size %u)", packet_size, GST_BUFFER_SIZE (buf));
 +
 +  CHECK (2);
 +  next_command_sequence = GST_KATE_UINT16_BE (ptr);
@@ -1888,7 +1915,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    }
 +  }
 +
-+  GST_LOG_OBJECT (ke, "%u/%u bytes left in the data packet\n",
++  GST_LOG_OBJECT (ke, "%u/%u bytes left in the data packet",
 +    max_nybbles[0]-nybble_offset[0],
 +    max_nybbles[1]-nybble_offset[1]);
 +
@@ -1916,12 +1943,253 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    kr->h = kb->height;
 +  }
 +
++  /* some SPUs have no hide time */
++  if (ke->hide_time == 0) {
++    GST_INFO_OBJECT (ke, "SPU has no hide time");
++    /* now, we don't know when the next SPU is scheduled to go, since we probably
++       haven't received it yet, so we'll just make it a 1 second delay, which is
++       probably going to end before the next one while being readable */
++    //ke->hide_time = ke->show_time + (1000*90/1024);
++  }
++
 +  return GST_FLOW_OK;
 +}
 +
 +#undef IGNORE
 +#undef ADVANCE
 +#undef CHECK
++
++static GstFlowReturn
++gst_kate_enc_chain_push_packet (GstKateEnc *ke, kate_packet *kp, GstClockTime start, GstClockTime duration)
++{
++  kate_int64_t granpos;
++  GstFlowReturn rflow;
++
++  granpos = kate_encode_get_granule (&ke->k);
++  if (G_UNLIKELY(granpos < 0)) {
++    GST_WARNING_OBJECT (ke, "Negative granpos for packet");
++    kate_packet_clear (kp);
++    return GST_FLOW_ERROR;
++  }
++  rflow = gst_kate_enc_push_and_free_kate_packet (ke, kp, granpos, start, duration, FALSE);
++  if (G_UNLIKELY(rflow != GST_FLOW_OK)) {
++    GST_WARNING_OBJECT (ke, "Failed to push Kate packet");
++  }
++  return rflow;
++}
++
++static void
++gst_kate_enc_generate_keepalive (GstKateEnc *ke, GstClockTime timestamp)
++{
++  kate_packet kp;
++  int ret;
++  kate_float t = timestamp / (double)GST_SECOND;
++  GST_DEBUG_OBJECT (ke, "keepalive at %f", t);
++  ret = kate_encode_keepalive (&ke->k, t, &kp);
++  if (ret<0) {
++    GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %d", ret);
++  }
++  else {
++    kate_int64_t granpos = kate_encode_get_granule (&ke->k);
++    GST_LOG_OBJECT (ke, "Keepalive packet encoded");
++    if (gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, timestamp, 0, FALSE)) {
++      GST_WARNING_OBJECT (ke, "Failed to push keepalive packet");
++    }
++  }
++}
++
++static GstFlowReturn
++gst_kate_enc_flush_waiting (GstKateEnc *ke, GstClockTime now)
++{
++  GstFlowReturn rflow = GST_FLOW_OK;
++  if (ke->delayed_spu) {
++    int ret;
++    kate_packet kp;
++    GstClockTime keepalive_time;
++
++    kate_float t0 = ke->delayed_start / (double)GST_SECOND;
++    kate_float t1 = now / (double)GST_SECOND;
++
++    GST_INFO_OBJECT (ke, "We had a delayed SPU packet starting at %f, flushing at %f (assumed duration %f)", t0, t1, t1-t0);
++
++    ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
++    if (G_UNLIKELY(ret < 0)) {
++      rflow = GST_FLOW_ERROR;
++    }
++    else {
++      rflow = gst_kate_enc_chain_push_packet (ke, &kp, ke->delayed_start, now-ke->delayed_start+1);
++    }
++
++    if (rflow == GST_FLOW_OK) {
++      GST_DEBUG_OBJECT (ke, "delayed SPU packet flushed");
++    }
++    else {
++      GST_WARNING_OBJECT (ke, "Failed to flush delayed SPU packet: %d", rflow);
++    }
++
++    /* forget it even if we couldn't flush it */
++    ke->delayed_spu = FALSE;
++
++    /* now that we've flushed the packet, we want to insert keepalives as requested */
++    if (ke->keepalive_min_time > 0.0f && t1 > t0) {
++GST_INFO_OBJECT (ke, "generating keepalives at %f from %f to %f",ke->keepalive_min_time, t0, t1);
++      for (keepalive_time = ke->delayed_start; (keepalive_time += ke->keepalive_min_time*GST_SECOND) < now; ) {
++GST_INFO_OBJECT (ke, "generating keepalive at %f", keepalive_time / (double)GST_SECOND);
++        gst_kate_enc_generate_keepalive (ke, keepalive_time);
++      }
++    }
++  }
++  return rflow;
++}
++
++static GstFlowReturn
++gst_kate_enc_chain_spu (GstKateEnc *ke, GstBuffer *buf)
++{
++  kate_packet kp;
++  kate_region kregion;
++  kate_bitmap kbitmap;
++  kate_palette kpalette;
++  GstFlowReturn rflow;
++  int ret = 0;
++
++  rflow = gst_kate_enc_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
++  if (G_UNLIKELY(rflow != GST_FLOW_OK)) {
++    GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
++#if 0
++    {
++      static int spu_count=0;
++      FILE *f;
++      char name[32];
++      snprintf (name, sizeof(name), "/tmp/bad_spu_%04d", spu_count++);
++      name [sizeof (name) - 1] = 0;
++      f=fopen (name,"w");
++      if (f) {
++        fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
++        fclose (f);
++      }
++    }
++#endif
++  }
++  else if (G_UNLIKELY(kbitmap.width==0 || kbitmap.height==0)) {
++    /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
++    GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
++    rflow = GST_FLOW_OK;
++  }
++  else {
++    /* timestamp offsets are hidden in the SPU packets */
++    GstClockTime start = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->show_time);
++    GstClockTime stop = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->hide_time);
++    kate_float t0 = start/(double)GST_SECOND;
++    kate_float t1 = stop/(double)GST_SECOND;
++    GST_DEBUG_OBJECT (ke, "buf ts %f, start/show %hu/%hu", GST_BUFFER_TIMESTAMP (buf) / (double)GST_SECOND, ke->show_time, ke->hide_time);
++
++#if 0
++    {
++      static int spu_count=0;
++      FILE *f;
++      char name[32];
++      snprintf (name, sizeof(name), "/tmp/spu_%04d", spu_count++);
++      name [sizeof (name) - 1] = 0;
++      f=fopen (name,"w");
++      if (f) {
++        fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
++        fclose (f);
++      }
++    }
++#endif
++    GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE (buf), t0, t1);
++    ret = kate_encode_set_region (&ke->k, &kregion);
++    if (G_UNLIKELY(ret < 0)) {
++      GST_WARNING_OBJECT (ke, "Failed to set event region (%d)", ret);
++      rflow = GST_FLOW_ERROR;
++    }
++    else {
++      ret = kate_encode_set_palette (&ke->k, &kpalette);
++      if (G_UNLIKELY(ret < 0)) {
++        GST_WARNING_OBJECT (ke, "Failed to set event palette (%d)", ret);
++        rflow = GST_FLOW_ERROR;
++      }
++      else {
++        ret = kate_encode_set_bitmap (&ke->k, &kbitmap);
++        if (G_UNLIKELY(ret < 0)) {
++          GST_WARNING_OBJECT (ke, "Failed to set event bitmap (%d)", ret);
++          rflow = GST_FLOW_ERROR;
++        }
++        else {
++          /* Some SPUs have no hide time - so I'm going to delay the encoding of the packet
++             till either a suitable event happens, and the time of this event will be used
++             as the end time of this SPU, which will then be encoded and sent off. Suitable
++             events are the arrival of a subsequent SPU (eg, this SPU will replace the one
++             with no end), EOS, a new segment event, or a time threshold being reached */
++          if (ke->hide_time <= ke->show_time) {
++            GST_INFO_OBJECT (ke, "Cannot encode SPU packet now, hide time is now known (starting at %d) - delaying", t0);
++            ke->delayed_spu = TRUE;
++            ke->delayed_start = start;
++            rflow = GST_FLOW_OK;
++          }
++          else {
++            ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
++            if (G_UNLIKELY(ret < 0)) {
++              GST_WARNING_OBJECT (ke, "Failed to encode empty text for SPU buffer (%d)", ret);
++              rflow = GST_FLOW_ERROR;
++            }
++            else {
++              rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop-start+1);
++            }
++          }
++        }
++      }
++    }
++    g_free (kpalette.colors);
++    g_free (kbitmap.pixels);
++  }
++
++  return rflow;
++}
++
++static GstFlowReturn
++gst_kate_enc_chain_text (GstKateEnc *ke, GstBuffer *buf, const char *mime_type)
++{
++  kate_packet kp;
++  int ret = 0;
++  GstFlowReturn rflow;
++  GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
++  GstClockTime stop = GST_BUFFER_TIMESTAMP (buf)+GST_BUFFER_DURATION (buf);
++
++  if (!strcmp (mime_type, "text/x-pango-markup")) {
++    ret = kate_encode_set_markup_type (&ke->k, kate_markup_simple);
++  }
++  else {
++    ret = kate_encode_set_markup_type (&ke->k, kate_markup_none);
++  }
++
++  if (G_UNLIKELY(ret < 0)) {
++    GST_WARNING_OBJECT (ke, "Failed to set markup type (%d)", ret);
++    rflow = GST_FLOW_ERROR;
++  }
++  else {
++    const char *text = (const char*) GST_BUFFER_DATA (buf);
++    if (text) {
++      size_t text_len = GST_BUFFER_SIZE (buf);
++      kate_float t0 = start/(double)GST_SECOND;
++      kate_float t1 = stop/(double)GST_SECOND;
++      GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f", (int)text_len, (int)text_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), t0, t1);
++      ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
++      if (G_UNLIKELY(ret < 0)) {
++        rflow = GST_FLOW_ERROR;
++      }
++      else {
++        rflow = gst_kate_enc_chain_push_packet (ke, &kp, start, stop-start+1);
++      }
++    }
++    else {
++      GST_WARNING_OBJECT (ke, "No text in text packet");
++      rflow = GST_FLOW_ERROR;
++    }
++  }
++
++  return rflow;
++}
 +
 +/* chain function
 + * this function does the actual processing
@@ -1930,15 +2198,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +gst_kate_enc_chain (GstPad * pad, GstBuffer * buf)
 +{
 +  GstKateEnc *ke = GST_KATE_ENC (gst_pad_get_parent (pad));
-+  kate_packet kp;
 +  GstFlowReturn rflow = GST_FLOW_OK;
-+  GstClockTime start = GST_BUFFER_TIMESTAMP (buf);
-+  GstClockTime duration = GST_BUFFER_DURATION (buf);
-+  GstClockTime stop = GST_BUFFER_TIMESTAMP (buf)+duration;
 +  GstCaps *caps;
 +  const gchar *mime_type = NULL;
-+  int ret;
-+  gboolean packet_ready = FALSE;
 +
 +  GST_DEBUG_OBJECT (ke, "got packet, %u bytes", GST_BUFFER_SIZE (buf));
 +
@@ -1950,105 +2212,33 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +  else {
 +    const GstStructure *structure = gst_caps_get_structure (caps, 0);
-+    mime_type = gst_structure_get_name (structure);
-+    GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type ? mime_type : "<no type>");
++    if (structure)
++      mime_type = gst_structure_get_name (structure);
 +
-+    /* first push headers if we haven't done that yet */
-+    rflow = gst_kate_enc_flush_headers (ke);
++    if (mime_type) {
++      GST_LOG_OBJECT (ke, "Packet has MIME type %s", mime_type);
 +
-+    if (G_LIKELY(rflow == GST_FLOW_OK)) {
-+      kate_float t0 = start/(double)GST_SECOND;
-+      kate_float t1 = stop/(double)GST_SECOND;
-+
-+      if (!strcmp (mime_type, GST_KATE_SPU_MIME_TYPE)) {
-+        /* encode a kate_bitmap */
-+        kate_region kregion;
-+        kate_bitmap kbitmap;
-+        kate_palette kpalette;
-+        rflow = gst_kate_enc_decode_spu (ke, buf, &kregion, &kbitmap, &kpalette);
-+        if (G_UNLIKELY(rflow != GST_FLOW_OK)) {
-+          GST_ERROR_OBJECT (ke, "Failed to decode incoming SPU");
-+#if 0
-+          {
-+            FILE *f=fopen ("/tmp/bad-spu","w");
-+            if (f) {
-+              fwrite (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), 1, f);
-+              fclose (f);
-+            }
-+          }
-+#endif
-+        }
-+        else if (G_UNLIKELY(kbitmap.width==0 || kbitmap.height==0)) {
-+          /* there are some DVDs (well, at least one) where some dimwits put in a wholly transparent full screen 720x576 SPU !!!!?! */
-+          GST_WARNING_OBJECT (ke, "SPU is totally invisible - dimwits");
-+          ret = 0;
-+          packet_ready = FALSE;
-+        }
-+        else {
-+          /* timestamp offsets are hidden in the SPU packets */
-+          start = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->show_time);
-+          stop = GST_BUFFER_TIMESTAMP (buf) + GST_KATE_STM_TO_GST (ke->hide_time);
-+          t0 = start/(double)GST_SECOND;
-+          t1 = stop/(double)GST_SECOND;
-+
-+          GST_DEBUG_OBJECT (ke, "Encoding %dx%d SPU: (%u bytes) from %f to %f", kbitmap.width, kbitmap.height, GST_BUFFER_SIZE (buf), t0, t1);
-+          ret = kate_encode_set_region (&ke->k, &kregion);
-+          if (G_UNLIKELY(ret < 0)) {
-+            GST_WARNING_OBJECT (ke, "Failed to set event region (%d)", ret);
-+          }
-+          else {
-+            ret = kate_encode_set_palette (&ke->k, &kpalette);
-+            if (G_UNLIKELY(ret < 0)) {
-+              GST_WARNING_OBJECT (ke, "Failed to set event palette (%d)", ret);
-+            }
-+            else {
-+              ret = kate_encode_set_bitmap (&ke->k, &kbitmap);
-+              if (G_UNLIKELY(ret < 0)) {
-+                GST_WARNING_OBJECT (ke, "Failed to set event bitmap (%d)", ret);
-+              }
-+              else {
-+                ret = kate_encode_text (&ke->k, t0, t1, "", 0, &kp);
-+                if (G_LIKELY(ret >= 0)) {
-+                  packet_ready = TRUE;
-+                }
-+              }
-+            }
-+          }
-+          g_free (kpalette.colors);
-+          g_free (kbitmap.pixels);
-+        }
-+      }
-+      else {
-+        /* encode text */
-+        if (!strcmp (mime_type, "text/x-pango-markup")) {
-+            ret = kate_encode_set_markup_type (&ke->k, kate_markup_simple);
-+        }
-+        else {
-+            ret = kate_encode_set_markup_type (&ke->k, kate_markup_none);
-+        }
-+        if (G_UNLIKELY(ret < 0)) {
-+          GST_WARNING_OBJECT (ke, "Failed to set markup type (%d)", ret);
-+        }
-+        else {
-+          const char *text = (const char*) GST_BUFFER_DATA (buf);
-+          size_t text_len = GST_BUFFER_SIZE (buf);
-+          GST_LOG_OBJECT (ke, "Encoding text: %*.*s (%u bytes) from %f to %f", (int)text_len, (int)text_len, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf), t0, t1);
-+          ret = kate_encode_text (&ke->k, t0, t1, text, text_len, &kp);
-+          if (G_LIKELY(ret >= 0))
-+            packet_ready = TRUE;
-+        }
-+      }
++      /* first push headers if we haven't done that yet */
++      rflow = gst_kate_enc_flush_headers (ke);
 +
 +      if (G_LIKELY(rflow == GST_FLOW_OK)) {
-+        if (G_UNLIKELY(ret < 0)) {
-+          GST_WARNING_OBJECT (ke, "Failed to encode buffer (%d)", ret);
-+          rflow = GST_FLOW_ERROR;
-+        }
-+        else if (G_LIKELY(packet_ready)) {
-+          kate_int64_t granpos = kate_encode_get_granule (&ke->k);
-+          rflow = gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, start, duration, FALSE);
++        /* flush any packet we had waiting */
++        rflow = gst_kate_enc_flush_waiting (ke, GST_BUFFER_TIMESTAMP (buf));
++      
++        if (G_LIKELY(rflow == GST_FLOW_OK)) {
++          if (!strcmp (mime_type, GST_KATE_SPU_MIME_TYPE)) {
++            /* encode a kate_bitmap */
++            rflow = gst_kate_enc_chain_spu (ke, buf);
++          }
++          else {
++            /* encode text */
++            rflow = gst_kate_enc_chain_text (ke, buf, mime_type);
++          }
 +        }
 +      }
++    }
++    else {
++      GST_WARNING_OBJECT (ke, "Packet has no MIME type, ignored");
 +    }
 +  }
 +
@@ -2294,24 +2484,23 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +          gst_event_parse_new_segment (event, NULL, NULL, &format, &timestamp, NULL, NULL);
 +          if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (timestamp)) {
-+            GST_WARNING_OBJECT (ke, "No time in newsegment event %p", event);
++            GST_WARNING_OBJECT (ke, "No time in newsegment event %p, format %d, timestamp %lld", event, (int)format, (long long)timestamp);
 +          } else {
 +            float t = timestamp/(double)GST_SECOND;
-+            GST_DEBUG_OBJECT (ke, "ts %f, last %f (min %f)", t, ke->last_timestamp/(double)GST_SECOND, ke->keepalive_min_time);
-+            if (ke->keepalive_min_time > 0.0f && t-ke->last_timestamp/(double)GST_SECOND >= ke->keepalive_min_time) {
-+              kate_packet kp;
-+              int ret;
-+              GST_DEBUG_OBJECT (ke, "keepalive at %f", t);
-+              ret = kate_encode_keepalive (&ke->k, t, &kp);
-+              if (ret<0) {
-+                GST_WARNING_OBJECT (ke, "Failed to encode keepalive packet: %d", ret);
++
++            if (ke->delayed_spu && t-ke->delayed_start/(double)GST_SECOND >= ke->default_spu_duration) {
++              if (G_UNLIKELY(gst_kate_enc_flush_waiting (ke, timestamp) != GST_FLOW_OK)) {
++                GST_WARNING_OBJECT (ke, "Failed to encode delayed packet");
++                /* continue with new segment handling anyway */
 +              }
-+              else {
-+                kate_int64_t granpos = kate_encode_get_granule (&ke->k);
-+                GST_LOG_OBJECT (ke, "Keepalive packet encoded");
-+                if (gst_kate_enc_push_and_free_kate_packet (ke, &kp, granpos, timestamp, 0, FALSE)) {
-+                  GST_WARNING_OBJECT (ke, "Failed to push keepalive packet");
-+                }
++            }
++
++            GST_LOG_OBJECT (ke, "ts %f, last %f (min %f)", t, ke->last_timestamp/(double)GST_SECOND, ke->keepalive_min_time);
++            if (ke->keepalive_min_time > 0.0f && t-ke->last_timestamp/(double)GST_SECOND >= ke->keepalive_min_time) {
++              /* we only generate a keepalive if there is no SPU waiting, as it would
++                 mean out of sequence start times - and granulepos */
++              if (!ke->delayed_spu) {
++                gst_kate_enc_generate_keepalive (ke, timestamp);
 +              }
 +            }
 +          }
@@ -2378,7 +2567,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +
 +    case GST_EVENT_EOS:
-+      GST_LOG_OBJECT (ke, "Got EOS event");
++      GST_INFO_OBJECT (ke, "Got EOS event");
 +      if (ke->initialized) {
 +        GST_LOG_OBJECT (ke, "ensuring all headers are in");
 +        if (gst_kate_enc_flush_headers (ke) != GST_FLOW_OK) {
@@ -2386,7 +2575,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        }
 +        else {
 +          kate_packet kp;
-+          int ret = kate_encode_finish (&ke->k, -1, &kp);
++          int ret;
++          GstClockTime delayed_end = ke->delayed_start + ke->default_spu_duration * GST_SECOND;
++
++          if (G_UNLIKELY(gst_kate_enc_flush_waiting (ke, delayed_end) != GST_FLOW_OK)) {
++            GST_WARNING_OBJECT (ke, "Failed to encode delayed packet");
++            /* continue with EOS handling anyway */
++          }
++
++          ret = kate_encode_finish (&ke->k, -1, &kp);
 +          if (ret<0) {
 +            GST_WARNING_OBJECT (ke, "Failed to encode EOS packet: %d", ret);
 +          }
@@ -2413,8 +2610,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateenc.h	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,120 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateenc.h	2008-09-17 20:28:43.000000000 +0100
+@@ -0,0 +1,123 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -2500,6 +2697,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gboolean headers_sent;
 +  gboolean initialized;
++  gboolean delayed_spu;
++  GstClockTime delayed_start;
 +  gchar *language;
 +  gchar *category;
 +
@@ -2508,6 +2707,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  int granule_shift;
 +
 +  float keepalive_min_time;
++  float default_spu_duration;
 +
 +  size_t original_canvas_width;
 +  size_t original_canvas_height;
@@ -2594,8 +2794,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateparse.c	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,590 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateparse.c	2008-09-17 12:35:15.000000000 +0100
+@@ -0,0 +1,606 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
 + * Copyright (C) 2006 Andy Wingo <wingo@pobox.com>
@@ -2835,11 +3035,20 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    gint64 granulepos)
 +{
 +  GST_LOG_OBJECT(parse, "granulepos %16llx", granulepos);
++  if (granulepos < 0) {
++    /* packets coming not from Ogg won't have a granpos in the offset end,
++       so we have to synthesize one here - only problem is we don't know
++       the backlink - pretend there's none for now */
++    GST_INFO_OBJECT(parse, "No granulepos on buffer, synthesizing one");
++    granulepos = kate_duration_granule (&parse->ki, GST_BUFFER_TIMESTAMP (buf) / (double)GST_SECOND) << kate_granule_shift(&parse->ki);
++  }
 +  GST_BUFFER_OFFSET (buf) = kate_granule_time(&parse->ki, granulepos)*GST_SECOND;
 +  GST_BUFFER_OFFSET_END (buf) = granulepos;
 +  GST_BUFFER_TIMESTAMP (buf) = GST_BUFFER_OFFSET (buf);
 +
 +  /* Hack to flush each packet on its own page - taken off the CMML encoder element */
++  /* TODO: this is shite and needs to go once I find a way to tell Ogg to flush
++     as it messes up Matroska's track duration */
 +  GST_BUFFER_DURATION (buf) = G_MAXINT64;
 +
 +  gst_buffer_set_caps (buf, GST_PAD_CAPS (parse->srcpad));
@@ -2861,7 +3070,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +   * first */
 +  gst_kate_parse_drain_event_queue (parse);
 +
-+  if (!g_queue_is_empty (parse->buffer_queue)) {
++  while (!g_queue_is_empty (parse->buffer_queue)) {
 +    GstBuffer *buf;
 +    gint64 granpos;
 +
@@ -2912,6 +3121,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GST_LOG_OBJECT(parse, "granpos %16llx", granpos);
 +  g_queue_push_tail (parse->buffer_queue, buf);
 +
++#if 1
++  /* if getting buffers from matroska, we won't have a granpos here... */
++  //if (GST_BUFFER_OFFSET_END_IS_VALID (buf)) {
++    ret = gst_kate_parse_drain_queue (parse, granpos);
++  //}
++#else
 +  if (granpos >= 0) {
 +    ret = gst_kate_parse_drain_queue (parse, granpos);
 +  }
@@ -2919,6 +3134,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GST_WARNING_OBJECT (parse, "granulepos < 0 (%lld)", granpos);
 +    ret = GST_FLOW_ERROR;
 +  }
++#endif
 +
 +  return ret;
 +}
@@ -3269,7 +3485,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetag.c	2008-09-13 11:32:42.000000000 +0100
++++ NEW/gst-plugins-bad/ext/kate/gstkatetag.c	2008-09-13 19:15:40.000000000 +0100
 @@ -0,0 +1,343 @@
 +/*
 + * GStreamer
@@ -3686,8 +3902,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TAG_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,503 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-18 23:26:52.000000000 +0100
+@@ -0,0 +1,647 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -3757,7 +3973,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + *   filesrc location=video.ogg ! oggdemux name=demux \
 + *   demux. ! queue ! theoradec ! ffmpegcolorspace ! tiger name=tiger \
 + *   demux. ! queue ! kateparse ! tiger. \
-+ *   tiger. ! fakesink silent=TRUE
++ *   tiger. ! ffmpegcolorspace ! autovideosink
 + * </programlisting>
 + * </para>
 + * </refsect2>
@@ -3827,6 +4043,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static gboolean gst_kate_tiger_kate_sink_query (GstPad * pad, GstQuery * query);
 +static gboolean gst_kate_tiger_kate_event (GstPad * pad, GstEvent * event);
 +static gboolean gst_kate_tiger_video_set_caps (GstPad * pad, GstCaps * caps);
++static gboolean gst_kate_tiger_source_event (GstPad * pad, GstEvent * event);
 +
 +static void
 +gst_kate_tiger_base_init (gpointer gclass)
@@ -3898,6 +4115,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +{
 +  GST_DEBUG_OBJECT (tiger, "gst_kate_tiger_init");
 +
++  tiger->mutex = g_mutex_new();
++
 +  tiger->katesinkpad = gst_pad_new_from_static_template ( &kate_sink_factory, "kate_sink");
 +  gst_pad_set_chain_function (tiger->katesinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_chain));
 +  gst_pad_set_query_function (tiger->katesinkpad, GST_DEBUG_FUNCPTR (gst_kate_tiger_kate_sink_query));
@@ -3915,6 +4134,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  gst_element_add_pad (GST_ELEMENT (tiger), tiger->videosinkpad);
 +
 +  tiger->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
++  gst_pad_set_event_function (tiger->srcpad, gst_kate_tiger_source_event);
 +  gst_element_add_pad (GST_ELEMENT (tiger), tiger->srcpad);
 +
 +  gst_kate_util_decode_base_init (&tiger->decoder);
@@ -3942,6 +4162,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    tiger->default_font_desc = NULL;
 +  }
 +
++  g_mutex_free (tiger->mutex);
++  tiger->mutex = NULL;
++
 +  GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 +}
 +
@@ -3952,6 +4175,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstKateTiger *tiger = GST_KATE_TIGER (object);
 +  const char *str;
 +
++  g_mutex_lock (tiger->mutex);
++
 +  switch (prop_id) {
 +    case ARG_DEFAULT_FONT_DESC:
 +      if (tiger->default_font_desc) {
@@ -3961,7 +4186,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      str = g_value_get_string (value);
 +      if (str) {
 +        tiger->default_font_desc = g_strdup(str);
-+        if (tiger->tr) tiger_renderer_set_default_font_desc (tiger->tr, tiger->default_font_desc);
++        if (tiger->tr) tiger_renderer_set_default_font_description (tiger->tr, tiger->default_font_desc);
 +      }
 +      break;
 +    case ARG_DEFAULT_FONT_RED:
@@ -3977,6 +4202,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 +      break;
 +  }
++
++  g_mutex_unlock (tiger->mutex);
 +}
 +
 +static void
@@ -3984,6 +4211,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    GValue * value, GParamSpec * pspec)
 +{
 +  GstKateTiger *tiger = GST_KATE_TIGER (object);
++
++  g_mutex_lock (tiger->mutex);
 +
 +  switch (prop_id) {
 +    case ARG_DEFAULT_FONT_DESC:
@@ -4004,6 +4233,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      }
 +      break;
 +  }
++
++  g_mutex_unlock (tiger->mutex);
 +}
 +
 +/* GstElement vmethod implementations */
@@ -4019,25 +4250,26 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  const kate_event *ev = NULL;
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +
++  g_mutex_lock (tiger->mutex);
++
 +  GST_LOG_OBJECT (tiger, "Got kate buffer");
 +
 +  rflow = gst_kate_util_decoder_base_chain_kate_packet (&tiger->decoder, GST_ELEMENT_CAST (tiger), pad, buf, tiger->srcpad, &ev);
-+  if (G_UNLIKELY(rflow != GST_FLOW_OK)) {
-+    gst_object_unref (tiger);
-+    gst_buffer_unref (buf);
-+    return rflow;
-+  }
-+
-+  if (ev) {
-+    int ret = tiger_renderer_add_event (tiger->tr, ev->ki, ev);
-+    GST_INFO_OBJECT (tiger, "adding event for %p from %f to %f: %p, \"%s\"", ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
-+    if (G_UNLIKELY(ret < 0)) {
-+      GST_WARNING_OBJECT (tiger, "failed to add Kate event to Tiger renderer: %d", ret);
++  if (G_LIKELY(rflow == GST_FLOW_OK)) {
++    if (ev) {
++      int ret = tiger_renderer_add_event (tiger->tr, ev->ki, ev);
++      GST_INFO_OBJECT (tiger, "adding event for %p from %f to %f: %p, \"%s\"", ev->ki, ev->start_time, ev->end_time, ev->bitmap, ev->text);
++      if (G_UNLIKELY(ret < 0)) {
++        GST_WARNING_OBJECT (tiger, "failed to add Kate event to Tiger renderer: %d", ret);
++      }
 +    }
 +  }
 +
 +  gst_object_unref (tiger);
 +  gst_buffer_unref (buf);
++
++  g_mutex_unlock (tiger->mutex);
++
 +  return rflow;
 +}
 +
@@ -4047,18 +4279,20 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstKateTiger *tiger = GST_KATE_TIGER (gst_pad_get_parent (pad));
 +  GstStructure *s;
 +  gint w, h;
++  gboolean res = FALSE;
++
++  g_mutex_lock (tiger->mutex);
 +
 +  s = gst_caps_get_structure (caps, 0);
 +
-+  if (G_UNLIKELY(!gst_structure_get_int (s, "width", &w)) || G_UNLIKELY(!gst_structure_get_int (s, "height", &h))) {
-+    gst_object_unref (tiger);
-+    return FALSE;
++  if (G_LIKELY(gst_structure_get_int (s, "width", &w)) && G_LIKELY(gst_structure_get_int (s, "height", &h))) {
++    GST_INFO_OBJECT (tiger, "video sink: %d %d", w, h);
++    tiger->video_width = w;
++    tiger->video_height = h;
++    res = TRUE;
 +  }
 +
-+  tiger->video_width = w;
-+  tiger->video_height = h;
-+
-+  GST_INFO_OBJECT (tiger, "video sink: %d %d", w, h);
++  g_mutex_unlock (tiger->mutex);
 +
 +  gst_object_unref (tiger);
 +  return TRUE;
@@ -4071,6 +4305,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  GstFlowReturn rflow = GST_FLOW_OK;
 +  unsigned char *ptr;
 +  int ret;
++
++  g_mutex_lock (tiger->mutex);
 +
 +  GST_LOG_OBJECT (tiger, "got video frame, %u bytes", GST_BUFFER_SIZE (buf));
 +
@@ -4110,6 +4346,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  rflow = gst_pad_push (tiger->srcpad, buf);
 +
 +  gst_object_unref (tiger);
++
++  g_mutex_unlock (tiger->mutex);
++
 +  return rflow;
 +}
 +
@@ -4122,10 +4361,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  switch (transition) {
 +    case GST_STATE_CHANGE_PAUSED_TO_READY:
 +      GST_DEBUG_OBJECT (tiger, "PAUSED -> READY, clearing kate state");
++      g_mutex_lock (tiger->mutex);
 +      if (tiger->tr) {
 +        tiger_renderer_destroy (tiger->tr);
 +        tiger->tr = NULL;
 +      }
++      g_mutex_unlock (tiger->mutex);
 +      break;
 +    default:
 +      break;
@@ -4136,20 +4377,139 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  switch (transition) {
 +    case GST_STATE_CHANGE_READY_TO_PAUSED:
 +      GST_DEBUG_OBJECT (tiger, "READY -> PAUSED, initializing kate state");
++      g_mutex_lock (tiger->mutex);
 +      if (tiger->decoder.initialized) {
 +        int ret = tiger_renderer_create (&tiger->tr);
 +        if (ret < 0) {
 +          GST_WARNING_OBJECT (tiger, "failed to create tiger renderer: %d", ret);
 +        }
 +        else {
-+          tiger_renderer_set_default_font_desc (tiger->tr, tiger->default_font_desc);
++          tiger_renderer_set_default_font_description (tiger->tr, tiger->default_font_desc);
 +          tiger_renderer_set_default_font_color (tiger->tr, tiger->default_font_r/255.0, tiger->default_font_g/255.0, tiger->default_font_b/255.0, 1.0);
 +        }
 +      }
++      g_mutex_unlock (tiger->mutex);
 +      break;
 +    default:
 +      break;
 +  }
++
++  return res;
++}
++
++static gboolean
++gst_kate_tiger_seek (GstKateTiger *tiger, GstPad *pad, GstEvent *event)
++{
++#if 1
++  GstFormat format; //, tformat;
++  gdouble rate;
++  //GstEvent *real_seek;
++  GstSeekFlags flags;
++  GstSeekType cur_type, stop_type;
++  gint64 cur, stop;
++  //gint64 tcur, tstop;
++
++  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur, &stop_type, &stop);
++
++  /* forward to both sinks */
++  gst_event_ref (event);
++  if (gst_pad_push_event (tiger->videosinkpad, event)) {
++    if (gst_pad_push_event (tiger->katesinkpad, event)) {
++      if (format == GST_FORMAT_TIME) {
++        /* if seeking in time, we can update tiger to remove any appropriate events */
++        kate_float target = cur / (gdouble) GST_SECOND;
++        GST_INFO_OBJECT (tiger, "Seeking in time to %f", target);
++        g_mutex_lock (tiger->mutex);
++        tiger_renderer_seek (tiger->tr, target);
++        g_mutex_unlock (tiger->mutex);
++      }
++      return TRUE;
++    }
++    else {
++      return FALSE;
++    }
++  }
++  else {
++    gst_event_unref (event);
++    return FALSE;
++  }
++#else
++  /* adapted from the theoradec element */
++  GstFormat format, tformat;
++  gdouble rate;
++  GstEvent *real_seek;
++  GstSeekFlags flags;
++  GstSeekType cur_type, stop_type;
++  gint64 cur, stop;
++  gint64 tcur, tstop;
++  gboolean res_kate, res_video;
++
++  /* parse the event, and we won't be needing it anymore */
++  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur, &stop_type, &stop);
++  gst_event_unref (event);
++
++  /* we have to ask our peers to seek to time here as we know
++   * nothing about how to generate a granulepos from the src
++   * formats or anything.
++   * 
++   * First bring the requested format to time 
++   */
++  tformat = GST_FORMAT_TIME;
++  switch (format) {
++    case GST_FORMAT_BYTES: GST_INFO_OBJECT (tiger, "seeking in bytes"); break;
++    case GST_FORMAT_TIME: GST_INFO_OBJECT (tiger, "seeking in time"); break;
++    case GST_FORMAT_DEFAULT: GST_INFO_OBJECT (tiger, "seeking in default (granpos)"); break;
++    case GST_FORMAT_BUFFERS: GST_INFO_OBJECT (tiger, "seeking in buffers"); break;
++    case GST_FORMAT_PERCENT: GST_INFO_OBJECT (tiger, "seeking in percents"); break;
++    case GST_FORMAT_UNDEFINED: GST_INFO_OBJECT (tiger, "seeking in undefined, oh dear..."); break;
++  }
++tcur=cur; // FIXME
++tstop=stop; // FIXME
++/*
++  if (!theora_dec_src_convert (pad, format, cur, &tformat, &tcur)) {
++    GST_WARNING_OBJECT (tiger, "could not convert format");
++    return FALSE;
++  }
++*/
++/*
++  if (!theora_dec_src_convert (pad, format, stop, &tformat, &tstop)) {
++    GST_WARNING_OBJECT (tiger, "could not convert format");
++    return FALSE;
++  }
++*/
++
++  /* then seek with time on the peers */
++  real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
++      flags, cur_type, tcur, stop_type, tstop);
++  res_kate = gst_pad_push_event (tiger->katesinkpad, real_seek);
++
++  real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
++      flags, cur_type, tcur, stop_type, tstop);
++  res_video = gst_pad_push_event (tiger->videosinkpad, real_seek);
++
++  return res_kate && res_video;
++#endif
++}
++
++static gboolean
++gst_kate_tiger_source_event (GstPad *pad, GstEvent *event)
++{
++  GstKateTiger *tiger = (GstKateTiger *) (gst_object_get_parent (GST_OBJECT (pad)));
++  gboolean res = TRUE;
++
++  g_return_val_if_fail (tiger != NULL, FALSE);
++
++  switch (GST_EVENT_TYPE (event)) {
++    case GST_EVENT_SEEK:
++      GST_INFO_OBJECT (tiger, "Seek on source pad");
++      res = gst_kate_tiger_seek (tiger, pad, event);
++      break;
++    default:
++      res = gst_pad_event_default (pad, event);
++      break;
++  }
++
++  gst_object_unref (tiger);
 +
 +  return res;
 +}
@@ -4192,8 +4552,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,101 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-09-18 09:09:11.000000000 +0100
+@@ -0,0 +1,103 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -4283,6 +4643,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gint video_width;
 +  gint video_height;
++
++  GMutex *mutex;
 +};
 +
 +struct _GstKateTigerClass 
@@ -4730,13 +5092,16 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +EXTRA_DIST=README
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/README	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,23 @@
++++ NEW/gst-plugins-bad/ext/kate/README	2008-09-13 20:21:35.000000000 +0100
+@@ -0,0 +1,20 @@
 +Kate is a free codec for text based data, which can also carry images.
 +It is typically used to create overlays on a video.
 +
-+libkate (see below) is required to build this plugin.
-+libtiger (see below) is optional.
++libkate, a codec for Kate streams, is required to build this plugin:
++http://libkate.googlecode.com/
++
++libtiger, a rendering library for Kate streams, is optional:
++http://libtiger.googlecode.com/
 +
 +The Kate plugin contains various elements to manipulate Kate streams:
 +
@@ -4744,19 +5109,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 + - kateenc: encodes Kate streams from text and SPU images
 + - kateparse: parses Kate streams
 + - katetag: allows changing metadata in Kate streams
-+ - tiger: renders Kate streams using libtiger
++ - tiger: renders Kate streams using libtiger (needs libtiger)
 +
 +More information about Kate can be found at:
 +http://wiki.xiph.org/index.php/OggKate
 +
-+libkate, a codec for Kate streams, can be found at:
-+http://libkate.googlecode.com/
-+
-+libtiger, a rendering library for Kate streams, can be found at:
-+http://libtiger.googlecode.com/
-+
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/tests/check/elements/kate.c	2008-09-13 11:32:42.000000000 +0100
++++ NEW/gst-plugins-bad/tests/check/elements/kate.c	2008-09-17 21:10:49.000000000 +0100
 @@ -0,0 +1,804 @@
 +/* GStreamer
 + *
