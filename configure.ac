@@ -65,25 +65,6 @@ AC_CHECK_HEADERS(
   ]
 )
 
-AC_MSG_CHECKING(for attribute)
-AC_CACHE_VAL(
-  [has_attribute],
-  [
-    AC_COMPILE_IFELSE(
-      [
-          void attribute_function(int arg __attribute__((unused))) __attribute__((visibility("internal")));
-      ],
-      [has_attribute=yes],
-      [has_attribute=no]
-    )
-  ]
-)
-if test "x${has_attribute}" = "xyes"
-then
-  AC_DEFINE_UNQUOTED(HAVE_ATTRIBUTE, [1], [Define to 1 if the compiler supports __attribute__])
-fi
-AC_MSG_RESULT($has_attribute)
-
 AC_TYPE_SIZE_T
 
 AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes)

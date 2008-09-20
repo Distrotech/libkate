@@ -33,11 +33,15 @@
 
 #include "kate/kate.h"
 
-#if !defined HAVE_ATTRIBUTE
+#if !defined __GNUC__ || (((__GNUC__&0x100)+__GNUC_MINOR__+0)<0x0303)
 #define __attribute__(x)
 #endif
 
+#ifdef __ELF__
 #define kate_internal __attribute__((visibility("internal")))
+#else
+#define kate_internal
+#endif
 
 /* granule operations */
 extern kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float offset) kate_internal;
