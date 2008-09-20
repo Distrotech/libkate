@@ -17,7 +17,7 @@ kate {
     text "L'amour est enfant de boh&#e8;me"
     //    0 2   6   0  3   7  0  3  4    7
     simple_timed_glyph_marker {
-      height from 32 to 48
+      height from 24 to 40
       pause for 0:1.0
       glyph 2 at 1.246029
       glyph 6 at 1.773831
