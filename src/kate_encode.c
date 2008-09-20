@@ -39,7 +39,7 @@ int kate_encode_init(kate_state *k,kate_info *ki)
   k->ki=ki;
   k->kds=NULL;
   k->ki->num_headers=NUM_HEADERS;
-  k->kes=kate_encode_state_create();
+  k->kes=kate_encode_state_create(ki);
   if (!k->kes) return KATE_E_OUT_OF_MEMORY;
 
   return 0;
@@ -146,9 +146,7 @@ static int kate_finalize_packet_buffer(kate_pack_buffer *kpb,kate_packet *kp,kat
   ++k->kes->packetno;
 
   /* clear any overrides */
-  kate_encode_state_clear_overrides(k->kes,k->ki);
-
-  return 0;
+  return kate_encode_state_clear_overrides(k->kes);
 }
 
 static int kate_encode_start_header(kate_pack_buffer *kpb,int headerid)

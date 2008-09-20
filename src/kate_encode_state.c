@@ -46,11 +46,13 @@ static void kate_encode_state_init_helper(kate_encode_state *kes)
   kes->overrides.font_mapping_index=-1;
 }
 
-kate_encode_state *kate_encode_state_create(void)
+kate_encode_state *kate_encode_state_create(const kate_info *ki)
 {
   kate_encode_state *kes=(kate_encode_state*)kate_malloc(sizeof(kate_encode_state));
   if (kes) {
     kate_pack_writeinit(&kes->kpb);
+
+    kes->ki=ki;
 
     kes->granulepos=0;
     kes->packetno=-1;
@@ -67,12 +69,13 @@ kate_encode_state *kate_encode_state_create(void)
   return kes;
 }
 
-int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki)
+int kate_encode_state_clear_overrides(kate_encode_state *kes)
 {
-  if (!kes || !ki) return KATE_E_INVALID_PARAMETER;
+  if (!kes) return KATE_E_INVALID_PARAMETER;
+  if (!kes->ki) return KATE_E_INIT;
 
   if (kes->motions) {
-    kate_motion_destroy(ki,kes->motions,kes->destroy_motions,kes->nmotions,0);
+    kate_motion_destroy(kes->ki,kes->motions,kes->destroy_motions,kes->nmotions,0);
   }
   if (kes->destroy_motions) {
     kate_free(kes->destroy_motions);
@@ -92,9 +95,9 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes,const kate_info *ki
     kate_free(kes->overrides.language);
   }
 
-  kes->overrides.text_encoding=ki->text_encoding;
-  kes->overrides.text_directionality=ki->text_directionality;
-  kes->overrides.text_markup_type=ki->text_markup_type;
+  kes->overrides.text_encoding=kes->ki->text_encoding;
+  kes->overrides.text_directionality=kes->ki->text_directionality;
+  kes->overrides.text_markup_type=kes->ki->text_markup_type;
 
   kate_encode_state_init_helper(kes);
 
@@ -106,8 +109,20 @@ static int kate_encode_state_add_motion_or_index(kate_encode_state *kes,kate_mot
   kate_motion **motions;
   int *destroy_motions;
   size_t *motion_indices;
+  kate_motion_semantics semantics;
+  size_t n;
 
   if (!kes) return KATE_E_INVALID_PARAMETER;
+  if (!kes->ki) return KATE_E_INIT;
+  if (!km && motion>=kes->ki->nmotions) return KATE_E_INVALID_PARAMETER;
+
+  /* check if we have that semantic already */
+  semantics=km?km->semantics:kes->ki->motions[motion]->semantics;
+  for (n=0;n<kes->nmotions;++n) {
+    const kate_motion *km2=kes->motions[n];
+    if (!km2) km2=kes->ki->motions[kes->motion_indices[n]];
+    if (km2->semantics==semantics) return KATE_E_LIMIT;
+  }
 
   motions=(kate_motion**)kate_realloc(kes->motions,(kes->nmotions+1)*sizeof(kate_motion*));
   if (!motions) return KATE_E_OUT_OF_MEMORY;
@@ -147,6 +162,8 @@ static int kate_encode_state_add_bitmap_or_index(kate_encode_state *kes,const ka
   size_t *bitmap_indices;
 
   if (!kes) return KATE_E_INVALID_PARAMETER;
+  if (!kes->ki) return KATE_E_INIT;
+  if (!kb && bitmap>=kes->ki->nbitmaps) return KATE_E_INVALID_PARAMETER;
 
   bitmaps=(const kate_bitmap**)kate_realloc(kes->bitmaps,(kes->nbitmaps+1)*sizeof(const kate_bitmap*));
   if (!bitmaps) return KATE_E_OUT_OF_MEMORY;
