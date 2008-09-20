@@ -1,7 +1,7 @@
-diff -ru /mnt/cdrom/svn/xiph/subtle/MediaInfo.py subtle/MediaInfo.py
---- /mnt/cdrom/svn/xiph/subtle/MediaInfo.py	2008-08-08 16:52:37.000000000 +0100
-+++ subtle/MediaInfo.py	2008-08-09 18:42:34.000000000 +0100
-@@ -37,12 +37,13 @@
+=== modified file 'Subtle/MediaInfo.py'
+--- Subtle/MediaInfo.py	2008-08-09 01:28:27 +0000
++++ Subtle/MediaInfo.py	2008-09-06 15:48:17 +0000
+@@ -36,12 +36,13 @@
  
  class MediaInfo:
  
@@ -16,319 +16,26 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/MediaInfo.py subtle/MediaInfo.py
  
      def discover(self,path):
          d = discoverer.Discoverer(path)
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Discoverer.py subtle/Subtitles/Discoverer.py
---- /mnt/cdrom/svn/xiph/subtle/Subtitles/Discoverer.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtitles/Discoverer.py	2008-08-09 19:37:23.000000000 +0100
-@@ -41,10 +41,10 @@
- 
-     for func in discover_funcs:
-         print "Testing this func: %s" % func
--        handle = func(file)
--        if handle is not None:
--            print "I have found a handle: %s" % handle
--            return handle(file)
-+        handles = func(file)
-+        if handles is not None:
-+            print "I have found a handle list: %s" % handles
-+            return handles
-     else:
-         print '----'            
- 
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/Softni.py subtle/Subtitles/Formats/Softni.py
---- /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/Softni.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtitles/Formats/Softni.py	2008-08-09 19:59:44.000000000 +0100
-@@ -53,6 +53,9 @@
-         file.
+
+=== modified file 'Subtle/Subtitles/Discoverer.py'
+--- Subtle/Subtitles/Discoverer.py	2008-08-09 01:28:27 +0000
++++ Subtle/Subtitles/Discoverer.py	2008-09-06 15:57:09 +0000
+@@ -40,8 +40,8 @@
      """
  
-+    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
-+    return
-+
-     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
-     status = m.load()
- 
-@@ -70,7 +73,7 @@
-     regex = re.compile(rawstr,  re.MULTILINE| re.VERBOSE)
- 
-     if regex.search(data):
--        return Softni
-+        return Softni(file)
-     return
-     
- class Softni(Subtitles):
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/SubRip.py subtle/Subtitles/Formats/SubRip.py
---- /mnt/cdrom/svn/xiph/subtle/Subtitles/Formats/SubRip.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtitles/Formats/SubRip.py	2008-08-09 19:44:26.000000000 +0100
-@@ -45,6 +45,9 @@
-         file.
-     """ 
- 
-+    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
-+    return
-+
-     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
-     status = m.load()
-     
-@@ -64,7 +67,7 @@
-     print "BEGIN: Test for SubRip"
-     if regex.search(data):
-         print "END: Test for SubRip"
--        return SubRip
-+        return SubRip(file)
-     return
- 
- class SubRip(Subtitles):
-@@ -94,8 +97,8 @@
-     ## Save subtitles.
-     # Save subtitles to the file.
-     # \param FN - file name.
--    # \param format - the store format of subtitles. (NOT USED YET)
--    def subSave(self, FN, format):
-+    # \param subs - the list of subtitles - for SRT, consists only of self
-+    def subSave(self, FN, subs):
-         FUN=os.open(FN,os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
-         N=1
-         for i in self.subKeys:
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Sub.py subtle/Subtitles/Sub.py
---- /mnt/cdrom/svn/xiph/subtle/Subtitles/Sub.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtitles/Sub.py	2008-08-09 18:42:34.000000000 +0100
-@@ -79,4 +79,12 @@
-             Set the subtitle text and this method will rearrange the
-             structure of lines as well as all other attributes.
-         """
-+        self.lines = []
-+        self._processText(text)
-         pass
-+
-+    def getSubStartTime(self):
-+        return self.start_time
-+
-+    def getSubEndTime(self):
-+        return self.end_time
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtitles/Subtitles.py subtle/Subtitles/Subtitles.py
---- /mnt/cdrom/svn/xiph/subtle/Subtitles/Subtitles.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtitles/Subtitles.py	2008-08-09 18:50:56.000000000 +0100
-@@ -41,6 +41,8 @@
-         self.filename = FN
-         # TODO: Support more subtitles types
-         self.subType = None
-+        self.subLanguage = ""
-+        self.subCategory = ""
-         self.encoding = None
-         self.framerate = None
-         return
-@@ -59,7 +61,7 @@
-     # \param Attrs - attributes of the subtitle.
-     # \param isUpdate - to update (or not) keys array of "subs" list.
-     def subAdd(self, STime, ETime, Text, Attrs, isUpdate=0):
--        TS=Sub()
-+        TS=Sub(Text)
-         TS.text=Text
-         TS.start_time=STime
-         TS.end_time=ETime
-@@ -78,7 +80,8 @@
-     # Update text for sub.
-     def updateText(self, key, text):
-         if key in self.subs.keys():
--            self.subs[key].text = text
-+            # self.subs[key].text = text
-+            self.subs[key].setSubText (text)
-         else:
-             print "Subkey %s not found" % key
- 
-@@ -105,6 +108,39 @@
-         return None
+     for func in discover_funcs:
+-        handle = func(file)
+-        if handle is not None:
+-            return handle(file)            
++        handles = func(file)
++        if handles is not None:
++            return handles
  
  
-+    ## Get subtitle by index.
-+    # Get subtitle with given index.
-+    # \param index - index of requested subtitle.
-+    # \return subtitle or "None".
-+    def getSubByIndex(self, index):
-+        for i in self.subKeys:
-+            index -= 1
-+            if index == 0:
-+                return self.subs[int(i)]
-+        return None
-+
-+
-+    ## Get subtitle type.
-+    # Get subtitle type.
-+    # \return type string
-+    def getType(self):
-+        return self.subType
-+
-+
-+    ## Get subtitle language.
-+    # Get subtitle language.
-+    # \return language (may be empty)
-+    def getLanguage(self):
-+        return self.subLanguage
-+
-+
-+    ## Get subtitle category.
-+    # Get subtitle category.
-+    # \return category (may be empty)
-+    def getCategory(self):
-+        return self.subCategory
-+
-+
-     ## Get subtitle supported types.
-     # Get subtitle supported types
-     # \return supported subtitle types 
-diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
---- /mnt/cdrom/svn/xiph/subtle/Subtle.py	2008-08-08 16:52:38.000000000 +0100
-+++ subtle/Subtle.py	2008-08-09 19:29:44.000000000 +0100
-@@ -254,8 +254,8 @@
-             model, iter = result
-             if self.subsListStore.iter_is_valid(iter):
-                 cur, sTime, eTime = self.subsListStore.get(iter, 0, 1, 2)
--                self.Subtitle.subAdd(sTime-1,sTime-2,'',None,1)
--                self.subsListStore.insert_before(iter, (cur, sTime-1, sTime-2,\
-+                self.Subtitle.subAdd(sTime-2,sTime-1,'',None,1)
-+                self.subsListStore.insert_before(iter, (cur, sTime-2, sTime-1,\
-                                                     'New subtitle...'))
-                 self.reorder_SubsListStore()
-         return
-@@ -379,7 +379,39 @@
-         return None
- 
- 
-+    def filter_sources(self,sources):
-+        filtered = {}
-+        for source in sources:
-+            filtered[source] = True
-+        return filtered.keys()
-+
-     def cb_saveStream(self, widget):
-+        # HACK - save all streams
-+        print 'HACK - save code saves every stream'
-+
-+        # Gather all sources
-+        sources = [ mInfo.source for mInfo in self.media ]
-+        sources += [ mInfo.filename for mInfo in self.Subtitles ]
-+        sources = self.filter_sources(sources)
-+
-+        # Save each source that contains subtitles
-+        for source in sources:
-+            print 'Media to save: %s' % source
-+            # find all subtitles from this source
-+            subs = {}
-+            subcount = 0
-+            for mInfo in self.Subtitles:
-+                if mInfo.filename == source:
-+                    subcount += 1
-+                    subs[mInfo] = mInfo
-+            if subcount > 0:
-+                print '%d subtitles found in %s, saving' % (subcount, source)
-+                mInfo.subSave(source, subs)
-+            else:
-+                print 'No subtitles found in %s, skipping' % source
-+        return
-+        # HACK - ends here
-+
-         """
-             Save a stream. This will be renamed to cb_saveSub
-             since we don't offer video editting (yet)
-@@ -460,6 +492,13 @@
-             child = self.streamsTreeStore.append(iter)
-             self.streamsTreeStore.set(child, 0, "Encoding: " + sub.encoding, \
-                     1, self.Subtitles.index(sub))
-+            child = self.streamsTreeStore.append(iter)
-+ 	    self.streamsTreeStore.set(child, 0, "Language: " + sub.getLanguage(), \
-+ 		    1, self.Subtitles.index(sub))
-+            child = self.streamsTreeStore.append(iter)
-+ 	    self.streamsTreeStore.set(child, 0, "Category: " + sub.getCategory(), \
-+ 		    1, self.Subtitles.index(sub))
-+            child = self.streamsTreeStore.append(iter)
-         for mInfo in self.media:
-             iter = self.streamsTreeStore.append(None)
-             self.streamsTreeStore.set(iter, 0, mInfo.source, 1, self.media.index(mInfo))
-@@ -520,15 +559,19 @@
-         self.TEST_SUB_URI = URI
-         WND.hide()
- 
--        tmpSub = Discoverer.discoverer(FN)
--        if tmpSub:
--            self.Subtitle = tmpSub
--            self.Subtitles.append(tmpSub)
--            self.updateStreamWindow()
--        else:
--            MI = MediaInfo(FN, URI)
--            # Lets poll for information
--            gobject.timeout_add(30, self.addMedia, MI)
-+        sub_count = 0
-+        tmpSubs = Discoverer.discoverer(FN)
-+        if tmpSubs:
-+            for idx in tmpSubs:
-+                sub_count += 1
-+                tmpSub = tmpSubs[idx]
-+                self.Subtitle = tmpSub
-+                self.Subtitles.append(tmpSub)
-+                self.updateStreamWindow()
-+
-+        MI = MediaInfo(FN, URI, sub_count)
-+        # Lets poll for information
-+        gobject.timeout_add(30, self.addMedia, MI)
-     
-     def addMedia(self, mInfo):
-         """
-@@ -541,34 +584,37 @@
-         # First, wait for media discovery 
-         if mInfo.poll():
-             return True 
--        mInfo = mInfo.getMedia()
--        if mInfo.MIME:
-+        mInfoMedia = mInfo.getMedia()
-+        if mInfoMedia.MIME:
-             # Set the subtitle framerate
-             if self.Subtitle:
--                self.Subtitle.framerate = mInfo.framerate
--            self.media.append(mInfo)
-+                self.Subtitle.framerate = mInfoMedia.framerate
-+            self.media.append(mInfoMedia)
-             self.updateStreamWindow()
-             #Set videoWidget sizes according to media standards
--            self.videoWidget.set_size_request(mInfo.videoWidth, \
--                                                mInfo.videoHeight)
-+            if mInfoMedia.videoWidth!=None and mInfoMedia.videoHeight!=None:
-+                self.videoWidget.set_size_request(mInfoMedia.videoWidth, \
-+                                                    mInfoMedia.videoHeight)
-             self.videoWidgetGst=VideoWidget(self.videoWidget)
-             self.player=GstPlayer(self.videoWidgetGst)
--            self.player.set_location("file://"+mInfo.source)
-+            self.player.set_location("file://"+mInfoMedia.source)
-             if self.videoWidget.flags() & gtk.REALIZED:
-                 self.play_toggled()
-             else:
-                 self.videoWidget.connect_after('realize',
-                                            lambda *x: self.play_toggled())
-         else:
--            errorDialog = gtk.MessageDialog(self.windowMainWindow, \
--                                            gtk.DIALOG_MODAL, \
--                                            gtk.MESSAGE_ERROR, \
--                                            gtk.BUTTONS_CLOSE, \
--                                            "This file format is not supported \
--                                            or not detected.")
--            result = errorDialog.run()
--            if (result == gtk.RESPONSE_CLOSE):
--                errorDialog.destroy()
-+            # TODO: mInfo or mInfoMedia ?
-+            if mInfo.sub_count == 0:
-+                errorDialog = gtk.MessageDialog(self.windowMainWindow, \
-+                                                gtk.DIALOG_MODAL, \
-+                                                gtk.MESSAGE_ERROR, \
-+                                                gtk.BUTTONS_CLOSE, \
-+                                                "This file format is not supported \
-+                                                or not detected.")
-+                result = errorDialog.run()
-+                if (result == gtk.RESPONSE_CLOSE):
-+                    errorDialog.destroy()
-         return
- 
- 
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ subtle/Subtitles/Formats/Kate.py	2008-08-11 20:51:02.000000000 +0100
+
+=== added file 'Subtle/Subtitles/Formats/Kate.py'
+--- Subtle/Subtitles/Formats/Kate.py	1970-01-01 00:00:00 +0000
++++ Subtle/Subtitles/Formats/Kate.py	2008-09-17 16:49:37 +0000
 @@ -0,0 +1,619 @@
 +#!/usr/bin/env python
 +#
@@ -357,20 +64,19 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +import gobject
 +gobject.threads_init()
 +
-+import pygst
-+pygst.require('0.10')
 +import gst
 +import gst.interfaces
++import pygst
++#pygst.require('0.10')
 +import gtk
 +import os
 +import time
 +from UserString import UserString
 +import string
 +from .. Subtitles import Subtitles
-+from Subtitles.Sub import *
 +
 +"""
-+    Documentation for Kate module of Subtle project.
++    Documentation for the Kate module of the Subtle project.
 +
 +    Information about the Kate codec may be found at:
 +    http://wiki.xiph.org/index.php/OggKate
@@ -381,7 +87,7 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +    http://libkate.googlecode.com/
 +
 +    This module only handles text and timing, so any other information that may
-+    be present in a Kate stream (such as graphics, motions, etc) will be lost when
++    be present in a Kate stream (such as graphics, motions, etc) will be LOST when
 +    saving it.
 +
 +    Any number of Kate streams (eg, one for each of a set of languages) may be
@@ -461,6 +167,7 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +
 +        # if saving, we just linked a pipeline with elements in the ready state, start them
 +        if save and play:
++            print 'save and play: setting elements to playing'
 +            self.oggmux_sources.append(self.oggmux)
 +            self.oggmux_sources.append(self.filesink)
 +            self.set_state(gst.STATE_PLAYING)
@@ -754,9 +461,9 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +            parser.link(self.oggmux)
 +            self.parsers.append(parser)
 +
-+            parser.set_state(gst.STATE_READY)
-+            queue.set_state(gst.STATE_READY)
++            parser.set_state(gst.STATE_PAUSED) #STATE_READY)
 +            self.oggmux_sources.append(parser)
++            queue.set_state(gst.STATE_PAUSED) #STATE_READY)
 +            self.oggmux_sources.append(queue)
 +
 +
@@ -775,7 +482,7 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +
 +        print 'Kate subtitles module init for %s' % filename
 +        Subtitles.__init__(self, filename)
-+        self.encoding = "FIXME: I have no idea what this is for ? character encoding ?"
++        self.encoding = "utf-8"
 +        self.subType = "Kate"
 +        self.subUserdata = None
 +
@@ -949,3 +656,311 @@ diff -ru /mnt/cdrom/svn/xiph/subtle/Subtle.py subtle/Subtle.py
 +
 +
 +__all__=["Kate", "KateLoader", "KateSaver"]
+
+=== modified file 'Subtle/Subtitles/Formats/Softni.py'
+--- Subtle/Subtitles/Formats/Softni.py	2008-08-09 01:28:27 +0000
++++ Subtle/Subtitles/Formats/Softni.py	2008-09-06 16:09:17 +0000
+@@ -52,6 +52,9 @@
+         file.
+     """
+ 
++    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
++    return
++
+     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
+     status = m.load()
+ 
+@@ -69,7 +72,7 @@
+     regex = re.compile(rawstr,  re.MULTILINE| re.VERBOSE)
+ 
+     if regex.search(data):
+-        return Softni
++        return Softni(file)
+     return
+     
+ class Softni(Subtitles.Subtitles):
+
+=== modified file 'Subtle/Subtitles/Formats/SubRip.py'
+--- Subtle/Subtitles/Formats/SubRip.py	2008-08-09 01:28:27 +0000
++++ Subtle/Subtitles/Formats/SubRip.py	2008-09-06 15:49:53 +0000
+@@ -46,6 +46,9 @@
+         file.
+     """ 
+ 
++    # FIXME: magic has no open function in my copy of python-magic, so bypass this for now
++    return
++
+     m = magic.open(magic.MAGIC_COMPRESS | magic.MAGIC_MIME)
+     status = m.load()
+     
+@@ -63,7 +66,7 @@
+     regex = re.compile(rawstr,re.MULTILINE| re.VERBOSE)
+     
+     if regex.search(data):
+-        return SubRip
++        return SubRip(file)
+     return
+ 
+ class SubRip(Subtitles.Subtitles):
+@@ -93,8 +96,8 @@
+     ## Save subtitles.
+     # Save subtitles to the file.
+     # \param FN - file name.
+-    # \param format - the store format of subtitles. (NOT USED YET)
+-    def subSave(self, FN, format):
++    # \param subs - the list of subtitles - for SRT, consists only of self
++    def subSave(self, FN, subs):
+         FUN=os.open(FN,os.O_WRONLY|os.O_CREAT|os.O_TRUNC)
+         N=1
+         for i in self.subKeys:
+
+=== modified file 'Subtle/Subtitles/Sub.py'
+--- Subtle/Subtitles/Sub.py	2008-08-09 01:28:27 +0000
++++ Subtle/Subtitles/Sub.py	2008-09-06 15:48:17 +0000
+@@ -79,4 +79,12 @@
+             Set the subtitle text and this method will rearrange the
+             structure of lines as well as all other attributes.
+         """
++        self.lines = []
++        self._processText(text)
+         pass
++
++    def getSubStartTime(self):
++        return self.start_time
++
++    def getSubEndTime(self):
++        return self.end_time
+
+=== modified file 'Subtle/Subtitles/Subtitles.py'
+--- Subtle/Subtitles/Subtitles.py	2008-08-09 01:28:27 +0000
++++ Subtle/Subtitles/Subtitles.py	2008-09-06 15:48:17 +0000
+@@ -41,6 +41,8 @@
+         self.filename = FN
+         # TODO: Support more subtitles types
+         self.subType = None
++        self.subLanguage = ""
++        self.subCategory = ""
+         self.encoding = None
+         self.framerate = None
+         return
+@@ -59,7 +61,7 @@
+     # \param Attrs - attributes of the subtitle.
+     # \param isUpdate - to update (or not) keys array of "subs" list.
+     def subAdd(self, STime, ETime, Text, Attrs, isUpdate=0):
+-        TS=Sub()
++        TS=Sub(Text)
+         TS.text=Text
+         TS.start_time=STime
+         TS.end_time=ETime
+@@ -78,7 +80,8 @@
+     # Update text for sub.
+     def updateText(self, key, text):
+         if key in self.subs.keys():
+-            self.subs[key].text = text
++            # self.subs[key].text = text
++            self.subs[key].setSubText (text)
+         else:
+             print "Subkey %s not found" % key
+ 
+@@ -105,6 +108,39 @@
+         return None
+ 
+ 
++    ## Get subtitle by index.
++    # Get subtitle with given index.
++    # \param index - index of requested subtitle.
++    # \return subtitle or "None".
++    def getSubByIndex(self, index):
++        for i in self.subKeys:
++            index -= 1
++            if index == 0:
++                return self.subs[int(i)]
++        return None
++
++
++    ## Get subtitle type.
++    # Get subtitle type.
++    # \return type string
++    def getType(self):
++        return self.subType
++
++
++    ## Get subtitle language.
++    # Get subtitle language.
++    # \return language (may be empty)
++    def getLanguage(self):
++        return self.subLanguage
++
++
++    ## Get subtitle category.
++    # Get subtitle category.
++    # \return category (may be empty)
++    def getCategory(self):
++        return self.subCategory
++
++
+     ## Get subtitle supported types.
+     # Get subtitle supported types
+     # \return supported subtitle types 
+
+=== modified file 'Subtle/Subtle.py'
+--- Subtle/Subtle.py	2008-08-09 01:48:27 +0000
++++ Subtle/Subtle.py	2008-09-06 16:01:29 +0000
+@@ -260,8 +260,8 @@
+             model, iter = result
+             if self.subsListStore.iter_is_valid(iter):
+                 cur, sTime, eTime = self.subsListStore.get(iter, 0, 1, 2)
+-                self.Subtitle.subAdd(sTime-1,sTime-2,'',None,1)
+-                self.subsListStore.insert_before(iter, (cur, sTime-1, sTime-2,\
++                self.Subtitle.subAdd(sTime-2,sTime-1,'',None,1)
++                self.subsListStore.insert_before(iter, (cur, sTime-2, sTime-1,\
+                                                     'New subtitle...'))
+                 self.reorder_SubsListStore()
+         return
+@@ -385,7 +385,39 @@
+         return None
+ 
+ 
++    def filter_sources(self,sources):
++        filtered = {}
++        for source in sources:
++            filtered[source] = True
++        return filtered.keys()
++
+     def cb_saveStream(self, widget):
++        # HACK - save all streams
++        print 'HACK - save code saves every stream'
++
++        # Gather all sources
++        sources = [ mInfo.source for mInfo in self.media ]
++        sources += [ mInfo.filename for mInfo in self.Subtitles ]
++        sources = self.filter_sources(sources)
++
++        # Save each source that contains subtitles
++        for source in sources:
++            print 'Media to save: %s' % source
++            # find all subtitles from this source
++            subs = {}
++            subcount = 0
++            for mInfo in self.Subtitles:
++                if mInfo.filename == source:
++                    subcount += 1
++                    subs[mInfo] = mInfo
++            if subcount > 0:
++                print '%d subtitles found in %s, saving' % (subcount, source)
++                mInfo.subSave(source, subs)
++            else:
++                print 'No subtitles found in %s, skipping' % source
++        return
++        # HACK - ends here
++
+         """
+             Save a stream. This will be renamed to cb_saveSub
+             since we don't offer video editting (yet)
+@@ -466,6 +498,13 @@
+             child = self.streamsTreeStore.append(iter)
+             self.streamsTreeStore.set(child, 0, "Encoding: " + sub.encoding, \
+                     1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
++ 	    self.streamsTreeStore.set(child, 0, "Language: " + sub.getLanguage(), \
++ 		    1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
++ 	    self.streamsTreeStore.set(child, 0, "Category: " + sub.getCategory(), \
++ 		    1, self.Subtitles.index(sub))
++            child = self.streamsTreeStore.append(iter)
+         for mInfo in self.media:
+             iter = self.streamsTreeStore.append(None)
+             self.streamsTreeStore.set(iter, 0, mInfo.source, 1, self.media.index(mInfo))
+@@ -526,15 +565,19 @@
+         self.TEST_SUB_URI = URI
+         WND.hide()
+ 
+-        tmpSub = Discoverer.discoverer(FN)
+-        if tmpSub:
+-            self.Subtitle = tmpSub
+-            self.Subtitles.append(tmpSub)
+-            self.updateStreamWindow()
+-        else:
+-            MI = MediaInfo(FN, URI)
+-            # Lets poll for information
+-            gobject.timeout_add(30, self.addMedia, MI)
++        sub_count = 0
++        tmpSubs = Discoverer.discoverer(FN)
++        if tmpSubs:
++            for idx in tmpSubs:
++                sub_count += 1
++                tmpSub = tmpSubs[idx]
++                self.Subtitle = tmpSub
++                self.Subtitles.append(tmpSub)
++                self.updateStreamWindow()
++
++        MI = MediaInfo(FN, URI, sub_count)
++        # Lets poll for information
++        gobject.timeout_add(30, self.addMedia, MI)
+     
+     def addMedia(self, mInfo):
+         """
+@@ -547,34 +590,37 @@
+         # First, wait for media discovery 
+         if mInfo.poll():
+             return True 
+-        mInfo = mInfo.getMedia()
+-        if mInfo.MIME:
++        mInfoMedia = mInfo.getMedia()
++        if mInfoMedia.MIME:
+             # Set the subtitle framerate
+             if self.Subtitle:
+-                self.Subtitle.framerate = mInfo.framerate
+-            self.media.append(mInfo)
++                self.Subtitle.framerate = mInfoMedia.framerate
++            self.media.append(mInfoMedia)
+             self.updateStreamWindow()
+             #Set videoWidget sizes according to media standards
+-            self.videoWidget.set_size_request(mInfo.videoWidth, \
+-                                                mInfo.videoHeight)
++            if mInfoMedia.videoWidth!=None and mInfoMedia.videoHeight!=None:
++                self.videoWidget.set_size_request(mInfoMedia.videoWidth, \
++                                                    mInfoMedia.videoHeight)
+             self.videoWidgetGst=VideoWidget(self.videoWidget)
+             self.player=GstPlayer(self.videoWidgetGst)
+-            self.player.set_location("file://"+mInfo.source)
++            self.player.set_location("file://"+mInfoMedia.source)
+             if self.videoWidget.flags() & gtk.REALIZED:
+                 self.play_toggled()
+             else:
+                 self.videoWidget.connect_after('realize',
+                                            lambda *x: self.play_toggled())
+         else:
+-            errorDialog = gtk.MessageDialog(self.windowMainWindow, \
+-                                            gtk.DIALOG_MODAL, \
+-                                            gtk.MESSAGE_ERROR, \
+-                                            gtk.BUTTONS_CLOSE, \
+-                                            "This file format is not supported \
+-                                            or not detected.")
+-            result = errorDialog.run()
+-            if (result == gtk.RESPONSE_CLOSE):
+-                errorDialog.destroy()
++            # TODO: mInfo or mInfoMedia ?
++            if mInfo.sub_count == 0:
++                errorDialog = gtk.MessageDialog(self.windowMainWindow, \
++                                                gtk.DIALOG_MODAL, \
++                                                gtk.MESSAGE_ERROR, \
++                                                gtk.BUTTONS_CLOSE, \
++                                                "This file format is not supported \
++                                                or not detected.")
++                result = errorDialog.run()
++                if (result == gtk.RESPONSE_CLOSE):
++                    errorDialog.destroy()
+         return
+ 
+ 
+@@ -661,7 +707,7 @@
+         text = self.txt_subedit.get_buffer().get_property('text')
+         self.Subtitle.updateText(subKey,text)
+         #self.Subtitle.subAdd(subKey,ETime,text,None,0)
+-        self.subsListStore.set(self.cur_edit_sub_iter, 3, text) 
++        self.subsListStore.set(self.cur_edit_sub_iter, 5, text) 
+         return
+ 
+ 
+
