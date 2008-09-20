@@ -69,7 +69,8 @@ If patched, it can play simple text and image based Kate subtitles.
 
 GStreamer is a media framework.
 If patched, it can encode simple text and image based Kate streams, as well
-as decode simple text Kate streams.
+as decode simple text Kate streams, and render any Kate stream on top of a
+video.
 
 \subsection support-thoggen Thoggen
 
@@ -109,6 +110,12 @@ If patched, it can decode full text and image based Kate streams and render them
 xine-ui is a frontend for xine-lib.
 If patched, it can decode text based Kate streams and display text as lyrics in
 its player window.
+
+\subsection support-liboggplay liboggplay
+
+liboggplay is a layer above liboggz that provides data format abstraction and
+stream synchronization.
+If patched, it can play any Kate stream using the Tiger rendering library.
 
 
 */
