@@ -96,3 +96,12 @@ Adds support for embedded Kate lyrics in Ogg streams, displaying them in sync.
 Adds support for embedded Kate lyrics in Ogg streams, placing them in a medialib
 string in sync.
 
+
+
+ * liboggplay (liboggplay-with-tiger.diff)
+
+Adds support for rendering Kate streams using libtiger, so non text streams can
+be rendered as well. Kate streams can be either overlaid on top of a video, or
+rendered to a separate buffer.
+
+
