@@ -36,6 +36,16 @@ static void kate_packet_create_ogg(kate_packet *kp,ogg_packet *op,kate_encode_st
   kate_free(kp->data);
 }
 
+/**
+  Encodes a Kate header to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param kc the comments to encode in headers
+  \param op the ogg_packet to encode headers to
+  \returns 0 success
+  \returns 1 success, and all headers have been encoded
+  \returns KATE_E_* error
+ */
 int kate_ogg_encode_headers(kate_state *k,kate_comment *kc,ogg_packet *op)
 {
   kate_packet kp;
@@ -46,6 +56,18 @@ int kate_ogg_encode_headers(kate_state *k,kate_comment *kc,ogg_packet *op)
   return 0;
 }
 
+/**
+  Encodes a text data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param start_time the start time, in seconds, of the event
+  \param stop_time the stop time, in seconds, of the event
+  \param text the text this event will hold (may be empty if none)
+  \param sz the size, in bytes, of the text
+  \param op the ogg_packet to encode headers to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
 int kate_ogg_encode_text(kate_state *k,kate_float start_time,kate_float stop_time,const char *text,size_t sz,ogg_packet *op)
 {
   kate_packet kp;
@@ -55,6 +77,15 @@ int kate_ogg_encode_text(kate_state *k,kate_float start_time,kate_float stop_tim
   return 0;
 }
 
+/**
+  Encodes a keepalive data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param t the time at which to insert the keepalive packet
+  \param op the ogg_packet to encode headers to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
 int kate_ogg_encode_keepalive(kate_state *k,kate_float t,ogg_packet *op)
 {
   kate_packet kp;
@@ -64,6 +95,16 @@ int kate_ogg_encode_keepalive(kate_state *k,kate_float t,ogg_packet *op)
   return 0;
 }
 
+/**
+  Encodes an end-of-stream data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  No other packet may be encoded afer an end of stream packet is encoded.
+  \param k the kate_state structure to encode headers for
+  \param t the time at which to insert the packet
+  \param op the ogg_packet to encode headers to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
 int kate_ogg_encode_finish(kate_state *k,kate_float t,ogg_packet *op)
 {
   kate_packet kp;
@@ -73,6 +114,13 @@ int kate_ogg_encode_finish(kate_state *k,kate_float t,ogg_packet *op)
   return 0;
 }
 
+/**
+  Checks whether an Ogg packet contains a Kate identification header.
+  \param op the ogg_packet to test
+  \returns 1 success, and the packet contains a Kate identification header
+  \returns 0 success, and the packet does not contain a Kate identification header
+  \returns KATE_E_* error
+ */
 int kate_ogg_decode_is_idheader(const ogg_packet *op)
 {
   kate_packet kp;
@@ -82,6 +130,15 @@ int kate_ogg_decode_is_idheader(const ogg_packet *op)
   return kate_decode_is_idheader(&kp);
 }
 
+/**
+  Decodes a Kate header
+  \param ki the kate_info structure to fill from headers
+  \param kc the kate_comment structure to fill from headers
+  \param op the ogg_packet to test
+  \returns 0 success
+  \returns 1 success, and all headers have been decoded
+  \returns KATE_E_* error
+ */
 int kate_ogg_decode_headerin(kate_info *ki,kate_comment *kc,ogg_packet *op)
 {
   kate_packet kp;
@@ -90,6 +147,14 @@ int kate_ogg_decode_headerin(kate_info *ki,kate_comment *kc,ogg_packet *op)
   return kate_decode_headerin(ki,kc,&kp);
 }
 
+/**
+  Decodes a Kate data packet
+  \param k the kate_state structure to decode a packet for
+  \param op the ogg_packet to test
+  \returns 0 success
+  \returns 1 success, and we're at end of stream
+  \returns KATE_E_* error
+ */
 int kate_ogg_decode_packetin(kate_state *k,ogg_packet *op)
 {
   kate_packet kp;
