@@ -256,7 +256,7 @@ typedef struct kate_font_mapping {
 } kate_font_mapping;
 
 /**
-  Information about a Kate bitstream
+  Information about a Kate bitstream.
   On encoding, this information will be filled by the encoder.
   On decoding, it will be extracted from the stream headers.
   */
