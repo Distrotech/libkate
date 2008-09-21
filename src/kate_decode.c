@@ -865,6 +865,7 @@ static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
   \param kc the kate_comment structure to update
   \param kp the packet to decode
   \returns 0 success
+  \returns 1 success, and all headers have been decoded
   \returns KATE_E_* error
   */
 int kate_decode_headerin(kate_info *ki,kate_comment *kc,kate_packet *kp)
