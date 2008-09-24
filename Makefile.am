@@ -35,11 +35,10 @@ noinst_HEADERS=\
   src/kate_bitwise.h src/kate_fp.h src/kate_rle.h
 
 lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@
-lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ --no-undefined
+lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ -no-undefined
 lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@
-lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ --no-undefined
+lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ -no-undefined
 
-lib_libkate_la_LIBADD=-lc
 lib_liboggkate_la_LIBADD=lib/libkate.la
 
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
