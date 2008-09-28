@@ -276,8 +276,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-16 10:11:14.000000000 +0100
-@@ -0,0 +1,159 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-27 17:50:07.000000000 +0100
+@@ -0,0 +1,154 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -401,12 +401,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +     text, but if we do build tiger, we'll want to use it preferentially
 +     as it can play non text streams too */
 +  if (!gst_element_register (plugin, "katedec",
-+#ifdef HAVE_TIGER
-+      GST_RANK_NONE,
-+#else
-+      GST_RANK_PRIMARY,
-+#endif
-+      GST_TYPE_KATE_DEC))
++      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
 +    return FALSE;
 +
 +  if (!gst_element_register (plugin, "kateenc",
@@ -849,8 +844,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-17 21:10:21.000000000 +0100
-@@ -0,0 +1,1758 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-21 19:45:01.000000000 +0100
+@@ -0,0 +1,1762 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -2485,6 +2480,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          gst_event_parse_new_segment (event, NULL, NULL, &format, &timestamp, NULL, NULL);
 +          if (format != GST_FORMAT_TIME || !GST_CLOCK_TIME_IS_VALID (timestamp)) {
 +            GST_WARNING_OBJECT (ke, "No time in newsegment event %p, format %d, timestamp %lld", event, (int)format, (long long)timestamp);
++            /* to be safe, we'd need to generate a keepalive anyway, but we'd have to guess at the timestamp to use; a
++               good guess would be the last known timestamp plus the keepalive time, but if we then get a packet with a
++               timestamp less than this, it would fail to encode, which would be Bad. If we don't encode a keepalive, we
++               run the risk of stalling the pipeline and hanging, which is Very Bad. Oh dear. We can't exit(-1), can we ? */
 +          } else {
 +            float t = timestamp/(double)GST_SECOND;
 +
@@ -3902,8 +3901,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TAG_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-18 23:26:52.000000000 +0100
-@@ -0,0 +1,647 @@
++++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-27 17:59:21.000000000 +0100
+@@ -0,0 +1,594 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -4384,8 +4383,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          GST_WARNING_OBJECT (tiger, "failed to create tiger renderer: %d", ret);
 +        }
 +        else {
-+          tiger_renderer_set_default_font_description (tiger->tr, tiger->default_font_desc);
-+          tiger_renderer_set_default_font_color (tiger->tr, tiger->default_font_r/255.0, tiger->default_font_g/255.0, tiger->default_font_b/255.0, 1.0);
++          ret = tiger_renderer_set_default_font_description (tiger->tr, tiger->default_font_desc);
++          if (ret < 0) {
++            GST_WARNING_OBJECT (tiger, "failed to set tiger default font description: %d", ret);
++          }
++          ret = tiger_renderer_set_default_font_color (tiger->tr, tiger->default_font_r/255.0, tiger->default_font_g/255.0, tiger->default_font_b/255.0, 1.0);
++          if (ret < 0) {
++            GST_WARNING_OBJECT (tiger, "failed to set tiger default font color: %d", ret);
++          }
 +        }
 +      }
 +      g_mutex_unlock (tiger->mutex);
@@ -4400,14 +4405,11 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static gboolean
 +gst_kate_tiger_seek (GstKateTiger *tiger, GstPad *pad, GstEvent *event)
 +{
-+#if 1
-+  GstFormat format; //, tformat;
++  GstFormat format;
 +  gdouble rate;
-+  //GstEvent *real_seek;
 +  GstSeekFlags flags;
 +  GstSeekType cur_type, stop_type;
 +  gint64 cur, stop;
-+  //gint64 tcur, tstop;
 +
 +  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur, &stop_type, &stop);
 +
@@ -4433,62 +4435,6 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    gst_event_unref (event);
 +    return FALSE;
 +  }
-+#else
-+  /* adapted from the theoradec element */
-+  GstFormat format, tformat;
-+  gdouble rate;
-+  GstEvent *real_seek;
-+  GstSeekFlags flags;
-+  GstSeekType cur_type, stop_type;
-+  gint64 cur, stop;
-+  gint64 tcur, tstop;
-+  gboolean res_kate, res_video;
-+
-+  /* parse the event, and we won't be needing it anymore */
-+  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur, &stop_type, &stop);
-+  gst_event_unref (event);
-+
-+  /* we have to ask our peers to seek to time here as we know
-+   * nothing about how to generate a granulepos from the src
-+   * formats or anything.
-+   * 
-+   * First bring the requested format to time 
-+   */
-+  tformat = GST_FORMAT_TIME;
-+  switch (format) {
-+    case GST_FORMAT_BYTES: GST_INFO_OBJECT (tiger, "seeking in bytes"); break;
-+    case GST_FORMAT_TIME: GST_INFO_OBJECT (tiger, "seeking in time"); break;
-+    case GST_FORMAT_DEFAULT: GST_INFO_OBJECT (tiger, "seeking in default (granpos)"); break;
-+    case GST_FORMAT_BUFFERS: GST_INFO_OBJECT (tiger, "seeking in buffers"); break;
-+    case GST_FORMAT_PERCENT: GST_INFO_OBJECT (tiger, "seeking in percents"); break;
-+    case GST_FORMAT_UNDEFINED: GST_INFO_OBJECT (tiger, "seeking in undefined, oh dear..."); break;
-+  }
-+tcur=cur; // FIXME
-+tstop=stop; // FIXME
-+/*
-+  if (!theora_dec_src_convert (pad, format, cur, &tformat, &tcur)) {
-+    GST_WARNING_OBJECT (tiger, "could not convert format");
-+    return FALSE;
-+  }
-+*/
-+/*
-+  if (!theora_dec_src_convert (pad, format, stop, &tformat, &tstop)) {
-+    GST_WARNING_OBJECT (tiger, "could not convert format");
-+    return FALSE;
-+  }
-+*/
-+
-+  /* then seek with time on the peers */
-+  real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-+      flags, cur_type, tcur, stop_type, tstop);
-+  res_kate = gst_pad_push_event (tiger->katesinkpad, real_seek);
-+
-+  real_seek = gst_event_new_seek (rate, GST_FORMAT_TIME,
-+      flags, cur_type, tcur, stop_type, tstop);
-+  res_video = gst_pad_push_event (tiger->videosinkpad, real_seek);
-+
-+  return res_kate && res_video;
-+#endif
 +}
 +
 +static gboolean
