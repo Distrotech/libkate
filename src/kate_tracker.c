@@ -391,12 +391,7 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     /* we already have a valid region */
     kin->has.region=1;
   }
-  kin->text_x=0;
-  kin->text_y=0;
-  for (n=0;n<4;++n) {
-    kin->marker_x[n]=0;
-    kin->marker_y[n]=0;
-  }
+
   if (ks) {
     kin->text_color=ks->text_color;
     kin->background_color=ks->background_color;
@@ -405,13 +400,7 @@ int kate_tracker_update(kate_tracker *kin,kate_float t,int window_w,int window_h
     kin->has.text_color=1;
     kin->has.background_color=1;
     kin->has.draw_color=1;
-  }
-  else {
-    /* can we leave them dangling if the bit isn't set anyway ? */
-    kin->text_color=default_text_color;
-    kin->background_color=default_background_color;
-  }
-  if (ks) {
+
     kin->text_halign=ks->halign;
     kin->text_valign=ks->valign;
     /* we already have internal alignment */
