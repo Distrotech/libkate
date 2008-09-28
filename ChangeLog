@@ -1,4 +1,5 @@
 0.2.1
+  minor code simplification in the tracker
   build fix for Cygwin/Mingw32 (yselkowitz/Cygwin Ports project)
 
 0.2.0
