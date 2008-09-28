@@ -1045,6 +1045,7 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
   \param kc the list of comments to add to the headers
   \param kp the packet to encode to
   \returns 0 success
+  \returns 1 success, and all headers have been encoded
   \returns KATE_E_* error
   */
 int kate_encode_headers(kate_state *k,kate_comment *kc,kate_packet *kp)

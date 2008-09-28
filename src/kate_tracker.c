@@ -136,6 +136,17 @@ int kate_tracker_morph_styles(kate_style *style,kate_float t,const kate_style *f
   return 0;
 }
 
+/**
+  \ingroup tracker
+  Remaps a point according to the given mappings
+  \param kin the tracker to use for the remapping
+  \param x_mapping the mapping for use for the x coordinate
+  \param y_mapping the mapping for use for the y coordinate
+  \param x a pointer to the x coordinate
+  \param y a pointer to the y coordinate
+  \returns 0 success
+  \returns KATE_E_* error
+  */
 int kate_tracker_remap(const kate_tracker *kin,kate_motion_mapping x_mapping,kate_motion_mapping y_mapping,kate_float *x,kate_float *y)
 {
   if (!kin || !x || !y) return KATE_E_INVALID_PARAMETER;
@@ -210,6 +221,19 @@ static const kate_motion *kate_tracker_find_motion(const kate_tracker *kin,kate_
   return NULL;
 }
 
+/**
+  \ingroup tracker
+  Returns the value of a particular property at the given time
+  \param kin the tracker to update the property for
+  \param duration the duration of the event the motion belongs to
+  \param t the time, between 0 and duration, at which to compute the point
+  \param semantics the semantics of the motion to use
+  \param x a pointer to the x coordinate
+  \param y a pointer to the y coordinate
+  \returns 0 success
+  \returns 1 success, and there is no such motion at this time
+  \returns KATE_E_* error
+  */
 int kate_tracker_update_property_at_duration(const kate_tracker *kin,kate_float duration,kate_float t,kate_motion_semantics semantics,kate_float *x,kate_float *y)
 {
   const kate_motion *km;
