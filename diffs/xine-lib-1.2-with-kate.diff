@@ -1,4 +1,4 @@
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine/buffer.h ../xine-lib-1-2-767ccb7795a2/include/xine/buffer.h
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine/buffer.h ../xine-lib-1-2-767ccb7795a2/include/xine/buffer.h
 --- xine-lib-1-2-767ccb7795a2/include/xine/buffer.h	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/include/xine/buffer.h	2008-07-22 21:56:36.000000000 +0100
 @@ -284,6 +284,7 @@
@@ -9,7 +9,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
  /*@}*/
  
  /**
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine.h ../xine-lib-1-2-767ccb7795a2/include/xine.h
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine.h ../xine-lib-1-2-767ccb7795a2/include/xine.h
 --- xine-lib-1-2-767ccb7795a2/include/xine.h	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/include/xine.h	2008-07-22 21:48:34.000000000 +0100
 @@ -1645,6 +1645,7 @@
@@ -38,7 +38,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
   * notify frame format change
   */
  typedef struct {
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am
 --- xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am	2008-07-23 08:34:02.000000000 +0100
 @@ -64,3 +64,8 @@
@@ -50,7 +50,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +xineplug_xiph_la_LIBADD += $(KATE_LIBS)
 +xineplug_xiph_la_CFLAGS += $(KATE_CFLAGS)
 +endif
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c ../xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c ../xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c
 --- xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c	2008-07-23 16:31:13.000000000 +0100
 @@ -53,6 +53,11 @@
@@ -205,7 +205,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
        return format_lang_string (this, 0xFFFFFFFF, BUF_SPU_OGM+channel, channel, str);
      }
      return DEMUX_OPTIONAL_UNSUPPORTED;
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c ../xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c ../xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c
 --- xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c	2008-07-22 21:59:48.000000000 +0100
 @@ -640,6 +640,61 @@
@@ -295,7 +295,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
            track->buf_type |= this->num_sub_tracks;
            this->num_sub_tracks++;
            break;
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h ../xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h ../xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h
 --- xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h	2008-07-22 22:00:16.000000000 +0100
 @@ -289,6 +289,7 @@
@@ -306,7 +306,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
  
  /* block lacing */
  #define MATROSKA_NO_LACING               0x0
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am
 --- xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am	2008-07-23 08:43:09.000000000 +0100
 @@ -34,3 +34,11 @@
@@ -321,7 +321,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +xineplug_kate_la_CFLAGS = $(KATE_CFLAGS)
 +endif
 +
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c
 --- xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c	2008-07-17 16:50:59.000000000 +0100
 +++ ../xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c	2008-07-22 22:04:04.000000000 +0100
 @@ -42,6 +42,36 @@
@@ -533,10 +533,38 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
      }
  
      /* some decoders require a full reinitialization when audio
-diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c
+diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c
 --- xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c	2008-07-22 22:01:48.000000000 +0100
-@@ -1646,6 +1646,14 @@
++++ ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c	2008-09-28 12:02:45.000000000 +0100
+@@ -282,6 +282,7 @@
+   rle_elem_t rle, *rle_p=0;
+   int x, y;
+   uint8_t *c;
++  int ret;
+ 
+   lprintf("osd=%p vpts=%"PRId64"\n", osd, vpts);
+   
+@@ -386,15 +387,18 @@
+     this->event.event_type = OVERLAY_EVENT_SHOW;
+     this->event.vpts = vpts;
+     ovl_manager->add_event(ovl_manager, (void *)&this->event);
++
++    ret = 1;
+   } else {
+     /* osd empty - hide it */
+     _osd_hide(osd, vpts);
++    ret = 0;
+   }
+   pthread_mutex_unlock (&this->osd_mutex);  
+   
+   this->stream->xine->port_ticket->release(this->stream->xine->port_ticket, 1);
+   
+-  return 1;
++  return ret;
+ }
+ 
+ /* normal OSD show
+@@ -1646,6 +1650,14 @@
  
    lprintf("osd=%p at (%d,%d) %dx%d\n",osd, x1,y1, width,height );
  
@@ -552,10 +580,11 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
    osd->x1 = MIN( osd->x1, x1 );
    osd->x2 = MAX( osd->x2, x1+width );
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/spu_dec/xine_kate_decoder.c	2008-07-23 16:31:21.000000000 +0100
-@@ -0,0 +1,1861 @@
++++ ../xine-lib-1-2-767ccb7795a2/src/spu_dec/xine_kate_decoder.c	2008-09-28 12:09:31.000000000 +0100
+@@ -0,0 +1,1937 @@
 +/*
 + * Copyright (C) 2000-2003 the xine project
++ * Copyright (C) 2008 ogg.k.ogg.k@googlemail.com
 + * 
 + * This file is part of xine, a free video player.
 + * 
@@ -639,7 +668,9 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  "tiny", "small", "normal", "large", "very large", "huge", NULL
 +};
 +
-+#define rgb2yuv(R,G,B) ((((((66*R+129*G+25*B+128)>>8)+16)<<8)|(((112*R-94*G-18*B+128)>>8)+128))<<8|(((-38*R-74*G+112*B+128)>>8)+128))
++/* found in the SPU decoder */
++#define rgb2yuv(R,G,B) \
++  ((((((66*R+129*G+25*B+128)>>8)+16)<<8)|(((112*R-94*G-18*B+128)>>8)+128))<<8|(((-38*R-74*G+112*B+128)>>8)+128))
 +
 +/* colors 224 to 255 are for background/marker colors */
 +#define FIRST_BACKGROUND_PALETTE 224
@@ -735,6 +766,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  int                font_size_dy;
 +
 +  osd_object_t      *osd;
++  int                osd_shown;
 +
 +  osd_object_t      *canvas; /* for draw semantics */
 +  int                prev_draw_x;
@@ -916,7 +948,6 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +    data.end_time = ev->end_time;
 +    data.text_len = ev->len0;
 +    data.text = ev->text;
-+printf("xinekate_send_synced_text_event: [%s]\n", ev->text);
 +  }
 +  else {
 +    data.start_time = 0.0;
@@ -931,8 +962,6 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  event.data_length = sizeof(data);
 +
 +  xine_event_send(decoder->master->stream, &event);
-+
-+  printf("synced text event sent: %s\n", ev?ev->text:"<none>");
 +}
 +
 +static void update_osd (xinekate_decoder_item_t *this, int force_update)
@@ -945,8 +974,9 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +    int frame_height = this->decoder->master->cached_height;
 +
 +    /* Create a full-window OSD */
-+    if( this->osd )
++    if( this->osd ) {
 +      this->osd_renderer->free_object (this->osd);
++    }
 +
 +    this->osd = this->osd_renderer->new_object (this->osd_renderer, frame_width, frame_height);
 +
@@ -1056,7 +1086,11 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  if (palette>=0) {
 +    this->osd_renderer->render_text(this->osd,x,y,glyph,palette);
 +  }
-+  this->osd_renderer->get_text_size(this->osd,glyph,w,h);
++  if (!this->osd_renderer->get_text_size(this->osd,glyph,w,h)) {
++    lprintf("Failed to retrieve text size for [%s]\n",glyph);
++    *w=0;
++    *h=0;
++  }
 +}
 +
 +static void xinekate_render_l2r(xinekate_decoder_item_t *this,int x,int y,const char *text,int palette,size_t len0,int *w,int *h)
@@ -1285,6 +1319,60 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  this->mx0=this->my0=this->mx1=this->my1=-1;
 +}
 +
++static kate_bitmap *xinekate_apply_scaling(xinekate_decoder_item_t *this, const kate_bitmap *kb)
++{
++  /* if the width/height of the video in is different from the original canvas size
++     (if known), then we need to scale the bitmap to match */
++  kate_bitmap *scaled_kb;
++  int frame_width = this->decoder->master->cached_width;
++  int frame_height = this->decoder->master->cached_height;
++  int new_width, new_height;
++  int n, x, y;
++
++  if (this->decoder->ki.original_canvas_width == frame_width && this->decoder->ki.original_canvas_height == frame_height)
++    return NULL;
++
++  /* compute the new width/height of the scaled bitmap */
++  new_width = (int)(kb->width * frame_width / this->decoder->ki.original_canvas_width + 0.5);
++  new_height = (int)(kb->height * frame_height / this->decoder->ki.original_canvas_height + 0.5);
++  if (new_width <= 0 || new_height <= 0) /* safety in case of very weird things */
++    return NULL;
++
++  scaled_kb = malloc(sizeof(kate_bitmap));
++  if (!scaled_kb) {
++    /* failed to malloc */
++    lprintf("Failed to malloc %u bytes\n", sizeof(kate_bitmap));
++    return NULL;
++  }
++
++  /* start with a copy of the original bitmap, and adapt */
++  memcpy(scaled_kb, kb, sizeof(*kb));
++  scaled_kb->width = new_width;
++  scaled_kb->height = new_height;
++
++  /* allocate pixel data for new size */
++  scaled_kb->pixels = malloc(new_width*new_height);
++  if (!scaled_kb->pixels) {
++    /* failed to malloc */
++    lprintf("Failed to malloc %d bytes\n", new_width*new_height);
++    free(scaled_kb);
++    return NULL;
++  }
++
++  /* scale pixel data - nearest neighbour (easier, and we have to keep palette colors anyway) */
++  /* we could to a halfway pixel, generate palette colors, would need 12 colors (or 16 ?) */
++  n = 0;
++  for (y=0; y<new_height; ++y) {
++    int row = (y*kb->height+new_height/2)/new_height;
++    for (x=0; x<new_width; ++x) {
++      int col = (x*kb->width+new_width/2)/new_width;
++      scaled_kb->pixels[n++] = kb->pixels[row*kb->width+col];
++    }
++  }
++
++  return scaled_kb;
++}
++
 +static void xinekate_draw_event_background(xinekate_decoder_item_t *this)
 +{
 +  const kate_bitmap *bitmap;
@@ -1310,17 +1398,25 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +        if (bitmap->palette>=0) pal=this->decoder->ki.palettes[bitmap->palette];
 +      }
 +      if (pal) {
++        kate_bitmap *scaled_bitmap;
++        const kate_bitmap *drawn_bitmap;
 +        int x=this->x0, y=this->y0;
 +        int frame_width = this->decoder->master->cached_width;
 +        int frame_height = this->decoder->master->cached_height;
 +        xinekate_setup_bitmap(this, bitmap, pal);
-+        if (x+bitmap->width>=frame_width) x=frame_width-bitmap->width-1;
-+        if (y+bitmap->height>=frame_height) y=frame_height-bitmap->height-1;
++        scaled_bitmap = xinekate_apply_scaling(this, bitmap);
++        drawn_bitmap = scaled_bitmap ? scaled_bitmap : bitmap;
++        if (x+drawn_bitmap->width>=frame_width) x=frame_width-drawn_bitmap->width-1;
++        if (y+drawn_bitmap->height>=frame_height) y=frame_height-drawn_bitmap->height-1;
 +        if (x<0) x=0;
 +        if (y<0) y=0;
-+        this->osd_renderer->draw_bitmap (this->osd, bitmap->pixels,
-+            x, y, bitmap->width, bitmap->height,
++        this->osd_renderer->draw_bitmap (this->osd, drawn_bitmap->pixels,
++            x, y, drawn_bitmap->width, drawn_bitmap->height,
 +            temp_bitmap_mapping);
++        if (scaled_bitmap) {
++          free(scaled_bitmap->pixels);
++          free(scaled_bitmap);
++        }
 +      }
 +      else {
 +        lprintf("No palette to display bitmap, not drawing bitmap\n");
@@ -1575,7 +1671,11 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +              break;
 +            }
 +          }
-+          this->osd_renderer->get_text_size(this->osd,substr,&w0,&h0);
++          if (!this->osd_renderer->get_text_size(this->osd,substr,&w0,&h0)) {
++            lprintf("Failed to retrieve text size for [%s]\n",substr);
++            w0=0;
++            h0=0;
++          }
 +
 +          /* transfer the current character and get the size of the text with it */
 +          ret=kate_text_get_character(kate_utf8,&rptr,&rlen0);
@@ -1588,7 +1688,11 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +          if (ret<0) {
 +            lprintf("Failed to add character to temporary karaoke string");
 +          }
-+          this->osd_renderer->get_text_size(this->osd,substr,&w1,&h1);
++          if (!this->osd_renderer->get_text_size(this->osd,substr,&w1,&h1)) {
++            lprintf("Failed to retrieve text size for [%s]\n",substr);
++            w1=0;
++            h1=0;
++          }
 +        }
 +
 +        /* if there is a secondary style, use it, else draw a marker */
@@ -1728,6 +1832,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +  parse_line(this, this->ev_text, this->len0, &draw_helper, (intptr_t)&this->draw_parms);
 +}
 +
++static int64_t xinekate_get_now(xinekate_master_decoder_t *this);
 +static void xinekate_init_item(xinekate_decoder_item_t *item, xinekate_decoder_t *decoder,int palette_idx)
 +{
 +  item->id =decoder->master->item_id_generator++;
@@ -1737,6 +1842,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +
 +  item->osd_renderer = decoder->master->stream->osd_renderer;
 +  item->osd = NULL;
++  item->osd_shown = 0;
 +  item->canvas = NULL;
 +  item->draw_hole = 1;
 +
@@ -1773,7 +1879,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +     its animations will have been updated by then */
 +  kate_tracker_init(&item->kin,&item->decoder->ki,ev);
 +  kate_tracker_update(
-+    &item->kin,0.0,
++    &item->kin,0,
 +    item->decoder->master->cached_width,item->decoder->master->cached_height,
 +    0,0,item->decoder->master->cached_width,item->decoder->master->cached_height
 + );
@@ -1807,7 +1913,9 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +
 +  /* when first displayed, send a synced text message */
 +  if (item->last_animation_frame_pts<0) {
-+    xinekate_send_synced_text_event(item->decoder, item->kin.event);
++    if (item->ev_text && item->len) {
++      xinekate_send_synced_text_event(item->decoder, item->kin.event);
++    }
 +    item->last_animation_frame_pts=pts;
 +  }
 +
@@ -1828,9 +1936,9 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +      item->decoder->master->cached_width,item->decoder->master->cached_height,
 +      0,0,item->decoder->master->cached_width,item->decoder->master->cached_height
 +    );
-+  }
 +
-+  item->last_animation_frame_pts=pts;
++    item->last_animation_frame_pts=pts;
++  }
 +}
 +
 +static void xinekate_decoder_item_draw(xinekate_decoder_item_t *item, int64_t pts)
@@ -1841,21 +1949,25 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +#endif
 +
 +  /* if the motion hasn't started yet, or is over, same */
-+  if (pts<item->start_pts || pts>item->end_pts) return;
++  if (pts<item->start_pts || pts>=item->end_pts) return;
 +
 +  // TODO: we might not need to redraw every time ?
 +  // TODO: if only region position changes, might be enough to set_pos the osd
 +  xinekate_draw_item(item);
 +
 +#ifdef FORCE_SHOWING
-+  if (1)
++  //if (1)
++  if (!item->osd_shown || item->animated)
++  //if (!item->osd_shown)
 +#else
 +  if (item->last_animation_frame_pts<0)
 +#endif
 +  {
 +    //if (!item->animated) lprintf("Showing now non animated OSD, text %s\n",item->ev_text);
-+    if (item->osd_renderer)
-+      item->osd_renderer->show(item->osd, 0);
++    if (item->osd_renderer) {
++      if (item->osd_renderer->show(item->osd, 0))
++        item->osd_shown = 1;
++    }
 +  }
 +}
 +
@@ -1876,7 +1988,9 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +{
 +  lprintf("item id %d: clearing (%s)\n",item->id, item->ev_text);
 +
-+  xinekate_send_synced_text_event(item->decoder, NULL);
++  if (item->ev_text && item->len) {
++    xinekate_send_synced_text_event(item->decoder, NULL);
++  }
 +
 +  kate_tracker_clear(&item->kin);
 +
@@ -1885,7 +1999,6 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +    item->ev_text=NULL;
 +  }
 +  if (item->osd) {
-+    item->osd_renderer->hide(item->osd, 0);
 +    item->osd_renderer->free_object(item->osd);
 +    item->osd=NULL;
 +    if (item->canvas) {
@@ -2040,16 +2153,6 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +
 +  /* get the Ogg packet */
 +  lprintf("Kate packet seen, %ld bytes\n",this->raw ? this->kp.nbytes : this->op.bytes);
-+#if 1
-+  {
-+    size_t i;
-+    unsigned char *ptr = this->raw ? this->kp.data : this->op.packet;
-+    size_t sz = this->raw ? this->kp.nbytes : this->op.bytes;
-+    lprintf("First 16 bytes: %s\n", ptr);
-+    for (i=0; i<((16>sz)?sz:16); ++i) printf("%02x ", ptr[i]);
-+    printf("\n");
-+  }
-+#endif
 +
 +  /* send the packet to Kate */
 +  if ( (buf->decoder_flags & BUF_FLAG_HEADER) &&
@@ -2183,6 +2286,7 @@ diff -x xine-config -x 'configure.h*' -x config.guess -x config.sub -x configure
 +        xine_format_change_data_t *frame_change = (xine_format_change_data_t *)event->data;
 +        this->cached_width = frame_change->width;
 +        this->cached_height = frame_change->height;
++        lprintf("video frame size changed: now %d %d\n",this->cached_width,this->cached_height);
 +        xinekate_master_decoder_refresh(this, 1);
 +      }
 +      break;
