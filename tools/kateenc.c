@@ -688,18 +688,26 @@ int main(int argc,char **argv)
       fprintf(stderr,"%s: %s\n",input_filename,strerror(errno));
       exit(-1);
     }
-    ptr=end=input_filename;
+    ptr=input_filename;
+    end=NULL;
     while (*ptr) {
       if (*ptr=='/' || *ptr=='\\')
         end=ptr;
       ++ptr;
     }
-    if ((size_t)(end-input_filename+1)>=sizeof(base_path)) {
-      fprintf(stderr,"%s too long\n",input_filename);
-      exit(-1);
+    if (end) {
+      /* we found a slash */
+      if ((size_t)(end-input_filename+1)>=sizeof(base_path)) {
+        fprintf(stderr,"%s too long\n",input_filename);
+        exit(-1);
+      }
+      strncpy(base_path,input_filename,end-input_filename+1);
+      base_path[end-input_filename+1]=0; /* just after the last slash */
     }
-    strncpy(base_path,input_filename,end-input_filename+1);
-    base_path[end-input_filename+1]=0; /* just after the last slash */
+    else {
+      /* we did not found a slash */
+      strcpy(base_path,"");
+    }
   }
 
   if (!output_filename || !strcmp(output_filename,"-")) {

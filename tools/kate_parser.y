@@ -193,6 +193,17 @@ static void init_palette(void)
   }
 }
 
+static void generate_full_filename(char *full_filename,const char *filename)
+{
+  if (filename[0]=='/' || filename[0]=='\\') {
+    strcpy(full_filename,filename);
+  }
+  else {
+    snprintf(full_filename,sizeof(full_filename),"%s%s",base_path,filename);
+    full_filename[sizeof(full_filename)-1]=0;
+  }
+}
+
 static void load_palette(const char *filename)
 {
 #ifdef HAVE_PNG
@@ -200,8 +211,7 @@ static void load_palette(const char *filename)
   kate_color *palette=NULL;
   static char full_filename[4096];
 
-  snprintf(full_filename,sizeof(full_filename),"%s%s",base_path,filename);
-  full_filename[sizeof(full_filename)-1]=0;
+  generate_full_filename(full_filename,filename);
   if (kd_read_png8(full_filename,NULL,NULL,NULL,&palette,&ncolors,NULL)) {
     yyerrorf("failed to load %s",filename);
     return;
@@ -287,8 +297,7 @@ static void load_bitmap(const char *filename,int paletted)
     int bpp;
     static char full_filename[4096];
 
-    snprintf(full_filename,sizeof(full_filename),"%s%s",base_path,filename);
-    full_filename[sizeof(full_filename)-1]=0;
+    generate_full_filename(full_filename,filename);
     if (kd_read_png8(full_filename,&w,&h,&bpp,NULL,NULL,&pixels)) {
       yyerrorf("failed to load %s",filename);
       return;
@@ -305,8 +314,7 @@ static void load_bitmap(const char *filename,int paletted)
     size_t size;
     static char full_filename[4096];
 
-    snprintf(full_filename,sizeof(full_filename),"%s%s",base_path,filename);
-    full_filename[sizeof(full_filename)-1]=0;
+    generate_full_filename(full_filename,filename);
     if (kd_read_png(full_filename,&w,&h,&pixels,&size)) {
       yyerrorf("failed to load %s",filename);
       return;

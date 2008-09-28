@@ -1,6 +1,7 @@
 0.2.1
-  minor code simplification in the tracker
+  generate correct filenames for absolute paths
   build fix for Cygwin/Mingw32 (yselkowitz/Cygwin Ports project)
+  minor code simplification in the tracker
 
 0.2.0
   bitstream 0.4
