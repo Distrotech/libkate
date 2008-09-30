@@ -1,12 +1,12 @@
 0.2.2
   fix build when doxygen isn't found (alexis ballier)
 
-0.2.1
+0.2.1 - 29 september 2008
   generate correct filenames for absolute paths
   build fix for Cygwin/Mingw32 (yselkowitz/Cygwin Ports project)
   minor code simplification in the tracker
 
-0.2.0
+0.2.0 - 22 september 2008
   bitstream 0.4
   glyph pointers and markers can now have a custom animated image
   bitmaps now have a logical position (x/y offset)
@@ -17,32 +17,32 @@
   comments are now validated against Vorbis comment rules
   more validity checks in the encoder and API
 
-0.1.12
+0.1.12 - 09 september 2008
   granule rate numerator and denominator are now unsigned
   kateenc can be given comments on the command line to add to the output stream
   some improvements in srt parsing
   katedec now writes srt times using the more widespread ',' instead of '.'
   build system improvements
 
-0.1.11
+0.1.11 - 04 september 2008
   fix version number being truncated
 
-0.1.10
+0.1.10 - 03 september 2008
   katedec does not unlink output files for no good reason anymore :)
 
-0.1.9
+0.1.9 - 02 september 2008
   defend against corrupt streams and pathological input
   fix some encoding properties not being reset for each event
   katedec can now decode multiple Kate streams in an Ogg stream
   katedec can now output srt format files
   fix make check on PPC archs
 
-0.1.8
+0.1.8 - 25 august 2008
   various build fixes for particular system configurations
   new -c (category) option to kateenc
   new man pages for kateenc and katedec
 
-0.1.7
+0.1.7 - 11 august 2008
   autotools support
   tools renamed to kateenc and katedec, and now installed
   win32 fixes (Roman Vorobets)
@@ -50,7 +50,7 @@
   fix off-by-ten tracker scaling bug
   the encoder now reads files from the input file directory, if any
 
-0.1.6
+0.1.6 - 21 july 2008
   new kate_high_decode_get_comments api function
   libraries can now build in C89 mode
   allow building without libogg (liboggkate and tools will not be built)
@@ -58,24 +58,24 @@
   use new names for oggz tools
   the encoder can now read .lrc (lyrics) files
 
-0.1.5
+0.1.5 - 08 july 2008
   bitstream 0.3
   new kate_encode_get_granule api function
   space metrics can now be expressed in millionths
   the info header can now hold the original canvas size
   fix misguided error throwing if a reserved area is not 0
 
-0.1.4
+0.1.4 - 23 june 2008
   Kate magic is now 8 bytes (though the bitstream is unchanged)
   fix an EOS packet encoding bug when using keepalive packets
 
-0.1.3
+0.1.3 - 02 june 2008
   remove last dependency on libogg from libkate (the bitpacker)
   new kate_region_init, kate_style_init, etc, functions
   RLE and delta compression for paletted images
   fix 64 bit warnings
 
-0.1.2
+0.1.2 - 15 may 2008
   bitstream 0.2
   background image
   text can now be escaped for markup if needed
@@ -86,10 +86,10 @@
   pkg-config files moved to misc/pkgconfig
   dodgy workarounds for building with enforcing SELinux
 
-0.1.1
+0.1.1 - 31 march 2008
   Examples now build with the new API
   Several fixes for bugs found with valgrind
 
-0.1.0
+0.1.0 - 18 march 2008
   bitstream 0.1
   First released version
