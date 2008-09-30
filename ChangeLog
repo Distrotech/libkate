@@ -1,5 +1,5 @@
 0.2.2
-  fix build when doxygen isn't found (alexis ballier)
+  fix build when doxygen isn't found (Alexis Ballier)
 
 0.2.1 - 29 september 2008
   generate correct filenames for absolute paths
