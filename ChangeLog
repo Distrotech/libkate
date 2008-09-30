@@ -1,3 +1,6 @@
+0.2.2
+  fix build when doxygen isn't found (alexis ballier)
+
 0.2.1
   generate correct filenames for absolute paths
   build fix for Cygwin/Mingw32 (yselkowitz/Cygwin Ports project)
