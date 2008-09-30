@@ -66,4 +66,33 @@ by Thoggen, and selecting them in the GUI will cause them to be saved as
 Kate tracks along with the movie.
 
 
+\section HOWTO-lyrics Song lyrics
+
+Kate streams carrying song lyrics can be embedded in an Ogg file. The
+oggenc Vorbis encoding tool from the Xiph.Org Vorbis tools allows lyrics
+to be loaded from a LRC or SRT text file and converted to a Kate stream
+multiplexed with the resulting Vorbis audio:
+
+\verbatim
+    oggenc -o song-with-lyrics.ogg --lyrics lyrics.lrc --lyrics-language en_US song.wav
+\endverbatim
+
+So called 'enhanced LRC' files (containing extra karaoke timing information)
+are supported, and a simple karaoke color change scheme will be saved
+out for these files. For more complex karaoke effects (such as more
+complex style changes, or sprite animation), kateenc should be used with
+a Kate description file to create a separate Kate stream, which can then
+be merged with a Vorbis only song with oggz-tools:
+
+\verbatim
+    oggenc -o song.ogg song.wav
+
+    kateenc -t kate -c lyrics -l en_US -o lyrics.ogg lyrics-with-karaoke.kate
+
+    oggz merge -o song-with-karaoke.ogg lyrics-with-karaoke.ogg song.ogg
+\endverbatim
+
+This latter method may also be used if you already have an encoded Vorbis song
+with no lyrics, and just want to add the lyrics without reencoding.
+
 */
