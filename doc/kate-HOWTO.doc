@@ -71,7 +71,9 @@ Kate tracks along with the movie.
 Kate streams carrying song lyrics can be embedded in an Ogg file. The
 oggenc Vorbis encoding tool from the Xiph.Org Vorbis tools allows lyrics
 to be loaded from a LRC or SRT text file and converted to a Kate stream
-multiplexed with the resulting Vorbis audio:
+multiplexed with the resulting Vorbis audio. At the time of writing,
+the patch to oggenc was not applied yet, so it will have to be patched
+manually with the patch found in the diffs directory.
 
 \verbatim
     oggenc -o song-with-lyrics.ogg --lyrics lyrics.lrc --lyrics-language en_US song.wav
