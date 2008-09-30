@@ -68,7 +68,14 @@ AC_CHECK_HEADERS(
 AC_TYPE_SIZE_T
 
 AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes)
-AC_CHECK_PROG(HAVE_DOXYGEN,doxygen,yes)
+
+AC_ARG_ENABLE(doc, [  --disable-doc	Disable building documentation (default enabled)])
+if test "x$enable_doc" != "xno"
+then
+  AC_CHECK_PROG(HAVE_DOXYGEN,doxygen,yes)
+else
+  HAVE_DOXYGEN="no"
+fi
 AM_CONDITIONAL(HAVE_DOXYGEN,test "${HAVE_DOXYGEN}" = "yes")
 
 AC_ARG_ENABLE(valgrind, [  --enable-valgrind       Run the tests with Valgrind (default disabled)])
