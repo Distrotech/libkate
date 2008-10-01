@@ -54,8 +54,9 @@ Sets the serial number for the output Kate stream (does not apply to raw streams
 .TP
 \fB\-C\fR tag=value
 Adds a comment to encode into the output Kate stream. The comment must be of the form
-tag=value. Note that you might have to escape or quote the comment for it to be seen as
-a single command line parameter.
+tag=value, and comply with the Vorbis comment rules (eg, tag is composed of a particular
+subset of ASCII characters, and value is valid UTF-8). Note that you might have to escape
+or quote the comment for it to be seen as a single command line parameter.
 .TP
 \fB\-t\fR filetype
 Specifies the type of the input (srt, lrc, kate)
