@@ -93,8 +93,7 @@ typedef uintptr_t kate_uintptr_t;
 #elif defined uintptr_t
 typedef uintptr_t kate_uintptr_t;
 #else
-#warning No suitable type for holding integer and pointer found, using unsigned long
-typedef unsigned long kate_uintptr_t;
+typedef union { unsigned int i; void *p; } kate_uintptr_t;
 #endif
 
 typedef float kate_float;
