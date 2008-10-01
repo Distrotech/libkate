@@ -50,8 +50,24 @@ static void kate_memory_guard_destroy(kate_memory_guard *kmg,int free_pointers)
   if (kmg->pointers) kate_free(kmg->pointers);
 }
 
+static int kate_memory_guard_merge(kate_memory_guard *kmg,kate_memory_guard *parent_kmg)
+{
+  void **new_pointers;
+  new_pointers=(void**)kate_realloc(parent_kmg->pointers,(parent_kmg->size+kmg->size)*sizeof(void*));
+  if (!new_pointers) {
+    kate_memory_guard_destroy(kmg,1);
+    return KATE_E_OUT_OF_MEMORY;
+  }
+  parent_kmg->pointers=new_pointers;
+  memcpy(parent_kmg->pointers+parent_kmg->size,kmg->pointers,kmg->size*sizeof(void*));
+  parent_kmg->size+=kmg->size;
+  kate_memory_guard_destroy(kmg,0);
+  return 0;
+}
+
 #define KMG_GUARD() kate_memory_guard kmg={0,NULL}
 #define KMG_MALLOC(size) kate_memory_guard_malloc(&kmg,size)
+#define KMG_MERGE(parent_kmg) kate_memory_guard_merge(&kmg,parent_kmg)
 #define KMG_ERROR(ret) (kate_memory_guard_destroy(&kmg,1),ret)
 #define KMG_OK() (kate_memory_guard_destroy(&kmg,0),0)
 
@@ -351,17 +367,18 @@ static int kate_decode_color(kate_color *kc,kate_pack_buffer *kpb)
   return 0;
 }
 
-static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer *kpb)
+static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer *kpb,kate_memory_guard *parent_kmg)
 {
+  KMG_GUARD();
   int ret;
   kate_float d[8];
   size_t idx;
   int len;
 
-  if (!ks || !kpb) return KATE_E_INVALID_PARAMETER;
+  if (!ks || !kpb) return KMG_ERROR(KATE_E_INVALID_PARAMETER);
 
   ret=kate_fp_decode_kate_float(sizeof(d)/sizeof(d[0]),d,1,kpb);
-  if (ret<0) return ret;
+  if (ret<0) return KMG_ERROR(ret);
 
   idx=0;
   ks->halign=d[idx++];
@@ -373,11 +390,11 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
   ks->right_margin=d[idx++];
   ks->bottom_margin=d[idx++];
   ret=kate_decode_color(&ks->text_color,kpb);
-  if (ret<0) return ret;
+  if (ret<0) return KMG_ERROR(ret);
   ret=kate_decode_color(&ks->background_color,kpb);
-  if (ret<0) return ret;
+  if (ret<0) return KMG_ERROR(ret);
   ret=kate_decode_color(&ks->draw_color,kpb);
-  if (ret<0) return ret;
+  if (ret<0) return KMG_ERROR(ret);
   ks->font_metric=kate_pack_read(kpb,8);
   ks->margin_metric=kate_pack_read(kpb,8);
   ks->bold=kate_pack_read1(kpb);
@@ -391,11 +408,11 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     ks->justify=kate_pack_read1(kpb);
     len=kate_read32v(kpb);
     if (len<0) {
-      return KATE_E_BAD_PACKET;
+      return KMG_ERROR(KATE_E_BAD_PACKET);
     }
     else if (len>0) {
-      ks->font=(char*)kate_malloc(len+1);
-      if (!ks->font) return KATE_E_OUT_OF_MEMORY;
+      ks->font=(char*)KMG_MALLOC(len+1);
+      if (!ks->font) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       kate_readbuf(kpb,ks->font,len);
       ks->font[len]=0;
     }
@@ -417,7 +434,10 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     ks->wrap_mode=kate_wrap_word;
   }
 
-  return kate_warp(kpb);
+  ret=kate_warp(kpb);
+  if (ret<0) return KMG_ERROR(ret);
+
+  return KMG_MERGE(parent_kmg);
 }
 
 static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -436,7 +456,7 @@ static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
   for (n=0;n<nstyles;++n) {
     styles[n]=(kate_style*)KMG_MALLOC(sizeof(kate_style));
     if (!styles[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-    ret=kate_decode_style(ki,styles[n],kpb);
+    ret=kate_decode_style(ki,styles[n],kpb,&kmg);
     if (ret<0) return KMG_ERROR(ret);
   }
 
@@ -452,28 +472,26 @@ static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
   return KMG_OK();
 }
 
-static int kate_decode_curve(const kate_info *ki,kate_curve *kc,kate_pack_buffer *kpb)
+static int kate_decode_curve(const kate_info *ki,kate_curve *kc,kate_pack_buffer *kpb,kate_memory_guard *parent_kmg)
 {
+  KMG_GUARD();
   int ret;
 
-  if (!ki || !kc || !kpb) return KATE_E_INVALID_PARAMETER;
+  if (!ki || !kc || !kpb) return KMG_ERROR(KATE_E_INVALID_PARAMETER);
 
   kc->type=kate_pack_read(kpb,8);
   kc->npts=kate_read32v(kpb);
   ret=kate_warp(kpb);
-  if (ret<0) return ret;
-  if (!ki->no_limits && kc->npts>KATE_LIMIT_CURVE_POINTS) return KATE_E_LIMIT;
-  kc->pts=(kate_float*)kate_malloc(kc->npts*2*sizeof(kate_float));
-  if (!kc->pts) return KATE_E_OUT_OF_MEMORY;
+  if (ret<0) return KMG_ERROR(ret);
+  if (!ki->no_limits && kc->npts>KATE_LIMIT_CURVE_POINTS) return KMG_ERROR(KATE_E_LIMIT);
+  kc->pts=(kate_float*)KMG_MALLOC(kc->npts*2*sizeof(kate_float));
+  if (!kc->pts) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
 
   ret=kate_fp_decode_kate_float(kc->npts,kc->pts,2,kpb);
-  if (ret<0) {
-    kate_free(kc->pts);
-    kc->pts=NULL;
-    return ret;
-  }
+  if (ret<0) return KMG_ERROR(ret);
 
-  return 0;
+  /* on success, add our memory to the parent guard */
+  return KMG_MERGE(parent_kmg);
 }
 
 static int kate_decode_curves_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -494,7 +512,7 @@ static int kate_decode_curves_packet(kate_info *ki,kate_pack_buffer *kpb)
     for (n=0;n<ncurves;++n) {
       curves[n]=(kate_curve*)KMG_MALLOC(sizeof(kate_curve));
       if (!curves[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-      ret=kate_decode_curve(ki,curves[n],kpb);
+      ret=kate_decode_curve(ki,curves[n],kpb,&kmg);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -511,7 +529,7 @@ static int kate_decode_curves_packet(kate_info *ki,kate_pack_buffer *kpb)
   return KMG_OK();
 }
 
-static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buffer *kpb)
+static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buffer *kpb,kate_memory_guard *parent_kmg)
 {
   KMG_GUARD();
   size_t n;
@@ -534,8 +552,8 @@ static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buff
     }
     else {
       km->curves[n]=(kate_curve*)KMG_MALLOC(sizeof(kate_curve));
-      if (!km->curves[n]) return KATE_E_OUT_OF_MEMORY;
-      ret=kate_decode_curve(ki,km->curves[n],kpb);
+      if (!km->curves[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
+      ret=kate_decode_curve(ki,km->curves[n],kpb,&kmg);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -548,7 +566,7 @@ static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buff
   ret=kate_warp(kpb);
   if (ret<0) return KMG_ERROR(ret);
 
-  return KMG_OK();
+  return KMG_MERGE(parent_kmg);
 }
 
 static int kate_decode_motions_packet(kate_info *ki,kate_pack_buffer *kpb)
@@ -569,7 +587,7 @@ static int kate_decode_motions_packet(kate_info *ki,kate_pack_buffer *kpb)
     for (n=0;n<nmotions;++n) {
       motions[n]=(kate_motion*)KMG_MALLOC(sizeof(kate_motion));
       if (!motions[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-      ret=kate_decode_motion(ki,motions[n],kpb);
+      ret=kate_decode_motion(ki,motions[n],kpb,&kmg);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -976,6 +994,25 @@ int kate_decode_init(kate_state *k,kate_info *ki)
     if (kate_pack_read1(kpb)) { read; } \
   } while(0)
 
+#ifdef DEBUG
+#include <unistd.h>
+#include <sys/types.h>
+#include <time.h>
+#include <stdlib.h>
+#define RNDERR(label) \
+  do { \
+    static int seed=0; \
+    if (!seed) { \
+      const char *env=getenv("KATE_RAND_SEED"); \
+      if (env) srand(atoi(env)); else srand(time(NULL)^getpid()); \
+      seed=1; \
+    } \
+    if (((rand()>>8)&0xff)==0) goto label; \
+  } while(0)
+#else
+#define RNDERR(label) ((void)0)
+#endif
+
 static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
 {
   KMG_GUARD();
@@ -999,17 +1036,21 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
   ev->backlink=kate_read64(kpb);
   if (ev->start<0 || ev->duration<0) goto error_bad_packet;
   if (ev->backlink<0 || ev->backlink>ev->start) goto error_bad_packet;
+  RNDERR(error_bad_packet);
 
   ev->start_time=kate_granule_duration(k->ki,ev->start);
   ev->end_time=ev->start_time+kate_granule_duration(k->ki,ev->duration);
 
   len=kate_read32(kpb);
   if (len<0) goto error_bad_packet;
+  RNDERR(error_bad_packet);
   if (!k->ki->no_limits && len>KATE_LIMIT_TEXT_LENGTH) goto error_limit;
+  RNDERR(error_limit);
 
   /* read the text, and null terminate it - 4 characters for UTF-32 */
   text=(char*)KMG_MALLOC(len+4);
   if (!text) goto error_out_of_memory;
+  RNDERR(error_out_of_memory);
   kate_readbuf(kpb,text,len);
   text[len]=0;
   text[len+1]=0;
@@ -1031,20 +1072,25 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     len=kate_read32v(kpb);
     if (len<=0) goto error_bad_packet; /* if the flag was set, there's at least one */
     if (!k->ki->no_limits && len>KATE_LIMIT_TEXT_MOTIONS) goto error_limit;
+    RNDERR(error_limit);
     motions=(kate_motion**)KMG_MALLOC(len*sizeof(kate_motion*));
     if (!motions) goto error_out_of_memory;
+    RNDERR(error_out_of_memory);
     nmotions=0;
     for (n=0;n<len;++n) {
       if (kate_pack_read1(kpb)) {
         size_t idx=kate_read32v(kpb);
         if (idx>=k->ki->nmotions) goto error_bad_packet;
+        RNDERR(error_bad_packet);
         motions[n]=k->ki->motions[idx];
       }
       else {
         motions[n]=KMG_MALLOC(sizeof(kate_motion));
         if (!motions[n]) goto error_out_of_memory;
-        ret=kate_decode_motion(k->ki,motions[n],kpb);
+        RNDERR(error_out_of_memory);
+        ret=kate_decode_motion(k->ki,motions[n],kpb,&kmg);
         if (ret<0) goto error;
+        RNDERR(error);
       }
       ++nmotions;
     }
@@ -1060,10 +1106,13 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
       do {
         len=kate_read32v(kpb);
         if (len<0) goto error_bad_packet;
+        RNDERR(error_bad_packet);
         if (!k->ki->no_limits && len>KATE_LIMIT_LANGUAGE_LENGTH) goto error_limit;
+        RNDERR(error_limit);
         if (len>0) {
           ev->language=(char*)KMG_MALLOC(len+1);
           if (!ev->language) goto error_out_of_memory;
+        RNDERR(error_out_of_memory);
           kate_readbuf(kpb,ev->language,len);
           ev->language[len]=0;
         }
@@ -1072,39 +1121,47 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     READ_OVERRIDE(
       size_t idx=kate_read32v(kpb);
       if (idx>=k->ki->nregions) goto error_bad_packet;
+      RNDERR(error_bad_packet);
       ev->region=k->ki->regions[idx];
     );
     READ_OVERRIDE(
       ev->region=KMG_MALLOC(sizeof(kate_region));
       if (!ev->region) goto error_out_of_memory;
+      RNDERR(error_out_of_memory);
       ret=kate_decode_region(k->ki,ev->region,kpb);
       if (ret<0) goto error;
     );
     READ_OVERRIDE(
       size_t idx=kate_read32v(kpb);
       if (idx>=k->ki->nstyles) goto error_bad_packet;
+      RNDERR(error_bad_packet);
       ev->style=k->ki->styles[idx]
     );
     READ_OVERRIDE(
-      ev->style=kate_malloc(sizeof(kate_style));
+      ev->style=KMG_MALLOC(sizeof(kate_style));
       if (!ev->style) goto error_out_of_memory;
-      ret=kate_decode_style(k->ki,ev->style,kpb);
+      RNDERR(error_out_of_memory);
+      ret=kate_decode_style(k->ki,ev->style,kpb,&kmg);
       if (ret<0) goto error;
     );
     READ_OVERRIDE(
       size_t idx=kate_read32v(kpb);
       if (idx>=k->ki->nstyles) goto error_bad_packet;
+      RNDERR(error_bad_packet);
       ev->secondary_style=k->ki->styles[idx]
     );
     READ_OVERRIDE(
-      ev->secondary_style=kate_malloc(sizeof(kate_style));
+      ev->secondary_style=KMG_MALLOC(sizeof(kate_style));
       if (!ev->secondary_style) goto error_out_of_memory;
-      ret=kate_decode_style(k->ki,ev->secondary_style,kpb);
+      RNDERR(error_out_of_memory);
+      ret=kate_decode_style(k->ki,ev->secondary_style,kpb,&kmg);
       if (ret<0) goto error;
+      RNDERR(error);
     );
     READ_OVERRIDE(
       size_t idx=kate_read32v(kpb);
       if (idx>=k->ki->nfont_mappings) goto error_bad_packet;
+      RNDERR(error_bad_packet);
       ev->font_mapping=k->ki->font_mappings[idx]
     );
   }
@@ -1116,6 +1173,7 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
       READ_OVERRIDE(
         size_t idx=kate_read32v(kpb);
         if (idx>=k->ki->npalettes) goto error_bad_packet;
+        RNDERR(error_bad_packet);
         ev->palette=k->ki->palettes[idx];
       );
       READ_OVERRIDE(
@@ -1123,6 +1181,7 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
         if (!ev->palette) goto error_out_of_memory;
         ret=kate_decode_palette(k->ki,ev->palette,kpb);
         if (ret<0) goto error;
+        RNDERR(error);
       );
       READ_OVERRIDE(
         size_t idx=kate_read32v(kpb);
@@ -1132,8 +1191,10 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
       READ_OVERRIDE(
         ev->bitmap=KMG_MALLOC(sizeof(kate_bitmap));
         if (!ev->bitmap) goto error_out_of_memory;
+        RNDERR(error_out_of_memory);
         ret=kate_decode_bitmap(k->ki,ev->bitmap,kpb);
         if (ret<0) goto error;
+        RNDERR(error);
       );
       READ_OVERRIDE(ev->text_markup_type=kate_pack_read(kpb,8));
     }
@@ -1148,20 +1209,24 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
 
     len=kate_read32v(kpb);
     if (len<0) goto error_bad_packet;
+    RNDERR(error_bad_packet);
     if (len>0) {
       if (!k->ki->no_limits && len>KATE_LIMIT_BITMAPS) goto error_limit;
       bitmaps=(kate_bitmap**)KMG_MALLOC(len*sizeof(kate_bitmap*));
       if (!bitmaps) goto error_out_of_memory;
+      RNDERR(error_out_of_memory);
       nbitmaps=0;
       for (n=0;n<len;++n) {
         if (kate_pack_read1(kpb)) {
           size_t idx=kate_read32v(kpb);
           if (idx>=k->ki->nbitmaps) goto error_bad_packet;
+          RNDERR(error_bad_packet);
           bitmaps[n]=k->ki->bitmaps[idx];
         }
         else {
           bitmaps[n]=KMG_MALLOC(sizeof(kate_bitmap));
           if (!bitmaps[n]) goto error_out_of_memory;
+          RNDERR(error_out_of_memory);
           ret=kate_decode_bitmap(k->ki,bitmaps[n],kpb);
           if (ret<0) goto error;
         }
@@ -1179,10 +1244,12 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
 
   ret=kate_warp(kpb);
   if (ret<0) goto error;
+  RNDERR(error);
 
   if (ev->text_markup_type!=kate_markup_none && k->ki->remove_markup) {
     ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);
     if (ret<0) goto error;
+    RNDERR(error);
     ev->text_markup_type=kate_markup_none;
   }
 
@@ -1211,9 +1278,9 @@ error_out_of_memory:
   goto error;
 
 error:
-  /* TODO: should not be necessary now that kate_memory_guard is there
-     we may leak a bit, but calling this will double free stuff */
-  /* kate_event_release(ev); */
+  /* all the memory allocated for the event should be freed by the kate_memory_guard,
+     so we just unlink and jettison it */
+  kate_free(kds->event);
   kds->event=NULL;
   return KMG_ERROR(ret);
 }
