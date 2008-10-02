@@ -22,7 +22,7 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBKATE_SHARED_VERSION="1:4:0"
+LIBKATE_SHARED_VERSION="1:5:0"
 LIBOGGKATE_SHARED_VERSION="1:1:0"
 
 AC_PROG_CC_C_O

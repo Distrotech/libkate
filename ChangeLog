@@ -1,4 +1,4 @@
-0.2.2
+0.2.2 - 02 october 2008
   fix several memory leaks on error code paths
   fix build when doxygen isn't found (Alexis Ballier)
 
