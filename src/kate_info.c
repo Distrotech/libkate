@@ -133,18 +133,17 @@ int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_floa
   }
 }
 
-static int kate_replace_string(char **sptr,const char *s)
+static int kate_replace_string(char **sptr,const char *s,size_t len)
 {
-  size_t len;
   char *l=NULL;
 
   if (!sptr) return KATE_E_INVALID_PARAMETER;
 
   if (s) {
-    len=strlen(s);
     l=(char*)kate_malloc(len+1);
     if (!l) return KATE_E_OUT_OF_MEMORY;
-    memcpy(l,s,len+1);
+    memcpy(l,s,len);
+    l[len]=0;
   }
 
   if (*sptr) kate_free(*sptr);
@@ -159,12 +158,68 @@ static int kate_replace_string(char **sptr,const char *s)
   \param ki the kate_info structure for the stream
   \param language the default language to set for this stream
   \returns 0 success
+  \returns 1 success, but the tag was truncated (the resulting tag may be read back from ki->language)
   \returns KATE_E_* error
   */
 int kate_info_set_language(kate_info *ki,const char *language)
 {
+  int ret;
+  size_t len;
+  size_t new_len;
+  const char *sep;
+  int truncated;
+
   if (!ki) return KATE_E_INVALID_PARAMETER;
-  return kate_replace_string(&ki->language,language);
+  if (!language) return KATE_E_INVALID_PARAMETER;
+
+  /* special case for empty string */
+  if (!*language) {
+    return kate_replace_string(&ki->language,language,0);
+  }
+
+  /* simple validity - the first tag must be 2 characters */
+  sep=strpbrk(language,"-_");
+  if (!sep) sep=language+strlen(language);
+  if (sep-language==0 || sep-language>3) return KATE_E_INVALID_PARAMETER;
+
+  /* if the tag is too long, it has to be truncated; while we still have space,
+     find the next - or _ following a tag of more than one character, and see
+     if we can fit it */
+  len=0;
+  new_len=0;
+  truncated=1;
+  while (truncated) {
+    size_t prev_new_len=new_len;
+    sep=strpbrk(language+new_len,"-_");
+    if (sep) {
+      new_len=sep-language;
+    }
+    else {
+      /* not found, gobble the remainder of the string */
+      new_len=strlen(language);
+      truncated=0;
+    }
+    if (new_len>15) {
+      /* we can't fit this new tag */
+      break;
+    }
+    /* one or less character tags aren't allowed as the last tag */
+    if (new_len-prev_new_len>=2) {
+      len=new_len;
+    }
+    /* if we need another go, skip the separator */
+    ++new_len;
+  }
+
+  if (len<=1) {
+    /* we can't fit any subtag, or the first tag is less than 2 characters long */
+    return KATE_E_INVALID_PARAMETER;
+  }
+
+  ret=kate_replace_string(&ki->language,language,len);
+  if (ret<0) return ret;
+
+  return truncated?1:0;
 }
 
 /**
@@ -193,7 +248,8 @@ int kate_info_set_text_directionality(kate_info *ki,kate_text_directionality tex
 int kate_info_set_category(kate_info *ki,const char *category)
 {
   if (!ki) return KATE_E_INVALID_PARAMETER;
-  return kate_replace_string(&ki->category,category);
+  if (!category) return KATE_E_INVALID_PARAMETER;
+  return kate_replace_string(&ki->category,category,strlen(category));
 }
 
 /**
