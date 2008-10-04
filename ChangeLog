@@ -1,3 +1,6 @@
+0.2.3
+  try harder to define kate_int64_t if included by C89 code not using autoconf
+
 0.2.2 - 02 october 2008
   fix several memory leaks on error code paths
   fix build when doxygen isn't found (Alexis Ballier)

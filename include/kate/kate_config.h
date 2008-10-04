@@ -9,12 +9,12 @@
 #ifndef _KATE_CONFIG_H_
 #define _KATE_CONFIG_H_
 
-#include <stddef.h>
-#include <limits.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <stddef.h>
+#include <limits.h>
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
@@ -83,6 +83,14 @@ typedef short int kate_int64_t;
 #elif defined LONG_MAX && LONG_MAX>2147483647
 typedef long int kate_int64_t;
 #elif defined LLONG_MAX && LLONG_MAX>2147483647
+typedef long long int kate_int64_t;
+#elif defined LONG_LONG_MAX && LONG_LONG_MAX>2147483647
+typedef long long int kate_int64_t;
+#elif defined __GNUC__ && __GNUC__>=4 && defined __WORDSIZE && __WORDSIZE==64
+/* this case matches glibc, check conservative GCC version just in case */
+typedef long int kate_int64_t;
+#elif defined __GNUC__ && __GNUC__>=4 && defined __WORDSIZE && __WORDSIZE==32
+/* this case matches glibc, check conservative GCC version just in case */
 typedef long long int kate_int64_t;
 #else
 #error No 64 bit signed integer found
