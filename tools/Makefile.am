@@ -13,8 +13,8 @@ endif
 katedec_SOURCES=katedec.c
 kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@ -lc
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ -lc
-kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@ @PNG_CFLAGS@
-katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @OGG_CFLAGS@
+kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@ @PNG_CFLAGS@
+katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@
 bin_PROGRAMS=katedec kateenc
 BUILT_SOURCES=kate_parser.h
 endif

@@ -37,9 +37,9 @@ noinst_HEADERS=\
   src/kate_encode_state.h src/kate_decode_state.h \
   src/kate_bitwise.h src/kate_fp.h src/kate_rle.h
 
-lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@
+lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@ @CFLAGS_FORTIFY_SOURCE@
 lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ -no-undefined
-lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@
+lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@ @CFLAGS_FORTIFY_SOURCE@
 lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ -no-undefined
 
 lib_liboggkate_la_LIBADD=lib/libkate.la
