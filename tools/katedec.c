@@ -303,7 +303,7 @@ static void write_text(FILE *f,const char *text,size_t len0,kate_markup_type tex
         fprintf(f,"%c",ret);
       }
       else {
-        fprintf(f,"&#%x;",ret);
+        fprintf(f,"&#%u;",ret);
       }
     }
   }

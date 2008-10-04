@@ -268,9 +268,9 @@ kate {
     directionality rtl_ttb
     language "ar"
     region "centerbox"
-    text "&#feb3;&#fefc;&#fee1;\n"
-       + "&#feb3;&#fefc;&#fee1;\n"
-       + "&#feb3;&#fefc;&#fee1;\n"
+    text "&#65203;&#65276;&#65249;\n"
+       + "&#65203;&#65276;&#65249;\n"
+       + "&#65203;&#65276;&#65249;\n"
     style "centerbox" { vcenter hright }
     /* do some move-to-left and move-to-right at the end */
     motion {
@@ -325,7 +325,7 @@ kate {
   event {
     00:09.00 --> 00:13.00
     region "scrollbar"
-    text "non ASCII latin: &#d1;&#d3;&#1e8;&#f9;&#bf;&#c0;&#df;"
+    text "non ASCII latin: &#209;&#211;&#488;&#249;&#191;&#192;&#223;"
     motion "r2l_scroll_motion"
   }
 
@@ -335,7 +335,7 @@ kate {
     00:12.00 --> 00:18.00
     language "ja"
     region "scrollbar"
-    text "Katakana (may need another font) &#30b4;&#30a6;&#30b8;&#30B9;&#31Fb;&#ff69;&#ff9a;"
+    text "Katakana (may need another font) &#12468;&#12454;&#12472;&#12473;&#12795;&#65385;&#65434;"
     motion "r2l_scroll_motion"
   }
 

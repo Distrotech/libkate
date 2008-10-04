@@ -14,7 +14,7 @@ kate {
     0:0.0 --> 0:5.00
     region "r1"
     style { font size 16 }
-    text "L'amour est enfant de boh&#e8;me"
+    text "L'amour est enfant de boh&#232;me"
     //    0 2   6   0  3   7  0  3  4    7
     simple_timed_glyph_marker {
       height from 24 to 40

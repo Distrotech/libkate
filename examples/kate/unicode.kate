@@ -39,7 +39,7 @@ kate {
   }
   event {
     $timing language "es" region "r2r"
-    "&#bf;ma&#f1;ana?"
+    "&#191;ma&#241;ana?"
   }
 
   event {
@@ -48,7 +48,7 @@ kate {
   }
   event {
     $timing language "ja" region "r3r"
-    "&#30b4;&#30a6;&#30b8;&#30B9;&#31Fb;&#ff69;&#ff9a;"
+    "&#12468;&#12454;&#12472;&#12473;&#12795;&#65385;&#65434;"
   }
 
   event {
@@ -57,7 +57,7 @@ kate {
   }
   event {
     $timing language "ar" directionality right_to_left region "r4r"
-    "&#feb3;&#fefc;&#fee1;"
+    "&#65203;&#65276;&#65249;"
   }
 
   event {
@@ -66,7 +66,7 @@ kate {
   }
   event {
     $timing language "ko" region "r5r"
-    "&#1104;&#113b;&#117f;&#11f2;&#3138;&#3184;&#320f;&#ffae;"
+    "&#4356;&#4411;&#4479;&#4594;&#12600;&#12676;&#12815;&#65454;"
   }
 
   event {
@@ -75,7 +75,7 @@ kate {
   }
   event {
     $timing language "gr" region "r6r"
-    "&#0391;&#839;&#39a;&#038e;&#0398;&#1d27;&#1f05;&#1f44;"
+    "&#913;&#2105;&#922;&#910;&#0920;&#7463;&#7941;&#8004;"
   }
 
   event {
@@ -84,7 +84,7 @@ kate {
   }
   event {
     $timing language "ru" region "r7r"
-    "&#4e6;&#4d8;&#4e9;&#4e1;&#4fc;&#4f6;&#1d2b;"
+    "&#1254;&#1240;&#1257;&#1249;&#1276;&#1270;&#7467;"
   }
 
   event {
@@ -93,7 +93,7 @@ kate {
   }
   event {
     $timing region "r8r"
-    "&#2f83;&#2f63;&#2f8c;&#2f3c;"
+    "&#12163;&#12131;&#12172;&#12092;"
   }
 
 }

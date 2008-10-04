@@ -890,7 +890,7 @@ static char *expand_numeric_entities(const char *text)
   enum {
     s_text,
     s_amp,
-    s_hex,
+    s_code,
     s_named
   } state=s_text;
   int c,code=0,code_from_numeric;
@@ -920,7 +920,7 @@ static char *expand_numeric_entities(const char *text)
         break;
       case s_amp:
         if (c=='#') {
-          state=s_hex;
+          state=s_code;
         }
         else {
           state=s_named;
@@ -935,16 +935,15 @@ static char *expand_numeric_entities(const char *text)
           }
         }
         break;
-      case s_hex:
+      case s_code:
         if (c==';') {
           c=code; /* this will be written below */
           code_from_numeric=1;
           state=s_text;
         }
         else {
-          code<<=4;
+          code*=10;
           if (isdigit(c)) code|=(c-'0');
-          else if (isxdigit(c)) code|=(tolower(c)-'a'+10);
           else yyerrorf("invalid character in numeric entity (only numeric entities are supported), got %d",c);
         }
         break;
