@@ -10,11 +10,13 @@ katepcdir=$(libdir)/pkgconfig
 lib_LTLIBRARIES=lib/libkate.la
 kateinc_HEADERS=include/kate/kate.h include/kate/kate_config.h
 katepc_DATA=misc/pkgconfig/kate.pc
+noinst_DATA=misc/pkgconfig/kate-uninstalled.pc
 
 if HAVE_OGG
 lib_LTLIBRARIES+=lib/liboggkate.la
 kateinc_HEADERS+=include/kate/oggkate.h
 katepc_DATA+=misc/pkgconfig/oggkate.pc
+noinst_DATA+=misc/pkgconfig/oggkate-uninstalled.pc
 endif
 
 LIBTOOLFLAGS=--silent
