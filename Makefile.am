@@ -41,8 +41,8 @@ noinst_HEADERS=\
 
 lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@ @CFLAGS_FORTIFY_SOURCE@
 lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ -no-undefined
-lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@ @CFLAGS_FORTIFY_SOURCE@
-lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ -no-undefined
+lib_liboggkate_la_CFLAGS=@CWARNFLAGS_FULL@ @OGG_CFLAGS@ @CFLAGS_FORTIFY_SOURCE@
+lib_liboggkate_la_LDFLAGS=-version-info @LIBOGGKATE_SHARED_VERSION@ -no-undefined # @OGG_LIBS@
 
 lib_liboggkate_la_LIBADD=lib/libkate.la
 
