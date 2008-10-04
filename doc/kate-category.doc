@@ -22,7 +22,8 @@ If a particular category is not recognized, it may still be displayed as
 a string, albeit non localized.
 
 If using custom categories for your own use, you may use category names
-prefixed by "x-". These are reserved for private use.
+prefixed by "x-". These are reserved for private use. Category names not
+starting with "x-" are reserved for future "standard" use.
 
 \li \c subtitles Movie (or other) subtitles, as text, possibly including
 simple inline markup.
