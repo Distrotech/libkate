@@ -1,4 +1,5 @@
 0.2.3
+  kate_info_matches_language now does better exact/partial matching
   try harder to define kate_int64_t if included by C89 code not using autoconf
   use kate_uintptr_t in kate/kate.h, fixes build when uintptr_t is not found
 

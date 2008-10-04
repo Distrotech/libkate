@@ -352,6 +352,11 @@ int kate_info_add_font_mapping(kate_info *ki,kate_font_mapping *kfm)
   \ingroup info
   Checks whether the given language matches (fully or partially) the language
   described in the kate_info structure.
+  Exact (case insensitive) matching of the two languages is required for a perfect match.
+  Exact (case insensitive) matching of the primary tags for each language (which each
+  may or may not have one or more secondary tags) is required for a partial match.
+  An empty language for either the stream language or the language passed as parameter
+  will cause a partial match.
   \param ki the kate_info structure for the stream
   \param language the language to check against
   \returns 0 success, but the language doesn't match
@@ -361,20 +366,33 @@ int kate_info_add_font_mapping(kate_info *ki,kate_font_mapping *kfm)
   */
 int kate_info_matches_language(const kate_info *ki,const char *language)
 {
-  char *sep;
+  char *sep0,*sep1;
+  size_t bytes;
   if (!ki) return KATE_E_INVALID_PARAMETER;
 
-  if (!language) return 1; /* if we ask for "any" language, we match */
-  if (!ki->language) return 1; /* if the stream has no set language, it matches all */
+  if (!language || !*language) return 2; /* if we ask for "any" language, we partially match */
+  if (!ki->language || !*ki->language) return 2; /* if the stream has no set language, it partially matches all */
 
   if (!kate_ascii_strncasecmp(ki->language,language,0xffffffff)) return 1; /* perfect match */
 
   /* if we specify a language with no subtag, it matches any subtag of the same language */
-  sep=strpbrk(language,"-_");
-  if (sep) {
-    size_t bytes=sep-language;
-    if (!kate_ascii_strncasecmp(ki->language,language,bytes)) return 2; /* partial match */
+  sep0=strpbrk(ki->language,"-_");
+  sep1=strpbrk(language,"-_");
+  if (!sep0 && !sep1) {
+    /* if none of the languages have subtags, they're different, or they'd have been picked
+       up by the first string comparison */
+    return 0; /* doesn't match */
   }
+
+  if (sep0 && sep1) {
+    /* if both have subtags, the primary tag must be the same length */
+    if (sep1-language!=sep0-ki->language) return 0; /* doesn't match */
+  }
+
+  /* we now have primary tags to compare (with or without secondary tags), of the same length */
+  bytes=sep0?sep0-ki->language:sep1-language;
+
+  if (!kate_ascii_strncasecmp(ki->language,language,bytes)) return 2; /* partial match */
 
   return 0; /* doesn't match */
 }
