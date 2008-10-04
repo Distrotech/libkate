@@ -69,7 +69,7 @@ AC_TYPE_SIZE_T
 
 AC_CHECK_PROG(HAVE_PKG_CONFIG,pkg-config,yes)
 
-AC_ARG_ENABLE(doc, [  --disable-doc	Disable building documentation (default enabled)])
+AC_ARG_ENABLE(doc, [  --disable-doc           Disable building documentation (default enabled)])
 if test "x$enable_doc" != "xno"
 then
   AC_CHECK_PROG(HAVE_DOXYGEN,doxygen,yes)
