@@ -57,7 +57,7 @@ typedef struct kate_region {
   int style;                     /**< default style to apply to text in this region */
   unsigned int clip:1;           /**< text/images will be clipped to the region */
   unsigned int pad0:31;
-  uintptr_t pad1[6];
+  kate_uintptr_t pad1[6];
 } kate_region;
 
 /** defines an RGBA color */
@@ -103,7 +103,7 @@ typedef struct kate_style {
 
   kate_const char *font;             /**< name of the font to use */
 
-  uintptr_t pad1[9];
+  kate_uintptr_t pad1[9];
 } kate_style;
 
 /** defines a type of curve */
@@ -121,7 +121,7 @@ typedef struct kate_curve {
   kate_curve_type type;              /**< type of the curve */
   size_t npts;                       /**< number of points in this curve */
   kate_float *pts;                   /**< point coordinates for this curve (2D: npts*2 values) */
-  uintptr_t pad[5];
+  kate_uintptr_t pad[5];
 } kate_curve;
 
 /** defines a way to transform a curve point */
@@ -202,7 +202,7 @@ typedef struct kate_motion {
   kate_motion_semantics semantics;               /**< what use this motion has */
   unsigned int periodic:1;                       /**< if true, repeats periodically (loops) */
   unsigned int pad0:31;
-  uintptr_t pad1[5];
+  kate_uintptr_t pad1[5];
 } kate_motion;
 
 /** defines the direction in which glyphs within a text are drawn */
@@ -217,7 +217,7 @@ typedef enum kate_text_directionality {
 typedef struct kate_palette {
   size_t ncolors;                                /**< number of colors in this palette */
   kate_color *colors;                            /**< the list of colors in this palette */
-  uintptr_t pad[2];
+  kate_uintptr_t pad[2];
 } kate_palette;
 
 /** defines a particular type of bitmap */
@@ -245,14 +245,14 @@ typedef struct kate_font_range {
   int first_code_point;                          /**< first code point in this range */
   int last_code_point;                           /**< last code point in this range */
   int first_bitmap;                              /**< index of the bitmap the first code point maps to */
-  uintptr_t pad[5];
+  kate_uintptr_t pad[5];
 } kate_font_range;
 
 /** defines a set of ranges to define a font mapping */
 typedef struct kate_font_mapping {
   size_t nranges;                                /**< the number of ranges in this mapping */
   kate_font_range **ranges;                      /**< the list of ranges in this mapping */
-  uintptr_t pad[6];
+  kate_uintptr_t pad[6];
 } kate_font_mapping;
 
 /**
@@ -308,14 +308,14 @@ typedef struct kate_info {
   size_t original_canvas_width;                  /**< width of the canvas this stream was authored for */
   size_t original_canvas_height;                 /**< height of the canvas this stream was authored for */
 
-  uintptr_t pad2[11];
+  kate_uintptr_t pad2[11];
 
   /* internal */
   int remove_markup;
   int no_limits;
   int probe;
 
-  uintptr_t pad3[13];
+  kate_uintptr_t pad3[13];
 } kate_info;
 
 struct kate_encode_state; /* internal */
@@ -329,7 +329,7 @@ typedef struct kate_state {
   kate_const struct kate_encode_state *kes;
   kate_const struct kate_decode_state *kds;
 
-  uintptr_t pad[5];
+  kate_uintptr_t pad[5];
 } kate_state;
 
 /** Vorbis comments - this is the same as Vorbis and Theora comments */
@@ -376,13 +376,13 @@ typedef struct kate_event {
   size_t nbitmaps;                              /**< number of attached bitmaps (may be zero) */
   kate_const kate_bitmap *kate_const *bitmaps;  /**< the list of attached bitmaps (may be NULL if none) */
 
-  uintptr_t pad0[6];
+  kate_uintptr_t pad0[6];
 
   /* internal */
   const kate_info *ki;
   size_t trackers;
 
-  uintptr_t pad1[10];
+  kate_uintptr_t pad1[10];
 } kate_event;
 
 struct kate_tracker_internal; /* internal */
@@ -505,7 +505,7 @@ typedef struct kate_tracker {
   /* internal */
   struct kate_tracker_internal *internal;
 
-  uintptr_t pad[19];
+  kate_uintptr_t pad[19];
 
 } kate_tracker;
 
