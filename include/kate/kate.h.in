@@ -574,7 +574,7 @@ extern int kate_comment_init(kate_comment *kc);
 extern int kate_comment_clear(kate_comment *kc);
 extern int kate_comment_add(kate_comment *kc,const char *comment);
 extern int kate_comment_add_length(kate_comment *kc,const char *comment,size_t len);
-extern int kate_comment_add_tag(kate_comment *kc,const char *name,const char *value);
+extern int kate_comment_add_tag(kate_comment *kc,const char *tag,const char *value);
 extern const char *kate_comment_query(const kate_comment *kc,const char *tag,int count);
 extern int kate_comment_query_count(const kate_comment *kc,const char *tag);
 
