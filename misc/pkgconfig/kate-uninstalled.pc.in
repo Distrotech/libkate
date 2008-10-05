@@ -10,6 +10,6 @@ Version: @VERSION@
 URL: http://libkate.googlecode.com/
 Requires: 
 Conflicts: 
-Libs: -L${libdir} -lkate
+Libs: ${libdir}/libkate.la
 Libs.private: 
 Cflags: -I${includedir}
