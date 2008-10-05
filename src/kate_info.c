@@ -177,6 +177,16 @@ int kate_info_set_language(kate_info *ki,const char *language)
     return kate_replace_string(&ki->language,language,0);
   }
 
+  /* basic validation of allowed characters - won't catch all */
+  for (sep=language;*sep;++sep) {
+    int c=*sep;
+    if (c>='A' && c<='Z') continue;
+    if (c>='a' && c<='z') continue;
+    if (c>='0' && c<='9') continue;
+    if (c=='-' || c=='_') continue;
+    return KATE_E_INVALID_PARAMETER;
+  }
+
   /* simple validity - the first tag must be 2 characters */
   sep=strpbrk(language,"-_");
   if (!sep) sep=language+strlen(language);
@@ -199,13 +209,23 @@ int kate_info_set_language(kate_info *ki,const char *language)
       new_len=strlen(language);
       truncated=0;
     }
+    /* maximum length of a subtag is 8 characters */
+    if (new_len-prev_new_len>8) {
+      return KATE_E_INVALID_PARAMETER;
+    }
     if (new_len>15) {
       /* we can't fit this new tag */
+      truncated=1;
       break;
     }
     /* one or less character tags aren't allowed as the last tag */
     if (new_len-prev_new_len>=2) {
+      /* so more than this is OK to keep */
       len=new_len;
+    }
+    else {
+      /* but less we ignore if we have more to go, but complain if we're at the end */
+      if (!truncated) return KATE_E_INVALID_PARAMETER;
     }
     /* if we need another go, skip the separator */
     ++new_len;
