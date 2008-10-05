@@ -1,4 +1,4 @@
-0.2.3 06 october 2008
+0.2.3 - 06 october 2008
   numeric entities are now interpreted as decimal, rather than hexadecimal
   kate_info_matches_language now does better exact/partial matching
   try harder to define kate_int64_t if included by C89 code not using autoconf
