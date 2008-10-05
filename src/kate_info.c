@@ -271,6 +271,10 @@ int kate_info_set_text_directionality(kate_info *ki,kate_text_directionality tex
   The category is an ASCII string limited to 15 characters.
   Predefined categories include "subtitles", "lyrics", etc.
   Categories prefixed with "x-" are reserved for private use.
+  \note Categories are not meant to be localized strings, but machine readable strings.
+  While they may be displayed to the user as is, players are encouraged to recognize
+  well known predefined categories such as the ones mentioned above, and supply
+  translation for these.
   \param ki the kate_info structure for the stream
   \param category the stream's category
   \returns 0 success
