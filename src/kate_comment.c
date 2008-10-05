@@ -137,25 +137,26 @@ int kate_comment_add(kate_comment *kc,const char *comment)
 
 /**
   \ingroup comments
-  Adds a comment to the kate_comment structure, formatted as "name=value".
-  The name must be 7 bit ASCII
-  The value is UTF-8
-  Neither name nor value may contain embedded NULs.
+  Adds a comment to the kate_comment structure, formatted as "tag=value".
+  The tag must be 7 bit ASCII and comply with Vorbis comment tag rules.
+  The value must be valid UTF-8 text.
+  Neither tag nor value may contain embedded NULs. To embed comments with
+  embedded NUL in the payload, see kate_comment_add_length.
   \param kc the kate_comment structure to add the comment to
-  \param name the title of the comment to add
+  \param tag the tag of the comment to add
   \param value the contents of the comment to add
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_comment_add_tag(kate_comment *kc,const char *name,const char *value)
+int kate_comment_add_tag(kate_comment *kc,const char *tag,const char *value)
 {
   char *comment;
 
-  if (!kc || !name || !value) return KATE_E_INVALID_PARAMETER;
+  if (!kc || !tag || !value) return KATE_E_INVALID_PARAMETER;
 
-  comment=(char*)kate_malloc(strlen(name)+1+strlen(value)+1);
+  comment=(char*)kate_malloc(strlen(tag)+1+strlen(value)+1);
   if (!comment) return KATE_E_OUT_OF_MEMORY;
-  sprintf(comment,"%s=%s",name,value);
+  sprintf(comment,"%s=%s",tag,value);
   kate_comment_add(kc,comment);
   kate_free(comment);
 
@@ -168,7 +169,7 @@ int kate_comment_add_tag(kate_comment *kc,const char *name,const char *value)
   The tags are case insensitive, so "tag", "TAG", "Tag", and "TaG" are all equivalent.
   If there are multiple comments with the same tag, count may be used to
   select which one to return.
-  The number of comments with a given tag may be retrieved using kate_comment_query_count
+  The number of comments with a given tag may be retrieved using kate_comment_query_count.
   \param kc the kate_comment structure to look into
   \param tag the title of the comment to look for
   \param count the index of the matching comment to return (if there are several)
