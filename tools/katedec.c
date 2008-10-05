@@ -1129,6 +1129,10 @@ int main(int argc,char **argv)
 
     bytes=64;
     buffer=(char*)kate_malloc(bytes);
+    if (!buffer) {
+      fprintf(stderr,"failed to allocate %lld bytes\n",(long long)bytes);
+      exit(-1);
+    }
     memcpy(buffer,signature,bytes);
 
     while (1) {
@@ -1168,7 +1172,11 @@ int main(int argc,char **argv)
       }
     }
 
-    kate_high_decode_clear(&k);
+    ret=kate_high_decode_clear(&k);
+    if (ret<0) {
+      fprintf(stderr,"kate_high_decode_clear failed: %d\n",ret);
+      /* continue anyway */
+    }
     kate_free(buffer);
 
     if (fout!=stdout) fclose(fout);
@@ -1202,6 +1210,10 @@ int main(int argc,char **argv)
         if (ogg_page_bos(&og)) do {
           kate_stream *ks;
           kate_streams=(kate_stream*)kate_realloc(kate_streams,(n_kate_streams+1)*sizeof(kate_stream));
+          if (!kate_streams) {
+            fprintf(stderr,"failed to allocate %zu bytes\n",(n_kate_streams+1)*sizeof(kate_stream));
+            exit(-1);
+          }
           ks=&kate_streams[n_kate_streams];
           ks->filename=NULL;
           ks->fout=NULL;
@@ -1279,7 +1291,11 @@ int main(int argc,char **argv)
                     }
                     if (write_start_function) (*write_start_function)(ks->fout);
 
-                    kate_decode_init(&ks->k,&ks->ki);
+                    ret=kate_decode_init(&ks->k,&ks->ki);
+                    if (ret<0) {
+                      fprintf(stderr,"kate_decode_init failed: %d\n",ret);
+                      exit(-1);
+                    }
                     kate_streams[n].init=data;
                     if (write_headers_function) (*write_headers_function)(ks->fout,&ks->ki,&ks->kc);
                   }
@@ -1290,8 +1306,16 @@ int main(int argc,char **argv)
                     ks->ret=ret;
                   }
                   ogg_stream_clear(&ks->os);
-                  kate_info_clear(&ks->ki);
-                  kate_comment_clear(&ks->kc);
+                  ret=kate_info_clear(&ks->ki);
+                  if (ret<0) {
+                    fprintf(stderr,"kate_info_clear failed: %d\n",ret);
+                    /* continue anyway */
+                  }
+                  ret=kate_comment_clear(&ks->kc);
+                  if (ret<0) {
+                    fprintf(stderr,"kate_comment_clear failed: %d\n",ret);
+                    /* continue anyway */
+                  }
                   if (n!=n_kate_streams-1) {
                     memmove(kate_streams+n,kate_streams+n+1,(n_kate_streams-1-n)*sizeof(kate_stream));
                   }
@@ -1343,13 +1367,33 @@ int main(int argc,char **argv)
 
     for (n=0;n<n_kate_streams;++n) {
       if (kate_streams[n].init==data) {
-        kate_clear(&kate_streams[n].k);
+        ret=kate_clear(&kate_streams[n].k);
+        if (ret<0) {
+          fprintf(stderr,"kate_clear failed: %d\n",ret);
+          /* continue anyway */
+        }
       }
-      kate_info_clear(&kate_streams[n].ki);
-      kate_comment_clear(&kate_streams[n].kc);
+      ret=kate_info_clear(&kate_streams[n].ki);
+      if (ret<0) {
+        fprintf(stderr,"kate_info_clear failed: %d\n",ret);
+        /* continue anyway */
+      }
+      ret=kate_comment_clear(&kate_streams[n].kc);
+      if (ret<0) {
+        fprintf(stderr,"kate_comment_clear failed: %d\n",ret);
+        /* continue anyway */
+      }
       if (kate_streams[n].fout!=stdout) {
-        fclose(kate_streams[n].fout);
-        if (kate_streams[n].ret<0) unlink(kate_streams[n].filename);
+        ret=fclose(kate_streams[n].fout);
+        if (ret<0) {
+          fprintf(stderr,"fclose failed (%d) - file %s might be corrupted\n",ret,kate_streams[n].filename);
+        }
+        if (kate_streams[n].ret<0) {
+          ret=unlink(kate_streams[n].filename);
+          if (ret<0) {
+            fprintf(stderr,"unlink failed (%d) - corrupt file %s will not be deleted\n",ret,kate_streams[n].filename);
+          }
+        }
         kate_free(kate_streams[n].filename);
       }
     }
