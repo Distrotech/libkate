@@ -17,6 +17,8 @@ This is the documentation for libkate.
 
 libkate is an implementation of a codec for the Kate bitstream format.
 
+The latest version of libkate may be found at <http://libkate.googlecode.com/>.
+
 The Kate bitstream format is a timed text codec designed for embedding
 in an Ogg bitstream. It was originally designed for karaoke and text.
 The Kate bitstream format is documented \ref Format "here".
