@@ -160,12 +160,6 @@ AM_CONDITIONAL(HAVE_PNG,test "${HAVE_PNG}" = "yes")
 CWARNFLAGS_LIGHT="-Wall -W"
 CWARNFLAGS_FULL="$CWARNFLAGS_LIGHT"
 
-AC_ARG_ENABLE(fortify_source, [  --enable-fortify-source Build with -D_FORTIFY_SOURCE=2 (default disabled)])
-if test "x$enable_fortify_source" = "xyes"
-then
-  CFLAGS_FORTIFY_SOURCE="-D_FORTIFY_SOURCE=2"
-fi
-
 AC_ARG_ENABLE(more_warnings, [  --enable-more-warnings  Enable more warnings (default disabled)])
 if test "x$enable_more_warnings" = "xyes"
 then
@@ -181,6 +175,12 @@ fi
 #CWARNFLAGS_FULL="$CWARNFLAGS_FULL -Wconversion"
 #CWARNFLAGS_LIGHT="$CWARNFLAGS_FULL"
 #endif
+
+AC_ARG_ENABLE(fortify_source, [  --enable-fortify-source Build with -D_FORTIFY_SOURCE=2 (default disabled)])
+if test "x$enable_fortify_source" = "xyes"
+then
+  CFLAGS_FORTIFY_SOURCE="-D_FORTIFY_SOURCE=2"
+fi
 
 
 AC_SUBST([LIBKATE_SHARED_VERSION])
