@@ -540,9 +540,9 @@ static void print_version(void)
   printf("Kate reference encoder - %s\n",kate_get_version_string());
 }
 
+#ifdef DEBUG
 static void print_rle_stats(void)
 {
-#ifdef DEBUG
   int n,total=0;
   extern int kate_rle_stats_overall[8];
   static const char *kate_rle_type_names[8]={
@@ -561,8 +561,8 @@ static void print_rle_stats(void)
       printf("%s: %d (%.2f%%)\n",kate_rle_type_names[n],kate_rle_stats_overall[n],100.0f*kate_rle_stats_overall[n]/total);
     }
   }
-#endif
 }
+#endif
 
 int main(int argc,char **argv)
 {
@@ -579,8 +579,16 @@ int main(int argc,char **argv)
 
   packetno=0;
 
-  kate_comment_init(&kc);
-  kate_info_init(&ki);
+  ret=kate_comment_init(&kc);
+  if (ret<0) {
+    fprintf(stderr,"kate_comment_init failed: %d\n",ret);
+    exit(-1);
+  }
+  ret=kate_info_init(&ki);
+  if (ret<0) {
+    fprintf(stderr,"kate_comment_init failed: %d\n",ret);
+    exit(-1);
+  }
 
   for (n=1;n<argc;++n) {
     if (argv[n][0]=='-') {
@@ -728,7 +736,11 @@ int main(int argc,char **argv)
     }
   }
 
-  kate_encode_init(&k,&ki);
+  ret=kate_encode_init(&k,&ki);
+  if (ret<0) {
+    fprintf(stderr,"kate_encode_init failed: %d\n",ret);
+    exit(-1);
+  }
 
   if (!raw) ogg_stream_init(&os,serial);
 
@@ -759,10 +771,22 @@ int main(int argc,char **argv)
   }
 
   if (!raw) ogg_stream_clear(&os);
-  kate_clear(&k);
+  ret=kate_clear(&k);
+  if (ret<0) {
+    fprintf(stderr,"kate_clear failed: %d\n",ret);
+    /* continue anyway */
+  }
 
-  kate_info_clear(&ki);
-  kate_comment_clear(&kc);
+  ret=kate_info_clear(&ki);
+  if (ret<0) {
+    fprintf(stderr,"kate_info_clear failed: %d\n",ret);
+    /* continue anyway */
+  }
+  ret=kate_comment_clear(&kc);
+  if (ret<0) {
+    fprintf(stderr,"kate_comment_clear failed: %d\n",ret);
+    /* continue anyway */
+  }
 
   if (fout!=stdout) {
     fclose(fout);
@@ -770,7 +794,9 @@ int main(int argc,char **argv)
   }
   if (fin!=stdin) fclose(fin);
 
+#ifdef DEBUG
   print_rle_stats();
+#endif
 
   return ret;
 }
