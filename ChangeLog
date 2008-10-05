@@ -5,6 +5,7 @@
   use kate_uintptr_t in kate/kate.h, fixes build when uintptr_t is not found
   kate_info_set_language now truncates according to RFC 4646
   kate_info_set_language does some basic tag validation
+  more error checking in the tools
 
 0.2.2 - 02 october 2008
   fix several memory leaks on error code paths

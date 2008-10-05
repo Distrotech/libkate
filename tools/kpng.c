@@ -232,7 +232,12 @@ int kd_read_png(const char *filename,int *w,int *h,unsigned char **pixels,size_t
   fseek(f,0,SEEK_SET);
   *pixels=malloc(sz);
   if (!*pixels) goto error;
-  fread(*pixels,sz,1,f);
+  if ((long)fread(*pixels,1,sz,f)!=sz) {
+    fprintf(stderr,"Failed to read %ld bytes\n",sz);
+    free(*pixels);
+    *pixels=NULL;
+    goto error;
+  }
 
   if (size) *size=sz;
 
