@@ -943,7 +943,7 @@ static char *expand_numeric_entities(const char *text)
         }
         else {
           code*=10;
-          if (isdigit(c)) code|=(c-'0');
+          if (isdigit(c)) code+=(c-'0');
           else yyerrorf("invalid character in numeric entity (only numeric entities are supported), got %d",c);
         }
         break;
@@ -1913,7 +1913,11 @@ static int find_font_mapping(const kate_info *ki,const char *name)
 
 static void kd_write_headers(void)
 {
-  write_headers(katedesc_out);
+  int ret=write_headers(katedesc_out);
+  if (ret<0) {
+    yyerrorf("Failed to write headers: %d\n",ret);
+    exit(-1);
+  }
 }
 
 static void kd_encode_text(kate_state *kstate,kd_event *ev)
@@ -1933,7 +1937,10 @@ static void kd_encode_text(kate_state *kstate,kd_event *ev)
     cancel_packet();
     return;
   }
-  send_packet(katedesc_out);
+  ret=send_packet(katedesc_out);
+  if (ret<0) {
+    yyerrorf("failed to send text packet: %d",ret);
+  }
 }
 
 static void kd_encode_set_language(kate_state *kstate,const char *s)

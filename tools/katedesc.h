@@ -18,8 +18,8 @@ extern void unset_macro_mode(void);
 extern void add_macro(const char *name,const char *body);
 extern void free_macros(void);
 
-extern void write_headers(FILE *f);
-extern void send_packet(FILE *f);
+extern int write_headers(FILE *f);
+extern int send_packet(FILE *f);
 extern void cancel_packet(void);
 
 extern void cleanup_lexer(void);
