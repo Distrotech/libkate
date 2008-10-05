@@ -155,6 +155,14 @@ static int kate_replace_string(char **sptr,const char *s,size_t len)
 /**
   \ingroup info
   Sets the default language for this bitstream.
+  The language should be a RFC 3066 language tag (most of the time, a ISO 639-1
+  code, optionally followed by a country secondary tag).
+  This function does some basic validation, and will truncate the tag according
+  to RFC 4646 rules. However, it may still accept some invalid tags.
+  The maximum length of a language tag is 15 characters. If RFC 4646 truncation
+  is possible, the tag will be truncated. If not, it will be rejected.
+  In case of truncation, the tag that was actually set may be read back from
+  the language field of the kate_info structure.
   \param ki the kate_info structure for the stream
   \param language the default language to set for this stream
   \returns 0 success
@@ -260,6 +268,9 @@ int kate_info_set_text_directionality(kate_info *ki,kate_text_directionality tex
 /**
   \ingroup info
   Sets the category for this bitstream.
+  The category is an ASCII string limited to 15 characters.
+  Predefined categories include "subtitles", "lyrics", etc.
+  Categories prefixed with "x-" are reserved for private use.
   \param ki the kate_info structure for the stream
   \param category the stream's category
   \returns 0 success
