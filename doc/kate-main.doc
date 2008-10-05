@@ -21,11 +21,11 @@ The Kate bitstream format is a timed text codec designed for embedding
 in an Ogg bitstream. It was originally designed for karaoke and text.
 The Kate bitstream format is documented \ref Format "here".
 
-The \ref HOWTO "HOWTO" page lists various uses of Kate streams and
-how to use them that way.
+The \ref HOWTO "HOWTO" page shows how to use Kate streams for various
+purposes, such as movie subtitles, or song lyrics.
 
 libkate is thread safe, with the usual caveat that a single thread
-accesses a given kate stream at the same time (eg, two different
+may access a given kate stream at the same time (eg, two different
 threads may use libkate at the same time, provided they access two
 different streams).
 
