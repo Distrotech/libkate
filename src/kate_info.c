@@ -269,6 +269,7 @@ int kate_info_set_category(kate_info *ki,const char *category)
 {
   if (!ki) return KATE_E_INVALID_PARAMETER;
   if (!category) return KATE_E_INVALID_PARAMETER;
+  if (strlen(category)>15) return KATE_E_LIMIT;
   return kate_replace_string(&ki->category,category,strlen(category));
 }
 
