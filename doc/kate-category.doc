@@ -42,7 +42,7 @@ played back by VLC, and MPlayer (if patched).
 plain text.
 
 For instance, oggenc (if patched) can create such streams, which can be
-played back by XMMS (if patched).
+played back by XMMS (if patched), or Audacious (if patched).
 
 */
 
