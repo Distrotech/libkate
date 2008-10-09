@@ -553,8 +553,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  $_def_faad_internal
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.c mplayer-svn-with-kate/katedec.c
 --- mplayer-svn/katedec.c	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.c	2008-07-27 18:25:10.000000000 +0100
-@@ -0,0 +1,296 @@
++++ mplayer-svn-with-kate/katedec.c	2008-10-09 09:00:23.000000000 +0100
+@@ -0,0 +1,320 @@
 +/* Katedec.c
 +
 +   ogg.k.ogg.k@googlemail.com
@@ -590,6 +590,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +#define DEFAULT_CANVAS_WIDTH 720
 +#define DEFAULT_CANVAS_HEIGHT 576
 +
++/* TODO: this means we can't have two Kate streams active at the same time */
 +static int katedec_has_kin=0;
 +static kate_tracker katedec_kin;
 +static unsigned char *katedec_image=NULL;
@@ -603,6 +604,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +static inline int katedec_color_to_y(kate_color kc)
 +{
 +  /* adapted from vobsub.c */
++  /* TODO: plenty of conversions here, could do some integer only code, though we'll still have promotions */
 +  return ( 0.299 * kc.r + 0.587 * kc.g + 0.114 * kc.b) * 219 / 255 + 16.5;
 +}
 +
@@ -625,7 +627,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +                             void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride));
 +
 +/* if we call draw_alpha directly, we get graphical artifacts on the right side of the image,
-+   due to... scaling bugs ? - i don't think they're due to my rearrangement in spudec.c */
++   due to... scaling bugs ? - i don't think they're due to my rearrangement in spudec.c,
++   but it wouldn't surprise me - can't find it though */
 +static void (*draw_alpha_ptr)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride)=0;
 +static void draw_alpha_proxy(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride)
 +{
@@ -633,8 +636,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  size_t needed = stride*h;
 +
 +  /* sized to the (supposed) max size of a SPU */
-+  static char tda_y[720*576];
-+  static char tda_a[sizeof(tda_y)];
++  static char tda_y[720*576]; // TODO: allocate dynamically
++  static char tda_a[sizeof(tda_y)]; // TODO: allocate dynamically
 +
 +  if (needed > sizeof tda_y) {
 +    mp_msg (MSGT_FIXME, MSGL_WARN, "kate: SPU too large (needing %u bytes, %u available), there will be graphical artifacts\n",
@@ -643,6 +646,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    return;
 +  }
 +
++  // TODO: can we lose this ?
 +  memset(tda_y, 0, needed);
 +  memset(tda_a, 0, needed);
 +
@@ -763,6 +767,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    draw_alpha(xpos,ypos,w,h,katedec_y,katedec_a,stride);
 +#else
 +    draw_alpha_ptr=draw_alpha;
++#if 1
 +    /*
 +       we don't want to scale the position, just the image, as:
 +        - either the positions were expressed in absolute pixels, in which case we must use those
@@ -771,6 +776,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +     */
 +    xpos = xpos*original_canvas_width/dxs;
 +    ypos = ypos*original_canvas_height/dys;
++#endif
 +    spudec_draw_scaled_image(dxs, dys,
 +                             katedec_y, katedec_a,
 +                             xpos, ypos, w, h, stride,
@@ -792,7 +798,11 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +
 +    mp_msg (MSGT_FIXME, MSGL_DBG2, "kate: decoding %d byte packet from %p\n", nbytes, sh);
 +
-+    kate_packet_wrap(&kp, nbytes, data);
++    ret = kate_packet_wrap(&kp, nbytes, data);
++    if (ret < 0) {
++      mp_msg (MSGT_FIXME, MSGL_WARN, "kate_packet_wrap failed: %d\n", ret);
++      return -1;
++    }
 +    ret = kate_high_decode_packetin(sh->k, &kp, &ev);
 +    if (ret < 0) {
 +      mp_msg (MSGT_FIXME, MSGL_WARN, "kate_high_decode_packetin failed to decode %d byte packet: %d\n", nbytes, ret);
@@ -809,14 +819,23 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +      sub_clear_text(subs, MP_NOPTS_VALUE);
 +      katedec_reset();
 +
-+      if (ev->text) {
++      if (ev->text && ev->len>0) {
 +        sub_utf8 = 1;
 +        sub_add_text(subs, ev->text, ev->len0, ev->end_time);
 +        vo_osd_changed(OSDTYPE_SUBTITLE);
 +      }
 +      if (ev->bitmap && ev->palette) {
-+        kate_tracker_init(&katedec_kin, ev->ki, ev);
-+        kate_tracker_update(&katedec_kin, 0.0f, sh_video->disp_w,sh_video->disp_h, 0, 0, sh_video->disp_w,sh_video->disp_h);
++        ret = kate_tracker_init(&katedec_kin, ev->ki, ev);
++        if (ret < 0) {
++          mp_msg (MSGT_FIXME, MSGL_WARN, "kate_tracker_init failed: %d\n", ret);
++          return -1;
++        }
++        ret = kate_tracker_update(&katedec_kin, 0.0f, sh_video->disp_w,sh_video->disp_h, 0, 0, sh_video->disp_w,sh_video->disp_h);
++        if (ret < 0) {
++          mp_msg (MSGT_FIXME, MSGL_WARN, "kate_tracker_update failed: %d\n", ret);
++          kate_tracker_clear(&katedec_kin);
++          return -1;
++        }
 +        katedec_has_kin=1;
 +        vo_osd_changed(OSDTYPE_KATE);
 +      }
@@ -844,7 +863,12 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +{
 +#ifdef HAVE_OGGKATE
 +  if (katedec_has_kin) {
-+    if (pts >= katedec_kin.event->end_time) {
++    /* if an event has an end time equal to its start time, we keep it till
++       the next one arrives (some DVDs have that kind of end-less SPUs).
++       Newer versions of the Kate GStreamer plugin detect this and make a
++       good guess at a likely end time, but we can't rely on this (eg, if
++       encoded by some other tool which doesn't do this) */
++    if (katedec_kin.event->end_time > katedec_kin.event->start_time && pts >= katedec_kin.event->end_time) {
 +      katedec_reset();
 +    }
 +  }
@@ -853,7 +877,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.h mplayer-svn-with-kate/katedec.h
 --- mplayer-svn/katedec.h	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.h	2008-06-15 13:44:01.000000000 +0100
++++ mplayer-svn-with-kate/katedec.h	2008-09-06 18:22:35.000000000 +0100
 @@ -0,0 +1,12 @@
 +#ifndef MPLAYER_KATEDEC_H
 +#define MPLAYER_KATEDEC_H
@@ -901,7 +925,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        if (buffer && m)
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libmpdemux/demux_ogg.c mplayer-svn-with-kate/libmpdemux/demux_ogg.c
 --- mplayer-svn/libmpdemux/demux_ogg.c	2008-03-14 13:26:57.000000000 +0000
-+++ mplayer-svn-with-kate/libmpdemux/demux_ogg.c	2008-06-15 12:59:38.000000000 +0100
++++ mplayer-svn-with-kate/libmpdemux/demux_ogg.c	2008-10-09 19:32:02.000000000 +0100
 @@ -32,6 +32,11 @@
  extern int _ilog (unsigned int); /* defined in many places in theora/lib/ */
  #endif
@@ -979,7 +1003,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
       (ds != d->audio || ((sh_audio_t*)ds->sh)->format != FOURCC_VORBIS || os->hdr_packets >= NUM_VORBIS_HDR_PACKETS ) &&
       (ds != d->video || (((sh_video_t*)ds->sh)->format != FOURCC_THEORA)))
      return 0;
-@@ -477,6 +497,29 @@
+@@ -477,6 +497,30 @@
    if (!data)
      return 0;
  
@@ -987,29 +1011,30 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  // helpfully clear the subtitles packet queue before starting polling it, so we
 +  // never get those, so we pass them to libakte now, apart from the first one,
 +  // which was already eaten when probing
-+  if (ds == d->sub && ds->sh && ((sh_sub_t*)ds->sh)->type == 'k') {
++  if (pack->bytes>0 && (pack->packet[0] & 0x80) && pack->packet[0]!=0x80 && !memcmp(pack->packet+1,"kate\0\0\0",7)) {
++    /* Kate packets: forward headers for all streams, so they're all ready for decoding,
++       but only pass data for the currently selected one, if any */
 +    sh_sub_t *sh = d->s_streams[id];
-+    if (pack->bytes>0 && (pack->packet[0] & 0x80) && pack->packet[0]!=0x80) {
-+      kate_packet kp;
-+      int ret;
++    kate_packet kp;
++    int ret;
 +
-+      kate_packet_wrap(&kp, pack->bytes, pack->packet);
-+      ret = kate_high_decode_packetin(sh->k, &kp, NULL);
-+      if (ret<0) {
-+        mp_msg(MSGT_DEMUX,MSGL_WARN,"kate_high_decode_packetin failed: %d\n", ret);
-+      }
-+      return 0;
++    kate_packet_wrap(&kp, pack->bytes, pack->packet);
++    ret = kate_high_decode_packetin(sh->k, &kp, NULL);
++    if (ret<0) {
++      mp_msg(MSGT_DEMUX,MSGL_WARN,"kate_high_decode_packetin failed: %d\n", ret);
 +    }
-+    else {
-+      /* we do not forward events for non active streams */
-+      if (dvdsub_id != sh->sid) return 0;
-+    }
++    return 0;
++  }
++  else if (ds->sh && ((sh_sub_t*)ds->sh)->type == 'k') {
++    /* we do not forward Kate events for non active streams */
++    const sh_sub_t *sh = d->s_streams[id];
++    if (sh && dvdsub_id != sh->sid) return 0;
 +  }
 +
    /// Clear subtitles if necessary (for broken files)
    if (sub_clear_text(&ogg_sub, pts)) {
      vo_sub = &ogg_sub;
-@@ -754,6 +797,7 @@
+@@ -754,6 +798,7 @@
    ogg_packet pack;
    sh_audio_t* sh_a;
    sh_video_t* sh_v;
@@ -1017,7 +1042,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
  #ifdef USE_ICONV
    subcp_open(NULL);
-@@ -816,6 +860,7 @@
+@@ -816,6 +861,7 @@
      // Reset our vars
      sh_a = NULL;
      sh_v = NULL;
@@ -1025,7 +1050,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
      ogg_d->subs[ogg_d->num_sub].ogg_d = ogg_d;
  
-@@ -895,6 +940,62 @@
+@@ -895,6 +941,62 @@
  	theora_comment_clear(&cc);
  	theora_info_clear(&inf);
  #   endif /* HAVE_OGGTHEORA */
@@ -1088,7 +1113,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      } else if (pack.bytes >= 4 && !strncmp (&pack.packet[0], "fLaC", 4)) {
  	sh_a = new_sh_audio_aid(demuxer,ogg_d->num_sub, n_audio);
  	sh_a->format =  mmioFOURCC('f', 'L', 'a', 'C');
-@@ -1052,7 +1153,7 @@
+@@ -1052,7 +1154,7 @@
      } else
        mp_msg(MSGT_DEMUX,MSGL_ERR,"Ogg stream %d is of an unknown type\n",ogg_d->num_sub);
  
@@ -1097,7 +1122,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        demux_stream_t* ds = NULL;
        if(sh_a) {
  	// If the audio stream is not defined we took the first one
-@@ -1081,6 +1182,18 @@
+@@ -1081,6 +1183,18 @@
            video_id = ogg_d->num_sub;
  	}
        }
@@ -1116,7 +1141,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
        /// Add the header packets if the stream isn't seekable
        if(ds && !s->end_pos) {
  	/// Finish the page, otherwise packets will be lost
-@@ -1209,7 +1322,7 @@
+@@ -1209,7 +1323,7 @@
        ds = d->audio;
      else if(id == d->video->id)
        ds = d->video;
@@ -1303,7 +1328,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/libvo/sub.c mplayer-svn-with-kate/libvo/sub.c
 --- mplayer-svn/libvo/sub.c	2008-03-14 13:26:58.000000000 +0000
-+++ mplayer-svn-with-kate/libvo/sub.c	2008-06-15 13:43:35.000000000 +0100
++++ mplayer-svn-with-kate/libvo/sub.c	2008-09-02 23:09:03.000000000 +0100
 @@ -26,6 +26,7 @@
  #include "font_load.h"
  #include "sub.h"
@@ -1382,7 +1407,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  #define OSDFLAG_CHANGED 2
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/mpcommon.c mplayer-svn-with-kate/mpcommon.c
 --- mplayer-svn/mpcommon.c	2008-03-14 13:27:00.000000000 +0000
-+++ mplayer-svn-with-kate/mpcommon.c	2008-06-15 12:23:40.000000000 +0100
++++ mplayer-svn-with-kate/mpcommon.c	2008-10-09 08:46:19.000000000 +0100
 @@ -20,6 +20,10 @@
  ass_track_t* ass_track = 0; // current track to render
  #endif
@@ -1402,20 +1427,18 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      }
      // find sub
      if (subdata) {
-@@ -100,6 +105,24 @@
+@@ -100,6 +105,22 @@
  
          if (spudec_changed(vo_spudec))
              vo_osd_changed(OSDTYPE_SPU);
 +    } else if (dvdsub_id >= 0 && type == 'k') {
 +	double curpts = sh_video->pts + sub_delay;
-+	double endpts;
 +        sh_sub_t* sh = d_dvdsub->sh;
 +	vo_sub = &subs;
 +	while (d_dvdsub->first) {
 +	    double pts = ds_get_next_pts(d_dvdsub);
 +	    if (pts > curpts)
 +		break;
-+	    endpts = d_dvdsub->first->endpts;
 +	    len = ds_get_packet_sub(d_dvdsub, &packet);
 +	    if (pts != MP_NOPTS_VALUE) {
 +                katedec_decode(sh, sh_video, &subs, len, packet);
@@ -1429,7 +1452,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
          double endpts;
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/mplayer.c mplayer-svn-with-kate/mplayer.c
 --- mplayer-svn/mplayer.c	2008-03-14 13:27:00.000000000 +0000
-+++ mplayer-svn-with-kate/mplayer.c	2008-06-15 13:41:09.000000000 +0100
++++ mplayer-svn-with-kate/mplayer.c	2008-10-09 19:28:45.000000000 +0100
 @@ -1115,6 +1115,15 @@
      forced_subs_only = mkv_sh_sub->forced_subs_only;
    }
@@ -1952,7 +1975,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    {
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/subreader.c mplayer-svn-with-kate/subreader.c
 --- mplayer-svn/subreader.c	2008-03-14 13:27:01.000000000 +0000
-+++ mplayer-svn-with-kate/subreader.c	2008-06-14 21:03:52.000000000 +0100
++++ mplayer-svn-with-kate/subreader.c	2008-10-09 08:49:31.000000000 +0100
 @@ -24,6 +24,12 @@
  #include <enca.h>
  #endif
@@ -2171,25 +2194,28 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      int i,len;
     
      while (1) {
-@@ -1060,6 +1183,17 @@
+@@ -1060,6 +1183,20 @@
  		{*uses_time=0; return SUB_AQTITLE;}
  	if (sscanf (line, "[%d:%d:%d]", &i, &i, &i)==3)
  		{*uses_time=1;return SUB_SUBRIP09;}
 +        /* We test for the OggS capture pattern, as the Kate track might be
 +           well away from the start of the stream (eg, if it is multiplexed
 +           with video and/or skeleton) so other bits above (like that bloody
-+           RT hair trigger) would go off wrongly. Ideally, the bit of code
-+           below would be better, since that's the Kate signature. */
++           RT hair trigger) would go off wrongly. Ideally, the second bit of
++           code below would be better, since that's the Kate signature, but
++           it might find itself on a subsequent 'line' so would not have a
++           chance to run before some of the other checks above would trigger. */
++#if 1
 +	if (!memcmp(line, "OggS", 4))
 +		{*uses_time=1;return SUB_KATE;}
-+        /*
++#else
 +        if ((ptr=strstr(line,"\200kate")) && !memcmp(ptr,"\200kate\0\0\0",8))
 +		{*uses_time=1;return SUB_KATE;}
-+                */
++#endif
      }
  
      return SUB_INVALID;  // too many bad lines
-@@ -1351,7 +1485,8 @@
+@@ -1351,7 +1488,8 @@
  	    { sub_read_line_subviewer2, NULL, "subviewer 2.0" },
  	    { sub_read_line_subrip09, NULL, "subrip 0.9" },
  	    { sub_read_line_jacosub, NULL, "jacosub" },
@@ -2199,7 +2225,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
      };
      struct subreader *srp;
      
-@@ -1381,6 +1516,11 @@
+@@ -1381,6 +1519,11 @@
  			    break;
  			}
  	    }
@@ -2211,7 +2237,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  	    if (k<0) subcp_open(fd);
      }
  #endif
-@@ -1488,9 +1628,13 @@
+@@ -1488,9 +1631,13 @@
      }
  
      // we do overlap if the user forced it (suboverlap_enable == 2) or
@@ -2226,7 +2252,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  if ((suboverlap_enabled == 2) ||
      ((suboverlap_enabled) && ((sub_format == SUB_JACOSUB) || (sub_format == SUB_SSA)))) {
      adjust_subs_time(first, 6.0, fps, 0, sub_num, uses_time);/*~6 secs AST*/
-@@ -2003,6 +2147,129 @@
+@@ -2003,6 +2150,129 @@
      mp_msg(MSGT_SUBREADER,MSGL_INFO,"Read %i subtitles, %i errors.\n", subd->sub_num, subd->sub_errs);
  }
  
