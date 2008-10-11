@@ -15,6 +15,7 @@
 
 #include <stddef.h>
 #include <limits.h>
+#include <sys/types.h>
 
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
