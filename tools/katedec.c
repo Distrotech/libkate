@@ -1007,7 +1007,7 @@ int main(int argc,char **argv)
           printf("   -v                  verbose\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
-          printf("   -t <type>           set output format (kate (default), srt\n");
+          printf("   -t <type>           set output format (kate (default), srt)\n");
           printf("   -B                  write some bitmaps in /tmp (debug)\n");
           printf("   -f <number>         fuzz testing with given seed (debug)\n");
           exit(0);
