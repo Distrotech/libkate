@@ -121,6 +121,7 @@ text                         {return TEXT;}
 background                   {return BACKGROUND;}
 bg                           {return BACKGROUND;}
 color                        {return COLOR;}
+marker                       {return MARKER;}
 position                     {return POSITION;}
 size                         {return SIZE;}
 halign                       {return HALIGN;}
