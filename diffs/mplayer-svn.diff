@@ -414,7 +414,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/cfg-mplayer.h mplayer-svn-with-kate/cfg-mplayer.h
 --- mplayer-svn/cfg-mplayer.h	2008-03-14 13:26:39.000000000 +0000
-+++ mplayer-svn-with-kate/cfg-mplayer.h	2008-03-15 20:49:21.000000000 +0000
++++ mplayer-svn-with-kate/cfg-mplayer.h	2008-10-11 14:50:34.000000000 +0100
 @@ -299,6 +299,7 @@
  	{"dumpmicrodvdsub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 7, NULL},
  	{"dumpjacosub", &stream_dump_type, CONF_TYPE_FLAG, 0, 0, 8, NULL},
@@ -445,7 +445,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  		    ass_track = sh->ass_track;
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/configure mplayer-svn-with-kate/configure
 --- mplayer-svn/configure	2008-03-17 21:23:27.000000000 +0000
-+++ mplayer-svn-with-kate/configure	2008-06-15 13:36:08.000000000 +0100
++++ mplayer-svn-with-kate/configure	2008-10-11 14:53:00.000000000 +0100
 @@ -304,6 +304,7 @@
    --disable-libvorbis       disable libvorbis support [autodetect]
    --disable-speex           disable Speex support [autodetect]
@@ -505,7 +505,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  r = kate_decode_headerin (&ki, &kc, &kp);
 +  r = kate_decode_init (&k, &ki);
 +  t = kate_granule_time (&ki, op.granulepos);
-+  r = kate_decode_packetin (&k, &op);
++  r = kate_ogg_decode_packetin (&k, &op);
 +  r = kate_decode_eventout (&k, &ev);
 +  r = kate_high_decode_init(&k);
 +  kate_clear (&k);
@@ -553,11 +553,14 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
  $_def_faad_internal
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.c mplayer-svn-with-kate/katedec.c
 --- mplayer-svn/katedec.c	1970-01-01 01:00:00.000000000 +0100
-+++ mplayer-svn-with-kate/katedec.c	2008-10-09 09:00:23.000000000 +0100
-@@ -0,0 +1,320 @@
++++ mplayer-svn-with-kate/katedec.c	2008-10-11 14:50:22.000000000 +0100
+@@ -0,0 +1,319 @@
 +/* Katedec.c
 +
 +   ogg.k.ogg.k@googlemail.com
++
++   Decodes Kate streams to text to be rendered with MPlayer's subtitle code,
++   or to be rendered with the Tiger library if available.
 +
 +   For information on the Kate format see:
 +   <URL:http://wiki.xiph.org/index.php/OggKate>
@@ -581,10 +584,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +#include "libswscale/swscale.h"
 +
 +#ifdef HAVE_OGGKATE
-+#include <kate/kate.h>
-+#endif
 +
-+#ifdef HAVE_OGGKATE
++#include <kate/kate.h>
 +
 +/* if no canvas size if specified, default to DVD size, that's a good guess */
 +#define DEFAULT_CANVAS_WIDTH 720
@@ -661,11 +662,8 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +  (*draw_alpha_ptr)(x0,y0,w,h,tda_y,tda_a,stride);
 +}
 +
-+#endif
-+
 +void katedec_draw(unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride))
 +{
-+#ifdef HAVE_OGGKATE
 +  if (katedec_has_kin) {
 +    int xpos = katedec_kin.has.region ? (int)(katedec_kin.region_x+0.5f) : 0;
 +    int ypos = katedec_kin.has.region ? (int)(katedec_kin.region_y+0.5f) : 0;
@@ -786,12 +784,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +                             draw_alpha_proxy);
 +#endif
 +  }
-+#endif
 +}
 +
 +int katedec_decode(sh_sub_t *sh, sh_video_t *sh_video, subtitle *subs, int nbytes, unsigned char *data)
 +{
-+#ifdef HAVE_OGGKATE
 +    kate_packet kp;
 +    const kate_event *ev;
 +    int ret;
@@ -840,13 +836,11 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +        vo_osd_changed(OSDTYPE_KATE);
 +      }
 +    }
-+#endif
 +    return 0;
 +}
 +
 +void katedec_reset()
 +{
-+#ifdef HAVE_OGGKATE
 +  if (katedec_has_kin) {
 +    kate_tracker_clear(&katedec_kin);
 +    free(katedec_image);
@@ -856,12 +850,10 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +    katedec_has_kin=0;
 +    vo_osd_changed(OSDTYPE_KATE);
 +  }
-+#endif
 +}
 +
 +void katedec_tick(sh_sub_t *sh, double pts)
 +{
-+#ifdef HAVE_OGGKATE
 +  if (katedec_has_kin) {
 +    /* if an event has an end time equal to its start time, we keep it till
 +       the next one arrives (some DVDs have that kind of end-less SPUs).
@@ -872,9 +864,16 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
 +      katedec_reset();
 +    }
 +  }
-+#endif
 +}
 +
++#else
++
++void katedec_draw(unsigned int dxs, unsigned int dys, void (*draw_alpha)(int x0,int y0, int w,int h, unsigned char* src, unsigned char *srca, int stride)) {}
++int katedec_decode(sh_sub_t *sh, sh_video_t *sh_video, subtitle *subs, int nbytes, unsigned char *data) {}
++void katedec_reset() {}
++void katedec_tick(sh_sub_t *sh, double pts) {}
++
++#endif
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/katedec.h mplayer-svn-with-kate/katedec.h
 --- mplayer-svn/katedec.h	1970-01-01 01:00:00.000000000 +0100
 +++ mplayer-svn-with-kate/katedec.h	2008-09-06 18:22:35.000000000 +0100
@@ -1975,7 +1974,7 @@ diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x co
    {
 diff -ruN -x 'config.*' -x configure.log -x '*.o' -x allformats.c -x vidix -x codecs.conf.h -x version.h -x help_mp.h mplayer-svn/subreader.c mplayer-svn-with-kate/subreader.c
 --- mplayer-svn/subreader.c	2008-03-14 13:27:01.000000000 +0000
-+++ mplayer-svn-with-kate/subreader.c	2008-10-09 08:49:31.000000000 +0100
++++ mplayer-svn-with-kate/subreader.c	2008-10-11 14:05:32.000000000 +0100
 @@ -24,6 +24,12 @@
  #include <enca.h>
  #endif
