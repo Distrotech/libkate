@@ -62,9 +62,9 @@ For this many bitmaps:
 \li if the bitmap is not already present in the stream headers, a \ref format_bitmap "bitmap" definition.
 
 \note
-Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that bitstream 0.3
-will contain a third warp after the one used above. Similarly, if this warp becomes used in future revisions
-of the bitstream, another one will automatically be used.
+Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that the bistream
+will contain another warp after any non empty warps. This means that a warp is a chain of single warps, where the
+last warp (and only the last one) is empty.
 
 Next, the data ends.
 
