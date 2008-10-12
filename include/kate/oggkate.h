@@ -7,8 +7,8 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#ifndef _KATE_OGGKATE_H_
-#define _KATE_OGGKATE_H_
+#ifndef KATE_oggkate_h_GUARD
+#define KATE_oggkate_h_GUARD
 
 /** \file oggkate.h
   The libkate Ogg interface public API.

@@ -7,8 +7,8 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#ifndef _KATEDESC_H_
-#define _KATEDESC_H_
+#ifndef KATE_katedesc_h_GUARD
+#define KATE_katedesc_h_GUARD
 
 extern int katedesc_error(const char *string);
 extern int yywarning(const char *string);

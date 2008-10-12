@@ -7,8 +7,8 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#ifndef _KATE_ENCODE_STATE_H_
-#define _KATE_ENCODE_STATE_H_
+#ifndef KATE_kate_encode_state_h_GUARD
+#define KATE_kate_encode_state_h_GUARD
 
 #include "kate_internal.h"
 #include "kate_bitwise.h"

@@ -7,8 +7,8 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#ifndef _KATE_INTERNAL_H_
-#define _KATE_INTERNAL_H_
+#ifndef KATE_kate_internal_h_GUARD
+#define KATE_kate_internal_h_GUARD
 
 #define KATE_LIMIT_COMMENTS 4096
 #define KATE_LIMIT_COMMENT_LENGTH 4096

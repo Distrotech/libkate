@@ -7,8 +7,8 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#ifndef _KATE_RLE_H_
-#define _KATE_RLE_H_
+#ifndef KATE_kate_rle_h_GUARD
+#define KATE_kate_rle_h_GUARD
 
 #include "kate_internal.h"
 #include "kate/kate.h"

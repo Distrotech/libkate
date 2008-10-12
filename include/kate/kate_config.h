@@ -6,8 +6,8 @@
    by a BSD style source license included with this source in the
    file 'COPYING'. Please read these terms before distributing. */
 
-#ifndef _KATE_CONFIG_H_
-#define _KATE_CONFIG_H_
+#ifndef KATE_kate_config_h_GUARD
+#define KATE_kate_config_h_GUARD
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

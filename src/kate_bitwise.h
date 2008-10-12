@@ -1,5 +1,5 @@
-#ifndef _KATE_BITWISE_H_
-#define _KATE_BITWISE_H_
+#ifndef KATE_kate_bitwise_h_GUARD
+#define KATE_kate_bitwise_h_GUARD
 
 #include "kate_internal.h"
 #include "kate/kate.h"
