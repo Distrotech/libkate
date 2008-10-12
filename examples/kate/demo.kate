@@ -335,7 +335,7 @@ kate {
     00:12.00 --> 00:18.00
     language "ja"
     region "scrollbar"
-    text "Katakana (may need another font) &#12468;&#12454;&#12472;&#12473;&#12795;&#65385;&#65434;"
+    text "Katakana (may need another font) &#12468;&#12454;&#12472;&#12473;&#12795;"
     motion "r2l_scroll_motion"
   }
 
