@@ -1,5 +1,6 @@
 0.2.4
   katedec can now output LRC files
+  kateenc now supports variable timestamping precision in LRC files
   try even harder to define kate_int64
 
 0.2.3 - 06 october 2008

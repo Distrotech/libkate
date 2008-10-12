@@ -371,13 +371,27 @@ static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,s
   }
 }
 
+static int fraction_to_milliseconds(int fraction,int digits)
+{
+  while (digits<3) {
+    fraction*=10;
+    ++digits;
+  }
+  while (digits>3) {
+    fraction/=10;
+    --digits;
+  }
+  return fraction;
+}
+
 static kate_motion *process_enhanced_lrc_tags(char *str,kate_float start_time,kate_float end_time,int line)
 {
   char *start,*end;
   int ret;
-  int m,s,cs;
+  int m,s,fs;
   kate_motion *km=NULL;
   kate_float current_time=start_time;
+  int f0,f1;
 
   if (!str) return NULL;
 
@@ -389,16 +403,17 @@ static kate_motion *process_enhanced_lrc_tags(char *str,kate_float start_time,ka
     if (!end) break;
 
     /* we found a <> pair, parse it */
-    ret=sscanf(start,"<%d:%d.%d>",&m,&s,&cs);
+    f0=f1=-1;
+    ret=sscanf(start,"<%d:%d.%n%d%n>",&m,&s,&f0,&fs,&f1);
 
     /* remove the <> tag from input to get raw text */
     memmove(start,end+1,strlen(end+1)+1);
 
-    if (ret!=3 || (m|s|cs)<0) {
+    if (ret<3 || (f0|f1)<0 || f1<=f0 || (m|s|fs)<0) {
       fprintf(stderr,"Error: failed to process enhanced LRC tag (%*.*s) - ignored\n",(int)(end-start+1),(int)(end-start+1),start);
     }
     else {
-      kate_float tag_time=hmsms2s(0,m,s,cs*10);
+      kate_float tag_time=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
 
       /* if this is the first tag in this line, create a kate motion */
       if (!km) {
@@ -454,13 +469,14 @@ static int convert_lrc(FILE *fin,FILE *fout)
 {
   int ret;
   static char text[4096];
-  int m,s,cs;
+  int m,s,fs;
   double t,start_time=-1.0;
   int offset;
   int line=0;
   long start;
   int has_karaoke;
   kate_motion *km;
+  int f0,f1;
 
   fgets2(str,sizeof(str),fin,1);
   ++line;
@@ -485,7 +501,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
 
   /* skip headers */
   while (!feof(fin)) {
-    ret=sscanf(str,"[%d:%d.%d]",&m,&s,&cs);
+    ret=sscanf(str,"[%d:%d.%d]",&m,&s,&fs);
     if (ret==3) break;
     fgets2(str,sizeof(str),fin,1);
     ++line;
@@ -499,7 +515,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
   has_karaoke=0;
   strcpy(text,str); /* we'll need to restore str after peeking */
   while (!feof(fin)) {
-    ret=sscanf(str,"[%d:%d.%d]%n",&m,&s,&cs,&offset);
+    ret=sscanf(str,"[%d:%d.%d]%n",&m,&s,&fs,&offset);
     if (ret==3) {
       const char *start=strchr(str+offset,'<');
       if (start) {
@@ -525,12 +541,13 @@ static int convert_lrc(FILE *fin,FILE *fout)
 
   while (!feof(fin)) {
     if (!is_line_empty(str)) {
-      ret=sscanf(str,"[%d:%d.%d]%n",&m,&s,&cs,&offset);
-      if (ret!=3 || (m|s|cs)<0) {
+      f0=f1=-1;
+      ret=sscanf(str,"[%d:%d.%n%d%n]%n",&m,&s,&f0,&fs,&f1,&offset);
+      if (ret<3 || (f0|f1)<0 || f1<=f0 || (m|s|fs)<0) {
         fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
         return -1;
       }
-      t=hmsms2s(0,m,s,cs*10);
+      t=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
       if (start_time>=0.0 && !is_line_empty(text)) {
         if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
         km=process_enhanced_lrc_tags(text,start_time,t,line);
