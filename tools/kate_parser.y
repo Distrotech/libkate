@@ -893,7 +893,7 @@ static char *expand_numeric_entities(const char *text)
     s_code,
     s_named
   } state=s_text;
-  int c,code=0,code_from_numeric;
+  int c,code=0,code_from_numeric,base=-1;
   size_t len=strlen(text),len0=len+1,rlen0=len0,wlen0=len0,allocated=len0;
   /* we might need to replace "&#00;" with "&amp;" - we can't use more characters, so we needn't allocate more */
   /* this might change if we even can replace a numeric entity with a named one that is longer as a string */
@@ -921,6 +921,7 @@ static char *expand_numeric_entities(const char *text)
       case s_amp:
         if (c=='#') {
           state=s_code;
+          base=-1; /* unknown yet */
         }
         else {
           state=s_named;
@@ -937,13 +938,35 @@ static char *expand_numeric_entities(const char *text)
         break;
       case s_code:
         if (c==';') {
-          c=code; /* this will be written below */
-          code_from_numeric=1;
-          state=s_text;
+          if (base<0) {
+            /* no code given */
+            yyerrorf("no code given in numeric entity");
+            c=0;
+            code_from_numeric=1;
+            state=s_text;
+          }
+          else {
+            c=code; /* this will be written below */
+            code_from_numeric=1;
+            state=s_text;
+          }
         }
         else {
-          code*=10;
+          /* if first character, determine if this is decimal or hexadecimal */
+          if (base<0) {
+            if (c=='x' || c=='X') {
+              base=16;
+              break; /* the code starts next character */
+            }
+            else {
+              base=10;
+              /* fall through */
+            }
+          }
+
+          code*=base;
           if (isdigit(c)) code+=(c-'0');
+          else if (base==16 && isxdigit(c)) code+=(tolower(c)-'a'+10);
           else yyerrorf("invalid character in numeric entity (only numeric entities are supported), got %d",c);
         }
         break;
