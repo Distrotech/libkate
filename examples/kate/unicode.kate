@@ -47,7 +47,7 @@ kate {
     "Katakana"
   }
   event {
-    $timing language "ja" region "r3r"
+    $timing language "ja" directionality t2b_l2r region "r3r"
     "&#12468;&#12454;&#12472;&#12473;"
   }
 
@@ -62,11 +62,11 @@ kate {
 
   event {
     $timing region "r5l"
-    "Hangul (Korean ?)"
+    "Hangul"
   }
   event {
     $timing language "ko" region "r5r"
-    "&#4356;&#4411;&#4479;&#4594;&#12600;&#12676;&#12815;&#65454;"
+    "&#4356;&#4411;&#4479;&#4594;&#12600;&#12676;&#12815;"
   }
 
   event {
@@ -75,7 +75,7 @@ kate {
   }
   event {
     $timing language "gr" region "r6r"
-    "&#913;&#2105;&#922;&#910;&#0920;&#7463;&#7941;&#8004;"
+    "&#913;&#922;&#910;&#0920;"
   }
 
   event {
@@ -84,7 +84,7 @@ kate {
   }
   event {
     $timing language "ru" region "r7r"
-    "&#1254;&#1240;&#1257;&#1249;&#1276;&#1270;&#7467;"
+    "&#1054;&#1040;&#1057;&#1049;&#1076;&#1070;"
   }
 
   event {
