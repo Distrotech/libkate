@@ -18,9 +18,6 @@
 #endif
 #include "kate/kate.h"
 
-static const kate_color default_text_color={255,255,255,255};
-static const kate_color default_background_color={0,0,0,0};
-
 typedef struct kate_tracker_internal {
   size_t nglyphs;
 } kate_tracker_internal;
