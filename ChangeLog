@@ -1,4 +1,4 @@
-0.2.4
+0.2.4 - 13 october 2008
   support for both hexadecimal and decimal numeric entities
   katedec can now output LRC files
   kateenc now supports variable timestamping precision in LRC files
