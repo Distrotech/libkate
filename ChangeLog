@@ -1,7 +1,7 @@
 0.2.4
   katedec can now output LRC files
   kateenc now supports variable timestamping precision in LRC files
-  try even harder to define kate_int64
+  more tweaks to try to find a suitable type for kate_int64_t
 
 0.2.3 - 06 october 2008
   numeric entities are now interpreted as decimal, rather than hexadecimal
