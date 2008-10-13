@@ -29,7 +29,7 @@ distclean-local:
 	if test -f .doc-dummy-target; then rm -f .doc-dummy-target; fi
 
 if HAVE_DOXYGEN
-.doc-dummy-target: $(top_srcdir)/doc/kate.doxygen
+.doc-dummy-target: kate.doxygen
 	doxygen kate.doxygen
 	touch .doc-dummy-target
 else
