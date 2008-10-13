@@ -11,7 +11,7 @@ Nicolas Chauvet (kwizart)
   help and advice on adding autotools
 
 yselkowitz/Cygwin Ports project
-  build fix for Cygwin/Mingw32
+  build fixes
 
 Alexis Ballier
   build fix when doxygen isn't found
