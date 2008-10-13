@@ -10,6 +10,6 @@ Version: @VERSION@
 URL: http://libkate.googlecode.com/
 Requires: kate ogg >= 1.1.2
 Conflicts: 
-Libs: ${libdir}/liboggkate.la
+Libs: ${libdir}/.libs/liboggkate.a
 Libs.private: 
 Cflags: -I${includedir}

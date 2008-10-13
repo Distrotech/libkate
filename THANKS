@@ -15,3 +15,6 @@ yselkowitz/Cygwin Ports project
 
 Alexis Ballier
   build fix when doxygen isn't found
+
+j
+  reported and suggested a fix for the uninstalled pc files using libtool
