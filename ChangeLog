@@ -1,4 +1,4 @@
-0.2.5
+0.2.5 - 16 october 2008
   fix VPATH documentation build (yselkowitz/Cygwin Ports project)
   uninstalled pc files now link against static libs rather than libtool ones
 
