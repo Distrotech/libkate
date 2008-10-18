@@ -1,0 +1,9 @@
+kate {
+  event {
+    from 0:00:00 to 1:00:00
+    region { percent position 10 10 size 80 80 }
+    style { justify background color 128 0 0 255 margins 5% 5% 5% 5% vtop }
+    markup "The bos page contains information to uniquely identify the codec type and MAY contain information to set up the decoding process.  The bos page SHOULD also contain information about the encoded media - for example, for audio, it should contain the sample rate and number of channels.  By convention, the first bytes of the bos page contain magic data that uniquely identifies the required codec.  It is the responsibility of anyone fielding a new codec to make sure it is possible to reliably distinguish his/her codec from all other codecs in use.  There is no fixed way to detect the end of the codec- identifying marker.  The format of the bos page is dependent on the codec and therefore MUST be given in the encapsulation specification of that logical bitstream type.  Ogg also allows but does not require secondary header packets after the bos page for logical bitstreams and these must also precede any data packets in any logical bitstream.  These subsequent header packets are framed into an integral number of pages, which will not contain any data packets.  So, a physical bitstream begins with the bos pages of all logical bitstreams containing one initial header packet per page, followed by the subsidiary header packets of all streams, followed by pages containing data packets."
+  }
+}
+

@@ -48,7 +48,7 @@ lib_liboggkate_la_LIBADD=lib/libkate.la
 
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
 
-STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style periodic granule
+STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style periodic granule justify
 if HAVE_PNG
 STREAMS+=png
 endif
