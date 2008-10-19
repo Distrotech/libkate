@@ -3,97 +3,178 @@ kate {
   defs {
     timebase 0:0.5
 
-    define region "r1l" { percent position 10 10 size 40 10 }
-    define region "r2l" { percent position 10 20 size 40 10 }
-    define region "r3l" { percent position 10 30 size 40 10 }
-    define region "r4l" { percent position 10 40 size 40 10 }
-    define region "r5l" { percent position 10 50 size 40 10 }
-    define region "r6l" { percent position 10 60 size 40 10 }
-    define region "r7l" { percent position 10 70 size 40 10 }
-    define region "r8l" { percent position 10 80 size 40 10 }
+    define region "r0l" { percent position 05 10 size 20 10 }
+    define region "r1l" { percent position 05 20 size 20 10 }
+    define region "r2l" { percent position 05 30 size 20 10 }
+    define region "r3l" { percent position 05 40 size 20 10 }
+    define region "r4l" { percent position 05 50 size 20 10 }
+    define region "r5l" { percent position 05 60 size 20 10 }
+    define region "r6l" { percent position 05 70 size 20 10 }
+    define region "r7l" { percent position 05 80 size 20 10 }
 
-    define region "r1r" { percent position 50 10 size 40 10 }
-    define region "r2r" { percent position 50 20 size 40 10 }
-    define region "r3r" { percent position 50 30 size 40 10 }
-    define region "r4r" { percent position 50 40 size 40 10 }
-    define region "r5r" { percent position 50 50 size 40 10 }
-    define region "r6r" { percent position 50 60 size 40 10 }
-    define region "r7r" { percent position 50 70 size 40 10 }
-    define region "r8r" { percent position 50 80 size 40 10 }
+    define region "r0r" { percent position 30 10 size 20 10 }
+    define region "r1r" { percent position 30 20 size 20 10 }
+    define region "r2r" { percent position 30 30 size 20 10 }
+    define region "r3r" { percent position 30 40 size 20 10 }
+    define region "r4r" { percent position 30 50 size 20 10 }
+    define region "r5r" { percent position 30 60 size 20 10 }
+    define region "r6r" { percent position 30 70 size 20 10 }
+    define region "r7r" { percent position 30 80 size 20 10 }
+
+    define region "r8l" { percent position 55 10 size 20 10 }
+    define region "r9l" { percent position 55 20 size 20 10 }
+    define region "ral" { percent position 55 30 size 20 10 }
+    define region "rbl" { percent position 55 40 size 20 10 }
+    define region "rcl" { percent position 55 50 size 20 10 }
+    define region "rdl" { percent position 55 60 size 20 10 }
+    define region "rel" { percent position 55 70 size 20 10 }
+    define region "rfl" { percent position 55 80 size 20 10 }
+
+    define region "r8r" { percent position 80 10 size 20 10 }
+    define region "r9r" { percent position 80 20 size 20 10 }
+    define region "rar" { percent position 80 30 size 20 10 }
+    define region "rbr" { percent position 80 40 size 20 10 }
+    define region "rcr" { percent position 80 50 size 20 10 }
+    define region "rdr" { percent position 80 60 size 20 10 }
+    define region "rer" { percent position 80 70 size 20 10 }
+    define region "rfr" { percent position 80 80 size 20 10 }
 
     define macro timing 0:00 --> 1:00
   }
 
   event {
-    $timing region "r1l"
+    $timing region "r0l"
     "English"
   }
   event {
-    $timing language "en" region "r1r"
+    $timing language "en" region "r0r"
     "English words"
   }
 
   event {
-    $timing region "r2l"
+    $timing region "r1l"
     "Spanish"
   }
   event {
-    $timing language "es" region "r2r"
+    $timing language "es" region "r1r"
     "&#191;ma&#241;ana?"
   }
 
   event {
-    $timing region "r3l"
+    $timing region "r2l"
     "Katakana"
   }
   event {
-    $timing language "ja" directionality t2b_l2r region "r3r"
+    $timing language "ja" directionality t2b_l2r region "r2r"
     "&#12468;&#12454;&#12472;&#12473;"
   }
 
   event {
-    $timing region "r4l"
+    $timing region "r3l"
     "Arabic"
   }
   event {
-    $timing language "ar" directionality right_to_left region "r4r"
+    $timing language "ar" directionality right_to_left region "r3r"
     "&#65203;&#65276;&#65249;"
   }
 
   event {
-    $timing region "r5l"
+    $timing region "r4l"
     "Hangul"
   }
   event {
-    $timing language "ko" region "r5r"
+    $timing language "ko" region "r4r"
     "&#4356;&#4411;&#4479;&#4594;&#12600;&#12676;&#12815;"
   }
 
   event {
-    $timing region "r6l"
+    $timing region "r5l"
     "Greek"
   }
   event {
-    $timing language "gr" region "r6r"
+    $timing language "gr" region "r5r"
     "&#913;&#922;&#910;&#0920;"
   }
 
   event {
-    $timing region "r7l"
+    $timing region "r6l"
     "Cyrillic"
   }
   event {
-    $timing language "ru" region "r7r"
+    $timing language "ru" region "r6r"
     "&#1054;&#1040;&#1057;&#1049;&#1076;&#1070;"
   }
 
   event {
-    $timing region "r8l"
+    $timing region "r7l"
     "Chinese ?"
   }
   event {
-    $timing region "r8r"
+    $timing region "r7r"
     "&#12163;&#12131;&#12172;&#12092;"
+  }
+
+  event {
+    $timing region "r8l"
+    "Devanagari"
+  }
+  event {
+    $timing region "r8r"
+    "&#x904;&#x970;&#x914;&#x948;"
+  }
+
+  event {
+    $timing region "r9l"
+    "Bengali"
+  }
+  event {
+    $timing region "r9r"
+    "&#x992;&#x9ac;&#x9b2;&#x9e4;"
+  }
+
+  event {
+    $timing region "ral"
+    "Hebrew"
+  }
+  event {
+    $timing region "rar"
+    "&#x5de;&#x5E7;&#x5d1;&#x5d9;"
+  }
+
+  event {
+    $timing region "rbl"
+    "Braille"
+  }
+  event {
+    $timing region "rbr"
+    "&#x2803;&#x2800;&#x2840;&#x2890;"
+  }
+
+  event {
+    $timing region "rcl"
+    "Hiragana"
+  }
+  event {
+    $timing region "rcr"
+    "&#x3050;&#x3084;&#x306f;&#x307e;"
+  }
+
+  event {
+    $timing region "rdl"
+    "Tibetan"
+  }
+  event {
+    $timing region "rdr"
+    "&#xf45;&#xf4d;&#xf5a;&#xf69;"
+  }
+
+  event {
+    $timing region "rel"
+    "Thai"
+  }
+  event {
+    $timing region "rer"
+    "&#xe07;&#xe1d;&#xe04;&#xe19;"
   }
 
 }
