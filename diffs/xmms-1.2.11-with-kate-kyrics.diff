@@ -1,4 +1,4 @@
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/Makefile.am xmms-1.2.11/Input/vorbis/Makefile.am
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/Makefile.am xmms-1.2.11/Input/vorbis/Makefile.am
 --- xmms-1.2.11-original/Input/vorbis/Makefile.am	2004-04-04 09:51:20.000000000 +0100
 +++ xmms-1.2.11/Input/vorbis/Makefile.am	2008-07-15 19:29:10.000000000 +0100
 @@ -6,9 +6,9 @@
@@ -13,7 +13,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/Makefile.a
  @LTLIBICONV@
  
  libvorbis_la_SOURCES = \
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/configure.c xmms-1.2.11/Input/vorbis/configure.c
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/configure.c xmms-1.2.11/Input/vorbis/configure.c
 --- xmms-1.2.11-original/Input/vorbis/configure.c	2005-05-15 01:01:20.000000000 +0100
 +++ xmms-1.2.11/Input/vorbis/configure.c	2008-07-16 14:20:27.000000000 +0100
 @@ -29,6 +29,8 @@
@@ -92,9 +92,9 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/configure.
  	/* Buttons */
  
  	bbox = gtk_hbutton_box_new();
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c xmms-1.2.11/Input/vorbis/fileinfo.c
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c xmms-1.2.11/Input/vorbis/fileinfo.c
 --- xmms-1.2.11-original/Input/vorbis/fileinfo.c	2005-05-15 01:01:20.000000000 +0100
-+++ xmms-1.2.11/Input/vorbis/fileinfo.c	2008-07-16 13:56:46.000000000 +0100
++++ xmms-1.2.11/Input/vorbis/fileinfo.c	2008-10-21 20:36:55.000000000 +0100
 @@ -33,6 +33,9 @@
  #include <ogg/ogg.h>
  #include <vorbis/codec.h>
@@ -116,7 +116,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  
  /* From mpg123.c, as no standardized Ogg Vorbis genres exists. */
  static const gchar *vorbis_genres[] =
-@@ -432,6 +439,75 @@
+@@ -432,6 +439,72 @@
  		gtk_widget_destroy(w);
  }
  
@@ -146,19 +146,15 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
 +                /* read enough data (easily enough to jump over the vorbis codebooks and find all kate headers) */
 +                size_t sz = fread(ptr, 1, 65536, f);
 +                ogg_sync_wrote(&oy, sz);
-+                //printf("read %u\n", sz);
 +                while (ogg_sync_pageout(&oy, &og) > 0) {
-+                        //printf("page for %08x\n", ogg_page_serialno (&og));
 +                        if (ogg_page_bos(&og) && !found_kate)
 +                                ogg_stream_init(&os, ogg_page_serialno (&og));
 +                        ogg_stream_pagein(&os, &og);
 +                        while (ogg_stream_packetout(&os, &op) > 0) {
 +                                kate_packet kp;
 +                                kate_packet_wrap(&kp, op.bytes, op.packet);
-+                                //printf("got packet, %u\n", op.bytes);
 +                                if (op.bytes >= 8 && !memcmp(op.packet, "\200kate\0\0\0", 8)) {
 +                                        /* it is a Kate BOS header */
-+                                        //printf("packet is kate\n");
 +                                        found_kate = TRUE;
 +                                        kate_high_decode_init(&k);
 +                                }
@@ -177,6 +173,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
 +                *category = g_strdup(k.ki->category);
 +                *language = g_strdup(k.ki->language);
 +#if (KATE_VERSION_MAJOR*0x10000) + (KATE_VERSION_MINOR*0x100) + KATE_VERSION_PATCH >= 0x000106
++                /* libkate API prior to 0.1.6 doesn't have kate_high_decode_get_comments */
 +                kc = kate_high_decode_get_comments(&k);
 +                *vendor = g_strdup(kc->vendor);
 +#endif
@@ -192,7 +189,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  /***********************************************************************/
  
  void vorbis_file_info_box(char *fn)
-@@ -457,7 +533,8 @@
+@@ -457,7 +530,8 @@
  	if (!window)
  	{
  		GtkWidget *info_frame, *info_box;
@@ -202,7 +199,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  		GtkWidget *table, *bbox, *cancel_button;
  		GtkWidget *save_button, *remove_button;
  
-@@ -719,8 +796,11 @@
+@@ -719,8 +793,11 @@
  		GTK_WIDGET_SET_FLAGS(cancel_button, GTK_CAN_DEFAULT);
  		gtk_box_pack_start(GTK_BOX(bbox),cancel_button, TRUE, TRUE, 0);
  
@@ -215,7 +212,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  
  		info_box = gtk_vbox_new(FALSE, 5);
  		gtk_container_add(GTK_CONTAINER(info_frame), info_box);
-@@ -796,6 +876,42 @@
+@@ -796,6 +873,42 @@
  		gtk_box_pack_start(GTK_BOX(info_box), peak_label, FALSE,
  				   FALSE, 0);
  		
@@ -258,7 +255,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  		gtk_widget_show_all(window);
  	} else
  		gdk_window_raise(window->window);
-@@ -813,10 +929,55 @@
+@@ -813,10 +926,55 @@
  	gtk_label_set_text(GTK_LABEL(filesize_label), "");
  	gtk_label_set_text(GTK_LABEL(vendor_label), "");
  
@@ -314,9 +311,9 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c
  		if (ov_open(fh, &vf, NULL, 0) == 0)
  		{
  			comment = ov_comment(&vf, -1);
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c xmms-1.2.11/Input/vorbis/vcedit.c
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c xmms-1.2.11/Input/vorbis/vcedit.c
 --- xmms-1.2.11-original/Input/vorbis/vcedit.c	2001-12-17 22:27:19.000000000 +0000
-+++ xmms-1.2.11/Input/vorbis/vcedit.c	2008-07-16 11:57:10.000000000 +0100
++++ xmms-1.2.11/Input/vorbis/vcedit.c	2008-10-21 20:38:37.000000000 +0100
 @@ -141,6 +141,39 @@
  	return ret;
  }
@@ -565,26 +562,24 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c x
  			goto cleanup;
  	}
  
-@@ -421,8 +491,10 @@
+@@ -421,16 +491,6 @@
  	/* Done with this, now */
  	vorbis_info_clear(&state->vi);
  
-+#if 0
- 	if (state->extrapage)
- 	{
-+                printf("extrapage!\n");
- 		if(state->write(ogin.header,1,ogin.header_len,
- 		                out) != (size_t) ogin.header_len)
- 			goto cleanup;
-@@ -430,6 +502,7 @@
- 				(size_t) ogin.body_len)
- 			goto cleanup;
- 	}
-+#endif
- 
+-	if (state->extrapage)
+-	{
+-		if(state->write(ogin.header,1,ogin.header_len,
+-		                out) != (size_t) ogin.header_len)
+-			goto cleanup;
+-		if (state->write(ogin.body,1,ogin.body_len, out) !=
+-				(size_t) ogin.body_len)
+-			goto cleanup;
+-	}
+-
  	state->eosin=0; /* clear it, because not all paths to here do */
  	while(!state->eosin) /* We reached eos, not eof */
-@@ -446,11 +519,7 @@
+ 	{
+@@ -446,11 +506,7 @@
  			{
  				/* Don't bother going through the rest, we can just 
  				 * write the page out now */
@@ -597,7 +592,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c x
  					goto cleanup;
  			}
  		}
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.h xmms-1.2.11/Input/vorbis/vcedit.h
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.h xmms-1.2.11/Input/vorbis/vcedit.h
 --- xmms-1.2.11-original/Input/vorbis/vcedit.h	2001-12-17 00:57:20.000000000 +0000
 +++ xmms-1.2.11/Input/vorbis/vcedit.h	2008-07-16 10:07:50.000000000 +0100
 @@ -40,7 +40,8 @@
@@ -610,9 +605,9 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.h x
  	int eosin;
  } vcedit_state;
  
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c xmms-1.2.11/Input/vorbis/vorbis.c
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c xmms-1.2.11/Input/vorbis/vorbis.c
 --- xmms-1.2.11-original/Input/vorbis/vorbis.c	2006-07-16 14:40:04.000000000 +0100
-+++ xmms-1.2.11/Input/vorbis/vorbis.c	2008-07-16 15:45:10.000000000 +0100
++++ xmms-1.2.11/Input/vorbis/vorbis.c	2008-10-21 20:43:07.000000000 +0100
 @@ -42,6 +42,9 @@
  #include <ogg/ogg.h>
  #include <vorbis/codec.h>
@@ -648,7 +643,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	
  
  InputPlugin *get_iplugin_info(void)
-@@ -131,11 +145,160 @@
+@@ -131,11 +145,158 @@
  	return &vorbis_ip;
  }
  
@@ -656,7 +651,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
 +{
 +        lyrics_event *new_lyrics_events = (lyrics_event*)g_realloc(lyrics_events, (num_lyrics_events+1)*sizeof(lyrics_event));
 +        if (!new_lyrics_events) {
-+                /* failed to allocate */
++                /* failed to allocate: just drop the new line on the floor and continue */
 +                return;
 +        }
 +        lyrics_events = new_lyrics_events;
@@ -765,13 +760,12 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
 +        while (ogg_sync_pageout(&ksy, &og) > 0) {
 +                /* if we get a Kate BOS, reset */
 +                if (is_kate_bos(&og)) {
-+                        //printf("found Kate BOS - init for %08x\n", ogg_page_serialno (&og));
 +                        reset_kate();
 +                        ogg_stream_init(&kst, ogg_page_serialno (&og));
 +                        ogg_stream_pagein(&kst, &og);
 +                        ret = kate_high_decode_init(&k);
 +                        if (ret < 0) {
-+                                //printf("kate_high_decode_init failed: %d\n", ret);
++                                /* failed to decode Kate ID header */
 +                        }
 +                }
 +                else {
@@ -782,10 +776,9 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
 +                        const kate_event *ev = NULL;
 +                        kate_packet kp;
 +                        kate_packet_wrap(&kp, op.bytes, op.packet);
-+                        //printf("[packet %u]\n", (size_t)op.bytes);
 +                        ret = kate_high_decode_packetin(&k, &kp, &ev);
 +                        if (ret < 0) {
-+                                //printf("kate_high_decode_packetin failed: %d\n", ret);
++                                /* failed to decode Kate packet */
 +                        }
 +                        else {
 +                                if (ev) {
@@ -810,7 +803,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  
  	/* is this our http resource? */
  	if (strncasecmp(filename, "http://", 7) == 0) {
-@@ -144,6 +307,9 @@
+@@ -144,6 +305,9 @@
  			if (!strncasecmp(ext, ".ogg", 4)) {
  				return TRUE;
  			}
@@ -820,7 +813,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  		}
  		return FALSE;
  	}
-@@ -321,6 +487,7 @@
+@@ -321,6 +485,7 @@
  	double time;
  	long timercount = 0;
  	vorbis_info *vi;
@@ -828,7 +821,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  
  	int last_section = -1;
  
-@@ -352,6 +519,8 @@
+@@ -352,6 +517,8 @@
  	 * without it
  	 */
  
@@ -837,7 +830,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	pthread_mutex_lock(&vf_mutex);
  	if (ov_open_callbacks(datasource, &vf, NULL, 0, vorbis_callbacks) < 0)
  	{
-@@ -462,6 +631,14 @@
+@@ -462,6 +629,14 @@
  						   samplerate, channels);
  			timercount = vorbis_ip.output->output_time();
  		}
@@ -852,7 +845,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	}
  	output_opened = FALSE;
  	if (!output_error)
-@@ -774,6 +951,7 @@
+@@ -774,6 +949,7 @@
  		  "Jorn Baayen <jorn@nl.linux.org>\n"
  		  "Haavard Kvaalen <havardk@xmms.org>\n"
  		  "Gian-Carlo Pascutto <gcp@sjeng.org>\n\n"
@@ -860,7 +853,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  		  "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
  		_("OK"), FALSE, NULL, NULL);
  	gtk_signal_connect(GTK_OBJECT(about_window), "destroy",
-@@ -798,6 +976,8 @@
+@@ -798,6 +974,8 @@
  	vorbis_cfg.use_replaygain = FALSE;
  	vorbis_cfg.replaygain_mode = REPLAYGAIN_MODE_TRACK;
  	vorbis_cfg.use_booster = FALSE;
@@ -869,7 +862,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  
  	cfg = xmms_cfg_open_default_file();
  	xmms_cfg_read_int(cfg, "vorbis", "http_buffer_size",
-@@ -830,6 +1010,8 @@
+@@ -830,6 +1008,8 @@
  	xmms_cfg_read_boolean(cfg, "vorbis", "use_replaygain", &vorbis_cfg.use_replaygain);
  	xmms_cfg_read_int(cfg, "vorbis", "replaygain_mode", &vorbis_cfg.replaygain_mode);
  	xmms_cfg_read_boolean(cfg, "vorbis", "use_booster", &vorbis_cfg.use_booster);
@@ -878,7 +871,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	xmms_cfg_free(cfg);
  }
  
-@@ -842,14 +1024,21 @@
+@@ -842,14 +1022,21 @@
  		/* this is a stream */
  		tmp = vorbis_http_read(ptr, size * nmemb);
  		vorbis_bytes_streamed += tmp;
@@ -902,7 +895,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	if (vorbis_is_streaming) {
  		/* this is a stream */
  		/* streams aren't seekable */
-@@ -861,6 +1050,8 @@
+@@ -861,6 +1048,8 @@
  
  static int ovcb_close(void *datasource)
  {
@@ -911,7 +904,7 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c x
  	if (vorbis_is_streaming) {
  		/* this is a stream */
  		vorbis_http_close();
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.h xmms-1.2.11/Input/vorbis/vorbis.h
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.h xmms-1.2.11/Input/vorbis/vorbis.h
 --- xmms-1.2.11-original/Input/vorbis/vorbis.h	2004-04-04 09:51:20.000000000 +0100
 +++ xmms-1.2.11/Input/vorbis/vorbis.h	2008-07-16 14:03:37.000000000 +0100
 @@ -21,6 +21,8 @@
@@ -923,9 +916,9 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.h x
  } vorbis_config_t;
  
  enum {
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/README xmms-1.2.11/README
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/README xmms-1.2.11/README
 --- xmms-1.2.11-original/README	2007-11-16 21:51:23.000000000 +0000
-+++ xmms-1.2.11/README	2008-07-16 15:37:54.000000000 +0100
++++ xmms-1.2.11/README	2008-10-21 20:30:51.000000000 +0100
 @@ -107,6 +107,10 @@
  
     http://www.vorbis.com/download_unix.psp
@@ -955,24 +948,15 @@ diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/README xmms-1.2.11/READ
  
  
  3.6.1.6 Wave player
-@@ -1154,7 +1160,7 @@
- 5.1 Supported File formats
- -------------------------
- 
--OGG Vorbis
-+OGG Vorbis/Kate
- MP2 and MP3 streams
- WAV/AU samples
- 
 @@ -1196,6 +1202,7 @@
  Plays MPEG layer 1/2/3 also wav and formats supported by mikmod
  Compiles and works on other UNIX's
  Proxy authentication support
-+Kate lyrics embedded in Ogg
++Kate lyrics embedded in Ogg alongside Vorbis
  
  
  6. Obtaining XMMS
-diff -x Makefile -x Makefile.in -ru xmms-1.2.11-original/configure.in xmms-1.2.11/configure.in
+diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/configure.in xmms-1.2.11/configure.in
 --- xmms-1.2.11-original/configure.in	2007-11-16 21:52:30.000000000 +0000
 +++ xmms-1.2.11/configure.in	2008-07-15 19:24:15.000000000 +0100
 @@ -272,6 +272,25 @@
