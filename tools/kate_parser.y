@@ -591,7 +591,7 @@ static void init_style(kd_style *style)
 {
   int ret=kate_style_init(style);
   if (ret<0) {
-    fprintf(stderr,"Error initializing style: %d\n",ret);
+    yyerrorf("Error initializing style: %d\n",ret);
     exit(1);
   }
 }
@@ -692,7 +692,7 @@ static void init_region(kd_region *region)
 {
   int ret=kate_region_init(region);
   if (ret<0) {
-    fprintf(stderr,"Error initializing region: %d\n",ret);
+    yyerrorf("Error initializing region: %d\n",ret);
     exit(1);
   }
 }
