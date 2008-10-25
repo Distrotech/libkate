@@ -1,4 +1,3 @@
-Binary files gxmms2-0.7.0/gxmms2 and gxmms2-0.7.0-with-lyrics/gxmms2 differ
 diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c
 --- gxmms2-0.7.0/gxmms2src/gxmms2.c	2007-11-15 20:22:46.000000000 +0000
 +++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 12:06:32.000000000 +0100
@@ -182,7 +181,6 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  
  	cfg_write_config_file(&cf, path_to_config_file);
  
-Binary files gxmms2-0.7.0/gxmms2src/gxmms2.o and gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.o differ
 diff -ru gxmms2-0.7.0/Makefile gxmms2-0.7.0-with-lyrics/Makefile
 --- gxmms2-0.7.0/Makefile	2007-09-12 20:19:07.000000000 +0100
 +++ gxmms2-0.7.0-with-lyrics/Makefile	2008-07-30 20:44:05.000000000 +0100
