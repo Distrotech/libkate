@@ -1,6 +1,6 @@
 diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c
 --- gxmms2-0.7.0/gxmms2src/gxmms2.c	2007-11-15 20:22:46.000000000 +0000
-+++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 12:06:32.000000000 +0100
++++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 17:57:19.000000000 +0100
 @@ -33,6 +33,7 @@
  #include "eggtrayicon.h"
  #define LABEL_WIDTH 19
@@ -135,7 +135,27 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  			case GDK_0:
  				rate_current_track(1);
  				break;
-@@ -589,6 +672,8 @@
+@@ -419,6 +502,9 @@
+ 		xmms2ctrl_get_error() != ERROR_CONNECTION) {
+ 		xmmsc_result_t *res2;
+ 
++		/* ensure we don't end up with stale lyrics when changing track */
++		strcpy (current_lyrics, "");
++
+ 		res2 = xmmsc_medialib_get_info(connection, current_id);
+ 		xmmsc_result_notifier_set(res2, n_media_lib_get_info, &current_id);
+ 		xmmsc_result_unref(res2);
+@@ -431,6 +517,9 @@
+ 		xmms2ctrl_get_error() != ERROR_CONNECTION) {
+ 		xmmsc_result_t *res2;
+ 
++		/* ensure we don't end up with stale lyrics when changing track */
++		strcpy (current_lyrics, "");
++
+ 		res2 = xmmsc_medialib_get_info(connection, current_id);
+ 		xmmsc_result_notifier_set(res2, n_media_lib_get_info, &current_id);
+ 		xmmsc_result_unref(res2);
+@@ -589,6 +678,8 @@
  		                  bc_handle_playback_status_change, NULL);
  		XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_volume_changed,
  		                  bc_handle_volume_change, NULL);
@@ -144,7 +164,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  
  		xmmsc_disconnect_callback_set(connection, connection_lost, NULL);
  		
-@@ -599,6 +684,10 @@
+@@ -599,6 +690,10 @@
  		res = xmmsc_playback_volume_get(connection);
  		xmmsc_result_notifier_set(res, n_volume_init, NULL);
  		xmmsc_result_unref(res);
@@ -155,7 +175,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  	}
  	return xmms2ctrl_get_error();
  }
-@@ -718,6 +807,7 @@
+@@ -718,6 +813,7 @@
  	cfg_add_key(&cf, "ShowRemainingTime",             "no");
  	cfg_add_key(&cf, "TerminateXmms2dOnExit",         "no");
  	cfg_add_key(&cf, "StartLocalXmms2dOnStartup",     "no");
@@ -163,7 +183,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  	username = g_get_user_name();
  	str_length = strlen(username) + 128;
  	ipc_path_default = g_malloc(str_length * sizeof(gchar));
-@@ -1110,6 +1200,9 @@
+@@ -1110,6 +1206,9 @@
  	if (strncasecmp(cfg_get_key_value(cf, "ShowRemainingTime"), "yes", 3) == 0)
  		flag_time_remaining = TRUE;
  
@@ -173,7 +193,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  	gtk_widget_show_all(window);
  
  	connection = xmmsc_init("gxmms2");
-@@ -1191,6 +1284,7 @@
+@@ -1191,6 +1290,7 @@
  		}
  	}
  	cfg_add_key(&cf, "ShowRemainingTime", (flag_time_remaining ? "yes" : "no"));
@@ -193,3 +213,14 @@ diff -ru gxmms2-0.7.0/Makefile gxmms2-0.7.0-with-lyrics/Makefile
  LIBS=$(GTK_LIB) $(XMMS2_LIB)
  
  KRELLLFLAGS=-shared
+diff -ru gxmms2-0.7.0/README gxmms2-0.7.0-with-lyrics/README
+--- gxmms2-0.7.0/README	2007-03-24 19:34:59.000000000 +0000
++++ gxmms2-0.7.0-with-lyrics/README	2008-10-25 15:25:08.000000000 +0100
+@@ -85,6 +85,7 @@
+ - b for next track
+ - j for medialib/playlist window
+ - t for toggle elapsed/remaining time
++- l for toggle lyrics display
+ - +/- to increase/decrease the volume
+ - 0..4 to rate the current track where 0 is worst and 4 is best
+ 
