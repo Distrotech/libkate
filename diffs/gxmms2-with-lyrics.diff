@@ -1,0 +1,127 @@
+Binary files gxmms2-0.7.0/gxmms2 and gxmms2-0.7.0-with-lyrics/gxmms2 differ
+diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c
+--- gxmms2-0.7.0/gxmms2src/gxmms2.c	2007-11-15 20:22:46.000000000 +0000
++++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 11:33:05.000000000 +0100
+@@ -33,6 +33,7 @@
+ #include "eggtrayicon.h"
+ #define LABEL_WIDTH 19
+ #define TITLE_STR_SIZE 512
++#define LYRICS_STR_SIZE 128
+ #define FONT_SIZE 12
+ 
+ static GtkWidget    *label_time, *eventbox_time, *scroller;
+@@ -50,6 +51,7 @@
+ static GtkWidget    *wv;
+ static ConfigFile    cf;
+ static gboolean      local_xmms2d = FALSE;
++static gchar         current_lyrics[LYRICS_STR_SIZE] = "";
+ 
+ static int xmms2_connect(void);
+ 
+@@ -62,7 +64,13 @@
+ {
+ 	const gchar *current_str = wejpscroller_get_text(WEJPSCROLLER(scroller));
+ 
+-	trackinfo_get_full_title(title_str, TITLE_STR_SIZE, track, FALSE);
++	if (current_lyrics[0]) {
++		strncpy(title_str, current_lyrics, TITLE_STR_SIZE);
++		title_str[TITLE_STR_SIZE-1] = 0;
++	}
++	else {
++		trackinfo_get_full_title(title_str, TITLE_STR_SIZE, track, FALSE);
++	}
+ 	if (!current_str) {
+ 		wejpscroller_set_text(WEJPSCROLLER(scroller), title_str, TRUE);
+ 	} else if (strcmp(current_str, title_str)) {
+@@ -134,6 +142,58 @@
+ 	change_volume(-1, wejpvolume_get_volume(WEJPVOLUME(widget)));
+ }
+ 
++static void n_lyrics_set(xmmsc_result_t *res, void *userdata)
++{
++	const gchar *lyrics;
++	
++	if (xmmsc_result_get_string(res, &lyrics) && 
++		xmms2ctrl_get_error() != ERROR_CONNECTION) {
++		if (lyrics) {
++			strncpy(current_lyrics, lyrics, LYRICS_STR_SIZE);
++			current_lyrics[LYRICS_STR_SIZE-1] = 0;
++		}
++		else {
++			strcpy(current_lyrics, "");
++		}
++	}
++	else {
++		strcpy(current_lyrics, "");
++	}
++	update_title_label(title_str, &track, TRUE);
++
++	xmmsc_result_unref(res);
++}
++
++static void get_current_lyrics()
++{
++	xmmsc_result_t *res;
++	res = xmmsc_playback_current_lyrics (connection);
++	xmmsc_result_notifier_set(res, n_lyrics_set, NULL);
++	xmmsc_result_unref(res);
++}
++
++static void sig_handle_current_lyrics(xmmsc_result_t *res, void *userdata)
++{
++	const char *lyrics = NULL;
++	if (xmmsc_result_get_string(res, &lyrics) && 
++		xmms2ctrl_get_error() != ERROR_CONNECTION) {
++
++		if (lyrics) {
++			strncpy(current_lyrics, lyrics, LYRICS_STR_SIZE);
++			current_lyrics[LYRICS_STR_SIZE-1] = 0;
++		}
++		else {
++			strcpy(current_lyrics, "");
++		}
++		update_title_label(title_str, &track, TRUE);
++
++		xmmsc_result_t *res2;
++		res2 = xmmsc_result_restart(res);
++		xmmsc_result_unref(res2);
++	}
++	xmmsc_result_unref(res);
++}
++
+ static void show_gxmms2_about_dialog(void)
+ {
+ 	GtkWidget *dialog;
+@@ -589,6 +649,8 @@
+ 		                  bc_handle_playback_status_change, NULL);
+ 		XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_volume_changed,
+ 		                  bc_handle_volume_change, NULL);
++		XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_lyrics_changed,
++		                  sig_handle_current_lyrics, connection);
+ 
+ 		xmmsc_disconnect_callback_set(connection, connection_lost, NULL);
+ 		
+@@ -599,6 +661,10 @@
+ 		res = xmmsc_playback_volume_get(connection);
+ 		xmmsc_result_notifier_set(res, n_volume_init, NULL);
+ 		xmmsc_result_unref(res);
++
++		/* if we're connecting to a server that is already playing, make sure
++		   we get any current lyrics now rather than wait for it to change */
++		get_current_lyrics();
+ 	}
+ 	return xmms2ctrl_get_error();
+ }
+Binary files gxmms2-0.7.0/gxmms2src/gxmms2.o and gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.o differ
+diff -ru gxmms2-0.7.0/Makefile gxmms2-0.7.0-with-lyrics/Makefile
+--- gxmms2-0.7.0/Makefile	2007-09-12 20:19:07.000000000 +0100
++++ gxmms2-0.7.0-with-lyrics/Makefile	2008-07-30 20:44:05.000000000 +0100
+@@ -11,7 +11,7 @@
+ XMMS2_CFLAGS=$(shell pkg-config xmms2-client xmms2-client-glib --cflags)
+ XMMS2_LIB=$(shell pkg-config xmms2-client xmms2-client-glib --libs)
+ 
+-CFLAGS=-O2 -Wall -fPIC $(GTK_CFLAGS) $(XMMS2_CFLAGS) -I.
++CFLAGS=-O2 -Wall -fPIC $(GTK_CFLAGS) $(XMMS2_CFLAGS) -I. -I$(HOME)/include/xmms2
+ LIBS=$(GTK_LIB) $(XMMS2_LIB)
+ 
+ KRELLLFLAGS=-shared

@@ -1,7 +1,8 @@
-diff -ru xmms2-stable/INSTALL ../xmms2-stable/INSTALL
---- xmms2-stable/INSTALL	2008-07-30 20:25:49.000000000 +0100
-+++ ../xmms2-stable/INSTALL	2008-07-30 20:26:22.000000000 +0100
-@@ -20,6 +20,7 @@
+diff --git a/INSTALL b/INSTALL
+index 4141faa..7dd4da1 100644
+--- a/INSTALL
++++ b/INSTALL
+@@ -20,6 +20,7 @@ These libraries are '''not needed''' for building xmms2d itself, but will add ex
  ** [http://www.underbit.com/products/mad/ MAD] (Ubuntu and debian users will want libmad0-dev) - For listening to MPEG files (MPEG 1 & 2 layers I, II and III - includes MP3)
  ** [http://www.audiocoding.com/ FAAD] - For listening to AAC.
  ** [http://www.xiph.org Vorbisfile] - For listening to Ogg Vorbis.
@@ -9,21 +10,131 @@ diff -ru xmms2-stable/INSTALL ../xmms2-stable/INSTALL
  ** [http://sidplay2.sourceforge.net/ SIDplay2] - For listening to SIDs.
  ** [http://www.geocities.com/SiliconValley/Lakes/5147/resid/ reSID] - For listening to SIDs.
  ** [http://flac.sourceforge.net/ libFLAC] - for FLAC support
-diff -ru xmms2-stable/src/include/xmms/xmms_medialib.h ../xmms2-stable/src/include/xmms/xmms_medialib.h
---- xmms2-stable/src/include/xmms/xmms_medialib.h	2008-07-30 20:25:49.000000000 +0100
-+++ ../xmms2-stable/src/include/xmms/xmms_medialib.h	2008-07-30 20:27:17.000000000 +0100
-@@ -80,6 +80,7 @@
- #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_FILE "website_file"
- #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_PUBLISHER "website_publisher"
- #define XMMS_MEDIALIB_ENTRY_PROPERTY_WEBSITE_COPYRIGHT "website_copyright"
-+#define XMMS_MEDIALIB_ENTRY_PROPERTY_CURRENT_LYRICS "current_lyrics"
+diff --git a/src/clients/lib/xmmsclient/playback.c b/src/clients/lib/xmmsclient/playback.c
+index 48bbdc9..99f69a2 100644
+--- a/src/clients/lib/xmmsclient/playback.c
++++ b/src/clients/lib/xmmsclient/playback.c
+@@ -279,5 +279,29 @@ xmmsc_broadcast_playback_volume_changed (xmmsc_connection_t *c)
+ 	return xmmsc_send_broadcast_msg (c, XMMS_IPC_SIGNAL_OUTPUT_VOLUME_CHANGED);
+ }
  
- G_BEGIN_DECLS
++/**
++ * Requests the lyrics changed signal. This will be called when
++ * lyrics change (new ones, or end of the current one).
++ */
++xmmsc_result_t *
++xmmsc_signal_playback_lyrics_changed (xmmsc_connection_t *c)
++{
++	x_check_conn (c, NULL);
++
++	return xmmsc_send_signal_msg (c, XMMS_IPC_SIGNAL_LYRICS_CHANGED);
++}
++
++/**
++ * Make server emit the current lyrics.
++ */
++xmmsc_result_t *
++xmmsc_playback_current_lyrics (xmmsc_connection_t *c)
++{
++	x_check_conn (c, NULL);
++
++	return xmmsc_send_msg_no_arg (c, XMMS_IPC_OBJECT_OUTPUT,
++	                              XMMS_IPC_CMD_CURRENT_LYRICS);
++}
++
+ /** @} */
  
-diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vorbis/vorbis.c
---- xmms2-stable/src/plugins/vorbis/vorbis.c	2008-07-30 20:25:49.000000000 +0100
-+++ ../xmms2-stable/src/plugins/vorbis/vorbis.c	2008-07-30 20:26:22.000000000 +0100
-@@ -31,6 +31,9 @@
+diff --git a/src/include/xmms/xmms_xformplugin.h b/src/include/xmms/xmms_xformplugin.h
+index 12d9491..a9858b6 100644
+--- a/src/include/xmms/xmms_xformplugin.h
++++ b/src/include/xmms/xmms_xformplugin.h
+@@ -149,6 +149,13 @@ typedef struct xmms_xform_methods_St {
+ 	 * This is called without init() beeing called.
+ 	 */
+ 	gboolean (*browse)(xmms_xform_t *, const gchar *, xmms_error_t *);
++
++	/**
++	 * lyrics method.
++	 *
++	 * Called to retrieve the current lyrics.
++	 */
++	gboolean (*lyrics)(xmms_xform_t *, xmms_error_t *);
+ } xmms_xform_methods_t;
+ 
+ #define XMMS_XFORM_METHODS_INIT(m) memset (&m, 0, sizeof (xmms_xform_methods_t))
+@@ -317,6 +324,8 @@ xmms_config_property_t *xmms_xform_config_lookup (xmms_xform_t *xform,
+ xmms_medialib_entry_t xmms_xform_entry_get (xmms_xform_t *xform);
+ const gchar *xmms_xform_get_url (xmms_xform_t *xform);
+ 
++void xmms_xform_set_lyrics (xmms_xform_t *xform, const gchar *lyrics);
++
+ #define XMMS_XFORM_BROWSE_FLAG_DIR (1 << 0)
+ 
+ void xmms_xform_browse_add_entry (xmms_xform_t *xform, const gchar *path, guint32 flags);
+diff --git a/src/include/xmmsc/xmmsc_idnumbers.h b/src/include/xmmsc/xmmsc_idnumbers.h
+index 6233897..cb81369 100644
+--- a/src/include/xmmsc/xmmsc_idnumbers.h
++++ b/src/include/xmmsc/xmmsc_idnumbers.h
+@@ -69,6 +69,7 @@ typedef enum {
+ 	XMMS_IPC_SIGNAL_QUIT,
+ 	XMMS_IPC_SIGNAL_MEDIAINFO_READER_STATUS,
+ 	XMMS_IPC_SIGNAL_MEDIAINFO_READER_UNINDEXED,
++	XMMS_IPC_SIGNAL_LYRICS_CHANGED,
+ 	XMMS_IPC_SIGNAL_END
+ } xmms_ipc_signals_t;
+ 
+@@ -122,6 +123,7 @@ typedef enum {
+ 	XMMS_IPC_CMD_CURRENTID,
+ 	XMMS_IPC_CMD_VOLUME_SET,
+ 	XMMS_IPC_CMD_VOLUME_GET,
++	XMMS_IPC_CMD_CURRENT_LYRICS,
+ 
+ 	/* Medialib */
+ 	XMMS_IPC_CMD_INFO,
+diff --git a/src/include/xmmsclient/xmmsclient.h b/src/include/xmmsclient/xmmsclient.h
+index b167aa8..d625fa5 100644
+--- a/src/include/xmmsclient/xmmsclient.h
++++ b/src/include/xmmsclient/xmmsclient.h
+@@ -120,6 +120,7 @@ xmmsc_result_t *xmmsc_playback_tickle (xmmsc_connection_t *c);
+ xmmsc_result_t *xmmsc_playback_start (xmmsc_connection_t *c);
+ xmmsc_result_t *xmmsc_playback_pause (xmmsc_connection_t *c);
+ xmmsc_result_t *xmmsc_playback_current_id (xmmsc_connection_t *c);
++xmmsc_result_t *xmmsc_playback_current_lyrics (xmmsc_connection_t *c);
+ xmmsc_result_t *xmmsc_playback_seek_ms (xmmsc_connection_t *c, uint32_t milliseconds);
+ xmmsc_result_t *xmmsc_playback_seek_ms_rel (xmmsc_connection_t *c, int milliseconds);
+ xmmsc_result_t *xmmsc_playback_seek_samples (xmmsc_connection_t *c, uint32_t samples);
+@@ -136,6 +137,7 @@ xmmsc_result_t *xmmsc_broadcast_playback_current_id (xmmsc_connection_t *c);
+ 
+ /* signals */
+ xmmsc_result_t *xmmsc_signal_playback_playtime (xmmsc_connection_t *c);
++xmmsc_result_t *xmmsc_signal_playback_lyrics_changed (xmmsc_connection_t *c);
+ 
+ 
+ /*
+diff --git a/src/includepriv/xmmspriv/xmms_xform.h b/src/includepriv/xmmspriv/xmms_xform.h
+index 2b1b823..3044528 100644
+--- a/src/includepriv/xmmspriv/xmms_xform.h
++++ b/src/includepriv/xmmspriv/xmms_xform.h
+@@ -51,6 +51,8 @@ void xmms_xform_outdata_type_set (xmms_xform_t *xform, xmms_stream_type_t *type)
+ GList *xmms_xform_browse (xmms_xform_object_t *obj, const gchar *url, xmms_error_t *error);
+ GList *xmms_xform_browse_method (xmms_xform_t *xform, const gchar *url, xmms_error_t *error);
+ 
++gchar *xmms_xform_lyrics (xmms_xform_t *xform, xmms_error_t *error);
++
+ const char *xmms_xform_indata_find_str (xmms_xform_t *xform, xmms_stream_type_key_t key);
+ 
+ #define XMMS_XFORM_BUILTIN(shname, name, ver, desc, setupfunc) XMMS_BUILTIN(XMMS_PLUGIN_TYPE_XFORM, XMMS_XFORM_API_VERSION, shname, name, ver, desc, (gboolean (*)(gpointer))setupfunc)
+diff --git a/src/plugins/vorbis/vorbis.c b/src/plugins/vorbis/vorbis.c
+index a1fb839..a6dd7d9 100644
+--- a/src/plugins/vorbis/vorbis.c
++++ b/src/plugins/vorbis/vorbis.c
+@@ -26,11 +26,14 @@
+ #include "xmms/xmms_xformplugin.h"
+ #include "xmms/xmms_sample.h"
+ #include "xmms/xmms_log.h"
+-#include "xmms/xmms_medialib.h"
++#include "xmms/xmms_ipc.h"
+ 
  #include <math.h>
  #include <vorbis/codec.h>
  #include <vorbis/vorbisfile.h>
@@ -33,7 +144,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  
  #include <glib.h>
  #include <string.h>
-@@ -38,10 +41,28 @@
+@@ -38,10 +41,29 @@
  #include <stdlib.h>
  #include <ctype.h>
  
@@ -58,14 +169,16 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +	GThread *thread;
 +	GMutex *mutex;
 +	gboolean running;
++	gchar *current_lyrics;
 +#endif
  } xmms_vorbis_data_t;
  
  typedef enum { STRING, INTEGER } ptype;
-@@ -77,6 +98,14 @@
+@@ -77,6 +99,15 @@ static gint xmms_vorbis_read (xmms_xform_t *xform, xmms_sample_t *buf, gint len,
  static gboolean xmms_vorbis_init (xmms_xform_t *decoder);
  static void xmms_vorbis_destroy (xmms_xform_t *decoder);
  static gint64 xmms_vorbis_seek (xmms_xform_t *xform, gint64 samples, xmms_xform_seek_mode_t whence, xmms_error_t *err);
++static gboolean xmms_vorbis_get_lyrics (xmms_xform_t *xform, xmms_error_t *err);
 +#ifdef HAVE_KATE
 +static void process_kate(xmms_xform_t *xform, const char *ptr, size_t bytes);
 +static void add_lyrics_event(xmms_xform_t *xform, const char *text, double t);
@@ -77,7 +190,15 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  
  /*
   * Plugin header
-@@ -112,6 +141,7 @@
+@@ -97,6 +128,7 @@ xmms_vorbis_plugin_setup (xmms_xform_plugin_t *xform_plugin)
+ 	methods.destroy = xmms_vorbis_destroy;
+ 	methods.read = xmms_vorbis_read;
+ 	methods.seek = xmms_vorbis_seek;
++	methods.lyrics = xmms_vorbis_get_lyrics;
+ 
+ 	xmms_xform_plugin_methods_set (xform_plugin, &methods);
+ 
+@@ -112,6 +144,7 @@ xmms_vorbis_plugin_setup (xmms_xform_plugin_t *xform_plugin)
  	                ">>28 string \x01vorbis", NULL);
  
  	xmms_magic_extension_add ("application/ogg", "*.ogg");
@@ -85,7 +206,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  
  	return TRUE;
  }
-@@ -126,6 +156,14 @@
+@@ -126,6 +159,16 @@ xmms_vorbis_destroy (xmms_xform_t *xform)
  	data = xmms_xform_private_data_get (xform);
  	g_return_if_fail (data);
  
@@ -95,12 +216,14 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +		g_thread_join (data->thread);
 +	}
 +	g_mutex_free (data->mutex);
++
++	xmms_ipc_signal_unregister (XMMS_IPC_SIGNAL_LYRICS_CHANGED);
 +#endif
 +
  	ov_clear (&data->vorbisfile);
  	g_free (data);
  }
-@@ -146,6 +184,11 @@
+@@ -146,6 +189,11 @@ vorbis_callback_read (void *ptr, size_t size, size_t nmemb,
  
  	ret = xmms_xform_read (xform, ptr, size * nmemb, &error);
  
@@ -112,7 +235,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  	return ret / size;
  }
  
-@@ -153,11 +196,20 @@
+@@ -153,11 +201,20 @@ static int
  vorbis_callback_seek (void *datasource, ogg_int64_t offset, int whence)
  {
  	xmms_xform_t *xform = datasource;
@@ -133,7 +256,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  	xmms_error_reset (&err);
  
  	if (whence == SEEK_CUR) {
-@@ -176,6 +228,25 @@
+@@ -176,6 +233,25 @@ vorbis_callback_seek (void *datasource, ogg_int64_t offset, int whence)
  static int
  vorbis_callback_close (void *datasource)
  {
@@ -159,7 +282,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  	return 0;
  }
  
-@@ -311,6 +382,9 @@
+@@ -311,6 +387,9 @@ xmms_vorbis_init (xmms_xform_t *xform)
  	gint ret;
  	guint playtime;
  	const gchar *metakey;
@@ -169,7 +292,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  
  	g_return_val_if_fail (xform, FALSE);
  
-@@ -323,14 +397,36 @@
+@@ -323,14 +402,40 @@ xmms_vorbis_init (xmms_xform_t *xform)
  
  	data->current = -1;
  
@@ -181,6 +304,10 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +	data->mutex = g_mutex_new ();
 +	data->thread = NULL;
 +	data->running = TRUE;
++	data->current_lyrics = NULL;
++
++	xmms_ipc_signal_register (XMMS_OBJECT (xform),
++	                          XMMS_IPC_SIGNAL_LYRICS_CHANGED);
 +#endif
 +
  	xmms_xform_private_data_set (xform, data);
@@ -206,7 +333,7 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
  	vi = ov_info (&data->vorbisfile, -1);
  
  	playtime = ov_time_total (&data->vorbisfile, -1);
-@@ -417,7 +513,213 @@
+@@ -417,7 +522,253 @@ xmms_vorbis_seek (xmms_xform_t *xform, gint64 samples,
  		return -1;
  	}
  
@@ -340,15 +467,25 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +	data = xmms_xform_private_data_get (xform);
 +	g_return_if_fail (data);
 +
-+	new_lyrics_events = (lyrics_event*)g_realloc(data->lyrics_events, (data->num_lyrics_events+1)*sizeof(lyrics_event));
-+	if (!new_lyrics_events) {
-+		/* failed to allocate */
-+		return;
++	/* lyrics are sent as signals, and it seems that sending two signals very
++	   close together will drop the second one on the floor. Since lyrics typically
++	   start just when the previous one ends, we'll check whether a lyrics line is
++	   added at the same time or slightly after the last one, and replace it if so */
++	if (data->num_lyrics_events>0 && t-data->lyrics_events[data->num_lyrics_events-1].t<0.1) {
++		g_free(data->lyrics_events[data->num_lyrics_events-1].text);
++		--data->num_lyrics_events;
 +	}
-+	data->lyrics_events = new_lyrics_events;
++	else {
++		new_lyrics_events = (lyrics_event*)g_realloc(data->lyrics_events, (data->num_lyrics_events+1)*sizeof(lyrics_event));
++		if (!new_lyrics_events) {
++			/* failed to allocate */
++			return;
++		}
++		data->lyrics_events = new_lyrics_events;
++	}
 +
-+	new_lyrics_events[data->num_lyrics_events].text = g_strdup(text);
-+	new_lyrics_events[data->num_lyrics_events].t = t;
++	data->lyrics_events[data->num_lyrics_events].text = g_strdup(text);
++	data->lyrics_events[data->num_lyrics_events].t = t;
 +
 +	++data->num_lyrics_events;
 +}
@@ -394,8 +531,38 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +
 +static void set_current_lyrics(xmms_xform_t *xform, const char *text)
 +{
++	xmms_vorbis_data_t *data;
++
 +	g_return_if_fail (xform);
-+	xmms_xform_metadata_set_str (xform, XMMS_MEDIALIB_ENTRY_PROPERTY_CURRENT_LYRICS, text);
++	data = xmms_xform_private_data_get (xform);
++	g_return_if_fail (data);
++
++	if (data->current_lyrics)
++		g_free(data->current_lyrics);
++	data->current_lyrics = text ? g_strdup(text) : NULL;
++
++	xmms_object_emit_f (XMMS_OBJECT (xform),
++                    	XMMS_IPC_SIGNAL_LYRICS_CHANGED,
++                    	XMMS_OBJECT_CMD_ARG_STRING,
++                    	text);
++}
++
++static gboolean
++xmms_vorbis_get_lyrics (xmms_xform_t *xform, xmms_error_t *err)
++{
++#ifdef HAVE_KATE
++	xmms_vorbis_data_t *data;
++
++	g_return_val_if_fail (xform, FALSE);
++	data = xmms_xform_private_data_get (xform);
++	g_return_val_if_fail (xform, FALSE);
++
++	xmms_xform_set_lyrics (xform, data->current_lyrics);
++
++	return TRUE;
++#else
++	return FALSE;
++#endif
 +}
 +
 +static gpointer
@@ -420,9 +587,10 @@ diff -ru xmms2-stable/src/plugins/vorbis/vorbis.c ../xmms2-stable/src/plugins/vo
 +
 +#endif
 +
-diff -ru xmms2-stable/src/plugins/vorbis/wscript ../xmms2-stable/src/plugins/vorbis/wscript
---- xmms2-stable/src/plugins/vorbis/wscript	2008-07-30 20:25:49.000000000 +0100
-+++ ../xmms2-stable/src/plugins/vorbis/wscript	2008-07-30 20:26:22.000000000 +0100
+diff --git a/src/plugins/vorbis/wscript b/src/plugins/vorbis/wscript
+index 6905653..723e2e6 100644
+--- a/src/plugins/vorbis/wscript
++++ b/src/plugins/vorbis/wscript
 @@ -1,6 +1,10 @@
  from waftools.plugin import plugin
  
@@ -435,3 +603,216 @@ diff -ru xmms2-stable/src/plugins/vorbis/wscript ../xmms2-stable/src/plugins/vor
 +    return vorbis_found
  
  configure, build = plugin('vorbis', needs_lib=True, configure=plugin_configure, source="vorbis.c")
+diff --git a/src/xmms/output.c b/src/xmms/output.c
+index 0c37945..991559c 100644
+--- a/src/xmms/output.c
++++ b/src/xmms/output.c
+@@ -55,6 +55,7 @@ static void xmms_output_seekms_rel (xmms_output_t *output, gint32 ms, xmms_error
+ static void xmms_output_seeksamples (xmms_output_t *output, guint32 samples, xmms_error_t *error);
+ static void xmms_output_seeksamples_rel (xmms_output_t *output, gint32 samples, xmms_error_t *error);
+ static guint xmms_output_status (xmms_output_t *output, xmms_error_t *error);
++static gchar *xmms_output_lyrics_get (xmms_output_t *output, xmms_error_t *error);
+ 
+ typedef enum xmms_output_filler_state_E {
+ 	FILLER_STOP,
+@@ -90,6 +91,7 @@ XMMS_CMD_DEFINE (output_status, xmms_output_status, xmms_output_t *, UINT32, NON
+ XMMS_CMD_DEFINE (currentid, xmms_output_current_id, xmms_output_t *, UINT32, NONE, NONE);
+ XMMS_CMD_DEFINE (volume_set, xmms_output_volume_set, xmms_output_t *, NONE, STRING, UINT32);
+ XMMS_CMD_DEFINE (volume_get, xmms_output_volume_get, xmms_output_t *, DICT, NONE, NONE);
++XMMS_CMD_DEFINE (lyrics_get, xmms_output_lyrics_get, xmms_output_t *, STRING, NONE, NONE);
+ 
+ /*
+  * Type definitions
+@@ -158,6 +160,11 @@ struct xmms_output_St {
+ 
+ 	GThread *monitor_volume_thread;
+ 	gboolean monitor_volume_running;
++
++	/**
++	 * Current lyrics, might be NULL if no xform supplies lyrics.
++	 */
++	gchar *current_lyrics;
+ };
+ 
+ /** @} */
+@@ -285,6 +292,12 @@ song_changed (void *data)
+ 	if (arg->flush)
+ 		xmms_output_flush (arg->output);
+ 
++	/* discard any lyrics we might have had */
++	if (arg->output->current_lyrics) {
++		g_free(arg->output->current_lyrics);
++		arg->output->current_lyrics = NULL;
++	}
++
+ 	xmms_object_emit_f (XMMS_OBJECT (arg->output),
+ 	                    XMMS_IPC_SIGNAL_OUTPUT_CURRENTID,
+ 	                    XMMS_OBJECT_CMD_ARG_UINT32,
+@@ -337,6 +350,36 @@ xmms_output_filler_seek_state (xmms_output_t *output, guint32 samples)
+ 	g_mutex_unlock (output->filler_mutex);
+ }
+ 
++static void
++xmms_output_filler_update_lyrics (xmms_output_t *output, xmms_xform_t *chain)
++{
++	gchar *lyrics = NULL;
++	xmms_error_t err;
++
++	g_return_if_fail (output != NULL);
++
++	/* starting chain might be NULL */
++	if (chain) {
++		xmms_error_reset (&err);
++		lyrics = xmms_xform_lyrics (chain, &err);
++		if (lyrics) {
++			/* we've found lyrics, replace if different */
++			int same = (output->current_lyrics!=NULL) && !strcmp(output->current_lyrics, lyrics);
++			if (!same) {
++				if (output->current_lyrics)
++					g_free(output->current_lyrics);
++				output->current_lyrics = g_strdup(lyrics);
++			}
++		}
++		else {
++			if (output->current_lyrics) {
++				g_free(output->current_lyrics);
++				output->current_lyrics = NULL;
++			}
++		}
++	}
++}
++
+ static void *
+ xmms_output_filler (void *arg)
+ {
+@@ -482,6 +525,8 @@ xmms_output_filler (void *arg)
+ 			}
+ 		}
+ 
++		/* walk the chain of xforms and see if we have lyrics */
++		xmms_output_filler_update_lyrics (output, chain);
+ 	}
+ 	g_mutex_unlock (output->filler_mutex);
+ 	return NULL;
+@@ -742,6 +787,25 @@ xmms_output_playtime (xmms_output_t *output, xmms_error_t *error)
+ 
+ 
+ /**
++ * Get the current lyrics (NULL if no lyrics).
++ */
++gchar*
++xmms_output_lyrics_get (xmms_output_t *output, xmms_error_t *error)
++{
++	gchar *lyrics = NULL;
++
++	g_return_val_if_fail (output, NULL);
++
++	g_mutex_lock (output->filler_mutex);
++	if (output->current_lyrics)
++		lyrics = g_strdup(output->current_lyrics);
++	g_mutex_unlock (output->filler_mutex);
++
++	return lyrics;
++}
++
++
++/**
+  * @internal
+  */
+ 
+@@ -814,6 +878,9 @@ xmms_output_destroy (xmms_object_t *object)
+ 	g_cond_free (output->filler_state_cond);
+ 	xmms_ringbuf_destroy (output->filler_buffer);
+ 
++	if (output->current_lyrics)
++		g_free(output->current_lyrics);
++
+ 	xmms_ipc_broadcast_unregister ( XMMS_IPC_SIGNAL_OUTPUT_VOLUME_CHANGED);
+ 	xmms_ipc_broadcast_unregister ( XMMS_IPC_SIGNAL_PLAYBACK_STATUS);
+ 	xmms_ipc_broadcast_unregister ( XMMS_IPC_SIGNAL_OUTPUT_CURRENTID);
+@@ -949,6 +1016,9 @@ xmms_output_new (xmms_output_plugin_t *plugin, xmms_playlist_t *playlist)
+ 	xmms_object_cmd_add (XMMS_OBJECT (output),
+ 	                     XMMS_IPC_CMD_VOLUME_GET,
+ 	                     XMMS_CMD_FUNC (volume_get));
++	xmms_object_cmd_add (XMMS_OBJECT (output),
++	                     XMMS_IPC_CMD_CURRENT_LYRICS,
++	                     XMMS_CMD_FUNC (lyrics_get));
+ 
+ 	output->status = XMMS_PLAYBACK_STATUS_STOP;
+ 
+diff --git a/src/xmms/xform.c b/src/xmms/xform.c
+index cb991ab..97ac8f5 100644
+--- a/src/xmms/xform.c
++++ b/src/xmms/xform.c
+@@ -67,6 +67,8 @@ struct xmms_xform_St {
+ 	GTree *browse_dict;
+ 	gint browse_index;
+ 
++	gchar *current_lyrics;
++
+ 	/** used for line reading */
+ 	struct {
+ 		gchar buf[XMMS_XFORM_MAX_LINE_SIZE];
+@@ -309,6 +311,32 @@ xmms_xform_browse (xmms_xform_object_t *obj, const gchar *url,
+ 	return list;
+ }
+ 
++void
++xmms_xform_set_lyrics (xmms_xform_t *xform, const gchar *lyrics)
++{
++	if (xform->current_lyrics)
++		g_free(xform->current_lyrics);
++	xform->current_lyrics = lyrics ? g_strdup(lyrics) : NULL;
++}
++
++gchar *
++xmms_xform_lyrics (xmms_xform_t *xform, xmms_error_t *error)
++{
++	if (xform->plugin && xform->plugin->methods.lyrics) {
++		if (!xform->plugin->methods.lyrics (xform, error)) {
++			if (xform->current_lyrics)
++				g_free (xform->current_lyrics);
++			xform->current_lyrics = NULL;
++		}
++	} else {
++		/* no lyrics available, try previous */
++		if (xform->prev)
++			return xmms_xform_lyrics (xform->prev, error);
++	}
++
++	return xform->current_lyrics;
++}
++
+ XMMS_CMD_DEFINE (browse, xmms_xform_browse, xmms_xform_object_t *,
+                  LIST, STRING, NONE);
+ 
+@@ -330,6 +358,11 @@ xmms_xform_object_init (void)
+ 	xmms_object_cmd_add (XMMS_OBJECT (obj), XMMS_IPC_CMD_BROWSE,
+ 	                     XMMS_CMD_FUNC (browse));
+ 
++#if 0
++	xmms_object_cmd_add (XMMS_OBJECT (obj), XMMS_IPC_CMD_CURRENT_LYRICS,
++	                     XMMS_CMD_FUNC (lyrics));
++#endif
++
+ 	effect_callbacks_init ();
+ 
+ 	return obj;
+@@ -354,6 +387,8 @@ xmms_xform_destroy (xmms_object_t *object)
+ 
+ 	g_free (xform->buffer);
+ 
++	g_free (xform->current_lyrics);
++
+ 	xmms_object_unref (xform->out_type);
+ 	xmms_object_unref (xform->plugin);
+ 
+@@ -403,6 +438,8 @@ xmms_xform_new (xmms_xform_plugin_t *plugin, xmms_xform_t *prev,
+ 	xform->buffer = g_malloc (READ_CHUNK);
+ 	xform->buffersize = READ_CHUNK;
+ 
++	xform->current_lyrics = NULL;
++
+ 	return xform;
+ }
+ 
