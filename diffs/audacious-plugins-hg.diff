@@ -67,7 +67,7 @@ diff -ru audacious-plugins-be718ff506c0/extra.mk.in ../audacious-plugins-be718ff
  LIBBEEP_MAJOR_VERSION ?= @LIBBEEP_MAJOR_VERSION@
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plugins-be718ff506c0/src/vorbis/configure.c
 --- audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-07-26 23:03:29.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/configure.c	2008-10-25 19:18:34.000000000 +0100
 @@ -17,6 +17,14 @@
  
  static GtkWidget *title_tag_override, *title_tag_box, *title_tag_entry,
@@ -536,7 +536,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c ../audacious-plugi
      return ret;
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c
 --- audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-07-24 08:07:38.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-10-25 19:47:38.000000000 +0100
 @@ -4,6 +4,7 @@
   * Copyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
   * Copyright (C) 2008 Cristi Măgherușan <majeru@gentoo.ro>
@@ -564,7 +564,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
  InputPlugin vorbis_ip = {
      .description = "Ogg Vorbis Audio Plugin",  /* description */
-@@ -118,14 +122,203 @@
+@@ -118,14 +122,225 @@
  
  static OggVorbis_File vf;
  
@@ -723,16 +723,38 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +                ogg_stream_clear(&kst);
 +                kate_init_state = kis_sync;
 +            }
-+            else if (!vorbis_cfg.kate_all_streams && strcmp(k.ki->category, "lyrics")) {
++            else {
++              if (ogg_stream_packetout(&kst, &op) > 0) {
++                kate_packet kp;
++                kate_packet_wrap(&kp, op.bytes, op.packet);
++                ret = kate_high_decode_packetin(&k, &kp, NULL);
++                if (ret < 0) {
 +#ifdef DEBUG
-+                g_message("Kate stream is not lyrics (%s): ignoring\n", k.ki->category);
++                    g_message("kate_high_decode_packetin failed: %d\n", ret);
 +#endif
++                }
++                else {
++                  if (!vorbis_cfg.kate_all_streams && strcmp(k.ki->category, "lyrics")) {
++#ifdef DEBUG
++                    g_message("Kate stream is not lyrics (%s): ignoring\n", k.ki->category);
++#endif
++                    ogg_stream_clear(&kst);
++                    kate_high_decode_clear(&k);
++                    kate_init_state = kis_sync;
++                  }
++                  else {
++                      kate_init_state = kis_all;
++                  }
++                }
++              }
++              else {
++#ifdef DEBUG
++                g_message("Initial Kate page did not contain Kate BOS header\n");
 +                ogg_stream_clear(&kst);
 +                kate_high_decode_clear(&k);
 +                kate_init_state = kis_sync;
-+            }
-+            else {
-+                kate_init_state = kis_all;
++#endif
++              }
 +            }
 +        }
 +        else if (kate_init_state == kis_all) {
@@ -768,7 +790,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  static int
  vorbis_check_fd(char *filename, VFSFile *stream)
  {
-@@ -147,7 +340,9 @@
+@@ -147,7 +362,9 @@
      memset(&vfile, 0, sizeof(vfile));
      g_mutex_lock(vf_mutex);
  
@@ -778,7 +800,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
      switch (result) {
      case OV_EREAD:
-@@ -193,8 +388,10 @@
+@@ -193,8 +410,10 @@
          break;
      }
  
@@ -789,7 +811,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
      g_mutex_unlock(vf_mutex);
      return TRUE;
  }
-@@ -242,6 +439,9 @@
+@@ -242,6 +461,9 @@
      vorbis_info *vi;
      gint br;
      VFSVorbisFile *fd = NULL;
@@ -799,7 +821,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
      int last_section = -1;
  
-@@ -281,8 +481,12 @@
+@@ -281,8 +503,12 @@
       * need to change playback settings at a section boundary
       */
   
@@ -813,7 +835,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
      if (ov_open_callbacks(datasource, &vf, NULL, 0, aud_vfs_is_streaming(fd->fd) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
          vorbis_callbacks.close_func(datasource);
          g_mutex_unlock(vf_mutex);
-@@ -430,6 +634,22 @@
+@@ -430,6 +656,22 @@
              last_section = current_section;
           
          }
@@ -836,7 +858,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
      } /* main loop */
  
      if (!playback->error) {
-@@ -620,7 +840,11 @@
+@@ -620,7 +862,11 @@
       * machine initialization.  If it returns zero, the stream
       * *is* Vorbis and we're fully ready to decode.
       */
@@ -848,7 +870,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
          aud_vfs_fclose(stream);
          return NULL;
      }
-@@ -632,6 +856,8 @@
+@@ -632,6 +878,8 @@
       * vorbisfile.a.  ov_clear will fclose it
       */
      ov_clear(&vfile);
@@ -857,7 +879,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
      return tuple;
  }
-@@ -691,7 +917,8 @@
+@@ -691,7 +939,8 @@
                                          "Jorn Baayen <jorn@nl.linux.org>\n"
                                          "Haavard Kvaalen <havardk@xmms.org>\n"
                                          "Gian-Carlo Pascutto <gcp@sjeng.org>\n"
@@ -867,7 +889,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
                                          "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
                                         _("Ok"), FALSE, NULL, NULL);
        g_signal_connect(G_OBJECT(about_window), "destroy",
-@@ -715,6 +942,9 @@
+@@ -715,6 +964,9 @@
      vorbis_cfg.proxy_pass = NULL;
      vorbis_cfg.tag_override = FALSE;
      vorbis_cfg.tag_format = NULL;
@@ -877,7 +899,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
      db = aud_cfg_db_open();
      aud_cfg_db_get_int(db, "vorbis", "http_buffer_size",
-@@ -744,9 +974,14 @@
+@@ -744,9 +996,14 @@
      aud_cfg_db_get_string(db, NULL, "proxy_user", &vorbis_cfg.proxy_user);
      aud_cfg_db_get_string(db, NULL, "proxy_pass", &vorbis_cfg.proxy_pass);
  
@@ -892,7 +914,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
      aud_mime_set_plugin("application/ogg", &vorbis_ip);
  }
-@@ -786,6 +1021,7 @@
+@@ -786,6 +1043,7 @@
  
      g_strfreev(vorbis_tag_encoding_list);
      g_mutex_free(vf_mutex);
@@ -900,7 +922,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  }
  
  static size_t
-@@ -793,7 +1029,16 @@
+@@ -793,7 +1051,16 @@
  {
      VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
  
@@ -918,7 +940,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  }
  
  static int
-@@ -801,6 +1046,16 @@
+@@ -801,6 +1068,16 @@
  {
      VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
  
@@ -935,7 +957,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
      return aud_vfs_fseek(handle->fd, offset, whence);
  }
  
-@@ -813,6 +1068,12 @@
+@@ -813,6 +1090,12 @@
  
      if (handle->probe == FALSE)
      {
