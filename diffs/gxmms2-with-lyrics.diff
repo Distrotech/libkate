@@ -1,7 +1,7 @@
 Binary files gxmms2-0.7.0/gxmms2 and gxmms2-0.7.0-with-lyrics/gxmms2 differ
 diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c
 --- gxmms2-0.7.0/gxmms2src/gxmms2.c	2007-11-15 20:22:46.000000000 +0000
-+++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 11:33:05.000000000 +0100
++++ gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.c	2008-10-25 12:06:32.000000000 +0100
 @@ -33,6 +33,7 @@
  #include "eggtrayicon.h"
  #define LABEL_WIDTH 19
@@ -10,7 +10,15 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  #define FONT_SIZE 12
  
  static GtkWidget    *label_time, *eventbox_time, *scroller;
-@@ -50,6 +51,7 @@
+@@ -43,6 +44,7 @@
+ static GtkTooltips  *docklet_tooltip;
+ static gboolean      update_scale = TRUE;
+ static gboolean      flag_time_remaining = FALSE;
++static gboolean      flag_lyrics = FALSE;
+ xmmsc_connection_t  *connection;
+ static trackinfo     track;
+ static gchar         title_str[TITLE_STR_SIZE] = "gxmms2 (not connected)";
+@@ -50,6 +52,7 @@
  static GtkWidget    *wv;
  static ConfigFile    cf;
  static gboolean      local_xmms2d = FALSE;
@@ -18,7 +26,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  
  static int xmms2_connect(void);
  
-@@ -62,7 +64,13 @@
+@@ -62,7 +65,13 @@
  {
  	const gchar *current_str = wejpscroller_get_text(WEJPSCROLLER(scroller));
  
@@ -33,7 +41,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  	if (!current_str) {
  		wejpscroller_set_text(WEJPSCROLLER(scroller), title_str, TRUE);
  	} else if (strcmp(current_str, title_str)) {
-@@ -134,6 +142,58 @@
+@@ -134,6 +143,65 @@
  	change_volume(-1, wejpvolume_get_volume(WEJPVOLUME(widget)));
  }
  
@@ -41,36 +49,42 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
 +{
 +	const gchar *lyrics;
 +	
-+	if (xmmsc_result_get_string(res, &lyrics) && 
-+		xmms2ctrl_get_error() != ERROR_CONNECTION) {
-+		if (lyrics) {
-+			strncpy(current_lyrics, lyrics, LYRICS_STR_SIZE);
-+			current_lyrics[LYRICS_STR_SIZE-1] = 0;
++	if (flag_lyrics) {
++		if (xmmsc_result_get_string(res, &lyrics) && 
++			xmms2ctrl_get_error() != ERROR_CONNECTION) {
++			if (lyrics) {
++				strncpy(current_lyrics, lyrics, LYRICS_STR_SIZE);
++				current_lyrics[LYRICS_STR_SIZE-1] = 0;
++			}
++			else {
++				strcpy(current_lyrics, "");
++			}
 +		}
 +		else {
 +			strcpy(current_lyrics, "");
 +		}
++		update_title_label(title_str, &track, TRUE);
 +	}
-+	else {
-+		strcpy(current_lyrics, "");
-+	}
-+	update_title_label(title_str, &track, TRUE);
 +
 +	xmmsc_result_unref(res);
 +}
 +
 +static void get_current_lyrics()
 +{
-+	xmmsc_result_t *res;
-+	res = xmmsc_playback_current_lyrics (connection);
-+	xmmsc_result_notifier_set(res, n_lyrics_set, NULL);
-+	xmmsc_result_unref(res);
++	if (flag_lyrics) {
++		xmmsc_result_t *res;
++		res = xmmsc_playback_current_lyrics (connection);
++		xmmsc_result_notifier_set(res, n_lyrics_set, NULL);
++		xmmsc_result_unref(res);
++	}
 +}
 +
 +static void sig_handle_current_lyrics(xmmsc_result_t *res, void *userdata)
 +{
 +	const char *lyrics = NULL;
-+	if (xmmsc_result_get_string(res, &lyrics) && 
++
++	if (flag_lyrics &&
++		xmmsc_result_get_string(res, &lyrics) && 
 +		xmms2ctrl_get_error() != ERROR_CONNECTION) {
 +
 +		if (lyrics) {
@@ -81,18 +95,48 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
 +			strcpy(current_lyrics, "");
 +		}
 +		update_title_label(title_str, &track, TRUE);
-+
-+		xmmsc_result_t *res2;
-+		res2 = xmmsc_result_restart(res);
-+		xmmsc_result_unref(res2);
 +	}
++
++	xmmsc_result_t *res2;
++	res2 = xmmsc_result_restart(res);
++	xmmsc_result_unref(res2);
++
 +	xmmsc_result_unref(res);
 +}
 +
  static void show_gxmms2_about_dialog(void)
  {
  	GtkWidget *dialog;
-@@ -589,6 +649,8 @@
+@@ -317,6 +385,17 @@
+ 	}
+ }
+ 
++static void update_lyrics_flag()
++{
++	if (flag_lyrics) {
++		get_current_lyrics();
++	}
++	else {
++		strcpy(current_lyrics, "");
++		update_title_label(title_str, &track, TRUE);
++	}
++}
++
+ static gboolean cb_key_press(GtkWidget   *widget,
+                              GdkEventKey *event,
+                              gpointer     userdata)
+@@ -352,6 +431,10 @@
+ 			case GDK_t:
+ 				flag_time_remaining = !flag_time_remaining;
+ 				break;
++			case GDK_l:
++				flag_lyrics = !flag_lyrics;
++				update_lyrics_flag();
++				break;
+ 			case GDK_0:
+ 				rate_current_track(1);
+ 				break;
+@@ -589,6 +672,8 @@
  		                  bc_handle_playback_status_change, NULL);
  		XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_volume_changed,
  		                  bc_handle_volume_change, NULL);
@@ -101,7 +145,7 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  
  		xmmsc_disconnect_callback_set(connection, connection_lost, NULL);
  		
-@@ -599,6 +661,10 @@
+@@ -599,6 +684,10 @@
  		res = xmmsc_playback_volume_get(connection);
  		xmmsc_result_notifier_set(res, n_volume_init, NULL);
  		xmmsc_result_unref(res);
@@ -112,6 +156,32 @@ diff -ru gxmms2-0.7.0/gxmms2src/gxmms2.c gxmms2-0.7.0-with-lyrics/gxmms2src/gxmm
  	}
  	return xmms2ctrl_get_error();
  }
+@@ -718,6 +807,7 @@
+ 	cfg_add_key(&cf, "ShowRemainingTime",             "no");
+ 	cfg_add_key(&cf, "TerminateXmms2dOnExit",         "no");
+ 	cfg_add_key(&cf, "StartLocalXmms2dOnStartup",     "no");
++	cfg_add_key(&cf, "ShowLyrics",                    "yes");
+ 	username = g_get_user_name();
+ 	str_length = strlen(username) + 128;
+ 	ipc_path_default = g_malloc(str_length * sizeof(gchar));
+@@ -1110,6 +1200,9 @@
+ 	if (strncasecmp(cfg_get_key_value(cf, "ShowRemainingTime"), "yes", 3) == 0)
+ 		flag_time_remaining = TRUE;
+ 
++	if (strncasecmp(cfg_get_key_value(cf, "ShowLyrics"), "yes", 3) == 0)
++		flag_lyrics = TRUE;
++
+ 	gtk_widget_show_all(window);
+ 
+ 	connection = xmmsc_init("gxmms2");
+@@ -1191,6 +1284,7 @@
+ 		}
+ 	}
+ 	cfg_add_key(&cf, "ShowRemainingTime", (flag_time_remaining ? "yes" : "no"));
++	cfg_add_key(&cf, "ShowLyrics", (flag_lyrics ? "yes" : "no"));
+ 
+ 	cfg_write_config_file(&cf, path_to_config_file);
+ 
 Binary files gxmms2-0.7.0/gxmms2src/gxmms2.o and gxmms2-0.7.0-with-lyrics/gxmms2src/gxmms2.o differ
 diff -ru gxmms2-0.7.0/Makefile gxmms2-0.7.0-with-lyrics/Makefile
 --- gxmms2-0.7.0/Makefile	2007-09-12 20:19:07.000000000 +0100
