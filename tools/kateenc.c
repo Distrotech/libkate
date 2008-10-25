@@ -617,7 +617,7 @@ int main(int argc,char **argv)
   int n,ret;
   const char *input_filename=NULL;
   const char *output_filename=NULL;
-  const char *output_filename_type=NULL;
+  const char *input_file_type=NULL;
   uint32_t serial;
   const char *comment;
   FILE *fin,*fout;
@@ -650,7 +650,7 @@ int main(int argc,char **argv)
           printf("   -V                  version\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
-          printf("   -t <type>           set input filename type\n");
+          printf("   -t <type>           set input file type\n");
           printf("       types can be: kate, srt, lrc\n");
           printf("   -l <language>       set stream language\n");
           printf("   -c <category>       set stream category\n");
@@ -668,11 +668,11 @@ int main(int argc,char **argv)
           }
           break;
         case 't':
-          if (!output_filename_type) {
-            output_filename_type=eat_arg(argc,argv,&n);
+          if (!input_file_type) {
+            input_file_type=eat_arg(argc,argv,&n);
           }
           else {
-            fprintf(stderr,"Only one output type may be given\n");
+            fprintf(stderr,"Only one input file type may be given\n");
             exit(-1);
           }
           break;
@@ -729,8 +729,8 @@ int main(int argc,char **argv)
     }
   }
 
-  if (!output_filename_type) {
-    fprintf(stderr,"No output filename type given\n");
+  if (!input_file_type) {
+    fprintf(stderr,"No input file type given\n");
     exit(-1);
   }
 
@@ -793,17 +793,17 @@ int main(int argc,char **argv)
   if (!raw) ogg_stream_init(&os,serial);
 
   ret=0;
-  if (!strcmp(output_filename_type,"kate")) {
+  if (!strcmp(input_file_type,"kate")) {
     ret=convert_kate(fin,fout);
   }
-  else if (!strcmp(output_filename_type,"srt")) {
+  else if (!strcmp(input_file_type,"srt")) {
     ret=convert_srt(fin,fout);
   }
-  else if (!strcmp(output_filename_type,"lrc")) {
+  else if (!strcmp(input_file_type,"lrc")) {
     ret=convert_lrc(fin,fout);
   }
   else {
-    fprintf(stderr,"Invalid format type: %s\n",output_filename_type);
+    fprintf(stderr,"Invalid format type: %s\n",input_file_type);
     ret=-1;
   }
 
