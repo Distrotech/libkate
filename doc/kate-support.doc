@@ -117,5 +117,15 @@ liboggplay is a layer above liboggz that provides data format abstraction and
 stream synchronization.
 If patched, it can play any Kate stream using the Tiger rendering library.
 
+\subsection support-xmms2 XMMS2
+
+XMMS2 is a music player.
+If patched, it can send timed lyrics to XMMS2 clients.
+
+\subsection support-gxmms2 gxmms2
+
+gxmms2 is a frontend for XMMS2.
+If patched, it can display Kate lyrics in sync with the music.
+
 
 */
