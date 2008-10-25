@@ -1,4 +1,4 @@
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/Makefile.am xmms-1.2.11/Input/vorbis/Makefile.am
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/Makefile.am xmms-1.2.11/Input/vorbis/Makefile.am
 --- xmms-1.2.11-original/Input/vorbis/Makefile.am	2004-04-04 09:51:20.000000000 +0100
 +++ xmms-1.2.11/Input/vorbis/Makefile.am	2008-07-15 19:29:10.000000000 +0100
 @@ -6,9 +6,9 @@
@@ -13,37 +13,39 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  @LTLIBICONV@
  
  libvorbis_la_SOURCES = \
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/configure.c xmms-1.2.11/Input/vorbis/configure.c
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/configure.c xmms-1.2.11/Input/vorbis/configure.c
 --- xmms-1.2.11-original/Input/vorbis/configure.c	2005-05-15 01:01:20.000000000 +0100
-+++ xmms-1.2.11/Input/vorbis/configure.c	2008-07-16 14:20:27.000000000 +0100
++++ xmms-1.2.11/Input/vorbis/configure.c	2008-10-25 20:24:40.000000000 +0100
 @@ -29,6 +29,8 @@
  static GtkWidget *streaming_save_dirbrowser, *streaming_save_hbox;
  static GtkWidget *title_tag_override, *title_tag_box, *title_tag_entry, *title_desc;
  static GtkWidget *rg_switch, *rg_clip_switch, *rg_booster_switch, *rg_track_gain;
-+static GtkWidget *kate_lyrics;
++static GtkWidget *kate_lyrics, *kate_all_streams;
 +static GtkWidget *kate_offset_spin;
  
  vorbis_config_t vorbis_cfg;
  
-@@ -80,6 +82,8 @@
+@@ -80,6 +82,9 @@
  	else
  		vorbis_cfg.replaygain_mode = REPLAYGAIN_MODE_ALBUM;
  
 +	vorbis_cfg.show_kate_lyrics = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(kate_lyrics));
++	vorbis_cfg.show_all_kate_streams = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(kate_all_streams));
 +	vorbis_cfg.kate_offset = gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(kate_offset_spin));
  	
  	cfg = xmms_cfg_open_default_file();
  
-@@ -117,6 +121,8 @@
+@@ -117,6 +122,9 @@
  	xmms_cfg_write_boolean(cfg, "vorbis", "use_replaygain", vorbis_cfg.use_replaygain);
  	xmms_cfg_write_int(cfg, "vorbis", "replaygain_mode", vorbis_cfg.replaygain_mode);
  	xmms_cfg_write_boolean(cfg, "vorbis", "use_booster", vorbis_cfg.use_booster);
 +	xmms_cfg_write_boolean(cfg, "vorbis", "show_kate_lyrics", vorbis_cfg.show_kate_lyrics);
++	xmms_cfg_write_boolean(cfg, "vorbis", "show_all_kate_streams", vorbis_cfg.show_all_kate_streams);
 +	xmms_cfg_write_int(cfg, "vorbis", "kate_offset", vorbis_cfg.kate_offset);
  	xmms_cfg_write_default_file(cfg);
  	xmms_cfg_free(cfg);
  	gtk_widget_destroy(vorbis_configurewin);
-@@ -211,6 +217,11 @@
+@@ -211,6 +219,11 @@
  	GtkWidget *bbox, *ok, *cancel;
  	GtkWidget *rg_type_frame, *rg_type_vbox, *rg_album_gain;
  	GtkObject *streaming_size_adj, *streaming_pre_adj;
@@ -55,7 +57,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  
  	char *temp;
  
-@@ -439,6 +450,36 @@
+@@ -439,6 +452,40 @@
  
  	gtk_notebook_append_page(GTK_NOTEBOOK(notebook), rg_frame, gtk_label_new(_("ReplayGain")));
  
@@ -71,6 +73,10 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
 +	kate_lyrics = gtk_check_button_new_with_label(_("Show embedded Kate lyrics"));
 +	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(kate_lyrics), vorbis_cfg.show_kate_lyrics);
 +	gtk_box_pack_start(GTK_BOX(kate_vbox), kate_lyrics, FALSE, FALSE, 0);
++	
++	kate_all_streams = gtk_check_button_new_with_label(_("Show all Kate streams"));
++	gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(kate_all_streams), vorbis_cfg.show_all_kate_streams);
++	gtk_box_pack_start(GTK_BOX(kate_vbox), kate_all_streams, FALSE, FALSE, 0);
 +	
 +	kate_offset_frame = gtk_frame_new(_("Timing"));
 +	gtk_container_set_border_width(GTK_CONTAINER(kate_offset_frame), 5);
@@ -92,7 +98,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	/* Buttons */
  
  	bbox = gtk_hbutton_box_new();
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c xmms-1.2.11/Input/vorbis/fileinfo.c
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/fileinfo.c xmms-1.2.11/Input/vorbis/fileinfo.c
 --- xmms-1.2.11-original/Input/vorbis/fileinfo.c	2005-05-15 01:01:20.000000000 +0100
 +++ xmms-1.2.11/Input/vorbis/fileinfo.c	2008-10-21 20:36:55.000000000 +0100
 @@ -33,6 +33,9 @@
@@ -311,7 +317,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  		if (ov_open(fh, &vf, NULL, 0) == 0)
  		{
  			comment = ov_comment(&vf, -1);
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c xmms-1.2.11/Input/vorbis/vcedit.c
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.c xmms-1.2.11/Input/vorbis/vcedit.c
 --- xmms-1.2.11-original/Input/vorbis/vcedit.c	2001-12-17 22:27:19.000000000 +0000
 +++ xmms-1.2.11/Input/vorbis/vcedit.c	2008-10-21 20:38:37.000000000 +0100
 @@ -141,6 +141,39 @@
@@ -592,7 +598,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  					goto cleanup;
  			}
  		}
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.h xmms-1.2.11/Input/vorbis/vcedit.h
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vcedit.h xmms-1.2.11/Input/vorbis/vcedit.h
 --- xmms-1.2.11-original/Input/vorbis/vcedit.h	2001-12-17 00:57:20.000000000 +0000
 +++ xmms-1.2.11/Input/vorbis/vcedit.h	2008-07-16 10:07:50.000000000 +0100
 @@ -40,7 +40,8 @@
@@ -605,9 +611,9 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	int eosin;
  } vcedit_state;
  
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c xmms-1.2.11/Input/vorbis/vorbis.c
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.c xmms-1.2.11/Input/vorbis/vorbis.c
 --- xmms-1.2.11-original/Input/vorbis/vorbis.c	2006-07-16 14:40:04.000000000 +0100
-+++ xmms-1.2.11/Input/vorbis/vorbis.c	2008-10-21 20:43:07.000000000 +0100
++++ xmms-1.2.11/Input/vorbis/vorbis.c	2008-10-25 20:52:07.000000000 +0100
 @@ -42,6 +42,9 @@
  #include <ogg/ogg.h>
  #include <vorbis/codec.h>
@@ -643,7 +649,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	
  
  InputPlugin *get_iplugin_info(void)
-@@ -131,11 +145,158 @@
+@@ -131,11 +145,187 @@
  	return &vorbis_ip;
  }
  
@@ -765,14 +771,43 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
 +                        ogg_stream_pagein(&kst, &og);
 +                        ret = kate_high_decode_init(&k);
 +                        if (ret < 0) {
-+                                /* failed to decode Kate ID header */
++                                /* failed to init libkate for decoding */
++                                ogg_stream_clear(&kst);
++                        }
++                        else {
++                                if (ogg_stream_packetout(&kst, &op) > 0) {
++                                        kate_packet kp;
++                                        kate_packet_wrap(&kp, op.bytes, op.packet);
++                                        ret = kate_high_decode_packetin(&k, &kp, NULL);
++                                        if (ret < 0) {
++                                                /* failed to decode Kate ID header */
++                                                kate_high_decode_clear(&k);
++                                                ogg_stream_clear(&kst);
++                                        }
++                                        else {
++                                                if (!vorbis_cfg.show_all_kate_streams && strcmp(k.ki->category, "lyrics")) {
++                                                        /* not lyrics, and we're not asked to play other streams */
++                                                        kate_high_decode_clear(&k);
++                                                        ogg_stream_clear(&kst);
++                                                }
++                                                else {
++                                                        kst_initialized = 1;
++                                                        kate_initialized = 1;
++                                                }
++                                        }
++                                }
++                                else {
++                                        /* the Initial Kate page did not contain a Kate BOS header */
++                                        kate_high_decode_clear(&k);
++                                        ogg_stream_clear(&kst);
++                                }
 +                        }
 +                }
 +                else {
 +                        ogg_stream_pagein(&kst, &og);
 +                }
 +
-+                while (ogg_stream_packetout(&kst, &op) > 0) {
++                if (kate_initialized) while (ogg_stream_packetout(&kst, &op) > 0) {
 +                        const kate_event *ev = NULL;
 +                        kate_packet kp;
 +                        kate_packet_wrap(&kp, op.bytes, op.packet);
@@ -803,7 +838,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  
  	/* is this our http resource? */
  	if (strncasecmp(filename, "http://", 7) == 0) {
-@@ -144,6 +305,9 @@
+@@ -144,6 +334,9 @@
  			if (!strncasecmp(ext, ".ogg", 4)) {
  				return TRUE;
  			}
@@ -813,7 +848,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  		}
  		return FALSE;
  	}
-@@ -321,6 +485,7 @@
+@@ -321,6 +514,7 @@
  	double time;
  	long timercount = 0;
  	vorbis_info *vi;
@@ -821,7 +856,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  
  	int last_section = -1;
  
-@@ -352,6 +517,8 @@
+@@ -352,6 +546,8 @@
  	 * without it
  	 */
  
@@ -830,7 +865,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	pthread_mutex_lock(&vf_mutex);
  	if (ov_open_callbacks(datasource, &vf, NULL, 0, vorbis_callbacks) < 0)
  	{
-@@ -462,6 +629,14 @@
+@@ -462,6 +658,14 @@
  						   samplerate, channels);
  			timercount = vorbis_ip.output->output_time();
  		}
@@ -845,7 +880,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	}
  	output_opened = FALSE;
  	if (!output_error)
-@@ -774,6 +949,7 @@
+@@ -774,6 +978,7 @@
  		  "Jorn Baayen <jorn@nl.linux.org>\n"
  		  "Haavard Kvaalen <havardk@xmms.org>\n"
  		  "Gian-Carlo Pascutto <gcp@sjeng.org>\n\n"
@@ -853,25 +888,27 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  		  "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
  		_("OK"), FALSE, NULL, NULL);
  	gtk_signal_connect(GTK_OBJECT(about_window), "destroy",
-@@ -798,6 +974,8 @@
+@@ -798,6 +1003,9 @@
  	vorbis_cfg.use_replaygain = FALSE;
  	vorbis_cfg.replaygain_mode = REPLAYGAIN_MODE_TRACK;
  	vorbis_cfg.use_booster = FALSE;
 +        vorbis_cfg.show_kate_lyrics = TRUE;
++        vorbis_cfg.show_all_kate_streams = FALSE;
 +        vorbis_cfg.kate_offset = 0;
  
  	cfg = xmms_cfg_open_default_file();
  	xmms_cfg_read_int(cfg, "vorbis", "http_buffer_size",
-@@ -830,6 +1008,8 @@
+@@ -830,6 +1038,9 @@
  	xmms_cfg_read_boolean(cfg, "vorbis", "use_replaygain", &vorbis_cfg.use_replaygain);
  	xmms_cfg_read_int(cfg, "vorbis", "replaygain_mode", &vorbis_cfg.replaygain_mode);
  	xmms_cfg_read_boolean(cfg, "vorbis", "use_booster", &vorbis_cfg.use_booster);
 +	xmms_cfg_read_boolean(cfg, "vorbis", "show_kate_lyrics", &vorbis_cfg.show_kate_lyrics);
++	xmms_cfg_read_boolean(cfg, "vorbis", "show_all_kate_streams", &vorbis_cfg.show_all_kate_streams);
 +	xmms_cfg_read_boolean(cfg, "vorbis", "kate_offset", &vorbis_cfg.kate_offset);
  	xmms_cfg_free(cfg);
  }
  
-@@ -842,14 +1022,21 @@
+@@ -842,14 +1053,21 @@
  		/* this is a stream */
  		tmp = vorbis_http_read(ptr, size * nmemb);
  		vorbis_bytes_streamed += tmp;
@@ -895,7 +932,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	if (vorbis_is_streaming) {
  		/* this is a stream */
  		/* streams aren't seekable */
-@@ -861,6 +1048,8 @@
+@@ -861,6 +1079,8 @@
  
  static int ovcb_close(void *datasource)
  {
@@ -904,19 +941,20 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  	if (vorbis_is_streaming) {
  		/* this is a stream */
  		vorbis_http_close();
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.h xmms-1.2.11/Input/vorbis/vorbis.h
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/Input/vorbis/vorbis.h xmms-1.2.11/Input/vorbis/vorbis.h
 --- xmms-1.2.11-original/Input/vorbis/vorbis.h	2004-04-04 09:51:20.000000000 +0100
-+++ xmms-1.2.11/Input/vorbis/vorbis.h	2008-07-16 14:03:37.000000000 +0100
-@@ -21,6 +21,8 @@
++++ xmms-1.2.11/Input/vorbis/vorbis.h	2008-10-25 20:24:58.000000000 +0100
+@@ -21,6 +21,9 @@
  	gboolean use_replaygain;
  	gint replaygain_mode;
  	gboolean use_booster;
 +	gboolean show_kate_lyrics;
++	gboolean show_all_kate_streams;
 +        gint kate_offset;
  } vorbis_config_t;
  
  enum {
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/README xmms-1.2.11/README
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/README xmms-1.2.11/README
 --- xmms-1.2.11-original/README	2007-11-16 21:51:23.000000000 +0000
 +++ xmms-1.2.11/README	2008-10-21 20:30:51.000000000 +0100
 @@ -107,6 +107,10 @@
@@ -956,7 +994,7 @@ diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1
  
  
  6. Obtaining XMMS
-diff -x config.h.in -x configure -x '*.m4' -x Makefile -x Makefile.in -ru xmms-1.2.11-original/configure.in xmms-1.2.11/configure.in
+diff -x config.h.in -x configure -x aclocal.m4 -x Makefile -x Makefile.in -ru xmms-1.2.11-original/configure.in xmms-1.2.11/configure.in
 --- xmms-1.2.11-original/configure.in	2007-11-16 21:52:30.000000000 +0000
 +++ xmms-1.2.11/configure.in	2008-07-15 19:24:15.000000000 +0100
 @@ -272,6 +272,25 @@
