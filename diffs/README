@@ -93,8 +93,14 @@ Adds support for embedded Kate lyrics in Ogg streams, displaying them in sync.
 
  * XMMS2 (xmms2-stable.diff)
 
-Adds support for embedded Kate lyrics in Ogg streams, placing them in a medialib
-string in sync.
+Adds support for embedded Kate lyrics in Ogg streams, sending a signal when lyrics
+change.
+
+
+
+ * gxmms2 (gxmms2-with-lyrics.diff)
+
+Displays lyrics sent by XMMS2 in sync.
 
 
 
