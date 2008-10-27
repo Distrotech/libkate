@@ -124,13 +124,17 @@ If patched, it can send timed lyrics to XMMS2 clients.
 
 \subsection support-gxmms2 gxmms2
 
-gxmms2 is a frontend for XMMS2.
+gxmms2 is a client for XMMS2.
 If patched, it can display Kate lyrics in sync with the music.
-
 
 \subsection support-abraca abraca
 
-abraca is a frontend for XMMS2.
+abraca is a client for XMMS2.
+If patched, it can display Kate lyrics in sync with the music.
+
+\subsection support-azrael azrael
+
+azrael is a client for XMMS2.
 If patched, it can display Kate lyrics in sync with the music.
 
 
