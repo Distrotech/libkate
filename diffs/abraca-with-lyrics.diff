@@ -126,7 +126,7 @@ diff -ru abraca/src/client.c abraca-with-lyrics/src/client.c
  	(self->priv->_result_playlist_changed == NULL ? NULL : (self->priv->_result_playlist_changed = (xmmsc_result_unref (self->priv->_result_playlist_changed), NULL)));
 diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
 --- abraca/src/toolbar.c	2008-04-06 15:19:22.000000000 +0100
-+++ abraca-with-lyrics/src/toolbar.c	2008-10-25 17:01:20.000000000 +0100
++++ abraca-with-lyrics/src/toolbar.c	2008-10-26 19:41:35.000000000 +0000
 @@ -36,6 +36,7 @@
  	GtkImage* _coverart;
  	GtkLabel* _track_label;
@@ -153,7 +153,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  static void _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime (AbracaClient* sender, guint pos, gpointer self);
  static GObject * abraca_tool_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
  static gpointer abraca_tool_bar_parent_class = NULL;
-@@ -186,11 +190,43 @@
+@@ -186,11 +190,46 @@
  
  
  static void abraca_tool_bar_create_track_label (AbracaToolBar* self) {
@@ -184,21 +184,24 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
 +	if (self->priv->_status == XMMS_PLAYBACK_STATUS_STOP) {
 +		lyrics = NULL;
 +	}
-+	info = NULL;
-+	_tmp0 = NULL;
-+	info = (_tmp0 = g_markup_printf_escaped ("%s", lyrics), (info = (g_free (info), NULL)), _tmp0);
-+	gtk_label_set_markup (self->priv->_lyrics_label, info);
-+	if (strcmp (lyrics, "")) {
-+		/* show when lyrics appear - this will pop up when we get non empty lyrics,
-+		   but won't go away when lyrics disappear, only when switching to a new song,
-+		   so we won't get flicker when lyrics have pauses within them */
-+		gtk_widget_show (GTK_WIDGET (self->priv->_lyrics_label));
++
++	if (lyrics) {
++		info = NULL;
++		_tmp0 = NULL;
++		info = (_tmp0 = g_markup_printf_escaped ("%s", lyrics), (info = (g_free (info), NULL)), _tmp0);
++		gtk_label_set_markup (self->priv->_lyrics_label, info);
++		if (strcmp (lyrics, "")) {
++			/* show when lyrics appear - this will pop up when we get non empty lyrics,
++		   	but won't go away when lyrics disappear, only when switching to a new song,
++		   	so we won't get flicker when lyrics have pauses within them */
++			gtk_widget_show (GTK_WIDGET (self->priv->_lyrics_label));
++		}
++		info = (g_free (info), NULL);
 +	}
-+	info = (g_free (info), NULL);
  }
  
  
-@@ -206,6 +242,11 @@
+@@ -206,6 +245,11 @@
  	_tmp0 = NULL;
  	xmmsc_result_notifier_set ((_tmp0 = xmmsc_medialib_get_info (abraca_client_get_xmms (c), ((guint32) mid))), _abraca_tool_bar_on_medialib_get_info_xmmsc_result_notifier_t, self);
  	(_tmp0 == NULL ? NULL : (_tmp0 = (xmmsc_result_unref (_tmp0), NULL)));
@@ -210,7 +213,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  }
  
  
-@@ -255,6 +296,13 @@
+@@ -255,6 +299,13 @@
  }
  
  
@@ -224,7 +227,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  static void _abraca_tool_bar_on_bindata_retrieve_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self) {
  	abraca_tool_bar_on_bindata_retrieve (self, res);
  }
-@@ -454,6 +502,7 @@
+@@ -454,6 +505,7 @@
  	}
  	if (self->priv->_status == XMMS_PLAYBACK_STATUS_STOP) {
  		abraca_tool_bar_update_time (self, ((guint) 0));
@@ -232,7 +235,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  	}
  	(image == NULL ? NULL : (image = (g_object_unref (image), NULL)));
  }
-@@ -496,6 +545,11 @@
+@@ -496,6 +548,11 @@
  }
  
  
@@ -244,7 +247,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  static void _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime (AbracaClient* sender, guint pos, gpointer self) {
  	abraca_tool_bar_on_playback_playtime (self, sender, pos);
  }
-@@ -544,6 +598,7 @@
+@@ -544,6 +601,7 @@
  		abraca_tool_bar_create_track_label (self);
  		g_signal_connect_object (c, "playback-status", ((GCallback) _abraca_tool_bar_on_playback_status_change_abraca_client_playback_status), self, 0);
  		g_signal_connect_object (c, "playback-current-id", ((GCallback) _abraca_tool_bar_on_playback_current_id_abraca_client_playback_current_id), self, 0);
@@ -252,7 +255,7 @@ diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
  		g_signal_connect_object (c, "playback-playtime", ((GCallback) _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime), self, 0);
  		(c == NULL ? NULL : (c = (g_object_unref (c), NULL)));
  		(btn == NULL ? NULL : (btn = (g_object_unref (btn), NULL)));
-@@ -572,6 +627,7 @@
+@@ -572,6 +630,7 @@
  	(self->priv->_coverart == NULL ? NULL : (self->priv->_coverart = (g_object_unref (self->priv->_coverart), NULL)));
  	(self->priv->_track_label == NULL ? NULL : (self->priv->_track_label = (g_object_unref (self->priv->_track_label), NULL)));
  	(self->priv->_time_label == NULL ? NULL : (self->priv->_time_label = (g_object_unref (self->priv->_time_label), NULL)));
