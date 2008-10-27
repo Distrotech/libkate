@@ -1,0 +1,129 @@
+diff -ru azrael/az_gui.c azrael-with-lyrics/az_gui.c
+--- azrael/az_gui.c	2008-07-20 15:50:34.000000000 +0100
++++ azrael-with-lyrics/az_gui.c	2008-10-27 08:39:15.000000000 +0000
+@@ -36,6 +36,8 @@
+ static GdkGeometry hints;
+ static gint        maximized;
+ 
++static GtkWidget   *lyrics_label;
++
+ 
+ void gui_error(gchar *str)
+ {
+@@ -170,6 +172,18 @@
+   adj_prog_ignore = ign;
+ }
+ 
++void gui_lyrics_set(const gchar *lyrics)
++{
++    if (lyrics) {
++        gtk_widget_show(GTK_WIDGET(lyrics_label));
++        gtk_label_set_text(GTK_LABEL(lyrics_label), lyrics);
++    }
++    else {
++        gtk_widget_hide(GTK_WIDGET(lyrics_label));
++        gtk_label_set_text(GTK_LABEL(lyrics_label), "");
++    }
++}
++
+ static GtkWidget *_gui_controls_create()
+ {
+   GtkWidget *lcd;
+@@ -184,6 +198,7 @@
+   GtkWidget *button_prev, *button_play, *button_pause, *button_stop, *button_next;
+   GtkWidget *hbox_bottom;
+   GtkWidget *vbox;
++  GtkWidget *lyrics;
+ 
+   lcd = lcd_create();
+   lcd_set_total(0);
+@@ -212,6 +227,9 @@
+   g_signal_connect(G_OBJECT(button_1), "toggled",
+                    G_CALLBACK(cb_repsong_toggle), NULL);
+ 
++  lyrics_label = gtk_label_new("");
++  gtk_widget_hide(GTK_WIDGET(lyrics_label));
++
+   button_small = gtk_button_new();
+   g_signal_connect(G_OBJECT(button_small), "clicked",
+                    G_CALLBACK(cb_small_toggle), NULL);
+@@ -273,9 +291,10 @@
+   gtk_box_pack_start(GTK_BOX(hbox_bottom), button_next,  FALSE, FALSE, 0);
+ 
+   vbox = gtk_vbox_new(FALSE, 6);
+-  gtk_box_pack_start(GTK_BOX(vbox), hbox_top,    FALSE, FALSE, 0);
+-  gtk_box_pack_start(GTK_BOX(vbox), scale_prog,  FALSE, FALSE, 0);
+-  gtk_box_pack_start(GTK_BOX(vbox), hbox_bottom, FALSE, FALSE, 0);
++  gtk_box_pack_start(GTK_BOX(vbox), hbox_top,     FALSE, FALSE, 0);
++  gtk_box_pack_start(GTK_BOX(vbox), lyrics_label, FALSE, FALSE, 0);
++  gtk_box_pack_start(GTK_BOX(vbox), scale_prog,   FALSE, FALSE, 0);
++  gtk_box_pack_start(GTK_BOX(vbox), hbox_bottom,  FALSE, FALSE, 0);
+ 
+   return vbox;
+ }
+diff -ru azrael/az_gui.h azrael-with-lyrics/az_gui.h
+--- azrael/az_gui.h	2006-03-04 05:14:16.000000000 +0000
++++ azrael-with-lyrics/az_gui.h	2008-10-27 08:30:11.000000000 +0000
+@@ -13,6 +13,7 @@
+ void      gui_prog_ignore(gboolean);
+ void      gui_minfo_clear();
+ void      gui_minfo(char*, char*);
++void      gui_lyrics_set(const gchar*);
+ 
+ void      gui_artist_clear();
+ void      gui_artist_detach();
+diff -ru azrael/az_main.c azrael-with-lyrics/az_main.c
+--- azrael/az_main.c	2006-03-02 14:46:40.000000000 +0000
++++ azrael-with-lyrics/az_main.c	2008-10-26 18:33:36.000000000 +0000
+@@ -88,6 +88,7 @@
+ 
+   XMMS_CALLBACK_SET(connection, xmmsc_broadcast_configval_changed, xsig_config, NULL);
+   XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_playtime, xsig_playtime, NULL);
++  XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_lyrics_changed, xsig_lyrics, NULL);
+   XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_status, xsig_status, NULL);
+   XMMS_CALLBACK_SET(connection, xmmsc_playback_status, xsig_status, NULL);
+   XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_current_id, xsig_media, connection);
+diff -ru azrael/az_xsig.c azrael-with-lyrics/az_xsig.c
+--- azrael/az_xsig.c	2008-07-20 15:50:15.000000000 +0100
++++ azrael-with-lyrics/az_xsig.c	2008-10-27 08:54:41.000000000 +0000
+@@ -89,6 +89,21 @@
+   }
+ }
+ 
++void xsig_lyrics(xmmsc_result_t *res, void *userdata)
++{
++  const gchar    *lyrics;
++  xmmsc_result_t *newres;
++
++  if (!xmmsc_result_iserror(res) && xmmsc_result_get_string(res, &lyrics)) {}
++  else return;
++
++  gui_lyrics_set(lyrics);
++
++  newres = xmmsc_result_restart(res);
++  xmmsc_result_unref(res);
++  xmmsc_result_unref(newres);
++}
++
+ void xsig_status(xmmsc_result_t *res, void *userdata)
+ {
+   guint status;
+@@ -122,6 +137,7 @@
+          gui_finfo_stat_show();
+     
+          gui_window_title(" - STOPPED");
++         gui_lyrics_set("");
+          break;
+   }
+ }
+diff -ru azrael/az_xsig.h azrael-with-lyrics/az_xsig.h
+--- azrael/az_xsig.h	2006-03-02 14:31:33.000000000 +0000
++++ azrael-with-lyrics/az_xsig.h	2008-10-26 18:27:37.000000000 +0000
+@@ -7,6 +7,7 @@
+ 
+ void xsig_config(xmmsc_result_t*, void*);
+ void xsig_playtime(xmmsc_result_t*, void*);
++void xsig_lyrics(xmmsc_result_t*, void*);
+ void xsig_status(xmmsc_result_t*, void*);
+ void xsig_media(xmmsc_result_t*, void*);
+ void xsig_playlist_pos(xmmsc_result_t*, void*);
