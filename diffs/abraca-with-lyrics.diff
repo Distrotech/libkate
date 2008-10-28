@@ -1,6 +1,6 @@
 diff -ru abraca/src/client.c abraca-with-lyrics/src/client.c
 --- abraca/src/client.c	2008-04-06 15:19:21.000000000 +0100
-+++ abraca-with-lyrics/src/client.c	2008-10-25 16:55:45.000000000 +0100
++++ abraca-with-lyrics/src/client.c	2008-10-28 20:33:59.000000000 +0000
 @@ -33,6 +33,7 @@
  	xmmsc_result_t* _result_playlist_changed;
  	xmmsc_result_t* _result_playlist_position;
@@ -68,10 +68,10 @@ diff -ru abraca/src/client.c abraca-with-lyrics/src/client.c
  	xmmsc_result_notifier_set ((_tmp11 = xmmsc_broadcast_playlist_current_pos (self->priv->_xmms)), _abraca_client_on_playlist_position_xmmsc_result_notifier_t, self);
  	(_tmp11 == NULL ? NULL : (_tmp11 = (xmmsc_result_unref (_tmp11), NULL)));
 +	_tmp12 = NULL;
-+	xmmsc_result_notifier_set ((_tmp12 = xmmsc_playback_current_lyrics (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
++	xmmsc_result_notifier_set ((_tmp12 = xmmsc_playback_lyrics (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
 +	(_tmp12 == NULL ? NULL : (_tmp12 = (xmmsc_result_unref (_tmp12), NULL)));
 +	_tmp13 = NULL;
-+	xmmsc_result_notifier_set ((_tmp13 = xmmsc_signal_playback_lyrics_changed (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
++	xmmsc_result_notifier_set ((_tmp13 = xmmsc_signal_playback_lyrics (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
 +	(_tmp13 == NULL ? NULL : (_tmp13 = (xmmsc_result_unref (_tmp13), NULL)));
  }
  

@@ -10,8 +10,88 @@ index 4141faa..7dd4da1 100644
  ** [http://sidplay2.sourceforge.net/ SIDplay2] - For listening to SIDs.
  ** [http://www.geocities.com/SiliconValley/Lakes/5147/resid/ reSID] - For listening to SIDs.
  ** [http://flac.sourceforge.net/ libFLAC] - for FLAC support
+diff --git a/src/clients/lib/python/xmmsapi.pyx b/src/clients/lib/python/xmmsapi.pyx
+index 04b5548..61b7aef 100644
+--- a/src/clients/lib/python/xmmsapi.pyx
++++ b/src/clients/lib/python/xmmsapi.pyx
+@@ -241,12 +241,14 @@ cdef extern from "xmmsclient/xmmsclient.h":
+ 	xmmsc_result_t *xmmsc_playback_seek_samples(xmmsc_connection_t *c, unsigned int samples)
+ 	xmmsc_result_t *xmmsc_playback_seek_samples_rel(xmmsc_connection_t *c, int samples)
+ 	xmmsc_result_t *xmmsc_playback_playtime(xmmsc_connection_t *c)
++	xmmsc_result_t *xmmsc_playback_lyrics(xmmsc_connection_t *c)
+ 	xmmsc_result_t *xmmsc_playback_status(xmmsc_connection_t *c)
+ 
+ 	xmmsc_result_t *xmmsc_broadcast_playback_status(xmmsc_connection_t *c)
+ 	xmmsc_result_t *xmmsc_broadcast_playback_current_id(xmmsc_connection_t *c)
+ 
+ 	xmmsc_result_t *xmmsc_signal_playback_playtime(xmmsc_connection_t *c)
++	xmmsc_result_t *xmmsc_signal_playback_lyrics(xmmsc_connection_t *c)
+ 
+ 	xmmsc_result_t *xmmsc_playback_volume_set (xmmsc_connection_t *c, char *channel, unsigned int volume)
+ 	xmmsc_result_t *xmmsc_playback_volume_get (xmmsc_connection_t *c)
+@@ -1434,6 +1436,27 @@ cdef class XMMS:
+ 		"""
+ 		return self.create_result(cb, xmmsc_signal_playback_playtime(self.conn))
+ 
++	def playback_lyrics(self, cb = None):
++		"""
++		playback_lyrics(cb=None) -> XMMSResult
++
++		Return current lyrics on current file/stream. This is essentially a
++		more direct version of L{signal_playback_lyrics}
++		@rtype: L{XMMSResult}(String)
++		@return: The result of the operation.(lyrics as a string)
++		"""
++		return self.create_result(cb, xmmsc_playback_lyrics(self.conn))
++		
++	def signal_playback_lyrics(self, cb = None):
++		"""
++		signal_playback_lyrics(cb=None) -> XMMSResult
++
++		Set a method to handle the playback lyrics signal from the
++		XMMS2 daemon.
++		@rtype: L{XMMSResult}(UInt)
++		"""
++		return self.create_result(cb, xmmsc_signal_playback_lyrics(self.conn))
++
+ 	def playback_volume_set(self, channel, volume, cb = None):
+ 		"""
+ 		playback_volume_set(channel, volume, cb=None) -> XMMSResult
+diff --git a/src/clients/lib/xmmsclient++/playback.cpp b/src/clients/lib/xmmsclient++/playback.cpp
+index 023486f..92e97d8 100644
+--- a/src/clients/lib/xmmsclient++/playback.cpp
++++ b/src/clients/lib/xmmsclient++/playback.cpp
+@@ -121,6 +121,13 @@ namespace Xmms
+ 		return UintResult( res, ml_ );
+ 	}
+ 
++	StringResult Playback::getLyrics() const
++	{
++		xmmsc_result_t* res = 
++		    call( connected_, boost::bind( xmmsc_playback_lyrics, conn_ ) );
++		return StringResult( res, ml_ );
++	}
++
+ 	VoidResult Playback::volumeSet(const std::string& channel,
+ 	                               unsigned int volume) const
+ 	{
+@@ -171,6 +178,14 @@ namespace Xmms
+ 		return UintSignal( res, ml_ );
+ 	}
+ 
++	StringSignal Playback::signalLyrics() const
++	{
++		xmmsc_result_t* res =
++		    call( connected_,
++		          boost::bind( xmmsc_signal_playback_lyrics, conn_ ) );
++		return StringSignal( res, ml_ );
++	}
++
+ 	Playback::Playback( xmmsc_connection_t*& conn, bool& connected,
+ 	                    MainloopInterface*& ml ) :
+ 		conn_( conn ), connected_( connected ), ml_( ml )
 diff --git a/src/clients/lib/xmmsclient/playback.c b/src/clients/lib/xmmsclient/playback.c
-index 48bbdc9..99f69a2 100644
+index 48bbdc9..d7e5948 100644
 --- a/src/clients/lib/xmmsclient/playback.c
 +++ b/src/clients/lib/xmmsclient/playback.c
 @@ -279,5 +279,29 @@ xmmsc_broadcast_playback_volume_changed (xmmsc_connection_t *c)
@@ -19,27 +99,27 @@ index 48bbdc9..99f69a2 100644
  }
  
 +/**
-+ * Requests the lyrics changed signal. This will be called when
++ * Requests the lyrics signal. This will be called when
 + * lyrics change (new ones, or end of the current one).
 + */
 +xmmsc_result_t *
-+xmmsc_signal_playback_lyrics_changed (xmmsc_connection_t *c)
++xmmsc_signal_playback_lyrics (xmmsc_connection_t *c)
 +{
 +	x_check_conn (c, NULL);
 +
-+	return xmmsc_send_signal_msg (c, XMMS_IPC_SIGNAL_LYRICS_CHANGED);
++	return xmmsc_send_signal_msg (c, XMMS_IPC_SIGNAL_LYRICS);
 +}
 +
 +/**
 + * Make server emit the current lyrics.
 + */
 +xmmsc_result_t *
-+xmmsc_playback_current_lyrics (xmmsc_connection_t *c)
++xmmsc_playback_lyrics (xmmsc_connection_t *c)
 +{
 +	x_check_conn (c, NULL);
 +
 +	return xmmsc_send_msg_no_arg (c, XMMS_IPC_OBJECT_OUTPUT,
-+	                              XMMS_IPC_CMD_CURRENT_LYRICS);
++	                              XMMS_IPC_CMD_LYRICS);
 +}
 +
  /** @} */
@@ -72,14 +152,14 @@ index 12d9491..a9858b6 100644
  
  void xmms_xform_browse_add_entry (xmms_xform_t *xform, const gchar *path, guint32 flags);
 diff --git a/src/include/xmmsc/xmmsc_idnumbers.h b/src/include/xmmsc/xmmsc_idnumbers.h
-index 6233897..cb81369 100644
+index 6233897..6bfd8d6 100644
 --- a/src/include/xmmsc/xmmsc_idnumbers.h
 +++ b/src/include/xmmsc/xmmsc_idnumbers.h
 @@ -69,6 +69,7 @@ typedef enum {
  	XMMS_IPC_SIGNAL_QUIT,
  	XMMS_IPC_SIGNAL_MEDIAINFO_READER_STATUS,
  	XMMS_IPC_SIGNAL_MEDIAINFO_READER_UNINDEXED,
-+	XMMS_IPC_SIGNAL_LYRICS_CHANGED,
++	XMMS_IPC_SIGNAL_LYRICS,
  	XMMS_IPC_SIGNAL_END
  } xmms_ipc_signals_t;
  
@@ -87,19 +167,19 @@ index 6233897..cb81369 100644
  	XMMS_IPC_CMD_CURRENTID,
  	XMMS_IPC_CMD_VOLUME_SET,
  	XMMS_IPC_CMD_VOLUME_GET,
-+	XMMS_IPC_CMD_CURRENT_LYRICS,
++	XMMS_IPC_CMD_LYRICS,
  
  	/* Medialib */
  	XMMS_IPC_CMD_INFO,
 diff --git a/src/include/xmmsclient/xmmsclient.h b/src/include/xmmsclient/xmmsclient.h
-index b167aa8..d625fa5 100644
+index b167aa8..4e71d45 100644
 --- a/src/include/xmmsclient/xmmsclient.h
 +++ b/src/include/xmmsclient/xmmsclient.h
 @@ -120,6 +120,7 @@ xmmsc_result_t *xmmsc_playback_tickle (xmmsc_connection_t *c);
  xmmsc_result_t *xmmsc_playback_start (xmmsc_connection_t *c);
  xmmsc_result_t *xmmsc_playback_pause (xmmsc_connection_t *c);
  xmmsc_result_t *xmmsc_playback_current_id (xmmsc_connection_t *c);
-+xmmsc_result_t *xmmsc_playback_current_lyrics (xmmsc_connection_t *c);
++xmmsc_result_t *xmmsc_playback_lyrics (xmmsc_connection_t *c);
  xmmsc_result_t *xmmsc_playback_seek_ms (xmmsc_connection_t *c, uint32_t milliseconds);
  xmmsc_result_t *xmmsc_playback_seek_ms_rel (xmmsc_connection_t *c, int milliseconds);
  xmmsc_result_t *xmmsc_playback_seek_samples (xmmsc_connection_t *c, uint32_t samples);
@@ -107,7 +187,7 @@ index b167aa8..d625fa5 100644
  
  /* signals */
  xmmsc_result_t *xmmsc_signal_playback_playtime (xmmsc_connection_t *c);
-+xmmsc_result_t *xmmsc_signal_playback_lyrics_changed (xmmsc_connection_t *c);
++xmmsc_result_t *xmmsc_signal_playback_lyrics (xmmsc_connection_t *c);
  
  
  /*
@@ -126,7 +206,7 @@ index 2b1b823..3044528 100644
  #define XMMS_XFORM_BUILTIN(shname, name, ver, desc, setupfunc) XMMS_BUILTIN(XMMS_PLUGIN_TYPE_XFORM, XMMS_XFORM_API_VERSION, shname, name, ver, desc, (gboolean (*)(gpointer))setupfunc)
 diff --git a/src/plugins/kate/kate.c b/src/plugins/kate/kate.c
 new file mode 100644
-index 0000000..6b57d28
+index 0000000..343de2c
 --- /dev/null
 +++ b/src/plugins/kate/kate.c
 @@ -0,0 +1,664 @@
@@ -318,7 +398,7 @@ index 0000000..6b57d28
 +    g_mutex_free (data->mutex);
 +    g_timer_destroy (data->read_timer);
 +
-+    xmms_ipc_signal_unregister (XMMS_IPC_SIGNAL_LYRICS_CHANGED);
++    xmms_ipc_signal_unregister (XMMS_IPC_SIGNAL_LYRICS);
 +
 +    xmms_kate_close(xform);
 +
@@ -348,7 +428,7 @@ index 0000000..6b57d28
 +    data->last_read_start_time = 0.0;
 +
 +    xmms_ipc_signal_register (XMMS_OBJECT (xform),
-+                              XMMS_IPC_SIGNAL_LYRICS_CHANGED);
++                              XMMS_IPC_SIGNAL_LYRICS);
 +
 +    xmms_xform_private_data_set (xform, data);
 +
@@ -682,7 +762,7 @@ index 0000000..6b57d28
 +    data->current_lyrics = text ? g_strdup(text) : NULL;
 +
 +    xmms_object_emit_f (XMMS_OBJECT (xform),
-+                        XMMS_IPC_SIGNAL_LYRICS_CHANGED,
++                        XMMS_IPC_SIGNAL_LYRICS,
 +                        XMMS_OBJECT_CMD_ARG_STRING,
 +                        text);
 +}
@@ -808,7 +888,7 @@ index 0000000..cc33dff
 +
 +configure, build = plugin('kate', needs_lib=True, configure=plugin_configure, source='kate.c', extra_libs=['ogg'])
 diff --git a/src/xmms/output.c b/src/xmms/output.c
-index 0c37945..991559c 100644
+index 0c37945..5e341f0 100644
 --- a/src/xmms/output.c
 +++ b/src/xmms/output.c
 @@ -55,6 +55,7 @@ static void xmms_output_seekms_rel (xmms_output_t *output, gint32 ms, xmms_error
@@ -939,7 +1019,7 @@ index 0c37945..991559c 100644
  	                     XMMS_IPC_CMD_VOLUME_GET,
  	                     XMMS_CMD_FUNC (volume_get));
 +	xmms_object_cmd_add (XMMS_OBJECT (output),
-+	                     XMMS_IPC_CMD_CURRENT_LYRICS,
++	                     XMMS_IPC_CMD_LYRICS,
 +	                     XMMS_CMD_FUNC (lyrics_get));
  
  	output->status = XMMS_PLAYBACK_STATUS_STOP;

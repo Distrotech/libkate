@@ -74,12 +74,12 @@ diff -ru azrael/az_gui.h azrael-with-lyrics/az_gui.h
  void      gui_artist_detach();
 diff -ru azrael/az_main.c azrael-with-lyrics/az_main.c
 --- azrael/az_main.c	2006-03-02 14:46:40.000000000 +0000
-+++ azrael-with-lyrics/az_main.c	2008-10-26 18:33:36.000000000 +0000
++++ azrael-with-lyrics/az_main.c	2008-10-28 20:33:27.000000000 +0000
 @@ -88,6 +88,7 @@
  
    XMMS_CALLBACK_SET(connection, xmmsc_broadcast_configval_changed, xsig_config, NULL);
    XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_playtime, xsig_playtime, NULL);
-+  XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_lyrics_changed, xsig_lyrics, NULL);
++  XMMS_CALLBACK_SET(connection, xmmsc_signal_playback_lyrics, xsig_lyrics, NULL);
    XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_status, xsig_status, NULL);
    XMMS_CALLBACK_SET(connection, xmmsc_playback_status, xsig_status, NULL);
    XMMS_CALLBACK_SET(connection, xmmsc_broadcast_playback_current_id, xsig_media, connection);
