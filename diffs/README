@@ -116,6 +116,12 @@ Displays lyrics sent by XMMS2 in sync.
 
 
 
+ * kuechenstation (kuechenstation-with-lyrics.diff)
+
+Displays lyrics sent by XMMS2 in sync.
+
+
+
  * liboggplay (liboggplay-with-tiger.diff)
 
 Adds support for rendering Kate streams using libtiger, so non text streams can
