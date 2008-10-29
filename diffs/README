@@ -122,6 +122,12 @@ Displays lyrics sent by XMMS2 in sync.
 
 
 
+ * blastwave (blastwave-with-lyrics.diff)
+
+Displays lyrics sent by XMMS2 in sync.
+
+
+
  * liboggplay (liboggplay-with-tiger.diff)
 
 Adds support for rendering Kate streams using libtiger, so non text streams can

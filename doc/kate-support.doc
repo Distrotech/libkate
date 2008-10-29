@@ -137,10 +137,14 @@ If patched, it can display Kate lyrics in sync with the music.
 azrael is a client for XMMS2.
 If patched, it can display Kate lyrics in sync with the music.
 
-
 \subsection support-kuechenstation kuechenstation
 
 kuechenstation is a client for XMMS2.
+If patched, it can display Kate lyrics in sync with the music.
+
+\subsection support-blastwave blastwave
+
+blastwave is a client for XMMS2.
 If patched, it can display Kate lyrics in sync with the music.
 
 

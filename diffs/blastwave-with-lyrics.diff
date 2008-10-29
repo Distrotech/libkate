@@ -1,0 +1,197 @@
+diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client.c blastwave-0-1-1-with-lyrics/src/client.c
+--- blastwave-0-1-1/src/client.c	2007-06-19 18:41:16.000000000 +0100
++++ blastwave-0-1-1-with-lyrics/src/client.c	2008-10-29 19:11:57.000000000 +0000
+@@ -150,6 +150,11 @@
+ 		                  cb_on_signal_playback_playtime,
+ 		                  NULL);
+ 
++		XMMS_CALLBACK_SET(xmms2_connection,
++		                  xmmsc_signal_playback_lyrics,
++		                  cb_on_signal_playback_lyrics,
++		                  NULL);
++
+ 		return TRUE;
+ 	}
+ }
+diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_callbacks.c blastwave-0-1-1-with-lyrics/src/client_callbacks.c
+--- blastwave-0-1-1/src/client_callbacks.c	2007-06-19 18:41:16.000000000 +0100
++++ blastwave-0-1-1-with-lyrics/src/client_callbacks.c	2008-10-29 19:15:06.000000000 +0000
+@@ -153,6 +153,28 @@
+ }
+ 
+ void
++cb_on_signal_playback_lyrics(xmmsc_result_t* result,
++                             void* data)
++{
++	const gchar *lyrics = -1;
++
++	if(!xmmsc_result_iserror(result) &&
++	   xmmsc_result_get_string(result, &lyrics))
++	{
++		gui_update_playback_lyrics(lyrics);
++
++		/* restart the time signal */
++		xmmsc_result_t* restart_signal = xmmsc_result_restart(result);
++
++		xmmsc_result_unref(restart_signal);
++	}
++	else
++	{
++		errormsg("%s", xmmsc_result_get_error(result));
++	}
++}
++
++void
+ cb_on_playback_current_id(xmmsc_result_t* result,
+                           void* data)
+ {
+diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_callbacks.h blastwave-0-1-1-with-lyrics/src/client_callbacks.h
+--- blastwave-0-1-1/src/client_callbacks.h	2007-06-19 18:41:16.000000000 +0100
++++ blastwave-0-1-1-with-lyrics/src/client_callbacks.h	2008-10-29 09:10:56.000000000 +0000
+@@ -47,6 +47,10 @@
+                                void* data);
+ 
+ void
++cb_on_signal_playback_lyrics(xmmsc_result_t* result,
++                             void* data);
++
++void
+ cb_on_playback_current_id(xmmsc_result_t* result,
+                           void* data);
+ 
+diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_result_notifiers.c blastwave-0-1-1-with-lyrics/src/client_result_notifiers.c
+--- blastwave-0-1-1/src/client_result_notifiers.c	2007-06-19 18:41:16.000000000 +0100
++++ blastwave-0-1-1-with-lyrics/src/client_result_notifiers.c	2008-10-29 19:16:27.000000000 +0000
+@@ -138,6 +138,9 @@
+ 
+ 		/* set docklet tooltip */
+ 		set_docklet_tooltip(title);
++
++		/* clear lyrics and hide lyrics widget in case next song doesn't have any lyrics */
++		gui_update_playback_lyrics(NULL);
+ 	}
+ 	else
+ 	{
+diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/interface.c blastwave-0-1-1-with-lyrics/src/interface.c
+--- blastwave-0-1-1/src/interface.c	2007-06-19 18:41:16.000000000 +0100
++++ blastwave-0-1-1-with-lyrics/src/interface.c	2008-10-29 20:58:46.000000000 +0000
+@@ -48,6 +48,8 @@
+ 
+ GtkWidget		*playtime_label;
+ 
++GtkWidget		*lyrics_label;
++
+ gboolean		flag_playtime_scale_active;
+ 
+ GtkWidget		*mediasearch_view;
+@@ -112,6 +114,17 @@
+ 	}
+ }
+ 
++void
++gui_update_playback_lyrics(const gchar *lyrics)
++{
++	gtk_label_set_text(GTK_LABEL(lyrics_label),
++	                   lyrics ? lyrics : "");
++	if (lyrics)
++		gtk_widget_show(GTK_WIDGET(lyrics_label));
++	else
++		gtk_widget_hide(GTK_WIDGET(lyrics_label));
++}
++
+ /* dialog windows */
+ void
+ create_dialog_connect_error(void)
+@@ -2859,19 +2872,44 @@
+   	gtk_widget_set_size_request(vseparator1,
+ 		                        12, 32);
+ 
++	/* a box for (timer and playback time slider) and lyrics */
++	GtkWidget *time_slider_lyrics_box = gtk_vbox_new (FALSE,
++													  0);
++
++  	gtk_widget_show(time_slider_lyrics_box);
++
++  	gtk_box_pack_start(GTK_BOX(control_panel),
++		               time_slider_lyrics_box,
++		               FALSE,
++		               TRUE,
++		               0);
++
++	/* timer and slider box */
++	GtkWidget *time_slider_box = gtk_hbox_new (FALSE,
++											   0);
++
++  	gtk_widget_show(time_slider_box);
++
++  	gtk_box_pack_start(GTK_BOX(time_slider_lyrics_box),
++		               time_slider_box,
++		               FALSE,
++		               TRUE,
++		               0);
++
++
+  	/* timer */
+   	playtime_label = gtk_label_new("00:00");
+ 
+   	gtk_widget_show(playtime_label);
+ 
+-  	gtk_box_pack_start(GTK_BOX(control_panel),
++  	gtk_box_pack_start(GTK_BOX(time_slider_box),
+ 		               playtime_label,
+ 		               FALSE,
+ 		               TRUE,
+ 		               0);
+ 
+   	gtk_widget_set_size_request(playtime_label,
+-		                        -1, -1);
++		                        40, 32);
+ 
+ 	/* playback time slider */
+   	playtime_scale = gtk_hscale_new(GTK_ADJUSTMENT
+@@ -2879,9 +2917,9 @@
+ 
+   	gtk_widget_show(playtime_scale);
+ 
+-	gtk_box_pack_start(GTK_BOX(control_panel),
++	gtk_box_pack_start(GTK_BOX(time_slider_box),
+ 		               playtime_scale,
+-		               TRUE,
++		               FALSE,
+ 		               TRUE,
+ 		               0);
+ 
+@@ -2894,6 +2932,20 @@
+   	gtk_scale_set_value_pos(GTK_SCALE(playtime_scale),
+ 		                    GTK_POS_LEFT);
+ 
++	/* lyrics */
++	lyrics_label = gtk_label_new("");
++
++  	gtk_widget_hide(lyrics_label); /* will show up if there are lyrics received */
++
++	gtk_box_pack_start(GTK_BOX(time_slider_lyrics_box),
++		               lyrics_label,
++		               FALSE,
++		               TRUE,
++		               4);
++
++  	gtk_misc_set_alignment(GTK_MISC(lyrics_label),
++		                   0, 0.5);
++
+ 	/* add a separator */
+   	GtkWidget *vseparator2 = gtk_vseparator_new();
+ 
+@@ -3385,6 +3437,12 @@
+ 
+ 	xmmsc_result_unref(res);
+ 
++	/* update the lyrics label when needed */
++	XMMS_CALLBACK_SET(client_get_connection(),
++		              xmmsc_signal_playback_lyrics,
++		              cb_on_signal_playback_lyrics,
++		              (gpointer)lyrics_label);
++
+ 	/* return the finished window */
+ 	gtk_window_add_accel_group(GTK_WINDOW(main_window),
+ 		                       accel_group);
