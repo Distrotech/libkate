@@ -1,6 +1,6 @@
 diff -ru audacious-plugins-be718ff506c0/configure.ac ../audacious-plugins-be718ff506c0/configure.ac
 --- audacious-plugins-be718ff506c0/configure.ac	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/configure.ac	2008-10-27 20:39:20.000000000 +0000
++++ ../audacious-plugins-be718ff506c0/configure.ac	2008-10-29 07:51:47.000000000 +0000
 @@ -685,6 +685,32 @@
  	INPUT_PLUGINS="$INPUT_PLUGINS vorbis"
  fi
@@ -26,9 +26,9 @@ diff -ru audacious-plugins-be718ff506c0/configure.ac ../audacious-plugins-be718f
 +
 +if test "x$have_kate" = "xyes"; then
 +    AC_DEFINE(HAVE_KATE, 1, [Define if libkate is available.])
-+    AC_SUBST(KATE_CFLAGS)
-+    AC_SUBST(KATE_LIBS)
 +fi
++AC_SUBST(KATE_CFLAGS)
++AC_SUBST(KATE_LIBS)
 +
 +
  dnl *** FLACng (in progress replacement to XMMS-flac port)
