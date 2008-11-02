@@ -1,0 +1,126 @@
+diff -ru gxine-58e7f77e8732/src/info_widgets.c gxine-58e7f77e8732-with-lyrics/src/info_widgets.c
+--- gxine-58e7f77e8732/src/info_widgets.c	2008-06-20 14:58:32.000000000 +0100
++++ gxine-58e7f77e8732-with-lyrics/src/info_widgets.c	2008-11-01 18:32:37.000000000 +0000
+@@ -47,7 +47,7 @@
+  * Object/type handling code
+  */
+ 
+-#define MAX_LINES 3
++#define MAX_LINES 4
+ 
+ typedef gboolean (*gxineinfo_cb) (gpointer);
+ 
+@@ -66,6 +66,8 @@
+ 
+ static GtkWidgetClass *parent_class = NULL;
+ 
++static char *current_synced_text = NULL;
++
+ static GtkType gxineinfo_get_type (void);
+ 
+ #define GTK_GXINE_INFO(obj)		(GTK_CHECK_CAST ((obj), gxineinfo_get_type (), GtkGxineInfo))
+@@ -360,13 +362,26 @@
+   }
+   gxineinfo_update_line (bars, 2, "%s", strbuf);
+ 
++  /*
++   * lyrics
++   */
++
++  if (current_synced_text)
++  {
++      gxineinfo_update_line (bars, 3, "%s", current_synced_text);
++  }
++  else
++  {
++      gxineinfo_update_line (bars, 3, "");
++  }
++
+   free (strbuf);
+ }
+ 
+ GtkWidget *
+ create_infobar (gboolean small)
+ {
+-  return gxineinfo_new (small ? 1 : 3, PANGO_ELLIPSIZE_END, 0, NULL, NULL, "info", 0);
++  return gxineinfo_new (small ? 1 : 4, PANGO_ELLIPSIZE_END, 0, NULL, NULL, "info", 0);
+ }
+ 
+ /*
+@@ -533,3 +548,16 @@
+     g_object_set_data ((GObject *) w, "gxine-chain", (gpointer) listp);
+   return w;
+ }
++
++void
++set_synced_text (const char *text)
++{
++  if (current_synced_text) {
++    free (current_synced_text);
++    current_synced_text = NULL;
++  }
++  if (text) {
++    current_synced_text = strdup (text);
++  }
++}
++
+diff -ru gxine-58e7f77e8732/src/info_widgets.h gxine-58e7f77e8732-with-lyrics/src/info_widgets.h
+--- gxine-58e7f77e8732/src/info_widgets.h	2008-06-20 14:58:32.000000000 +0100
++++ gxine-58e7f77e8732-with-lyrics/src/info_widgets.h	2008-11-01 18:21:23.000000000 +0000
+@@ -36,4 +36,6 @@
+ 
+ void infobar_show_metadata (const GSList *);
+ 
++void infobar_set_synced_text (const char *text);
++
+ #endif
+diff -ru gxine-58e7f77e8732/src/menu.c gxine-58e7f77e8732-with-lyrics/src/menu.c
+--- gxine-58e7f77e8732/src/menu.c	2008-06-20 14:58:32.000000000 +0100
++++ gxine-58e7f77e8732-with-lyrics/src/menu.c	2008-11-02 12:54:24.000000000 +0000
+@@ -671,6 +671,9 @@
+   {
+     static char subt[] = "Subtitles..";
+     char lang[XINE_LANG_MAX];
++#ifdef XINE_CATEGORY_MAX
++    char cat[XINE_CATEGORY_MAX];
++#endif
+     sprintf (subt + 9, "%d", i);
+     GtkAction *item = get_action (subt);
+     if (!item)
+@@ -683,6 +686,14 @@
+         /* skip spaces */;
+       label = g_strconcat (label, strcmp (lang, "none") ? " / " : NULL, lang, NULL);
+     }
++#ifdef XINE_CATEGORY_MAX
++    if (xine_get_spu_category (stream, i, cat) && *cat)
++    {
++      char *newlabel = g_strconcat (label, " ", cat, NULL);
++      g_free (label);
++      label = newlabel;
++    }
++#endif
+     g_object_set ((GObject *) item, "label", label ? label : base, NULL);
+     free (label);
+   }
+diff -ru gxine-58e7f77e8732/src/playlist.c gxine-58e7f77e8732-with-lyrics/src/playlist.c
+--- gxine-58e7f77e8732/src/playlist.c	2008-06-20 14:58:32.000000000 +0100
++++ gxine-58e7f77e8732-with-lyrics/src/playlist.c	2008-11-01 18:26:16.000000000 +0000
+@@ -2003,6 +2003,18 @@
+       gdk_threads_leave ();
+     }
+     break;
++
++#ifdef XINE_EVENT_SYNCED_TEXT
++  /* synced text - lyrics, etc */
++  case XINE_EVENT_SYNCED_TEXT:
++    if(event->stream == stream) {
++      xine_synced_text_data_t *stevent = (xine_synced_text_data_t *) event->data;
++      set_synced_text(stevent->text);
++      infobar_show_metadata (infobars);
++    }
++    break;
++#endif
++
+   }
+ }
+ 

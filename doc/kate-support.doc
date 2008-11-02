@@ -147,5 +147,10 @@ If patched, it can display Kate lyrics in sync with the music.
 blastwave is a client for XMMS2.
 If patched, it can display Kate lyrics in sync with the music.
 
+\subsection support-gxine gxine
+
+gxine is a frontend for xine.
+If patched, it can display Kate lyrics in sync with the music.
+
 
 */

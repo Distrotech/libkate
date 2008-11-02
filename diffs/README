@@ -135,3 +135,10 @@ be rendered as well. Kate streams can be either overlaid on top of a video, or
 rendered to a separate buffer.
 
 
+ * gxine (gxine-with-lyrics.diff)
+
+This allows displaying Kate lyrics on the player window in sync with
+an acompanying stream.
+
+
+
