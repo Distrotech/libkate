@@ -1,4 +1,4 @@
-diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client.c blastwave-0-1-1-with-lyrics/src/client.c
+diff -x 'config.*' -x autom4te.cache -x Makefile -x Makefile.in -ru blastwave-0-1-1/src/client.c blastwave-0-1-1-with-lyrics/src/client.c
 --- blastwave-0-1-1/src/client.c	2007-06-19 18:41:16.000000000 +0100
 +++ blastwave-0-1-1-with-lyrics/src/client.c	2008-10-29 19:11:57.000000000 +0000
 @@ -150,6 +150,11 @@
@@ -13,9 +13,9 @@ diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru
  		return TRUE;
  	}
  }
-diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_callbacks.c blastwave-0-1-1-with-lyrics/src/client_callbacks.c
+diff -x 'config.*' -x autom4te.cache -x Makefile -x Makefile.in -ru blastwave-0-1-1/src/client_callbacks.c blastwave-0-1-1-with-lyrics/src/client_callbacks.c
 --- blastwave-0-1-1/src/client_callbacks.c	2007-06-19 18:41:16.000000000 +0100
-+++ blastwave-0-1-1-with-lyrics/src/client_callbacks.c	2008-10-29 19:15:06.000000000 +0000
++++ blastwave-0-1-1-with-lyrics/src/client_callbacks.c	2008-11-02 16:23:24.000000000 +0000
 @@ -153,6 +153,28 @@
  }
  
@@ -23,7 +23,7 @@ diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru
 +cb_on_signal_playback_lyrics(xmmsc_result_t* result,
 +                             void* data)
 +{
-+	const gchar *lyrics = -1;
++	const gchar *lyrics = NULL;
 +
 +	if(!xmmsc_result_iserror(result) &&
 +	   xmmsc_result_get_string(result, &lyrics))
@@ -45,7 +45,7 @@ diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru
  cb_on_playback_current_id(xmmsc_result_t* result,
                            void* data)
  {
-diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_callbacks.h blastwave-0-1-1-with-lyrics/src/client_callbacks.h
+diff -x 'config.*' -x autom4te.cache -x Makefile -x Makefile.in -ru blastwave-0-1-1/src/client_callbacks.h blastwave-0-1-1-with-lyrics/src/client_callbacks.h
 --- blastwave-0-1-1/src/client_callbacks.h	2007-06-19 18:41:16.000000000 +0100
 +++ blastwave-0-1-1-with-lyrics/src/client_callbacks.h	2008-10-29 09:10:56.000000000 +0000
 @@ -47,6 +47,10 @@
@@ -59,7 +59,7 @@ diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru
  cb_on_playback_current_id(xmmsc_result_t* result,
                            void* data);
  
-diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/client_result_notifiers.c blastwave-0-1-1-with-lyrics/src/client_result_notifiers.c
+diff -x 'config.*' -x autom4te.cache -x Makefile -x Makefile.in -ru blastwave-0-1-1/src/client_result_notifiers.c blastwave-0-1-1-with-lyrics/src/client_result_notifiers.c
 --- blastwave-0-1-1/src/client_result_notifiers.c	2007-06-19 18:41:16.000000000 +0100
 +++ blastwave-0-1-1-with-lyrics/src/client_result_notifiers.c	2008-10-29 19:16:27.000000000 +0000
 @@ -138,6 +138,9 @@
@@ -72,7 +72,7 @@ diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru
  	}
  	else
  	{
-diff -x Makefile -x Makefile.in -x 'config.*' -x configure -x autom4te.cache -ru blastwave-0-1-1/src/interface.c blastwave-0-1-1-with-lyrics/src/interface.c
+diff -x 'config.*' -x autom4te.cache -x Makefile -x Makefile.in -ru blastwave-0-1-1/src/interface.c blastwave-0-1-1-with-lyrics/src/interface.c
 --- blastwave-0-1-1/src/interface.c	2007-06-19 18:41:16.000000000 +0100
 +++ blastwave-0-1-1-with-lyrics/src/interface.c	2008-10-29 20:58:46.000000000 +0000
 @@ -48,6 +48,8 @@
