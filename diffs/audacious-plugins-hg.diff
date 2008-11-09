@@ -211,8 +211,18 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/configure.c ../audacious-plug
      bbox = gtk_hbutton_box_new();
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/Makefile ../audacious-plugins-be718ff506c0/src/vorbis/Makefile
 --- audacious-plugins-be718ff506c0/src/vorbis/Makefile	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/Makefile	2008-07-21 19:24:41.000000000 +0100
-@@ -11,5 +11,5 @@
++++ ../audacious-plugins-be718ff506c0/src/vorbis/Makefile	2008-11-04 21:26:03.000000000 +0000
+@@ -3,7 +3,8 @@
+ SRCS = configure.c	\
+        vcupdate.c	\
+        vcedit.c		\
+-       vorbis.c
++       vorbis.c         \
++       kate.c
+ 
+ include ../../buildsys.mk
+ include ../../extra.mk
+@@ -11,5 +12,5 @@
  plugindir := ${plugindir}/${INPUT_PLUGIN_DIR}
  
  CFLAGS += ${PLUGIN_CFLAGS}
@@ -542,7 +552,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vcupdate.c ../audacious-plugi
      return ret;
 diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c
 --- audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-10-27 20:40:06.000000000 +0000
++++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.c	2008-11-04 21:24:25.000000000 +0000
 @@ -4,6 +4,7 @@
   * Copyright (C) 2007 William Pitcock <nenolod@sacredspiral.co.uk>
   * Copyright (C) 2008 Cristi Măgherușan <majeru@gentoo.ro>
@@ -560,26 +570,17 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  #include <glib.h>
  #include <gtk/gtk.h>
  
-@@ -51,6 +50,9 @@
- #include <ogg/ogg.h>
- #include <vorbis/codec.h>
- #include <vorbis/vorbisfile.h>
-+#ifdef HAVE_KATE
-+#include <kate/kate.h>
-+#endif
- 
- #include <audacious/plugin.h>
- #include <audacious/output.h>
-@@ -58,8 +60,6 @@
+@@ -57,8 +56,7 @@
+ #include <audacious/i18n.h>
  
  #include "vorbis.h"
- 
--extern vorbis_config_t vorbis_cfg;
 -
+-extern vorbis_config_t vorbis_cfg;
++#include "kate.h"
+ 
  static Tuple *get_song_tuple(gchar *filename);
  static int vorbis_check_fd(char *filename, VFSFile *stream);
- static void vorbis_play(InputPlayback *data);
-@@ -80,23 +80,23 @@
+@@ -80,23 +78,23 @@
  static int ovcb_close(void *datasource);
  static long ovcb_tell(void *datasource);
  
@@ -607,7 +608,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
      .description = "Ogg Vorbis Audio Plugin",  /* description */
      .init = vorbis_init,                /* init */
      .about = vorbis_aboutbox,            /* aboutbox */
-@@ -112,20 +112,267 @@
+@@ -112,18 +110,27 @@
      .update_song_tuple = vorbis_update_song_tuple,
  };
  
@@ -618,24 +619,6 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
  
  static OggVorbis_File vf;
  
-+#ifdef HAVE_KATE
-+
-+typedef struct {
-+    char *text;
-+    double t;
-+} lyrics_event;
-+
-+typedef struct {
-+    kate_state k;
-+    ogg_stream_state kst;
-+    ogg_sync_state ksy;
-+    enum { kis_none, kis_sync, kis_all } kate_init_state;
-+    lyrics_event *lyrics_events;
-+    size_t num_lyrics_events;
-+} aud_kate_state;
-+
-+#endif
-+
 +typedef struct {
 +    VFSFile *fd;
 +    gboolean probe;
@@ -654,14 +637,363 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 -gchar **vorbis_tag_encoding_list = NULL;
  static GtkWidget *about_window;
  
+ static int
+@@ -136,6 +143,9 @@
+     fd = g_new0(VFSVorbisFile, 1);
+     fd->fd = stream;
+     fd->probe = TRUE;
++#ifdef HAVE_KATE
++    aud_kate_state_init(&fd->aks);
++#endif
+ 
+     /*
+      * The open function performs full stream detection and machine
+@@ -147,43 +157,35 @@
+     memset(&vfile, 0, sizeof(vfile));
+     g_mutex_lock(vf_mutex);
+ 
++    g_mutex_lock(kate_mutex);
+     result = ov_test_callbacks(fd, &vfile, NULL, 0, aud_vfs_is_streaming(stream) ? vorbis_callbacks_stream : vorbis_callbacks);
++    g_mutex_unlock(kate_mutex);
+ 
+     switch (result) {
+     case OV_EREAD:
+-#ifdef DEBUG
+-        g_message("** vorbis.c: Media read error: %s", filename);
+-#endif
++        AUDDBG("** vorbis.c: Media read error: %s", filename);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+         break;
+     case OV_ENOTVORBIS:
+-#ifdef DEBUG
+-        g_message("** vorbis.c: Not Vorbis data: %s", filename);
+-#endif
++        AUDDBG("** vorbis.c: Not Vorbis data: %s", filename);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+         break;
+     case OV_EVERSION:
+-#ifdef DEBUG
+-        g_message("** vorbis.c: Version mismatch: %s", filename);
+-#endif
++        AUDDBG("** vorbis.c: Version mismatch: %s", filename);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+         break;
+     case OV_EBADHEADER:
+-#ifdef DEBUG
+-        g_message("** vorbis.c: Invalid Vorbis bistream header: %s",
+-                  filename);
+-#endif
++        AUDDBG("** vorbis.c: Invalid Vorbis bistream header: %s",
++               filename);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+         break;
+     case OV_EFAULT:
+-#ifdef DEBUG
+-        g_message("** vorbis.c: Internal logic fault while reading %s",
+-                  filename);
+-#endif
++        AUDDBG("** vorbis.c: Internal logic fault while reading %s",
++               filename);
+         g_mutex_unlock(vf_mutex);
+         return FALSE;
+         break;
+@@ -193,8 +195,10 @@
+         break;
+     }
+ 
++    g_mutex_lock(kate_mutex);
+     ov_clear(&vfile);           /* once the ov_open succeeds, the stream belongs to
+                                    vorbisfile.a.  ov_clear will fclose it */
++    g_mutex_unlock(kate_mutex);
+     g_mutex_unlock(vf_mutex);
+     return TRUE;
+ }
+@@ -263,6 +267,9 @@
+     fd = g_new0(VFSVorbisFile, 1);
+     fd->fd = stream;
+     datasource = (void *) fd;
++#ifdef HAVE_KATE
++    aud_kate_state_init(&fd->aks);
++#endif
+ 
+     /*char pcmout[4096];*/
+     float pcmout[PCM_BUFSIZE*sizeof(float)];
+@@ -281,8 +288,12 @@
+      * need to change playback settings at a section boundary
+      */
+  
+-   
+     g_mutex_lock(vf_mutex);
++
++#ifdef HAVE_KATE
++    aud_kate_setup(&fd->aks, &vorbis_ip);
++#endif
++   
+     if (ov_open_callbacks(datasource, &vf, NULL, 0, aud_vfs_is_streaming(fd->fd) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
+         vorbis_callbacks.close_func(datasource);
+         g_mutex_unlock(vf_mutex);
+@@ -430,6 +441,11 @@
+             last_section = current_section;
+          
+         }
++
++#ifdef HAVE_KATE
++        aud_kate_update_lyrics(&fd->aks, playback, title);
++#endif
++
+     } /* main loop */
+ 
+     if (!playback->error) {
+@@ -620,7 +636,11 @@
+      * machine initialization.  If it returns zero, the stream
+      * *is* Vorbis and we're fully ready to decode.
+      */
++    g_mutex_lock(vf_mutex);
++    g_mutex_lock(kate_mutex);
+     if (ov_open_callbacks(fd, &vfile, NULL, 0, aud_vfs_is_streaming(stream) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
++        g_mutex_unlock(kate_mutex);
++        g_mutex_unlock(vf_mutex);
+         aud_vfs_fclose(stream);
+         return NULL;
+     }
+@@ -632,6 +652,8 @@
+      * vorbisfile.a.  ov_clear will fclose it
+      */
+     ov_clear(&vfile);
++    g_mutex_unlock(kate_mutex);
++    g_mutex_unlock(vf_mutex);
+ 
+     return tuple;
+ }
+@@ -691,7 +713,8 @@
+                                         "Jorn Baayen <jorn@nl.linux.org>\n"
+                                         "Haavard Kvaalen <havardk@xmms.org>\n"
+                                         "Gian-Carlo Pascutto <gcp@sjeng.org>\n"
+-                                        "Eugene Zagidullin <e.asphyx@gmail.com>\n\n"
++                                        "Eugene Zagidullin <e.asphyx@gmail.com>\n"
++                                        "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>\n\n"
+                                         "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
+                                        _("Ok"), FALSE, NULL, NULL);
+       g_signal_connect(G_OBJECT(about_window), "destroy",
+@@ -715,6 +738,9 @@
+     vorbis_cfg.proxy_pass = NULL;
+     vorbis_cfg.tag_override = FALSE;
+     vorbis_cfg.tag_format = NULL;
++    vorbis_cfg.kate_offset = 0;
++    vorbis_cfg.kate_display = TRUE;
++    vorbis_cfg.kate_all_streams = TRUE;
+ 
+     db = aud_cfg_db_open();
+     aud_cfg_db_get_int(db, "vorbis", "http_buffer_size",
+@@ -744,9 +770,14 @@
+     aud_cfg_db_get_string(db, NULL, "proxy_user", &vorbis_cfg.proxy_user);
+     aud_cfg_db_get_string(db, NULL, "proxy_pass", &vorbis_cfg.proxy_pass);
+ 
++    aud_cfg_db_get_int(db, "vorbis", "kate_offset", &vorbis_cfg.kate_offset);
++    aud_cfg_db_get_bool(db, "vorbis", "kate_display", &vorbis_cfg.kate_display);
++    aud_cfg_db_get_bool(db, "vorbis", "kate_all_streams", &vorbis_cfg.kate_all_streams);
++
+     aud_cfg_db_close(db);
+ 
+     vf_mutex = g_mutex_new();
++    kate_mutex = g_mutex_new();
+ 
+     aud_mime_set_plugin("application/ogg", &vorbis_ip);
+ }
+@@ -784,8 +815,8 @@
+         vorbis_cfg.title_encoding = NULL;
+     }
+ 
+-    g_strfreev(vorbis_tag_encoding_list);
+     g_mutex_free(vf_mutex);
++    g_mutex_free(kate_mutex);
+ }
+ 
+ static size_t
+@@ -793,7 +824,16 @@
+ {
+     VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
+ 
+-    return aud_vfs_fread(ptr, size, nmemb, handle->fd);
++    size_t bytes = aud_vfs_fread(ptr, size, nmemb, handle->fd);
++
++#ifdef HAVE_KATE
++    if (g_mutex_trylock(kate_mutex)) {
++        aud_kate_process_data(&handle->aks, ptr, bytes);
++        g_mutex_unlock(kate_mutex);
++    }
++#endif
++
++    return bytes;
+ }
+ 
+ static int
+@@ -801,6 +841,16 @@
+ {
+     VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
+ 
++#ifdef HAVE_KATE
++    if (g_mutex_trylock(kate_mutex)) {
++        if (handle->aks.kate_init_state >= kis_sync) {
++            ogg_sync_reset(&handle->aks.ksy);
++        }
++        aud_kate_clear_lyrics_events(&handle->aks);
++        g_mutex_unlock(kate_mutex);
++    }
++#endif
++
+     return aud_vfs_fseek(handle->fd, offset, whence);
+ }
+ 
+@@ -813,6 +863,12 @@
+ 
+     if (handle->probe == FALSE)
+     {
++#ifdef HAVE_KATE
++        if (g_mutex_trylock(kate_mutex)) {
++            aud_kate_shutdown(&handle->aks);
++            g_mutex_unlock(kate_mutex);
++        }
++#endif
+         ret = aud_vfs_fclose(handle->fd);
+ /*        g_free(handle);  it causes double free. i'm not really sure that commenting out at here is correct. --yaz*/
+     }
+diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.h ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.h
+--- audacious-plugins-be718ff506c0/src/vorbis/vorbis.h	2008-07-18 10:10:11.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.h	2008-10-27 20:28:31.000000000 +0000
+@@ -1,23 +1,11 @@
+ #ifndef __VORBIS_H__
+ #define __VORBIS_H__
+ 
+-#include <vorbis/vorbisfile.h>
+-
+ #include <audacious/plugin.h>
+ 
+-typedef struct {
+-    VFSFile *fd;
+-    gboolean probe;
+-} VFSVorbisFile;
+-
+-extern ov_callbacks vorbis_callbacks;
++extern void vorbis_configure(void);
+ 
+-void vorbis_configure(void);
+-
+-gboolean vorbis_update_song_tuple (Tuple *tuple, VFSFile *fd);
+-
+-char *convert_to_utf8(const char *string);
+-char *convert_from_utf8(const char *string);
++extern gboolean vorbis_update_song_tuple (Tuple *tuple, VFSFile *fd);
+ 
+ typedef struct {
+     gint http_buffer_size;
+@@ -33,8 +21,14 @@
+     gchar *tag_format;
+     gboolean title_encoding_enabled;
+     gchar *title_encoding;
++    gint kate_offset;
++    gboolean kate_display;
++    gboolean kate_all_streams;
+ } vorbis_config_t;
+ 
+-#define         ENCODING_SEPARATOR      " ,:;|/"
++extern vorbis_config_t vorbis_cfg;
++
++extern GMutex *vf_mutex;
++extern GMutex *kate_mutex;
+ 
+ #endif                          /* __VORBIS_H__ */
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/kate.h	2008-11-04 21:16:52.000000000 +0000
+@@ -0,0 +1,35 @@
++#ifndef __VKATE_H__
++#define __VKATE_H__
++
 +#ifdef HAVE_KATE
 +
-+static void
++#include <stddef.h>
++#include <ogg/ogg.h>
++#include <kate/kate.h>
++#include <audacious/plugin.h>
++
++typedef struct {
++    char *text;
++    double t;
++} lyrics_event;
++
++typedef struct {
++    kate_state k;
++    ogg_stream_state kst;
++    ogg_sync_state ksy;
++    enum { kis_none, kis_sync, kis_all } kate_init_state;
++    lyrics_event *lyrics_events;
++    size_t num_lyrics_events;
++    InputPlugin *input;
++} aud_kate_state;
++
++extern void aud_kate_state_init(aud_kate_state *aks);
++extern void aud_kate_setup(aud_kate_state *aks, InputPlugin *ip);
++extern void aud_kate_shutdown(aud_kate_state *aks);
++extern void aud_kate_update_lyrics(aud_kate_state *aks, InputPlayback *playback, char *title);
++extern void aud_kate_clear_lyrics_events(aud_kate_state *aks);
++extern void aud_kate_process_data(aud_kate_state *aks,void *ptr, size_t sz);
++
++#endif
++
++#endif
+--- /dev/null	2008-04-05 19:24:09.000000000 +0100
++++ ../audacious-plugins-be718ff506c0/src/vorbis/kate.c	2008-11-04 21:24:21.000000000 +0000
+@@ -0,0 +1,259 @@
++/*
++ * Copyright (C) 2008 Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
++ * 02110-1301, USA.
++ *
++ */
++
++#include "config.h"
++/*#define AUD_DEBUG
++#define DEBUG*/
++
++#include <glib.h>
++#include <gtk/gtk.h>
++
++#include <stdlib.h>
++#include <math.h>
++#include <string.h>
++
++#include <fcntl.h>
++
++#include "vorbis.h"
++#include "kate.h"
++
++
++#ifdef HAVE_KATE
++
++void
 +aud_kate_state_init(aud_kate_state *aks)
 +{
 +    aks->kate_init_state = kis_none;
 +    aks->lyrics_events = NULL;
 +    aks->num_lyrics_events = 0;
++    aks->input = NULL;
 +}
 +
 +static void
@@ -695,8 +1027,8 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +    return text; /* caller owns and must free */
 +}
 +
-+static void
-+clear_lyrics_events(aud_kate_state *aks)
++void
++aud_kate_clear_lyrics_events(aud_kate_state *aks)
 +{
 +    size_t n;
 +    for (n=0; n<aks->num_lyrics_events; ++n) {
@@ -707,11 +1039,11 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +    aks->lyrics_events = NULL;
 +    aks->num_lyrics_events = 0;
 +
-+    vorbis_ip.set_info_text("");
++    aks->input->set_info_text("");
 +}
 +
-+static void
-+shutdown_kate(aud_kate_state *aks)
++void
++aud_kate_shutdown(aud_kate_state *aks)
 +{
 +    if (aks->kate_init_state == kis_all) {
 +        ogg_stream_clear(&aks->kst);
@@ -725,16 +1057,17 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +
 +    aks->kate_init_state = kis_none;
 +
-+    clear_lyrics_events(aks);
++    aud_kate_clear_lyrics_events(aks);
 +}
 +
-+static void
-+setup_kate(aud_kate_state *aks)
++void
++aud_kate_setup(aud_kate_state *aks, InputPlugin *ip)
 +{
 +    ogg_sync_init(&aks->ksy);
 +    aks->kate_init_state = kis_sync;
++    aks->input = ip;
 +
-+    clear_lyrics_events(aks);
++    aud_kate_clear_lyrics_events(aks);
 +}
 +
 +static void
@@ -749,7 +1082,7 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +        aks->kate_init_state = kis_sync;
 +    }
 +
-+    clear_lyrics_events(aks);
++    aud_kate_clear_lyrics_events(aks);
 +}
 +
 +static int
@@ -769,8 +1102,8 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +    return kate_bos;
 +}
 +
-+static void
-+process_kate(aud_kate_state *aks,void *ptr, size_t sz)
++void
++aud_kate_process_data(aud_kate_state *aks,void *ptr, size_t sz)
 +{
 +    int ret;
 +    ogg_page og;
@@ -853,8 +1186,8 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +    }
 +}
 +
-+static void
-+update_lyrics(aud_kate_state *aks, InputPlayback *playback, char *title)
++void
++aud_kate_update_lyrics(aud_kate_state *aks, InputPlayback *playback, char *title)
 +{
 +    char *text;
 +
@@ -862,10 +1195,10 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +    text = get_next_lyrics_event(aks, playback->output->output_time()/1000.0);
 +    if (text) {
 +        if (vorbis_cfg.kate_display) {
-+            vorbis_ip.set_info_text(text);
++            aks->input->set_info_text(text);
 +        }
 +        else {
-+            vorbis_ip.set_info_text(title);
++            aks->input->set_info_text(title);
 +        }
 +        g_free(text);
 +    }
@@ -874,275 +1207,3 @@ diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.c ../audacious-plugins
 +
 +#endif
 +
- static int
- vorbis_check_fd(char *filename, VFSFile *stream)
- {
-@@ -136,6 +383,9 @@
-     fd = g_new0(VFSVorbisFile, 1);
-     fd->fd = stream;
-     fd->probe = TRUE;
-+#ifdef HAVE_KATE
-+    aud_kate_state_init(&fd->aks);
-+#endif
- 
-     /*
-      * The open function performs full stream detection and machine
-@@ -147,43 +397,35 @@
-     memset(&vfile, 0, sizeof(vfile));
-     g_mutex_lock(vf_mutex);
- 
-+    g_mutex_lock(kate_mutex);
-     result = ov_test_callbacks(fd, &vfile, NULL, 0, aud_vfs_is_streaming(stream) ? vorbis_callbacks_stream : vorbis_callbacks);
-+    g_mutex_unlock(kate_mutex);
- 
-     switch (result) {
-     case OV_EREAD:
--#ifdef DEBUG
--        g_message("** vorbis.c: Media read error: %s", filename);
--#endif
-+        AUDDBG("** vorbis.c: Media read error: %s", filename);
-         g_mutex_unlock(vf_mutex);
-         return FALSE;
-         break;
-     case OV_ENOTVORBIS:
--#ifdef DEBUG
--        g_message("** vorbis.c: Not Vorbis data: %s", filename);
--#endif
-+        AUDDBG("** vorbis.c: Not Vorbis data: %s", filename);
-         g_mutex_unlock(vf_mutex);
-         return FALSE;
-         break;
-     case OV_EVERSION:
--#ifdef DEBUG
--        g_message("** vorbis.c: Version mismatch: %s", filename);
--#endif
-+        AUDDBG("** vorbis.c: Version mismatch: %s", filename);
-         g_mutex_unlock(vf_mutex);
-         return FALSE;
-         break;
-     case OV_EBADHEADER:
--#ifdef DEBUG
--        g_message("** vorbis.c: Invalid Vorbis bistream header: %s",
--                  filename);
--#endif
-+        AUDDBG("** vorbis.c: Invalid Vorbis bistream header: %s",
-+               filename);
-         g_mutex_unlock(vf_mutex);
-         return FALSE;
-         break;
-     case OV_EFAULT:
--#ifdef DEBUG
--        g_message("** vorbis.c: Internal logic fault while reading %s",
--                  filename);
--#endif
-+        AUDDBG("** vorbis.c: Internal logic fault while reading %s",
-+               filename);
-         g_mutex_unlock(vf_mutex);
-         return FALSE;
-         break;
-@@ -193,8 +435,10 @@
-         break;
-     }
- 
-+    g_mutex_lock(kate_mutex);
-     ov_clear(&vfile);           /* once the ov_open succeeds, the stream belongs to
-                                    vorbisfile.a.  ov_clear will fclose it */
-+    g_mutex_unlock(kate_mutex);
-     g_mutex_unlock(vf_mutex);
-     return TRUE;
- }
-@@ -263,6 +507,9 @@
-     fd = g_new0(VFSVorbisFile, 1);
-     fd->fd = stream;
-     datasource = (void *) fd;
-+#ifdef HAVE_KATE
-+    aud_kate_state_init(&fd->aks);
-+#endif
- 
-     /*char pcmout[4096];*/
-     float pcmout[PCM_BUFSIZE*sizeof(float)];
-@@ -281,8 +528,12 @@
-      * need to change playback settings at a section boundary
-      */
-  
--   
-     g_mutex_lock(vf_mutex);
-+
-+#ifdef HAVE_KATE
-+    setup_kate(&fd->aks);
-+#endif
-+   
-     if (ov_open_callbacks(datasource, &vf, NULL, 0, aud_vfs_is_streaming(fd->fd) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
-         vorbis_callbacks.close_func(datasource);
-         g_mutex_unlock(vf_mutex);
-@@ -430,6 +681,11 @@
-             last_section = current_section;
-          
-         }
-+
-+#ifdef HAVE_KATE
-+        update_lyrics(&fd->aks, playback, title);
-+#endif
-+
-     } /* main loop */
- 
-     if (!playback->error) {
-@@ -620,7 +876,11 @@
-      * machine initialization.  If it returns zero, the stream
-      * *is* Vorbis and we're fully ready to decode.
-      */
-+    g_mutex_lock(vf_mutex);
-+    g_mutex_lock(kate_mutex);
-     if (ov_open_callbacks(fd, &vfile, NULL, 0, aud_vfs_is_streaming(stream) ? vorbis_callbacks_stream : vorbis_callbacks) < 0) {
-+        g_mutex_unlock(kate_mutex);
-+        g_mutex_unlock(vf_mutex);
-         aud_vfs_fclose(stream);
-         return NULL;
-     }
-@@ -632,6 +892,8 @@
-      * vorbisfile.a.  ov_clear will fclose it
-      */
-     ov_clear(&vfile);
-+    g_mutex_unlock(kate_mutex);
-+    g_mutex_unlock(vf_mutex);
- 
-     return tuple;
- }
-@@ -691,7 +953,8 @@
-                                         "Jorn Baayen <jorn@nl.linux.org>\n"
-                                         "Haavard Kvaalen <havardk@xmms.org>\n"
-                                         "Gian-Carlo Pascutto <gcp@sjeng.org>\n"
--                                        "Eugene Zagidullin <e.asphyx@gmail.com>\n\n"
-+                                        "Eugene Zagidullin <e.asphyx@gmail.com>\n"
-+                                        "Vincent Penquerc'h <ogg.k.ogg.k@googlemail.com>\n\n"
-                                         "Visit the Xiph.org Foundation at http://www.xiph.org/\n"),
-                                        _("Ok"), FALSE, NULL, NULL);
-       g_signal_connect(G_OBJECT(about_window), "destroy",
-@@ -715,6 +978,9 @@
-     vorbis_cfg.proxy_pass = NULL;
-     vorbis_cfg.tag_override = FALSE;
-     vorbis_cfg.tag_format = NULL;
-+    vorbis_cfg.kate_offset = 0;
-+    vorbis_cfg.kate_display = TRUE;
-+    vorbis_cfg.kate_all_streams = TRUE;
- 
-     db = aud_cfg_db_open();
-     aud_cfg_db_get_int(db, "vorbis", "http_buffer_size",
-@@ -744,9 +1010,14 @@
-     aud_cfg_db_get_string(db, NULL, "proxy_user", &vorbis_cfg.proxy_user);
-     aud_cfg_db_get_string(db, NULL, "proxy_pass", &vorbis_cfg.proxy_pass);
- 
-+    aud_cfg_db_get_int(db, "vorbis", "kate_offset", &vorbis_cfg.kate_offset);
-+    aud_cfg_db_get_bool(db, "vorbis", "kate_display", &vorbis_cfg.kate_display);
-+    aud_cfg_db_get_bool(db, "vorbis", "kate_all_streams", &vorbis_cfg.kate_all_streams);
-+
-     aud_cfg_db_close(db);
- 
-     vf_mutex = g_mutex_new();
-+    kate_mutex = g_mutex_new();
- 
-     aud_mime_set_plugin("application/ogg", &vorbis_ip);
- }
-@@ -784,8 +1055,8 @@
-         vorbis_cfg.title_encoding = NULL;
-     }
- 
--    g_strfreev(vorbis_tag_encoding_list);
-     g_mutex_free(vf_mutex);
-+    g_mutex_free(kate_mutex);
- }
- 
- static size_t
-@@ -793,7 +1064,16 @@
- {
-     VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
- 
--    return aud_vfs_fread(ptr, size, nmemb, handle->fd);
-+    size_t bytes = aud_vfs_fread(ptr, size, nmemb, handle->fd);
-+
-+#ifdef HAVE_KATE
-+    if (g_mutex_trylock(kate_mutex)) {
-+        process_kate(&handle->aks, ptr, bytes);
-+        g_mutex_unlock(kate_mutex);
-+    }
-+#endif
-+
-+    return bytes;
- }
- 
- static int
-@@ -801,6 +1081,16 @@
- {
-     VFSVorbisFile *handle = (VFSVorbisFile *) datasource;
- 
-+#ifdef HAVE_KATE
-+    if (g_mutex_trylock(kate_mutex)) {
-+        if (handle->aks.kate_init_state >= kis_sync) {
-+            ogg_sync_reset(&handle->aks.ksy);
-+        }
-+        clear_lyrics_events(&handle->aks);
-+        g_mutex_unlock(kate_mutex);
-+    }
-+#endif
-+
-     return aud_vfs_fseek(handle->fd, offset, whence);
- }
- 
-@@ -813,6 +1103,12 @@
- 
-     if (handle->probe == FALSE)
-     {
-+#ifdef HAVE_KATE
-+        if (g_mutex_trylock(kate_mutex)) {
-+            shutdown_kate(&handle->aks);
-+            g_mutex_unlock(kate_mutex);
-+        }
-+#endif
-         ret = aud_vfs_fclose(handle->fd);
- /*        g_free(handle);  it causes double free. i'm not really sure that commenting out at here is correct. --yaz*/
-     }
-diff -ru audacious-plugins-be718ff506c0/src/vorbis/vorbis.h ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.h
---- audacious-plugins-be718ff506c0/src/vorbis/vorbis.h	2008-07-18 10:10:11.000000000 +0100
-+++ ../audacious-plugins-be718ff506c0/src/vorbis/vorbis.h	2008-10-27 20:28:31.000000000 +0000
-@@ -1,23 +1,11 @@
- #ifndef __VORBIS_H__
- #define __VORBIS_H__
- 
--#include <vorbis/vorbisfile.h>
--
- #include <audacious/plugin.h>
- 
--typedef struct {
--    VFSFile *fd;
--    gboolean probe;
--} VFSVorbisFile;
--
--extern ov_callbacks vorbis_callbacks;
-+extern void vorbis_configure(void);
- 
--void vorbis_configure(void);
--
--gboolean vorbis_update_song_tuple (Tuple *tuple, VFSFile *fd);
--
--char *convert_to_utf8(const char *string);
--char *convert_from_utf8(const char *string);
-+extern gboolean vorbis_update_song_tuple (Tuple *tuple, VFSFile *fd);
- 
- typedef struct {
-     gint http_buffer_size;
-@@ -33,8 +21,14 @@
-     gchar *tag_format;
-     gboolean title_encoding_enabled;
-     gchar *title_encoding;
-+    gint kate_offset;
-+    gboolean kate_display;
-+    gboolean kate_all_streams;
- } vorbis_config_t;
- 
--#define         ENCODING_SEPARATOR      " ,:;|/"
-+extern vorbis_config_t vorbis_cfg;
-+
-+extern GMutex *vf_mutex;
-+extern GMutex *kate_mutex;
- 
- #endif                          /* __VORBIS_H__ */
