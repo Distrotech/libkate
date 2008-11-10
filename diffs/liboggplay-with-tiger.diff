@@ -740,8 +740,8 @@ Index: src/liboggplay/oggplay_data.c
 +    rgb.rgb_width = yuv.y_width;
 +    rgb.rgb_height = yuv.y_height;
 +
-+    /* TODO: this might need rgb for big endian machines ? */
-+    oggplay_yuv2bgr(&yuv, &rgb);
++    /* TODO: this might need bgr for big endian machines ? */
++    oggplay_yuv2rgb(&yuv, &rgb);
 +
 +    odata->rgb = rgb.ptro;
 +    odata->rgba = NULL;
@@ -816,7 +816,7 @@ Index: src/liboggplay/oggplay_data.c
 +        OggPlayDataHeader *header = info->records[0];
 +        data = (OggPlayOverlayData*)(header+1);
 +        if (decode->tr && data->rgb) {
-+          tiger_renderer_set_buffer(decode->tr, data->rgb, data->width, data->height, data->stride);
++          tiger_renderer_set_buffer(decode->tr, data->rgb, data->width, data->height, data->stride, 1);
 +        }
 +        else {
 +          /* we're supposed to overlay on a frame, but the available frame has no RGB buffer */
@@ -852,7 +852,7 @@ Index: src/liboggplay/oggplay_data.c
 +      data->stride = width*4;
 +
 +      if (decode->tr && data->rgba) {
-+        tiger_renderer_set_buffer(decode->tr, data->rgba, data->width, data->height, data->stride);
++        tiger_renderer_set_buffer(decode->tr, data->rgba, data->width, data->height, data->stride, 1);
 +      }
 +
 +      oggplay_data_add_to_list(&decode->decoder, &(record->header));
@@ -911,7 +911,7 @@ Index: src/examples/glut-player.c
 ===================================================================
 --- src/examples/glut-player.c	(revision 3694)
 +++ src/examples/glut-player.c	(working copy)
-@@ -58,58 +58,52 @@
+@@ -58,58 +58,54 @@
  static GLuint texture;
  
  static unsigned char *texture_bits = NULL;
@@ -973,7 +973,9 @@ Index: src/examples/glut-player.c
 -    window_height = y_height;
 +    window_width = width;
 +    window_height = height;
++#ifdef DEBUG
      printf("New window size is (%d, %d)\n", window_width, window_height);
++#endif
    }
 -    
 -  oggplay_get_video_uv_size(player, track_num, &uv_width, &uv_height);
@@ -993,7 +995,7 @@ Index: src/examples/glut-player.c
    if (texture_bits == NULL) {
  
      texture_bits = calloc(1, po2_width * po2_height * 4);
-@@ -124,7 +118,27 @@
+@@ -124,7 +120,27 @@
      texture_width = po2_width;
      texture_height = po2_height;
    }
@@ -1021,7 +1023,7 @@ Index: src/examples/glut-player.c
    /*
     * Convert the YUV data to RGB, using platform-specific optimisations
     * where possible.
-@@ -145,6 +159,73 @@
+@@ -145,6 +161,67 @@
  
  }
  
@@ -1034,8 +1036,8 @@ Index: src/examples/glut-player.c
 +  int               x;
 +  int               y;
 +
-+  /* RGB video comes as ARGB in host endianness */
-+  /* TODO: might need another version for big endian machines */
++  /* RGB video comes as ARGB in host endianness.
++     Might need to setup RGB swap in oggplay_data.c for big endian archs ? */
 +
 +  /* if we're getting RGBA (eg, the track was not set to be overlayed on top of video),
 +     but we do not actually have any video, then ignore alpha and blit the overlay as
@@ -1045,17 +1047,10 @@ Index: src/examples/glut-player.c
 +    const unsigned char *video = overlay_data->rgb ? overlay_data->rgb : overlay_data->rgba;
 +    update_video_size(overlay_data->width, overlay_data->height);
 +
-+    /* I'm sure that could be done much faster with some assembler code */
 +    for (y=0; y < overlay_data->height; ++y) {
 +      const unsigned char *src = video+y*overlay_data->stride;
 +      unsigned char *dest = texture_bits+y*texture_width*4;
-+      for (x=0; x < overlay_data->width; ++x) {
-+        dest[0] = src[2];
-+        dest[1] = src[1];
-+        dest[2] = src[0];
-+        dest += 4;
-+        src += 4;
-+      }
++      memcpy(dest, src, overlay_data->width*4);
 +    }
 +  }
 +  else {
@@ -1074,16 +1069,17 @@ Index: src/examples/glut-player.c
 +    if (overlay_data->height < h)
 +      h = overlay_data->height;
 +
-+    /* damn slow - full frame alpha blending in C */
++    /* damn slow - full frame alpha blending in C - use liboil ? */
 +    for (y=0; y<h; ++y) {
 +      const unsigned char *src = overlay_data->rgba+y*overlay_data->stride;
 +      unsigned char *dest = texture_bits+y*texture_width*4;
 +      for (x=0; x<w; ++x) {
 +        unsigned char a=src[3];
 +        if (a) {
-+          dest[0] = (a * src[2] + (255-a) * dest[0])/256;
-+          dest[1] = (a * src[1] + (255-a) * dest[1])/256;
-+          dest[2] = (a * src[0] + (255-a) * dest[2])/256;
++          /* note: we're getting premultiplied alpha, so src[n] isn't mutliplied by a here */
++          dest[0] = src[0] + (255-a) * dest[0]/256;
++          dest[1] = src[1] + (255-a) * dest[1]/256;
++          dest[2] = src[2] + (255-a) * dest[2]/256;
 +        }
 +        dest += 4;
 +        src += 4;
@@ -1095,7 +1091,7 @@ Index: src/examples/glut-player.c
  static int              rate = 16000;
  static int              channels = 2;
  static int              fps_denom = 1000;
-@@ -176,9 +257,11 @@
+@@ -176,9 +253,11 @@
    target_audio_rate = (int)(rate * channels * sizeof(short) / 25);
  #endif
    tmp = AFMT_S16_LE;
@@ -1110,7 +1106,7 @@ Index: src/examples/glut-player.c
  }
  
  static short *buffer = NULL;
-@@ -193,13 +276,17 @@
+@@ -193,13 +272,17 @@
    }
   
    if (buffer_length < size) {
@@ -1131,7 +1127,7 @@ Index: src/examples/glut-player.c
  }
  
  #endif
-@@ -211,6 +298,7 @@
+@@ -211,6 +294,7 @@
    int                     i;
    OggPlayDataHeader    ** headers;
    OggPlayVideoData      * video_data;
@@ -1139,7 +1135,7 @@ Index: src/examples/glut-player.c
  #if USE_AUDIO
    OggPlayAudioData      * audio_data;
    count_info              tsc;
-@@ -241,9 +329,15 @@
+@@ -241,9 +325,15 @@
      }
  #if USE_AUDIO
      if (rate > 0) {
@@ -1158,7 +1154,7 @@ Index: src/examples/glut-player.c
  #else
      {
        long long offset = 400 * 100;
-@@ -279,6 +373,17 @@
+@@ -279,6 +369,17 @@
              oggplay_callback_info_get_presentation_time(headers[required - 1]));
            */
            break;
@@ -1176,7 +1172,7 @@ Index: src/examples/glut-player.c
          case OGGPLAY_FLOATS_AUDIO:
  #if USE_AUDIO
          required = oggplay_callback_info_get_required(track_info[i]);
-@@ -326,9 +431,18 @@
+@@ -326,9 +427,18 @@
      printf("Processing frame: %d | audio B/s: %d | average audio B/s %f | targetaudio rate %d B/s\n", n_frames, bytes_per_frame, (float)(total_audio_bytes/n_frames), target_audio_rate); 
      bytes_per_frame = 0;
  #endif    
@@ -1196,7 +1192,7 @@ Index: src/examples/glut-player.c
  #endif
      glutPostRedisplay();
      //show_window();
-@@ -345,17 +459,23 @@
+@@ -345,17 +455,23 @@
  MessageEnum         msg;
  static sem_t        msg_sem;
  
@@ -1227,7 +1223,7 @@ Index: src/examples/glut-player.c
      exit(0);
    } else if (k == 'l') {
      msg = SEEK_FORWARD;
-@@ -468,7 +588,10 @@
+@@ -468,7 +584,10 @@
    printf ("there are %d tracks\n", oggplay_get_num_tracks (player));
   
    video_track = -1; 
@@ -1238,7 +1234,7 @@ Index: src/examples/glut-player.c
      printf("Track %d is of type %s\n", i, 
                      oggplay_get_track_typename (player, i));
      if (oggplay_get_track_type (player, i) == OGGZ_CONTENT_THEORA) {
-@@ -496,15 +619,41 @@
+@@ -496,15 +615,41 @@
        int ret = oggplay_get_kate_category(player, i, &category);
        ret = oggplay_get_kate_language(player, i, &language);
        printf("category %s, language %s\n", category, language);
@@ -1354,7 +1350,7 @@ Index: configure.ac
 +  [use_tiger="$withval"]
 +)
 +if test "x$use_tiger" != "xno"; then
-+  PKG_CHECK_MODULES(TIGER, tiger >= 0.2.0, HAVE_TIGER="yes", HAVE_TIGER="no")
++  PKG_CHECK_MODULES(TIGER, tiger >= 0.3.1, HAVE_TIGER="yes", HAVE_TIGER="no")
 +  if test "x$HAVE_TIGER" = "xyes" ; then
 +    AC_DEFINE(HAVE_TIGER, [], [Define if have libtiger])
 +    AC_SUBST(TIGER_CFLAGS)
