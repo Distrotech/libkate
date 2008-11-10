@@ -41,12 +41,11 @@ extern FILE *katedesc_in;
 extern FILE *katedesc_out;
 extern int nerrors;
 
-ogg_stream_state os;
-ogg_packet op;
+static ogg_stream_state os;
 kate_state k;
 kate_info ki;
 kate_comment kc;
-ogg_int64_t packetno;
+static ogg_int64_t packetno;
 char base_path[4096]="";
 
 static char str[4096];
@@ -90,6 +89,8 @@ static int poll_page(FILE *f)
 
 int write_headers(FILE *f)
 {
+  ogg_packet op;
+
   /* command line overrides */
   if (language) kate_info_set_language(&ki,language);
   if (category) kate_info_set_category(&ki,category);
@@ -111,7 +112,7 @@ int write_headers(FILE *f)
     if (ret>0) break; /* we're done */
 
     if (raw) {
-      int ret=send_packet(f);
+      int ret=send_packet(f,&op);
       if (ret<0) {
         fprintf(stderr,"error sending packet: %d\n",ret);
         return ret;
@@ -129,35 +130,35 @@ int write_headers(FILE *f)
   return flush_page(f);
 }
 
-int send_packet(FILE *f)
+int send_packet(FILE *f,ogg_packet *op)
 {
   int ret;
   if (raw) {
-    if (op.packetno>0) {
-      ogg_int64_t bytes=op.bytes;
+    if (op->packetno>0) {
+      ogg_int64_t bytes=op->bytes;
       ret=fwrite(&bytes,1,8,f);
       if (ret!=8) {
         fprintf(stderr,"Write failed (%s)\n",strerror(errno));
         return -1;
       }
     }
-    ret=fwrite(op.packet,1,op.bytes,f);
-    if (ret!=op.bytes) {
+    ret=fwrite(op->packet,1,op->bytes,f);
+    if (ret!=op->bytes) {
       fprintf(stderr,"Write failed (%s)\n",strerror(errno));
       return -1;
     }
     return 0;
   }
   else {
-    ogg_stream_packetin(&os,&op);
-    ogg_packet_clear(&op);
+    ogg_stream_packetin(&os,op);
+    ogg_packet_clear(op);
     return poll_page(f);
   }
 }
 
-void cancel_packet(void)
+void cancel_packet(ogg_packet *op)
 {
-  ogg_packet_clear(&op);
+  ogg_packet_clear(op);
 }
 
 static int flush_headers(FILE *f)
@@ -292,10 +293,11 @@ static int convert_srt(FILE *fin,FILE *fout)
         break;
       case need_text:
         if (is_line_empty(str)) {
+          ogg_packet op;
           size_t len=strlen(text);
           if (len>0 && text[len-1]=='\n') text[--len]=0;
           kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
-          ret=send_packet(fout);
+          ret=send_packet(fout,&op);
           if (ret<0) return ret;
           need=need_id;
         }
@@ -549,6 +551,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
       }
       t=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
       if (start_time>=0.0 && !is_line_empty(text)) {
+        ogg_packet op;
         if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
         km=process_enhanced_lrc_tags(text,start_time,t,line);
         if (km) {
@@ -571,7 +574,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
           fprintf(stderr,"Failed to add lyrics (%d)\n",ret);
           return ret;
         }
-        ret=send_packet(fout);
+        ret=send_packet(fout,&op);
         if (ret<0) return ret;
       }
       start_time=t;
@@ -808,12 +811,13 @@ int main(int argc,char **argv)
   }
 
   if (ret==0) {
+    ogg_packet op;
     ret=kate_ogg_encode_finish(&k,-1,&op);
     if (ret<0) {
       fprintf(stderr,"error encoding end packet: %d\n",ret);
     }
     else {
-      ret=send_packet(fout);
+      ret=send_packet(fout,&op);
       if (ret<0) {
         fprintf(stderr,"error sending end packet: %d\n",ret);
       }

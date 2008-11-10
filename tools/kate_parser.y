@@ -30,8 +30,6 @@
 int nerrors=0;
 int nwarnings=0;
 
-extern ogg_packet op;
-
 static char *temp_macro_name=NULL;
 static kate_float timebase = (kate_float)0;
 
@@ -1946,21 +1944,21 @@ static void kd_write_headers(void)
 static void kd_encode_text(kate_state *kstate,kd_event *ev)
 {
   int ret;
+  ogg_packet op;
 
   if (!ev) { yyerror("internal error: no event"); exit(-1); }
   ret=kate_encode_set_markup_type(kstate,ev->text_markup_type);
   if (ret<0) {
     yyerrorf("failed to set text markup type: %d",ret);
-    cancel_packet();
     return;
   }
   ret=kate_ogg_encode_text(kstate,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
   if (ret<0) {
     yyerrorf("failed to encode text %s: %d",ev->text?ev->text:"<none>",ret);
-    cancel_packet();
+    cancel_packet(&op);
     return;
   }
-  ret=send_packet(katedesc_out);
+  ret=send_packet(katedesc_out,&op);
   if (ret<0) {
     yyerrorf("failed to send text packet: %d",ret);
   }

@@ -10,6 +10,8 @@
 #ifndef KATE_katedesc_h_GUARD
 #define KATE_katedesc_h_GUARD
 
+#include <ogg/ogg.h>
+
 extern int katedesc_error(const char *string);
 extern int yywarning(const char *string);
 
@@ -19,8 +21,8 @@ extern void add_macro(const char *name,const char *body);
 extern void free_macros(void);
 
 extern int write_headers(FILE *f);
-extern int send_packet(FILE *f);
-extern void cancel_packet(void);
+extern int send_packet(FILE *f,ogg_packet *op);
+extern void cancel_packet(ogg_packet *op);
 
 extern void cleanup_lexer(void);
 
