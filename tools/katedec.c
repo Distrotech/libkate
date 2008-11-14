@@ -767,6 +767,7 @@ static void output_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int
   float t1=ev->end_time;
 
   (void)event_index;
+  (void)data;
   fprintf(fout,"  event {\n");
   if (ev->id>=0) {
     fprintf(fout,"    id %d\n",ev->id);
@@ -1259,7 +1260,7 @@ int main(int argc,char **argv)
       ogg_sync_wrote(&oy,bytes_read);
 
       while (ogg_sync_pageout(&oy,&og)>0) {
-        if (ogg_page_bos(&og)) do {
+        if (ogg_page_bos(&og)) do { /* use do {} while(0) to be able to break out of it */
           kate_stream *ks;
           kate_streams=(kate_stream*)kate_realloc(kate_streams,(n_kate_streams+1)*sizeof(kate_stream));
           if (!kate_streams) {
@@ -1437,7 +1438,7 @@ int main(int argc,char **argv)
         fprintf(stderr,"kate_comment_clear failed: %d\n",ret);
         /* continue anyway */
       }
-      if (kate_streams[n].fout!=stdout) {
+      if (kate_streams[n].fout && kate_streams[n].fout!=stdout) {
         ret=fclose(kate_streams[n].fout);
         if (ret<0) {
           fprintf(stderr,"fclose failed (%d) - file %s might be corrupted\n",ret,kate_streams[n].filename);
