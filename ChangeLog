@@ -1,4 +1,5 @@
 0.2.6
+  fix a katedec crash if decoding more than one Kate stream to stdout
   various minor cleanups
 
 0.2.5 - 16 october 2008
