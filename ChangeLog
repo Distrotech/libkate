@@ -1,3 +1,6 @@
+0.2.7
+  add a couple tests for make check
+
 0.2.6
   fix a katedec crash if decoding more than one Kate stream to stdout
   various minor cleanups
