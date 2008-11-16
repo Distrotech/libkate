@@ -202,6 +202,7 @@ static int kate_decode_info_header(kate_info *ki,kate_pack_buffer *kpb)
   if (ki->bitstream_version_major>KATE_BITSTREAM_VERSION_MAJOR) return KMG_ERROR(KATE_E_VERSION);
 
   ki->num_headers=kate_pack_read(kpb,8);
+  if (ki->num_headers<1) return KMG_ERROR(KATE_E_BAD_PACKET);
   ki->text_encoding=kate_pack_read(kpb,8);
   ki->text_directionality=kate_pack_read(kpb,8);
   reserved=kate_pack_read(kpb,8);
