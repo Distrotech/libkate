@@ -205,6 +205,7 @@ AC_CONFIG_FILES(
   [doc/Makefile]
   [doc/man/kateenc.1 doc/man/katedec.1]
   [include/kate/kate.h]
+  [tests/Makefile]
   [misc/pkgconfig/kate.pc]
   [misc/pkgconfig/kate-uninstalled.pc]
   [misc/pkgconfig/oggkate.pc]

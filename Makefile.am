@@ -1,4 +1,4 @@
-SUBDIRS=. tools
+SUBDIRS=. tools tests
 if HAVE_DOXYGEN
 SUBDIRS+=doc
 endif
