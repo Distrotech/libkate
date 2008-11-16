@@ -20,10 +20,12 @@ static void ksz_print(const char *type,size_t sz)
     printf("\n"); \
   } while(0)
 
-#if LONG_MAX==9223372036854775807L
+#ifdef __x86_64__
 #define KSZ(type,sz32,sz64) KSZA(type,sz64)
-#else
+#elif defined __i386__
 #define KSZ(type,sz32,sz64) KSZA(type,sz32)
+#else
+#define KSZ(type,sz32,sz64) do { return 77; } while(0)
 #endif
 
 int main()
