@@ -1255,8 +1255,11 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
   if (ret<0) goto error;
 
   if (ev->text_markup_type!=kate_markup_none && k->ki->remove_markup) {
-    ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);
+    size_t zero_size=ev->len0-ev->len;
+    ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len0);
     if (ret<0) goto error;
+    if (ev->len0<zero_size) goto error_bad_packet; /* can't happen, but let's be safe */
+    ev->len=ev->len0-zero_size;
     RNDERR(error);
     ev->text_markup_type=kate_markup_none;
   }

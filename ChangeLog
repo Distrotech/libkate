@@ -1,4 +1,5 @@
 0.2.7
+  fix size mixup when removing markup at decode time
   add a couple tests for make check
   add extra validation checks to the decoder
 
