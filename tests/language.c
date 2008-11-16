@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <kate/kate.h>
+#include "kate/kate.h"
 
 static const struct {
   const char * const tag;
