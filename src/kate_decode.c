@@ -1057,6 +1057,8 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
   text[len+1]=0;
   text[len+2]=0;
   text[len+3]=0;
+  /* we can't validate the text yet, as we don't know whether there's a text encoding override later,
+     so we delay validatation till we've read the overrides */
 
   ev->text=text;
   ev->len=len;
@@ -1246,6 +1248,11 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
   ret=kate_warp(kpb);
   if (ret<0) goto error;
   RNDERR(error);
+
+  /* validate text, and reject invalid encodings */
+  ret=kate_text_validate(ev->text_encoding,ev->text,ev->len0);
+  RNDERR(error);
+  if (ret<0) goto error;
 
   if (ev->text_markup_type!=kate_markup_none && k->ki->remove_markup) {
     ret=kate_text_remove_markup(ev->text_encoding,ev->text,&ev->len);

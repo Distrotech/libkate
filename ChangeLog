@@ -1,5 +1,6 @@
 0.2.7
   add a couple tests for make check
+  add extra validation checks to the decoder
 
 0.2.6 - 14 november 2008
   fix a katedec crash if decoding more than one Kate stream to stdout
