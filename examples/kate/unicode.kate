@@ -92,7 +92,7 @@ kate {
     "Greek"
   }
   event {
-    $timing language "gr" region "r5r"
+    $timing language "el" region "r5r"
     "&#913;&#922;&#910;&#0920;"
   }
 
@@ -110,7 +110,7 @@ kate {
     "Chinese ?"
   }
   event {
-    $timing region "r7r"
+    $timing language "zh" region "r7r"
     "&#12163;&#12131;&#12172;&#12092;"
   }
 
@@ -128,7 +128,7 @@ kate {
     "Bengali"
   }
   event {
-    $timing region "r9r"
+    $timing language "bn" region "r9r"
     "&#x992;&#x9ac;&#x9b2;&#x9e4;"
   }
 
@@ -137,7 +137,7 @@ kate {
     "Hebrew"
   }
   event {
-    $timing region "rar"
+    $timing language "he" region "rar"
     "&#x5de;&#x5E7;&#x5d1;&#x5d9;"
   }
 
@@ -155,7 +155,7 @@ kate {
     "Hiragana"
   }
   event {
-    $timing region "rcr"
+    $timing language "ja" region "rcr"
     "&#x3050;&#x3084;&#x306f;&#x307e;"
   }
 
@@ -164,7 +164,7 @@ kate {
     "Tibetan"
   }
   event {
-    $timing region "rdr"
+    $timing language "bo" region "rdr"
     "&#xf45;&#xf4d;&#xf5a;&#xf69;"
   }
 
@@ -173,7 +173,7 @@ kate {
     "Thai"
   }
   event {
-    $timing region "rer"
+    $timing language "th" region "rer"
     "&#xe07;&#xe1d;&#xe04;&#xe19;"
   }
 
