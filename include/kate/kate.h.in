@@ -583,6 +583,7 @@ extern int kate_encode_init(kate_state *k,kate_info *ki);
 extern int kate_encode_headers(kate_state *k,kate_comment *kc,kate_packet *kp);
 extern int kate_encode_text(kate_state *k,kate_float start_time,kate_float stop_time,const char *text,size_t sz,kate_packet *kp); /* text is not null terminated */
 extern int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp);
+extern int kate_encode_repeat(kate_state *k,kate_float t,kate_float threshold,kate_packet *kp);
 extern int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp); /* t may be negative to use the end granule of the last event */
 extern int kate_encode_set_id(kate_state *k,kate_int32_t id);
 extern int kate_encode_set_language(kate_state *k,const char *language); /* language can be NULL */
@@ -653,6 +654,7 @@ extern int kate_packet_clear(kate_packet *kp);
 #define KATE_E_VERSION (-9)              /**< we do not understand that bitstream version */
 #define KATE_E_NOT_KATE (-10)            /**< the packet is not a Kate packet */
 #define KATE_E_BAD_TAG (-11)             /**< a tag does not comply with the Vorbis comment rules */
+#define KATE_E_IMPL (-12)                /**< the requested feature is not implemented */
 /** @} */
 
 #endif

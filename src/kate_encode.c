@@ -956,7 +956,14 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   if (start_granulepos>k->kes->furthest_granule) k->kes->furthest_granule=start_granulepos;
 
   k->kes->granulepos=start_granulepos;
-  return kate_finalize_packet_buffer(kpb,kp,k);
+  ret=kate_finalize_packet_buffer(kpb,kp,k);
+  if (ret<0) return ret;
+
+  /* save the packet in case we have to repeat it */
+  ret=kate_encode_state_save_event_buffer(k->kes,kp->nbytes,kp->data);
+  if (ret<0) return ret;
+
+  return 0;
 }
 
 /**
@@ -989,6 +996,7 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
     ret=0;
   }
   if (ret<0) return ret;
+
   granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
   if (granulepos<0) return granulepos;
 
@@ -1006,6 +1014,57 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
 
 /**
   \ingroup encoding
+  Emits a repeat packet, to help with seeking.
+  The first active event at time t, if it or its latest repeat (whichever is
+  the latest) was emitted more than threshold ago, of if threshold is zero,
+  will have a repeat packet emitted.
+  kate_encode_repeat is designed to be called in a loop, as it will return a
+  repeat packet for only one event even if more than one event needs a repeat.
+  When the returned value is 0, no more events need repeating at time t.
+  \param k the kate_state to encode to
+  \param t the timestamp for the the packets, if any
+  \param threshold the time threshold at which to emit a repeat packets (zero to force a repeat)
+  \param kp the packet to encode to
+  \returns 0 success, and no repeat packet was encoded
+  \returns 1 success, and a repeat packet was encoded
+  \returns KATE_E_* error
+  */
+int kate_encode_repeat(kate_state *k,kate_float t,kate_float threshold,kate_packet *kp)
+{
+  kate_float earliest_t;
+  kate_int64_t granulepos;
+  int ret;
+
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
+  if (threshold<(kate_float)0) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (k->kes->eos) return KATE_E_INIT;
+
+  ret=kate_encode_state_trim_events(k->kes,t);
+  if (ret<0) return ret;
+  ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
+  if (ret==KATE_E_NOT_FOUND) {
+    /* if there are no live events yet, base from now */
+    earliest_t=t;
+  }
+  else if (ret<0) {
+    return ret;
+  }
+  granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
+  if (granulepos<0) return granulepos;
+
+  if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
+
+  ret=kate_encode_state_get_repeat(k->kes,t,threshold,kp);
+  if (ret>0) {
+    /* if we encoded a repeat, update encoding state granpos */
+    k->kes->granulepos=granulepos;
+  }
+  return ret;
+}
+
+/**
+  \ingroup encoding
   Finalizes the currently encoded stream.
   No more events may be added after this is called.
   \param k the kate_state to encode to
@@ -1018,13 +1077,17 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
+  int ret;
 
   if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
 
+  ret=kate_encode_state_trim_events(k->kes,t);
+  if (ret<0) return ret;
+
   if (t<0) {
-    int ret=kate_encode_state_get_latest_event(k->kes,NULL,&t);
+    ret=kate_encode_state_get_latest_event(k->kes,NULL,&t);
     if (ret==KATE_E_NOT_FOUND) {
       /* if nothing was encoded, it is still a valid stream */
       t=0;
@@ -1389,10 +1452,12 @@ int kate_encode_set_text_directionality(kate_state *k,kate_text_directionality t
 
 /**
   \ingroup encoding
-  Sets a unique identifier for the currently encoded event, so it can be referred to later
+  This function is obsolete and should not be used. An event identifier is automatically
+  generated for each event.
+  It used to set a unique identifier for the currently encoded event, so it can be referred
+  to later, but not does nothing.
   \param k the kate_state to encode to
-  \param id the id to tag this event with (must be positive)
-  \returns 0 success
+  \param id unused
   \returns KATE_E_* error
   */
 int kate_encode_set_id(kate_state *k,kate_int32_t id)
@@ -1400,9 +1465,9 @@ int kate_encode_set_id(kate_state *k,kate_int32_t id)
   if (!k) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
 
-  k->kes->id=id;
+  (void)id;
 
-  return 0;
+  return KATE_E_IMPL;
 }
 
 /**

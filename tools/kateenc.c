@@ -51,6 +51,8 @@ char base_path[4096]="";
 static char str[4096];
 static int headers_written=0;
 static int raw=0;
+static kate_float repeat_threshold=(kate_float)0;
+static kate_float last_stream_time=(kate_float)0;
 static const unsigned char utf8bom[3]={0xef,0xbb,0xbf};
 static const unsigned char utf16lebom[2]={0xff,0xfe};
 static const unsigned char utf16bebom[2]={0xfe,0xff};
@@ -112,7 +114,7 @@ int write_headers(FILE *f)
     if (ret>0) break; /* we're done */
 
     if (raw) {
-      int ret=send_packet(f,&op);
+      int ret=send_packet(f,&op,(kate_float)-1);
       if (ret<0) {
         fprintf(stderr,"error sending packet: %d\n",ret);
         return ret;
@@ -130,9 +132,13 @@ int write_headers(FILE *f)
   return flush_page(f);
 }
 
-int send_packet(FILE *f,ogg_packet *op)
+int send_packet(FILE *f,ogg_packet *op,kate_float t)
 {
   int ret;
+
+  if (t>last_stream_time)
+    last_stream_time=t;
+
   if (raw) {
     if (op->packetno>0) {
       ogg_int64_t bytes=op->bytes;
@@ -220,6 +226,33 @@ static int is_line_empty(const char *s)
   return 1;
 }
 
+void emit_repeats(kate_state *k,FILE *fout,kate_float endt)
+{
+  ogg_packet op;
+  kate_float t;
+  int ret;
+
+  kate_float threshold=repeat_threshold;
+  if (threshold<=(kate_float)0) return;
+
+  for (t=last_stream_time;t<endt;t+=threshold) {
+    while (1) {
+      ret=kate_ogg_encode_repeat(k,t,threshold,&op);
+      if (ret<0) {
+        fprintf(stderr,"Failed encoding repeat at %f (%d), continuing anyway\n",t,ret);
+        return;
+      }
+      if (ret==0) break;
+      ret=send_packet(fout,&op,t);
+      if (ret<0) {
+        fprintf(stderr,"Failed sending repeat packet, continuing anyway\n");
+        return;
+      }
+      last_stream_time=t;
+    }
+  }
+}
+
 static int convert_srt(FILE *fin,FILE *fout)
 {
   enum { need_id, need_timing, need_text };
@@ -229,7 +262,7 @@ static int convert_srt(FILE *fin,FILE *fout)
   int id;
   static char text[4096];
   int h0,m0,s0,ms0,h1,m1,s1,ms1;
-  kate_float t0=0.0,t1=0.0;
+  kate_float t0=(kate_float)0,t1=(kate_float)0;
   int line=0;
 
   ret=flush_headers(fout);
@@ -294,7 +327,11 @@ static int convert_srt(FILE *fin,FILE *fout)
       case need_text:
         if (is_line_empty(str)) {
           ogg_packet op;
-          size_t len=strlen(text);
+          size_t len;
+
+          emit_repeats(&k,fout,t0);
+
+          len=strlen(text);
           if (len>0 && text[len-1]=='\n') text[--len]=0;
           ret=kate_text_validate(kate_utf8,text,len+1);
           if (ret<0) {
@@ -312,7 +349,7 @@ static int convert_srt(FILE *fin,FILE *fout)
             return ret;
           }
           else {
-            ret=send_packet(fout,&op);
+            ret=send_packet(fout,&op,t0);
             if (ret<0) return ret;
           }
           need=need_id;
@@ -488,7 +525,8 @@ static int convert_lrc(FILE *fin,FILE *fout)
   int ret;
   static char text[4096];
   int m,s,fs;
-  double t,start_time=-1.0;
+  kate_float t;
+  kate_float start_time=(kate_float)-1.0;
   int offset;
   int line=0;
   fpos_t start;
@@ -575,6 +613,9 @@ static int convert_lrc(FILE *fin,FILE *fout)
       t=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
       if (start_time>=0.0 && !is_line_empty(text)) {
         ogg_packet op;
+
+        emit_repeats(&k,fout,start_time);
+
         if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
         km=process_enhanced_lrc_tags(text,start_time,t,line);
         if (km) {
@@ -608,7 +649,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
           fprintf(stderr,"Failed to add lyrics (%d)\n",ret);
           return ret;
         }
-        ret=send_packet(fout,&op);
+        ret=send_packet(fout,&op,start_time);
         if (ret<0) return ret;
       }
       start_time=t;
@@ -657,6 +698,8 @@ int main(int argc,char **argv)
   const char *input_file_type=NULL;
   uint32_t serial;
   const char *comment;
+  const char *arg;
+  char *endptr;
   FILE *fin,*fout;
 
   srand(time(NULL)^getpid());
@@ -693,6 +736,7 @@ int main(int argc,char **argv)
           printf("   -c <category>       set stream category\n");
           printf("   -s <hex number>     set serial number of output stream\n");
           printf("   -r                  write raw Kate stream (experimental)\n");
+          printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
           printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
           exit(0);
         case 'o':
@@ -747,6 +791,15 @@ int main(int argc,char **argv)
           ret=kate_comment_add(&kc,comment);
           if (ret<0) {
             fprintf(stderr,"error adding comment \"%s\": %d\n",comment,ret);
+            exit(-1);
+          }
+          break;
+        case 'R':
+          arg=eat_arg(argc,argv,&n);
+          endptr=NULL;
+          repeat_threshold=(kate_float)strtod(arg,&endptr);
+          if (endptr==arg || *endptr) {
+            fprintf(stderr,"error in repeat threshold: %s: should be a floating point value\n",arg);
             exit(-1);
           }
           break;
@@ -853,7 +906,7 @@ int main(int argc,char **argv)
       failed=ret;
     }
     else {
-      ret=send_packet(fout,&op);
+      ret=send_packet(fout,&op,(kate_float)-1);
       if (ret<0) {
         fprintf(stderr,"error sending end packet: %d\n",ret);
         failed=ret;

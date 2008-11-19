@@ -793,9 +793,6 @@ static void output_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int
   (void)event_index;
   (void)data;
   fprintf(fout,"  event {\n");
-  if (ev->id>=0) {
-    fprintf(fout,"    id %d\n",ev->id);
-  }
   if (granpos>=0) {
     kate_float base,offset;
     kate_granule_split_time(ki,granpos,&base,&offset);

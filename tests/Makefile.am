@@ -26,7 +26,7 @@ tmp_ogg2:="$(top_builddir)/kate-check-2.kate.ogg"
 tmp_kate1:="$(top_builddir)/kate-check-1.kate"
 tmp_kate2:="$(top_builddir)/kate-check-2.kate"
 
-KATEENC_OPTS=-s 0 -c test -l en
+KATEENC_OPTS=-s 0 -c test -l en -K 5 -R 15
 
 check-local:
 	@echo " Checking Kate namespace"

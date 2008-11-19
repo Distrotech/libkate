@@ -13,13 +13,12 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <string.h>
 #include "kate/kate.h"
 #include "kate_encode_state.h"
 
 static void kate_encode_state_init_helper(kate_encode_state *kes)
 {
-  kes->id=-1;
-
   kes->motions=NULL;
   kes->destroy_motions=NULL;
   kes->motion_indices=NULL;
@@ -53,6 +52,8 @@ kate_encode_state *kate_encode_state_create(const kate_info *ki)
     kate_pack_writeinit(&kes->kpb);
 
     kes->ki=ki;
+
+    kes->id=0;
 
     kes->granulepos=0;
     kes->packetno=-1;
@@ -194,10 +195,18 @@ int kate_encode_state_add_bitmap_index(kate_encode_state *kes,size_t bitmap)
 
 int kate_encode_state_destroy(kate_encode_state *kes)
 {
+  size_t n;
+
   if (!kes) return KATE_E_INVALID_PARAMETER;
 
   kate_pack_writeclear(&kes->kpb);
-  if (kes->timings) kate_free(kes->timings);
+  if (kes->timings) {
+    for (n=0;n<kes->ntimings;++n) {
+      if (kes->timings[n].original_data) kate_free(kes->timings[n].original_data);
+      if (kes->timings[n].repeat_data) kate_free(kes->timings[n].repeat_data);
+    }
+    kate_free(kes->timings);
+  }
   if (kes->motions) kate_free(kes->motions);
   if (kes->destroy_motions) kate_free(kes->destroy_motions);
   if (kes->motion_indices) kate_free(kes->motion_indices);
@@ -222,6 +231,12 @@ int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_flo
 
   kes->timings[kes->ntimings].start=start;
   kes->timings[kes->ntimings].end=end;
+  kes->timings[kes->ntimings].id=kes->id;
+  kes->timings[kes->ntimings].repeat=start;
+  kes->timings[kes->ntimings].original_size=0;
+  kes->timings[kes->ntimings].original_data=NULL;
+  kes->timings[kes->ntimings].repeat_size=0;
+  kes->timings[kes->ntimings].repeat_data=NULL;
   ++kes->ntimings;
 
   return 0;
@@ -235,8 +250,9 @@ int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_float *star
   if (!kes->ntimings) return KATE_E_NOT_FOUND;
 
   for (n=0;n<kes->ntimings;++n) {
-    if (n==0 || kes->timings[n].start<*start) {
-      *start=kes->timings[n].start;
+    /* repeat will be either start, or later if a repeat has been emitted */
+    if (n==0 || kes->timings[n].repeat<*start) {
+      *start=kes->timings[n].repeat;
       if (end) *end=kes->timings[n].end;
     }
   }
@@ -269,8 +285,105 @@ int kate_encode_state_trim_events(kate_encode_state *kes,kate_float t)
 
   for (n=0;n<kes->ntimings;++n) {
     if (kes->timings[n].end<=t) {
+      if (kes->timings[n].original_data) kate_free(kes->timings[n].original_data);
+      if (kes->timings[n].repeat_data) kate_free(kes->timings[n].repeat_data);
       kes->timings[n--]=kes->timings[--kes->ntimings];
     }
+  }
+
+  return 0;
+}
+
+int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const void *data)
+{
+  kate_event_timing *ket;
+
+  if (!kes) return KATE_E_INVALID_PARAMETER;
+  if (!data || size==0) return KATE_E_INVALID_PARAMETER;
+  if (kes->ntimings==0) return KATE_E_INIT;
+
+  /* store in the last added slot */
+  ket=&kes->timings[kes->ntimings-1];
+
+  /* initialized already ? */
+  if (ket->original_data || ket->original_size) return KATE_E_INIT;
+  if (ket->repeat_data || ket->repeat_size) return KATE_E_INIT;
+
+  /* increment id */
+  ++kes->id;
+  if (kes->id<0) return KATE_E_LIMIT; /* 2 billion or so events limit */
+
+  /* store packet data */
+  ket->original_data=kate_malloc(size);
+  if (!ket->original_data) return KATE_E_OUT_OF_MEMORY;
+  memcpy(ket->original_data,data,size);
+  ket->original_size=size;
+
+  return 0;
+}
+
+static void kate_encode_state_write64(unsigned char *ptr,kate_int64_t v)
+{
+  int n;
+  for (n=0;n<8;++n) {
+    ptr[n]=v&0xff;
+    v>>=8;
+  }
+}
+
+int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float threshold,kate_packet *kp)
+{
+  size_t n;
+  kate_event_timing *ket;
+  unsigned char packet_type;
+  kate_float earliest_t;
+  kate_int64_t backlink;
+  int ret;
+
+  if (!kes) return KATE_E_INVALID_PARAMETER; /* kp may be NULL */
+
+  for (n=0;n<kes->ntimings;++n) {
+    ket=kes->timings+n;
+    /* old enough ? */
+    if (threshold==(kate_float)0) {
+      if (ket->repeat>=t-threshold) continue;
+    }
+    else {
+      if (ket->repeat>t-threshold) continue;
+    }
+    /* has data ? */
+    if (!ket->original_data) continue;
+    /* is a text packet ? */
+    if (ket->original_size<1+8*3) continue;
+    packet_type=((const unsigned char*)ket->original_data)[0];
+    if (packet_type!=0x00) continue;
+
+    /* we found an older one */
+    ket->repeat = t;
+
+    /* create a repeat packet if there is none yet */
+    if (!ket->repeat_data) {
+      /* we're in luck, it's the same size */
+      ket->repeat_data=kate_malloc(ket->original_size);
+      if (!ket->repeat_data) return KATE_E_OUT_OF_MEMORY;
+      memcpy(ket->repeat_data,ket->original_data,ket->original_size);
+      ket->repeat_size=ket->original_size;
+      /* set packet type to repeat */
+      ((unsigned char*)ket->repeat_data)[0]=0x02;
+    }
+
+    /* fiddle with the backlink, it may have changed */
+    ret=kate_encode_state_get_earliest_event(kes,&earliest_t,NULL);
+    if (ret<0) return ret;
+    backlink=kate_duration_granule(kes->ki,t-earliest_t);
+    if (backlink<0) return backlink;
+    kate_encode_state_write64(((unsigned char*)ket->repeat_data)+1+2*8,backlink);
+
+//TODO: some kind of packet ref counting ? Would screw up ABI though :/
+//    kate_packet_wrap(kp,ket->repeat_size,ket->repeat_data);
+    kate_packet_init(kp,ket->repeat_size,ket->repeat_data);
+
+    return 1;
   }
 
   return 0;

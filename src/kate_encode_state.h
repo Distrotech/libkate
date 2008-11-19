@@ -17,6 +17,15 @@
 typedef struct kate_event_timing {
   kate_float start;
   kate_float end;
+
+  kate_int32_t id;
+  kate_float repeat;
+
+  size_t original_size;
+  void *original_data;
+
+  size_t repeat_size;
+  void *repeat_data;
 } kate_event_timing;
 
 typedef struct kate_encode_state {
@@ -77,5 +86,7 @@ extern int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,k
 extern int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_float *start,kate_float *end) kate_internal;
 extern int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_float *start,kate_float *end) kate_internal;
 extern int kate_encode_state_trim_events(kate_encode_state *kes,kate_float t) kate_internal;
+extern int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const void *data) kate_internal;
+extern int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float threshold,kate_packet *kp) kate_internal;
 
 #endif
