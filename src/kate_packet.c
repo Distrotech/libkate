@@ -13,6 +13,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <string.h>
 #include "kate/kate.h"
 
 /**
@@ -60,6 +61,7 @@ int kate_packet_init(kate_packet *kp,size_t nbytes,const void *data)
 
   dup_data=kate_malloc(nbytes);
   if (!dup_data) return KATE_E_OUT_OF_MEMORY;
+  memcpy(dup_data,data,nbytes);
 
   return kate_packet_wrap(kp,nbytes,dup_data);
 }
