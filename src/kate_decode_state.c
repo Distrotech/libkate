@@ -25,6 +25,8 @@ kate_decode_state *kate_decode_state_create()
   kds->ki=NULL;
   kds->kc=NULL;
   kds->event=NULL;
+  kds->n_active_events=0;
+  kds->active_events=NULL;
 
   return kds;
 }
@@ -47,6 +49,64 @@ int kate_decode_state_clear(kate_decode_state *kds,const kate_info *ki,int new)
   return 0;
 }
 
+int kate_decode_state_flush_events(kate_decode_state *kds,kate_int64_t granule)
+{
+  size_t n;
+
+  if (!kds) return KATE_E_INVALID_PARAMETER;
+
+  /* -1 will flush everything */
+  for (n=0;n<kds->n_active_events;++n) {
+    if (granule<kds->active_events[n].start || granule>kds->active_events[n].end) {
+      kds->active_events[n--]=kds->active_events[--kds->n_active_events];
+    }
+  }
+
+  return 0;
+}
+
+int kate_decode_state_find_event(kate_decode_state *kds,kate_int32_t id)
+{
+  size_t n;
+
+  if (!kds) return KATE_E_INVALID_PARAMETER;
+  if (id<0) return KATE_E_INVALID_PARAMETER;
+
+  for (n=0;n<kds->n_active_events;++n) {
+    if (kds->active_events[n].id==id) return 0;
+  }
+
+  return KATE_E_NOT_FOUND;
+}
+
+int kate_decode_state_add_event(kate_decode_state *kds,const kate_event *ev)
+{
+  size_t n;
+  kate_active_event *events;
+
+  if (!kds) return KATE_E_INVALID_PARAMETER;
+  if (!ev) return KATE_E_INVALID_PARAMETER;
+
+  /* check if it is there already */
+  for (n=0;n<kds->n_active_events;++n) {
+    if (kds->active_events[n].id==ev->id) {
+      return 1;
+    }
+  }
+
+  /* if it is not there, add it */
+  events=(kate_active_event*)kate_realloc(kds->active_events,(kds->n_active_events+1)*sizeof(kate_active_event));
+  if (!events) return KATE_E_OUT_OF_MEMORY;
+
+  kds->active_events=events;
+  kds->active_events[kds->n_active_events].id=ev->id;
+  kds->active_events[kds->n_active_events].start=ev->start;
+  kds->active_events[kds->n_active_events].end=ev->start+ev->duration-1;
+  ++kds->n_active_events;
+
+  return 0;
+}
+
 int kate_decode_state_destroy(kate_decode_state *kds)
 {
   if (!kds) return KATE_E_INVALID_PARAMETER;
@@ -55,6 +115,8 @@ int kate_decode_state_destroy(kate_decode_state *kds)
 
   if (kds->ki) kate_info_clear(kds->ki);
   if (kds->kc) kate_comment_clear(kds->kc);
+
+  kate_free(kds->active_events);
 
   kate_free(kds);
 

@@ -613,6 +613,7 @@ extern int kate_decode_init(kate_state *k,kate_info *ki);
 extern int kate_decode_headerin(kate_info *ki,kate_comment *kc,kate_packet *kp);
 extern int kate_decode_packetin(kate_state *k,kate_packet *kp);
 extern int kate_decode_eventout(kate_state *k,kate_const kate_event **ev); /* event can be NULL */
+extern int kate_decode_seek(kate_state *k);
 
 /** \defgroup tracker Tracker */
 extern int kate_tracker_init(kate_tracker *kin,const kate_info *ki,kate_const kate_event *ev);

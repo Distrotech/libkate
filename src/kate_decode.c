@@ -1071,6 +1071,13 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     ev->id=kate_read32v(kpb);
   }
 
+  if (ev->id>=0) {
+    /* check if we have this event already */
+    ret=kate_decode_state_find_event(k->kds,ev->id);
+    if (ret<0 && ret!=KATE_E_NOT_FOUND) goto error;
+    if (ret>=0) goto ignore;
+  }
+
   if (kate_pack_read1(kpb)) {
     kate_motion **motions=NULL;
     size_t nmotions=0;
@@ -1277,6 +1284,13 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     }
   }
 
+  if (ev->id>=0) {
+    /* register the event as active */
+    ret=kate_decode_state_add_event(k->kds,ev);
+    RNDERR(error);
+    if (ret<0) goto error;
+  }
+
   return KMG_OK();
 
 error_limit:
@@ -1291,12 +1305,23 @@ error_out_of_memory:
   ret=KATE_E_OUT_OF_MEMORY;
   goto error;
 
+ignore:
+  /* special case where we need to destroy the event as we're not interested in it,
+     but we do not want an error to be raised */
+  ret=0;
+  goto error;
+
 error:
   /* all the memory allocated for the event should be freed by the kate_memory_guard,
      so we just unlink and jettison it */
   kate_free(kds->event);
   kds->event=NULL;
   return KMG_ERROR(ret);
+}
+
+static int kate_decode_repeat_packet(kate_state *k,kate_pack_buffer *kpb)
+{
+  return kate_decode_text_packet(k,kpb);
 }
 
 static int kate_decode_keepalive_packet(kate_state *k,kate_pack_buffer *kpb)
@@ -1348,6 +1373,7 @@ int kate_decode_packetin(kate_state *k,kate_packet *kp)
   switch (id) {
     case 0x00: return kate_decode_text_packet(k,&kpb);
     case 0x01: return kate_decode_keepalive_packet(k,&kpb);
+    case 0x02: return kate_decode_repeat_packet(k,&kpb);
     case 0x7f: return kate_decode_end_packet(k,&kpb);
     default: return 0; /* unknown data packets are ignored, for future proofing */
   }
@@ -1374,5 +1400,23 @@ int kate_decode_eventout(kate_state *k,kate_const kate_event **event)
   if (event) *event=k->kds->event;
 
   return 0;
+}
+
+/**
+  \ingroup decoding
+  Informs the Kate decoder that seeking has occured.
+  This will cause the decoder to use any future repeat packets to recover
+  data from past events which are still active, but which original packets
+  were before the seek point, and therefore unavailable.
+  \param k the kate_state for which a seek occured
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_decode_seek(kate_state *k)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  if (!k->kds) return KATE_E_INIT;
+
+  return kate_decode_state_flush_events(k->kds,-1);
 }
 
