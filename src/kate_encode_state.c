@@ -322,23 +322,11 @@ int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const
   return 0;
 }
 
-static void kate_encode_state_write64(unsigned char *ptr,kate_int64_t v)
-{
-  int n;
-  for (n=0;n<8;++n) {
-    ptr[n]=v&0xff;
-    v>>=8;
-  }
-}
-
 int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float threshold,kate_packet *kp)
 {
   size_t n;
   kate_event_timing *ket;
   unsigned char packet_type;
-  kate_float earliest_t;
-  kate_int64_t backlink;
-  int ret;
 
   if (!kes) return KATE_E_INVALID_PARAMETER; /* kp may be NULL */
 
@@ -371,13 +359,6 @@ int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float 
       /* set packet type to repeat */
       ((unsigned char*)ket->repeat_data)[0]=0x02;
     }
-
-    /* fiddle with the backlink, it may have changed */
-    ret=kate_encode_state_get_earliest_event(kes,&earliest_t,NULL);
-    if (ret<0) return ret;
-    backlink=kate_duration_granule(kes->ki,t-earliest_t);
-    if (backlink<0) return backlink;
-    kate_encode_state_write64(((unsigned char*)ket->repeat_data)+1+2*8,backlink);
 
 //TODO: some kind of packet ref counting ? Would screw up ABI though :/
 //    kate_packet_wrap(kp,ket->repeat_size,ket->repeat_data);
