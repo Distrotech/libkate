@@ -1008,7 +1008,10 @@ int kate_decode_init(kate_state *k,kate_info *ki)
       if (env) srand(atoi(env)); else srand(time(NULL)^getpid()); \
       seed=1; \
     } \
-    if (((rand()>>8)&0xff)==0) goto label; \
+    if (((rand()>>8)&0xff)==0) { \
+      ret=KATE_E_OUT_OF_MEMORY; \
+      goto label; \
+    } \
   } while(0)
 #else
 #define RNDERR(label) ((void)0)
