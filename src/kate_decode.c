@@ -1017,7 +1017,7 @@ int kate_decode_init(kate_state *k,kate_info *ki)
 #define RNDERR(label) ((void)0)
 #endif
 
-static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
+static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repeat)
 {
   KMG_GUARD();
   int ret,n;
@@ -1071,8 +1071,8 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     ev->id=kate_read32v(kpb);
   }
 
-  if (ev->id>=0) {
-    /* check if we have this event already */
+  if (repeat && ev->id>=0) {
+    /* if this is a repeat, check if we have this event already */
     ret=kate_decode_state_find_event(k->kds,ev->id);
     if (ret<0 && ret!=KATE_E_NOT_FOUND) goto error;
     if (ret>=0) goto ignore;
@@ -1325,7 +1325,7 @@ error:
 
 static int kate_decode_repeat_packet(kate_state *k,kate_pack_buffer *kpb)
 {
-  return kate_decode_text_packet(k,kpb);
+  return kate_decode_text_packet(k,kpb,1);
 }
 
 static int kate_decode_keepalive_packet(kate_state *k,kate_pack_buffer *kpb)
@@ -1375,7 +1375,7 @@ int kate_decode_packetin(kate_state *k,kate_packet *kp)
   }
 
   switch (id) {
-    case 0x00: return kate_decode_text_packet(k,&kpb);
+    case 0x00: return kate_decode_text_packet(k,&kpb,0);
     case 0x01: return kate_decode_keepalive_packet(k,&kpb);
     case 0x02: return kate_decode_repeat_packet(k,&kpb);
     case 0x7f: return kate_decode_end_packet(k,&kpb);
