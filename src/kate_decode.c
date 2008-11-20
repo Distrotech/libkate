@@ -1291,6 +1291,10 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb)
     if (ret<0) goto error;
   }
 
+  ret=kate_decode_state_flush_events(k->kds,ev->start);
+  RNDERR(error);
+  if (ret<0) goto error;
+
   return KMG_OK();
 
 error_limit:
