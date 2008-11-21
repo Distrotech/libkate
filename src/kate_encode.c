@@ -983,6 +983,11 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
   if (ret<0) return ret;
 
   ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
+  if (ret==KATE_E_NOT_FOUND) {
+    /* if there are no live events yet, base from now */
+    earliest_t=t;
+    ret=0;
+  }
   if (ret<0) return ret;
   granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
   if (granulepos<0) return granulepos;
