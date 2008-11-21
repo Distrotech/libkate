@@ -6,7 +6,7 @@ LIBKATE=../lib/libkate.la
 
 TESTS_ENVIRONMENT=$(LIBTOOL) -dlopen $(LIBKATE) --mode=execute $(VALGRIND)
 
-TESTS=check_sizes language
+TESTS=check_sizes language text
 
 noinst_PROGRAMS=$(TESTS)
 
@@ -15,6 +15,9 @@ check_sizes_LDADD=$(LIBKATE)
 
 language_SOURCES=language.c
 language_LDADD=$(LIBKATE)
+
+text_SOURCES=text.c
+text_LDADD=$(LIBKATE)
 
 STREAMS=@STREAMS@
 
