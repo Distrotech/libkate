@@ -20,6 +20,8 @@ kateenc \- create Kate streams from text input
 .BI "[\-c " category ]
 .BI "[\-s " serial ]
 .BI "[\-C " tag=value ]
+.BI "[\-R " threshold ]
+.BI "[\-K " threshold ]
 .BI "\-t " filetype
 [ infile ]
 
@@ -60,6 +62,15 @@ or quote the comment for it to be seen as a single command line parameter.
 .TP
 \fB\-t\fR filetype
 Specifies the type of the input (srt, lrc, kate)
+.TP
+\fB\-R\fR threshold
+Use repeat packets, with the given threshold (in seconds).
+Data packets will be repeated at intervals of roughly threshold seconds, while active.
+.TP
+\fB\-K\fR threshold
+Use keepalive packets, with the given threshold (in seconds).
+Keepalive packets will be emitted when no other packet has been emitted for roughly
+threshold seconds.
 
 .SH EXAMPLES
 

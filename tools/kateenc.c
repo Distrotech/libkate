@@ -52,6 +52,7 @@ static char str[4096];
 static int headers_written=0;
 static int raw=0;
 static kate_float repeat_threshold=(kate_float)0;
+static kate_float keepalive_threshold=(kate_float)0;
 static kate_float last_stream_time=(kate_float)0;
 static const unsigned char utf8bom[3]={0xef,0xbb,0xbf};
 static const unsigned char utf16lebom[2]={0xff,0xfe};
@@ -231,24 +232,46 @@ void emit_repeats(kate_state *k,FILE *fout,kate_float endt)
   ogg_packet op;
   kate_float t;
   int ret;
+  kate_float step;
 
-  kate_float threshold=repeat_threshold;
-  if (threshold<=(kate_float)0) return;
+  /* work out the best step to walk the time segment */
+  step=(kate_float)0;
+  if (step==(kate_float)0 || (repeat_threshold>(kate_float)0 && repeat_threshold<step))
+    step=repeat_threshold;
+  if (step==(kate_float)0 || (keepalive_threshold>(kate_float)0 && keepalive_threshold<step))
+    step=keepalive_threshold;
 
-  for (t=last_stream_time;t<endt;t+=threshold) {
-    while (1) {
-      ret=kate_ogg_encode_repeat(k,t,threshold,&op);
+  if (step<=(kate_float)0) return;
+
+  for (t=last_stream_time;t<endt;t+=step) {
+    /* try repeats first, no keepalives will be needed if we have one */
+    if (repeat_threshold>(kate_float)0) {
+      while (1) {
+        ret=kate_ogg_encode_repeat(k,t,repeat_threshold,&op);
+        if (ret<0) {
+          fprintf(stderr,"Failed encoding repeat at %f (%d), continuing anyway\n",t,ret);
+          return;
+        }
+        if (ret==0) break;
+        ret=send_packet(fout,&op,t);
+        if (ret<0) {
+          fprintf(stderr,"Failed sending repeat packet, continuing anyway\n");
+          return;
+        }
+      }
+    }
+    /* keepalives next */
+    if (keepalive_threshold>(kate_float)0 && t-last_stream_time>=keepalive_threshold) {
+      ret=kate_ogg_encode_keepalive(k,t,&op);
       if (ret<0) {
-        fprintf(stderr,"Failed encoding repeat at %f (%d), continuing anyway\n",t,ret);
+        fprintf(stderr,"Failed encoding keepalive at %f (%d), continuing anyway\n",t,ret);
         return;
       }
-      if (ret==0) break;
       ret=send_packet(fout,&op,t);
       if (ret<0) {
-        fprintf(stderr,"Failed sending repeat packet, continuing anyway\n");
+        fprintf(stderr,"Failed sending keepalive packet, continuing anyway\n");
         return;
       }
-      last_stream_time=t;
     }
   }
 }
@@ -737,6 +760,7 @@ int main(int argc,char **argv)
           printf("   -s <hex number>     set serial number of output stream\n");
           printf("   -r                  write raw Kate stream (experimental)\n");
           printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
+          printf("   -K <threshold>      Use keepalive packets with given threshold (seconds)\n");
           printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
           exit(0);
         case 'o':
@@ -800,6 +824,15 @@ int main(int argc,char **argv)
           repeat_threshold=(kate_float)strtod(arg,&endptr);
           if (endptr==arg || *endptr) {
             fprintf(stderr,"error in repeat threshold: %s: should be a floating point value\n",arg);
+            exit(-1);
+          }
+          break;
+        case 'K':
+          arg=eat_arg(argc,argv,&n);
+          endptr=NULL;
+          keepalive_threshold=(kate_float)strtod(arg,&endptr);
+          if (endptr==arg || *endptr) {
+            fprintf(stderr,"error in keepalive threshold: %s: should be a floating point value\n",arg);
             exit(-1);
           }
           break;
