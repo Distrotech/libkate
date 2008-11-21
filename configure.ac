@@ -182,6 +182,13 @@ then
   CFLAGS_FORTIFY_SOURCE="-D_FORTIFY_SOURCE=2"
 fi
 
+STREAMS="bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z"
+STREAMS="$STREAMS style periodic granule justify"
+if test "x$HAVE_PNG" = "xyes"
+then
+  STREAMS="$STREAMS png"
+fi
+
 
 AC_SUBST([LIBKATE_SHARED_VERSION])
 AC_SUBST([LIBOGGKATE_SHARED_VERSION])
@@ -198,6 +205,7 @@ AC_SUBST([CWARNFLAGS_LIGHT])
 AC_SUBST([CWARNFLAGS_FULL])
 AC_SUBST([CFLAGS_FORTIFY_SOURCE])
 AC_SUBST([NM])
+AC_SUBST([STREAMS])
 
 AC_CONFIG_FILES(
   [Makefile]

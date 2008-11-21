@@ -48,50 +48,7 @@ lib_liboggkate_la_LIBADD=lib/libkate.la
 
 am__tar = ${AMTAR} chof - --owner=0 --group=0 --exclude=CVS --exclude=.cvsignore "$$tardir"
 
-STREAMS=bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z style periodic granule justify
-if HAVE_PNG
-STREAMS+=png
-endif
-
-tmp_ogg1:="kate-check-1.kate.ogg"
-tmp_ogg2:="kate-check-2.kate.ogg"
-tmp_kate1:="kate-check-1.kate"
-tmp_kate2:="kate-check-2.kate"
-
-if HAVE_OGG
-check-local: tools/kateenc tools/katedec
-else
-check-local:
-endif
-	@echo " Checking Kate namespace"
-	@! @NM@ lib/.libs/*.{a,so} \
-	 | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
-	 | $(GREP) -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
-	 | $(GREP) -vE " _(rest|save)[fg]pr_[0-9]*(|_x)$$" \
-	 | $(GREP) -v "^.\{11\}kate_"
-	@echo " Checking memory allocation routines"
-	@! $(GREP) -EHn '[^_](malloc|realloc|free|calloc|memalign)\(' \
-           $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
-           $(top_srcdir)/tools/katedesc.h \
-	   $(top_srcdir)/tools/kateenc.c $(top_srcdir)/tools/katedec.c \
-	   $(top_srcdir)/tools/*.[ly] \
-	 | $(GREP) -v "^include/kate/kate.h:#define kate_"
-	@echo " Checking forgotten debug traces"
-	@! $(GREP) -EHn '[^sn]printf' \
-	  $(top_srcdir)/src/*.[ch] $(top_srcdir)/include/kate/*.h \
-	  $(top_srcdir)/tools/katedesc.h \
-	| $(GREP) .
-if HAVE_OGG
-	@$(foreach stream, $(STREAMS), \
-	  echo " Checking Kate stream $(stream)" && \
-	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -c test -l en -o $(tmp_ogg1) $(top_srcdir)/examples/kate/$(stream).kate && \
-	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate1) $(tmp_ogg1) && \
-	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/kateenc -s 0 -t kate -c test -l en -o $(tmp_ogg2) $(tmp_kate1) && \
-	  $(OGG_DIFF) $(tmp_ogg1) $(tmp_ogg2) && \
-	  $(LIBTOOL) -dlopen lib/libkate.la --mode=execute $(VALGRIND) ./tools/katedec -o $(tmp_kate2) $(tmp_ogg2) && \
-	  cmp $(tmp_kate1) $(tmp_kate2) && \
-	) rm -f $(tmp_ogg1) $(tmp_ogg2) $(tmp_kate1) $(tmp_kate2)
-endif
+STREAMS=@STREAMS@
 
 if HAVE_OGG
 
