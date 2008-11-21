@@ -55,6 +55,7 @@ int main()
   COUNT_GLYPHS("",0);
   COUNT_GLYPHS("Kate",4);
   COUNT_GLYPHS("\377",KATE_E_TEXT);
+  COUNT_GLYPHS("¿",1);
   REMOVE_MARKUP("","");
   REMOVE_MARKUP("<foo></foo>","");
   REMOVE_MARKUP("simple","simple");
