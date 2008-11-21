@@ -972,13 +972,19 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
+  kate_float earliest_t;
   int ret;
 
   if (!k || !kp) return KATE_E_INVALID_PARAMETER;
   if (!k->kes) return KATE_E_INIT;
   if (k->kes->eos) return KATE_E_INIT;
 
-  granulepos=kate_time_granule(k->ki,t,0);
+  ret=kate_encode_state_trim_events(k->kes,t);
+  if (ret<0) return ret;
+
+  ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
+  if (ret<0) return ret;
+  granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
   if (granulepos<0) return granulepos;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
