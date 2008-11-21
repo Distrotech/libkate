@@ -98,6 +98,30 @@ typedef long long int kate_int64_t;
 #endif
 
 #if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
+typedef uint64_t kate_uint64_t;
+#elif defined uint64_t
+typedef uint64_t kate_uint64_t;
+#elif defined UINT_MAX && UINT_MAX>2147483647
+typedef unsigned int kate_uint64_t;
+#elif defined USHRT_MAX && USHRT_MAX>2147483647
+typedef unsigned short int kate_uint64_t;
+#elif defined ULONG_MAX && ULONG_MAX>2147483647
+typedef unsigned long int kate_uint64_t;
+#elif defined ULLONG_MAX && ULLONG_MAX>2147483647
+typedef unsigned long long int kate_uint64_t;
+#elif defined ULONG_LONG_MAX && ULONG_LONG_MAX>2147483647
+typedef unsigned long long int kate_uint64_t;
+#elif defined __GNUC__ && __GNUC__>=4 && defined __WORDSIZE && __WORDSIZE==64
+/* this case matches glibc, check conservative GCC version just in case */
+typedef unsigned long int kate_uint64_t;
+#elif defined __GNUC__ && __GNUC__>=4 && defined __WORDSIZE && __WORDSIZE==32
+/* this case matches glibc, check conservative GCC version just in case */
+typedef unsigned long long int kate_uint64_t;
+#else
+#error No 64 bit unsigned signed integer found
+#endif
+
+#if defined HAVE_STDINT_H || defined HAVE_INTTYPES_H
 typedef uintptr_t kate_uintptr_t;
 #elif defined uintptr_t
 typedef uintptr_t kate_uintptr_t;
