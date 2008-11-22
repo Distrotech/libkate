@@ -55,12 +55,14 @@ int main()
   COUNT_GLYPHS("",0);
   COUNT_GLYPHS("Kate",4);
   COUNT_GLYPHS("\377",KATE_E_TEXT);
-  COUNT_GLYPHS("¿",1);
+  COUNT_GLYPHS("\xe0\xb8\x87",1);
+  COUNT_GLYPHS("-\xe0\xb8\x87-\xe0\xbd\xa9-",5);
   REMOVE_MARKUP("","");
   REMOVE_MARKUP("<foo></foo>","");
   REMOVE_MARKUP("simple","simple");
   REMOVE_MARKUP("<foo></foo>","");
-  REMOVE_MARKUP("1<foo>2</foo>3","123");
+  REMOVE_MARKUP("\xe0\xb8\x87<foo>\xe0\xb8\x87</foo>\xe0\xb8\x87","\xe0\xb8\x87\xe0\xb8\x87\xe0\xb8\x87");
+  REMOVE_MARKUP("\xe0\xb8\x87<\xe0\xb8\x87>\xe0\xb8\x87","\xe0\xb8\x87\xe0\xb8\x87");
   return 0;
 }
 
