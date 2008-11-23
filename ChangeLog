@@ -1,4 +1,4 @@
-0.2.7
+0.2.7 - 24 november 2008
   fix wildly embarassing bug - forgot to copy data in kate_packet_init
   fix size mixup when removing markup at decode time
   add a couple tests for make check
