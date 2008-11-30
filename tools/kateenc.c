@@ -227,7 +227,7 @@ static int is_line_empty(const char *s)
   return 1;
 }
 
-void emit_repeats(kate_state *k,FILE *fout,kate_float endt)
+void update_stream_time(kate_state *k,FILE *fout,kate_float endt)
 {
   ogg_packet op;
   kate_float t;
@@ -352,7 +352,7 @@ static int convert_srt(FILE *fin,FILE *fout)
           ogg_packet op;
           size_t len;
 
-          emit_repeats(&k,fout,t0);
+          update_stream_time(&k,fout,t0);
 
           len=strlen(text);
           if (len>0 && text[len-1]=='\n') text[--len]=0;
@@ -637,7 +637,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
       if (start_time>=0.0 && !is_line_empty(text)) {
         ogg_packet op;
 
-        emit_repeats(&k,fout,start_time);
+        update_stream_time(&k,fout,start_time);
 
         if (text[strlen(text)-1]=='\n') text[strlen(text)-1]=0;
         km=process_enhanced_lrc_tags(text,start_time,t,line);
