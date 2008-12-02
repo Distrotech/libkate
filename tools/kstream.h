@@ -28,9 +28,22 @@ typedef struct {
   int ret;
 } kate_stream;
 
+typedef struct {
+  size_t n_kate_streams;
+  kate_stream *kate_streams;
+} kate_stream_set;
+
 extern int kstream_init(kate_stream *ks,ogg_page *og,int stream_index);
 extern int kstream_clear(kate_stream *ks);
-extern char *get_filename(const char *basename,const kate_stream *ks,const kate_stream *streams,size_t nstreams);
+extern char *get_filename(const char *basename,const kate_stream *ks,const kate_stream_set *streams);
+
+extern void init_kate_stream_set(kate_stream_set *streams);
+extern kate_stream *add_kate_stream(kate_stream_set *streams,ogg_page *og,int stream_index);
+extern kate_stream *find_kate_stream_for_page(kate_stream_set *streams,ogg_page *og);
+extern void remove_kate_stream(const kate_stream *ks,kate_stream_set *streams);
+extern void clear_and_remove_kate_stream(kate_stream *ks,kate_stream_set *streams);
+extern void clear_kate_stream_set(kate_stream_set *streams);
+extern kate_stream *find_kate_stream_for_file(kate_stream_set *streams,FILE *f);
 
 #endif
 
