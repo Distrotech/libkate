@@ -13,13 +13,6 @@
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
-#if defined WIN32 || defined _WIN32 || defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
-#include <io.h>
-#include <fcntl.h>
-#endif
-#if defined WIN32 || defined _WIN32
-#include <process.h>
-#endif
 #include <stdarg.h>
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
@@ -38,6 +31,7 @@
 #include "kkate.h"
 #include "kfuzz.h"
 #include "kstream.h"
+#include "kread.h"
 #include "kutil.h"
 
 <<<<<<< HEAD:tools/katedec.c
@@ -166,18 +160,6 @@ static char *get_filename(const char *basename,const kate_stream *ks,const kate_
 static void print_version(void)
 {
   printf("Kate reference decoder - %s\n",kate_get_version_string());
-}
-
-static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
-{
-  size_t ret;
-
-  *buffer=(char*)kate_realloc(*buffer,bytes);
-  if (!*buffer) return -1;
-
-  ret=fread(*buffer,1,bytes,f);
-  if (ret<(size_t)bytes) return -1;
-  return 0;
 }
 
 static kate_stream *find_kate_stream_for_page(size_t n_kate_streams,kate_stream *kate_streams,ogg_page *og)
@@ -327,23 +309,8 @@ int main(int argc,char **argv)
     exit(-1);
   }
 
-  if (!input_filename || !strcmp(input_filename,"-")) {
-#if defined WIN32 || defined _WIN32
-    _setmode(_fileno(stdin),_O_BINARY);
-#else
-#if defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2 || defined __BORLANDC__
-    setmode(fileno(stdin),_O_BINARY);
-#endif
-#endif
-    fin=stdin;
-  }
-  else {
-    fin=fopen(input_filename,"rb");
-    if (!fin) {
-      fprintf(stderr,"%s: %s\n",input_filename,strerror(errno));
-      exit(-1);
-    }
-  }
+  fin=open_and_probe_stream(input_filename);
+  if (!fin) exit(-1);
 
   /* first, read the first few bytes to know if we have a raw Kate stream
      or a Kate-in-Ogg stream */
@@ -360,6 +327,14 @@ int main(int argc,char **argv)
     FILE *fout;
     int event_index=0;
     int ret;
+
+    bytes=64;
+    buffer=(char*)kate_malloc(bytes);
+    if (!buffer) {
+      fprintf(stderr,"failed to allocate %lld bytes\n",(long long)bytes);
+      exit(-1);
+    }
+    memcpy(buffer,signature,bytes);
 
     if (!output_filename || !strcmp(output_filename,"-")) {
       fout=stdout;
@@ -381,14 +356,6 @@ int main(int argc,char **argv)
       fprintf(stderr,"failed to init raw kate packet decoding (%d)\n",ret);
       exit(-1);
     }
-
-    bytes=64;
-    buffer=(char*)kate_malloc(bytes);
-    if (!buffer) {
-      fprintf(stderr,"failed to allocate %lld bytes\n",(long long)bytes);
-      exit(-1);
-    }
-    memcpy(buffer,signature,bytes);
 
     while (1) {
       const kate_event *ev=NULL;
@@ -417,16 +384,8 @@ int main(int argc,char **argv)
       }
 
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
-      bytes_read=fread(&bytes,1,8,fin);
-      if (bytes_read!=8 || bytes<=0) {
-        fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",bytes_read,(long long)bytes);
-        exit(-1);
-      }
-      ret=read_raw_packet(fin,&buffer,bytes);
-      if (ret<0) {
-        fprintf(stderr,"failed to read raw kate packet (%lld bytes)\n",(long long)bytes);
-        exit(-1);
-      }
+      ret=read_raw_size_and_packet(fin,&buffer,&bytes);
+      if (ret<0) exit(-1);
     }
 
     ret=kate_high_decode_clear(&k);
