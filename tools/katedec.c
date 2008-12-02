@@ -36,6 +36,7 @@
 #include "ksrt.h"
 #include "klrc.h"
 #include "kkate.h"
+#include "kfuzz.h"
 #include "kutil.h"
 
 enum { uninitialized, header_info, header_comment, data };
@@ -173,37 +174,6 @@ static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
   ret=fread(*buffer,1,bytes,f);
   if (ret<(size_t)bytes) return -1;
   return 0;
-}
-
-static unsigned long gen_fuzz(unsigned long *seed)
-{
-  return *seed=*seed*65521+0x9e370001UL;
-}
-
-static unsigned long gen_fuzz_n(unsigned long *seed,unsigned long n)
-{
-  return gen_fuzz(seed)%n;
-}
-
-static void fuzz_packet(unsigned long *seed,unsigned long nbytes,unsigned char *data)
-{
-  unsigned long n=gen_fuzz_n(seed,4),i;
-  if (n!=0) return;
-  n=gen_fuzz_n(seed,8);
-  for (i=0;i<n;++i) {
-    unsigned long offset=gen_fuzz_n(seed,nbytes);
-    data[offset]^=1;
-  }
-}
-
-static void fuzz_kate_packet(unsigned long *seed,kate_packet *kp)
-{
-  fuzz_packet(seed,kp->nbytes,kp->data);
-}
-
-static void fuzz_ogg_packet(unsigned long *seed,ogg_packet *op)
-{
-  fuzz_packet(seed,op->bytes,op->packet);
 }
 
 int main(int argc,char **argv)
