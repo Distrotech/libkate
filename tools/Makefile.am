@@ -10,7 +10,7 @@ kateenc_SOURCES=kateenc.c kate_lexer.l kate_parser.y
 if HAVE_PNG
 kateenc_SOURCES+=kpng.c
 endif
-katedec_SOURCES=katedec.c kkate.c ksrt.c klrc.c kutil.c kfuzz.c
+katedec_SOURCES=katedec.c kkate.c ksrt.c klrc.c kutil.c kfuzz.c kstream.c
 kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@ @PNG_CFLAGS@
