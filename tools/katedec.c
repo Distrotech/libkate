@@ -365,7 +365,7 @@ int main(int argc,char **argv)
       fout=stdout;
     }
     else {
-      char *filename=get_filename(output_filename,0,kate_streams,n_kate_streams);
+      char *filename=get_filename(output_filename,NULL,kate_streams,n_kate_streams);
       fout=fopen(filename,"w");
       if (!fout) {
         fprintf(stderr,"%s: %s\n",filename,strerror(errno));
@@ -544,17 +544,7 @@ int main(int argc,char **argv)
                   fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
                   ks->ret=ret;
                 }
-                ogg_stream_clear(&ks->os);
-                ret=kate_info_clear(&ks->ki);
-                if (ret<0) {
-                  fprintf(stderr,"kate_info_clear failed: %d\n",ret);
-                  /* continue anyway */
-                }
-                ret=kate_comment_clear(&ks->kc);
-                if (ret<0) {
-                  fprintf(stderr,"kate_comment_clear failed: %d\n",ret);
-                  /* continue anyway */
-                }
+                kstream_clear(ks);
                 remove_kate_stream(ks,&n_kate_streams,kate_streams);
               }
             }
