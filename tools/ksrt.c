@@ -10,16 +10,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
 #include <stdio.h>
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
 #include <ogg/ogg.h>
-#include "kate/oggkate.h"
-#include "kate_internal.h"
+#include "kate/kate.h"
 #include "kutil.h"
 #include "ksrt.h"
 

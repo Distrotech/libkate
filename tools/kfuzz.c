@@ -11,7 +11,7 @@
 #include "config.h"
 #endif
 #include <ogg/ogg.h>
-#include "kate_internal.h"
+#include "kate/kate.h"
 #include "kfuzz.h"
 
 unsigned long gen_fuzz(unsigned long *seed)

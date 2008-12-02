@@ -10,28 +10,12 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#if defined WIN32 || defined _WIN32 || defined MSDOS || defined __CYGWIN__ || defined __EMX__ || defined OS2
-#include <io.h>
-#include <fcntl.h>
-#endif
-#if defined WIN32 || defined _WIN32
-#include <process.h>
-#endif
-#include <stdarg.h>
 #include <stdio.h>
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include <errno.h>
-#ifdef HAVE_STRING_H
-#include <string.h>
-#endif
 #include <ogg/ogg.h>
-#include "kate/oggkate.h"
-#include "kate_internal.h"
+#include "kate/kate.h"
 #include "kutil.h"
 
 int time_hours(kate_float t)
