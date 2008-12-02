@@ -91,7 +91,10 @@ char *get_filename(const char *basename,const kate_stream *ks,const kate_stream 
         fcats(&filename,"%",1);
         break;
       case 'c':
-        if (!is_ok_for_filename(ks->ki.category)) {
+        if (!ks->ki.category) {
+          fcat(&filename,"-");
+        }
+        else if (!is_ok_for_filename(ks->ki.category)) {
           fprintf(stderr,"Category '%s' not suitable for using in a filename, using 'INVCAT'",ks->ki.category);
           fcat(&filename,"INVCAT");
         }
@@ -100,7 +103,10 @@ char *get_filename(const char *basename,const kate_stream *ks,const kate_stream 
         }
         break;
       case 'l':
-        if (!is_ok_for_filename(ks->ki.language)) {
+        if (!ks->ki.language) {
+          fcat(&filename,"-");
+        }
+        else if (!is_ok_for_filename(ks->ki.language)) {
           fprintf(stderr,"Language '%s' not suitable for using in a filename, using 'INVLANG'",ks->ki.language);
           fcat(&filename,"INVLANG");
         }
@@ -109,11 +115,11 @@ char *get_filename(const char *basename,const kate_stream *ks,const kate_stream 
         }
         break;
       case 's':
-        snprintf(tmp,sizeof(tmp),"%08x",(ogg_uint32_t)ks->os.serialno);
+        snprintf(tmp,sizeof(tmp),"%08x",(ogg_uint32_t)(ks?ks->os.serialno:0));
         fcat(&filename,tmp);
         break;
       case 'i':
-        snprintf(tmp,sizeof(tmp),"%d",ks->stream_index);
+        snprintf(tmp,sizeof(tmp),"%d",ks?ks->stream_index:0);
         fcat(&filename,tmp);
         break;
       default:
