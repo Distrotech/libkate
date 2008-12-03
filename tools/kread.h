@@ -10,8 +10,15 @@
 #ifndef KATE_kread_h_GUARD
 #define KATE_kread_h_GUARD
 
+#include <stdio.h>
+
+typedef struct {
+  int (*on_page)(kate_uintptr_t data,ogg_page*);
+} ogg_parser_funcs;
+
 extern int read_raw_size_and_packet(FILE *f,char **buffer,ogg_int64_t *bytes);
 extern FILE *open_and_probe_stream(const char *filename);
+extern int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_funcs funcs,kate_uintptr_t data);
 
 #endif
 

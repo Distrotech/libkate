@@ -38,6 +38,7 @@
 #include "kfuzz.h"
 #include "kstream.h"
 #include "kutil.h"
+#include "kread.h"
 
 static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
 {
@@ -94,5 +95,55 @@ FILE *open_and_probe_stream(const char *filename)
   }
 
   return fin;
+}
+
+int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_funcs funcs,kate_uintptr_t data)
+{
+  char *ptr=NULL;
+  ogg_sync_state oy;
+  ogg_page og;
+  ogg_int64_t bytes_read;
+  int eos=0;
+
+  ogg_sync_init(&oy);
+
+  /* first add the buffer, if any */
+  if (pre_buffer && pre_bytes) {
+    ptr=ogg_sync_buffer(&oy,pre_bytes);
+    if (!ptr) {
+      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",pre_bytes);
+      goto error;
+    }
+    memcpy(ptr,pre_buffer,pre_bytes);
+    ogg_sync_wrote(&oy,pre_bytes);
+  }
+
+  while (1) {
+    ptr=ogg_sync_buffer(&oy,4096);
+    if (!ptr) {
+      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",4096);
+      goto error;
+    }
+    bytes_read=fread(ptr,1,4096,f);
+    if (bytes_read==0) {
+      eos=1;
+      break;
+    }
+    ogg_sync_wrote(&oy,bytes_read);
+
+    while (ogg_sync_pageout(&oy,&og)>0) {
+      if (funcs.on_page) {
+        int ret=(*funcs.on_page)(data,&og);
+        if (ret<0) goto error;
+      }
+    }
+  }
+
+  ogg_sync_clear(&oy);
+  return 0;
+
+error:
+  ogg_sync_clear(&oy);
+  return -1;
 }
 

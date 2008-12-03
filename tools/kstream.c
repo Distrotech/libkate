@@ -58,9 +58,11 @@ static void fcat(char **ptr,const char *s)
 static int is_filename_used(const char *filename,const kate_stream_set *streams)
 {
   size_t n;
-  for (n=0;n<streams->n_kate_streams;++n) {
-    const kate_stream *ks=streams->kate_streams+n;
-    if (ks->filename && !strcmp(filename,ks->filename)) return 1;
+  if (streams) {
+    for (n=0;n<streams->n_kate_streams;++n) {
+      const kate_stream *ks=streams->kate_streams+n;
+      if (ks->filename && !strcmp(filename,ks->filename)) return 1;
+    }
   }
   return 0;
 }

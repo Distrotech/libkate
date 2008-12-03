@@ -34,129 +34,6 @@
 #include "kread.h"
 #include "kutil.h"
 
-<<<<<<< HEAD:tools/katedec.c
-enum { uninitialized, header_info, header_comment, data };
-
-typedef struct {
-  ogg_stream_state os;
-  kate_state k;
-  kate_info ki;
-  kate_comment kc;
-  int init;
-  char *filename;
-  FILE *fout;
-  unsigned int stream_index;
-  int event_index;
-  int ret;
-} kate_stream;
-
-static void fcats(char **ptr,const char *s,size_t s_len)
-{
-  if (s && *s) {
-    size_t ptr_len=(*ptr)?strlen(*ptr):0;
-    *ptr=(char*)kate_realloc(*ptr,ptr_len+s_len+1);
-    memcpy((*ptr)+ptr_len,s,s_len);
-    (*ptr)[ptr_len+s_len]=0;
-  }
-}
-
-static void fcat(char **ptr,const char *s)
-{
-  if (s && *s) {
-    fcats(ptr,s,strlen(s));
-  }
-}
-
-static int is_filename_used(const char *filename,const kate_stream *streams,size_t nstreams)
-{
-  size_t n;
-  for (n=0;n<nstreams;++n) {
-    const kate_stream *ks=streams+n;
-    if (ks->filename && !strcmp(filename,ks->filename)) return 1;
-  }
-  return 0;
-}
-
-static int is_ok_for_filename(const char *s)
-{
-  int c;
-  while ((c=*s++)) {
-    if (isalnum(c)) continue;
-    if (strchr("-_",c)) continue;
-    return 0;
-  }
-  return 1;
-}
-
-static char *get_filename(const char *basename,const kate_stream *ks,const kate_stream *streams,size_t nstreams)
-{
-  char tmp[32];
-  char *filename=NULL;
-  const char *ptr=basename;
-
-  if (!basename) return NULL;
-  while (*ptr) {
-    const char *percent=strchr(ptr,'%');
-    if (!percent) {
-      fcat(&filename,ptr);
-      break;
-    }
-    if (percent>ptr) {
-      fcats(&filename,ptr,percent-ptr);
-    }
-    ptr=percent+1;
-    if (!*ptr) {
-      fprintf(stderr,"absent format tag in filename\n");
-      exit(-1);
-    }
-    switch (*ptr) {
-      case '%':
-        fcats(&filename,"%",1);
-        break;
-      case 'c':
-        if (!is_ok_for_filename(ks->ki.category)) {
-          fprintf(stderr,"Category '%s' not suitable for using in a filename, using 'INVCAT'",ks->ki.category);
-          fcat(&filename,"INVCAT");
-        }
-        else {
-          fcat(&filename,ks->ki.category);
-        }
-        break;
-      case 'l':
-        if (!is_ok_for_filename(ks->ki.language)) {
-          fprintf(stderr,"Language '%s' not suitable for using in a filename, using 'INVLANG'",ks->ki.language);
-          fcat(&filename,"INVLANG");
-        }
-        else {
-          fcat(&filename,ks->ki.language);
-        }
-        break;
-      case 's':
-        snprintf(tmp,sizeof(tmp),"%08x",(ogg_uint32_t)ks->os.serialno);
-        fcat(&filename,tmp);
-        break;
-      case 'i':
-        snprintf(tmp,sizeof(tmp),"%d",ks->stream_index);
-        fcat(&filename,tmp);
-        break;
-      default:
-        fprintf(stderr,"unknown format tag in filename: %c\n",*ptr);
-        exit(-1);
-        break;
-    }
-    ++ptr;
-  }
-
-  if (is_filename_used(filename,streams,nstreams)) {
-    kate_free(filename);
-    return NULL;
-  }
-
-  return filename;
-}
-
-=======
->>>>>>> split kate_stream stuff into its own file, and refactor some of it:tools/katedec.c
 static void print_version(void)
 {
   printf("Kate reference decoder - %s\n",kate_get_version_string());
@@ -166,7 +43,6 @@ int main(int argc,char **argv)
 {
   size_t bytes_read;
   int ret=-1;
-  int eos=0;
   const char *input_filename=NULL;
   const char *output_filename=NULL;
   const char *output_filename_type=NULL;
@@ -181,17 +57,10 @@ int main(int argc,char **argv)
   int headers_written=0;
   int fuzz=0;
   unsigned long fuzz_seed=0;
-  unsigned int n_streams=0;
-  kate_stream_set kate_streams;
-  ogg_sync_state oy;
-  ogg_page og;
-  ogg_packet op;
+  ogg_parser_data opd;
+  ogg_parser_funcs opf;
   struct lrc_data lrc_data;
-  void (*write_start_function)(FILE*);
-  void (*write_end_function)(FILE*);
-  void (*write_headers_function)(FILE*,const kate_info*,const kate_comment*);
-  void (*write_event_function)(FILE*,void*,const kate_event*,ogg_int64_t,int);
-  void *write_event_function_data=NULL;
+  write_funcs wf;
 
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
@@ -255,33 +124,31 @@ int main(int argc,char **argv)
   }
 
   if (!output_filename_type || !strcmp(output_filename_type,"kate")) {
-    write_start_function=&write_kate_start;
-    write_headers_function=&write_kate_headers;
-    write_end_function=&write_kate_end;
-    write_event_function=&write_kate_event;
-    write_event_function_data=NULL;
+    wf.write_start_function=&write_kate_start;
+    wf.write_headers_function=&write_kate_headers;
+    wf.write_end_function=&write_kate_end;
+    wf.write_event_function=&write_kate_event;
+    wf.write_event_function_data=NULL;
   }
   else if (!strcmp(output_filename_type,"srt")) {
-    write_start_function=NULL;
-    write_headers_function=NULL;
-    write_end_function=NULL;
-    write_event_function=&write_srt_event;
-    write_event_function_data=NULL;
+    wf.write_start_function=NULL;
+    wf.write_headers_function=NULL;
+    wf.write_end_function=NULL;
+    wf.write_event_function=&write_srt_event;
+    wf.write_event_function_data=NULL;
   }
   else if (!strcmp(output_filename_type,"lrc")) {
-    write_start_function=NULL;
-    write_headers_function=NULL;
-    write_end_function=&write_lrc_end;
-    write_event_function=&write_lrc_event;
-    write_event_function_data=&lrc_data;
+    wf.write_start_function=NULL;
+    wf.write_headers_function=NULL;
+    wf.write_end_function=&write_lrc_end;
+    wf.write_event_function=&write_lrc_event;
+    wf.write_event_function_data=&lrc_data;
     lrc_data.last_event_end_time=(kate_float)-1.0;
   }
   else {
     fprintf(stderr,"Invalid format type: %s\n",output_filename_type);
     exit(-1);
   }
-
-  init_kate_stream_set(&kate_streams);
 
   fin=open_and_probe_stream(input_filename);
   if (!fin) exit(-1);
@@ -314,7 +181,7 @@ int main(int argc,char **argv)
       fout=stdout;
     }
     else {
-      char *filename=get_filename(output_filename,NULL,&kate_streams);
+      char *filename=get_filename(output_filename,NULL,NULL);
       fout=fopen(filename,"w");
       if (!fout) {
         fprintf(stderr,"%s: %s\n",filename,strerror(errno));
@@ -342,17 +209,17 @@ int main(int argc,char **argv)
         exit(-1);
       }
       if (k.ki->probe<0 && !headers_written) {
-        if (write_start_function) (*write_start_function)(fout);
-        if (write_headers_function) (*write_headers_function)(fout,k.ki,NULL);
+        if (wf.write_start_function) (*wf.write_start_function)(fout);
+        if (wf.write_headers_function) (*wf.write_headers_function)(fout,k.ki,NULL);
         headers_written=1;
       }
       if (ret>0) {
-        if (write_end_function) (*write_end_function)(fout);
+        if (wf.write_end_function) (*wf.write_end_function)(fout);
         break; /* last packet decoded */
       }
       if (ev) {
-        if (write_event_function) {
-          (*write_event_function)(fout,write_event_function_data,ev,-1,event_index);
+        if (wf.write_event_function) {
+          (*wf.write_event_function)(fout,wf.write_event_function_data,ev,-1,event_index);
         }
         ++event_index;
       }
@@ -372,138 +239,21 @@ int main(int argc,char **argv)
     if (fout!=stdout) fclose(fout);
   }
   else {
-    /* we'll assume we're embedded in Ogg */
     raw=0;
     signature_size=bytes_read;
-    ogg_sync_init(&oy);
 
-    while (1) {
-      buffer=ogg_sync_buffer(&oy,4096);
-      if (!buffer) {
-        fprintf(stderr,"Failed to get sync buffer\n");
-        break;
-      }
-      if (signature_size>0) {
-        memcpy(buffer,signature,signature_size);
-        signature_size=0;
-      }
-      else {
-        bytes_read=fread(buffer,1,4096,fin);
-      }
-      if (bytes_read==0) {
-        eos=1;
-        break;
-      }
-      ogg_sync_wrote(&oy,bytes_read);
+    init_kate_stream_set(&opd.kate_streams);
+    opd.n_streams=0;
+    opd.verbose=verbose;
+    opd.fuzz=fuzz;
+    opd.fuzz_seed=fuzz_seed;
+    opd.output_filename=output_filename;
+    opd.wf=&wf;
 
-      while (ogg_sync_pageout(&oy,&og)>0) {
-        if (ogg_page_bos(&og)) {
-          add_kate_stream(&kate_streams,&og,n_streams++);
-        };
+    opf.on_page=&ogg_parser_on_page;
+    ret=parse_ogg_stream(fin,signature,signature_size,opf,(kate_uintptr_t)&opd);
 
-        kate_stream *ks=find_kate_stream_for_page(&kate_streams,&og);
-        if (ks) {
-          ogg_int64_t granpos=ogg_page_granulepos(&og);
-          while (ogg_stream_packetout(&ks->os,&op)) {
-            if (verbose>=2) printf("Got packet: %ld bytes\n",op.bytes);
-            if (ks->init<kstream_data) {
-              ret=kate_ogg_decode_headerin(&ks->ki,&ks->kc,&op);
-              if (ret>=0) {
-                /* we found a Kate bitstream */
-                if (op.packetno==0) {
-                  if (verbose>=1) printf("Bitstream %08x looks like Kate\n",ogg_page_serialno(&og));
-                }
-                if (ret>0) {
-                  /* we're done parsing headers, go for data */
-                  if (verbose>=1) {
-                    printf("Bitstream %08x is Kate (\"%s\" \"%s\", encoding %d)\n",
-                      ogg_page_serialno(&og),
-                      ks->ki.language,
-                      ks->ki.category,
-                      ks->ki.text_encoding);
-                  }
-                  if (!output_filename || !strcmp(output_filename,"-")) {
-                    const kate_stream *other=find_kate_stream_for_file(&kate_streams,stdout);
-                    if (other) {
-                      fprintf(stderr,"Cannot write two Kate streams to the same output, new Kate stream will be ignored\n");
-                      break;
-                    }
-                    ks->fout=stdout;
-                  }
-                  else {
-                    ks->filename=get_filename(output_filename,ks,&kate_streams);
-                    if (!ks->filename) {
-                      /* get_filename returns NULL when it can't generate a filename because no format field
-                         was given in the output filename and we have more than one Kate stream */
-                      fprintf(stderr,"Cannot write two Kate streams to the same output, new Kate stream will be ignored\n");
-                      break;
-                    }
-                    ks->fout=fopen(ks->filename,"w");
-                    if (!ks->fout) {
-                      fprintf(stderr,"%s: %s\n",ks->filename,strerror(errno));
-                      exit(-1);
-                    }
-                  }
-                  if (write_start_function) (*write_start_function)(ks->fout);
-
-                  ret=kate_decode_init(&ks->k,&ks->ki);
-                  if (ret<0) {
-                    fprintf(stderr,"kate_decode_init failed: %d\n",ret);
-                    exit(-1);
-                  }
-                  ks->init=kstream_data;
-                  if (write_headers_function) (*write_headers_function)(ks->fout,&ks->ki,&ks->kc);
-                }
-              }
-              else {
-                if (ret!=KATE_E_NOT_KATE) {
-                  fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
-                  ks->ret=ret;
-                }
-                clear_and_remove_kate_stream(ks,&kate_streams);
-              }
-            }
-            else {
-              if (fuzz) fuzz_ogg_packet(&fuzz_seed,&op);
-              ret=kate_ogg_decode_packetin(&ks->k,&op);
-              if (ret<0) {
-                fprintf(stderr,"error in kate_decode_packetin: %d\n",ret);
-                ks->ret=ret;
-              }
-              else if (ret>0) {
-                /* we're done */
-                if (write_end_function) (*write_end_function)(ks->fout);
-                eos=1;
-                break;
-              }
-              else {
-                const kate_event *ev=NULL;
-                ret=kate_decode_eventout(&ks->k,&ev);
-                if (ret<0) {
-                  fprintf(stderr,"error in kate_decode_eventout: %d\n",ret);
-                  ks->ret=ret;
-                }
-                else if (ret>0) {
-                  /* printf("No event to go with this packet\n"); */
-                }
-                else if (ret==0) {
-                  if (write_event_function) {
-                    (*write_event_function)(ks->fout,write_event_function_data,ev,granpos,ks->event_index);
-                  }
-                  ++ks->event_index;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      //if (eos) break;
-    }
-
-    clear_kate_stream_set(&kate_streams);
-
-    ogg_sync_clear(&oy);
+    clear_kate_stream_set(&opd.kate_streams);
   }
 
   if (fin!=stdin) fclose(fin);
