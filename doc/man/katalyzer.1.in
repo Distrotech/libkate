@@ -1,0 +1,55 @@
+.\" Copyright (C) 2008 Vincent Penquerc'h.
+.\" This file is part of the Kate codec library.
+.\" Written by Vincent Penquerc'h.
+.\"
+.\" Use, distribution and reproduction of this library is governed
+.\" by a BSD style source license included with this source in the
+.\" file 'COPYING'. Please read these terms before distributing. */
+
+
+.TH "KATALYZER" 1 "03 december 2008" "libkate @VERSION@ "libkate documentation"
+
+.SH NAME
+katalyzer \- analyzes Kate streams and displays various information about them.
+
+.SH SYNOPSIS
+.B katalyzer
+.B "[\-hV]"
+.BI "[\-o " outfile ]
+.BI "[\-l " types ]
+[ infile ]
+
+.SH DESCRIPTION
+.B katalyzer
+analyzes Kate streams and displays information about them. The type of information
+to select is selectable on the command line. Several multiplexed Kate streams may be
+analyzed at the same time.
+
+.SH OPTIONS
+.TP
+\fB\-h\fR
+Show command line help.
+.TP
+\fB\-V\fR
+Show version information.
+.TP
+\fB\-l\fR types
+Selet the types of information to log:
+    e: errors
+    o: Ogg related information (pages, packets)
+    -: miscellaneous information that doesn't belong in any other type
+
+.SH EXAMPLES
+
+Analyzes any Kate stream in an Ogg file:
+
+    katalyzer input.ogg
+
+Analyzes any Kate stream in an Ogg file, displaying only errors:
+
+    katalyzer -l e input.ogg
+
+.SH SEE ALSO
+.PP
+\fBkatedec\fR(1), \fBkateenc\fR(1)
+

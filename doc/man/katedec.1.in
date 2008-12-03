@@ -63,5 +63,5 @@ Decodes several multiplexed Kate streams to SubRip files:
 
 .SH SEE ALSO
 .PP
-\fBkateenc\fR(1)
+\fBkateenc\fR(1), \fBkatalyzer\fR(1)
 

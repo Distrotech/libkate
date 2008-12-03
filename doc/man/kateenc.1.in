@@ -80,5 +80,5 @@ Create a Kate stream for Welsh subtitles from a SubRip file:
 
 .SH SEE ALSO
 .PP
-\fBkatedec\fR(1)
+\fBkatedec\fR(1), \fBkatalyzer\fR(1)
 

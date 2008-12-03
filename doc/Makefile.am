@@ -1,6 +1,6 @@
 LIBTOOLFLAGS=--silent
 
-man_MANS=man/kateenc.1 man/katedec.1
+man_MANS=man/kateenc.1 man/katedec.1 man/katalyzer.1
 
 # dependency to get doc to be built
 noinst_DATA = .doc-dummy-target
@@ -41,7 +41,7 @@ endif
 dist-hook: .doc-dummy-target
 	cp -fR * $(distdir)
 	rm -f $(distdir)/doc/kate.doxygen
-	for f in man/kateenc.1 man/katedec.1; do \
+	for f in man/kateenc.1 man/katedec.1 man/katalyzer.1; do \
 	  if test -f "$(distdir)/doc/$$f"; then rm -f "$(distdir)/doc/$$f"; fi \
 	done
 
