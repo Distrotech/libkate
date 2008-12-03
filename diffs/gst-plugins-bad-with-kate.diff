@@ -1,7 +1,7 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/configure.ac NEW/gst-plugins-bad/configure.ac
---- ORG/gst-plugins-bad/configure.ac	2008-09-13 11:26:03.000000000 +0100
-+++ NEW/gst-plugins-bad/configure.ac	2008-09-18 13:23:44.000000000 +0100
-@@ -807,6 +807,30 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/configure.ac NEW2/gst-plugins-bad/configure.ac
+--- ORG2/gst-plugins-bad/configure.ac	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/configure.ac	2008-12-03 14:21:19.000000000 +0000
+@@ -800,6 +800,30 @@
    AC_SUBST(JP2K_LIBS)
  ])
  
@@ -14,7 +14,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  ])
 +  AC_SUBST(KATE_CFLAGS)
 +  AC_SUBST(KATE_LIBS)
-+  PKG_CHECK_MODULES(TIGER, tiger >= 0.2.0,
++  PKG_CHECK_MODULES(TIGER, tiger >= 0.3.2,
 +    [
 +      HAVE_TIGER="yes"
 +      AC_DEFINE(HAVE_TIGER, 1, [Define if libtiger is available])
@@ -32,7 +32,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  dnl *** ladspa ***
  translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
  AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-@@ -1328,6 +1352,7 @@
+@@ -1321,6 +1345,7 @@
  AM_CONDITIONAL(USE_X264, false)
  AM_CONDITIONAL(USE_XVID, false)
  AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -40,7 +40,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  AM_CONDITIONAL(USE_WININET, false)
  AM_CONDITIONAL(USE_ACM, false)
  
-@@ -1473,6 +1498,7 @@
+@@ -1471,6 +1496,7 @@
  ext/ivorbis/Makefile
  ext/jack/Makefile
  ext/jp2k/Makefile
@@ -48,10 +48,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/ladspa/Makefile
  ext/libmms/Makefile
  ext/Makefile
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
---- ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-09-13 11:26:04.000000000 +0100
-+++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-09-13 11:32:42.000000000 +0100
-@@ -38,6 +38,10 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
+--- ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-12-03 14:05:46.000000000 +0000
+@@ -40,6 +40,10 @@
      <xi:include href="xml/element-ivorbisdec.xml" />
      <xi:include href="xml/element-jackaudiosrc.xml" />
      <xi:include href="xml/element-jackaudiosink.xml" />
@@ -59,18 +59,18 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    <xi:include href="xml/element-katedec.xml" />
 +    <xi:include href="xml/element-kateparse.xml" />
 +    <xi:include href="xml/element-katetag.xml" />
+     <xi:include href="xml/element-legacyresample.xml" />
      <xi:include href="xml/element-metadatademux.xml" />
      <xi:include href="xml/element-metadatamux.xml" />
-     <xi:include href="xml/element-modplug.xml" />
-@@ -54,6 +58,7 @@
-     <xi:include href="xml/element-speexresample.xml" />
+@@ -56,6 +60,7 @@
+     <xi:include href="xml/element-speed.xml" />
      <xi:include href="xml/element-stereo.xml" />
      <!--xi:include href="xml/element-theoradecexp.xml" /-->
 +    <xi:include href="xml/element-tiger.xml" />
      <xi:include href="xml/element-timidity.xml" />
      <xi:include href="xml/element-twolame.xml" />
      <xi:include href="xml/element-trm.xml" />
-@@ -94,6 +99,7 @@
+@@ -99,6 +104,7 @@
      <xi:include href="xml/plugin-gstrtpmanager.xml" />
      <xi:include href="xml/plugin-h264parse.xml" />
      <xi:include href="xml/plugin-jack.xml" />
@@ -78,10 +78,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      <xi:include href="xml/plugin-ladspa.xml" />
      <xi:include href="xml/plugin-metadata.xml" />
      <xi:include href="xml/plugin-mms.xml" />
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt
---- ORG/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-09-13 11:26:04.000000000 +0100
-+++ NEW/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-09-13 11:32:42.000000000 +0100
-@@ -317,6 +317,76 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt
+--- ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-12-03 14:04:18.000000000 +0000
+@@ -345,6 +345,76 @@
  </SECTION>
  
  <SECTION>
@@ -158,10 +158,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  <FILE>gstbasemetadata</FILE>
  <TITLE>GstBaseMetadata</TITLE>
  GstBaseMetadata
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/docs/plugins/Makefile.am NEW/gst-plugins-bad/docs/plugins/Makefile.am
---- ORG/gst-plugins-bad/docs/plugins/Makefile.am	2008-09-13 11:26:04.000000000 +0100
-+++ NEW/gst-plugins-bad/docs/plugins/Makefile.am	2008-09-13 11:32:42.000000000 +0100
-@@ -104,6 +104,11 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/Makefile.am NEW2/gst-plugins-bad/docs/plugins/Makefile.am
+--- ORG2/gst-plugins-bad/docs/plugins/Makefile.am	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/docs/plugins/Makefile.am	2008-12-03 14:04:18.000000000 +0000
+@@ -99,6 +99,11 @@
  	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
  	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
  	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
@@ -173,10 +173,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
  	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
  	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/ext/Makefile.am NEW/gst-plugins-bad/ext/Makefile.am
---- ORG/gst-plugins-bad/ext/Makefile.am	2008-09-13 11:26:16.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/Makefile.am	2008-09-13 11:34:40.000000000 +0100
-@@ -136,6 +136,12 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/ext/Makefile.am NEW2/gst-plugins-bad/ext/Makefile.am
+--- ORG2/gst-plugins-bad/ext/Makefile.am	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/ext/Makefile.am	2008-12-03 14:04:18.000000000 +0000
+@@ -142,6 +142,12 @@
  JP2K_DIR =
  endif
  
@@ -189,7 +189,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  if USE_LADSPA
  LADSPA_DIR = ladspa
  else
-@@ -336,6 +342,7 @@
+@@ -343,6 +349,7 @@
  	$(IVORBIS_DIR) \
  	$(JACK_DIR) \
  	$(JP2K_DIR) \
@@ -197,7 +197,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(LADSPA_DIR) \
  	$(LCS_DIR) \
  	$(LIBFAME_DIR) \
-@@ -382,6 +389,7 @@
+@@ -389,6 +396,7 @@
  	ladspa \
  	jack \
  	jp2k \
@@ -205,21 +205,30 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	libmms \
  	dts \
  	divx \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/gst-plugins-bad.spec.in NEW/gst-plugins-bad/gst-plugins-bad.spec.in
---- ORG/gst-plugins-bad/gst-plugins-bad.spec.in	2008-09-13 11:26:39.000000000 +0100
-+++ NEW/gst-plugins-bad/gst-plugins-bad.spec.in	2008-09-13 11:32:42.000000000 +0100
-@@ -146,6 +146,7 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/gst-plugins-bad.spec.in NEW2/gst-plugins-bad/gst-plugins-bad.spec.in
+--- ORG2/gst-plugins-bad/gst-plugins-bad.spec.in	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/gst-plugins-bad.spec.in	2008-12-03 14:04:18.000000000 +0000
+@@ -150,6 +150,7 @@
  @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
  @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
  @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 +@USE_KATE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
  
  %changelog
- * Mon Sep 1 2008 Christian Schaller <christian.schaller at collabora dot co uk>
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/LICENSE_readme NEW/gst-plugins-bad/LICENSE_readme
---- ORG/gst-plugins-bad/LICENSE_readme	2008-09-13 11:26:39.000000000 +0100
-+++ NEW/gst-plugins-bad/LICENSE_readme	2008-09-13 11:32:42.000000000 +0100
-@@ -93,6 +93,7 @@
+ * Thu Oct 9 2008 Christian Schaller <chrisian.schaller at collabora dot co uk>
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/LICENSE_readme NEW2/gst-plugins-bad/LICENSE_readme
+--- ORG2/gst-plugins-bad/LICENSE_readme	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/LICENSE_readme	2008-12-03 14:30:42.000000000 +0000
+@@ -85,6 +85,8 @@
+ dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
+ effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
+ musepack 			  (http://www.musepack.net/)
++kate             libtiger         (http://libtiger.googlecode.com/)
++                                   Optional, only for the tiger element
+ 
+ Plugins which use a BSD covered library are as follows:
+ 
+@@ -93,6 +95,7 @@
  gsttheora        libtheora        (http://www.theora.org/)
  speex                             (http://www.speex.org/)
  flac             libFLAC          (http://flac.sourceforge.net/)
@@ -227,9 +236,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  Plugins based on libraries with other free licenses:
  
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/REQUIREMENTS NEW/gst-plugins-bad/REQUIREMENTS
---- ORG/gst-plugins-bad/REQUIREMENTS	2008-09-13 11:26:40.000000000 +0100
-+++ NEW/gst-plugins-bad/REQUIREMENTS	2008-09-13 11:32:42.000000000 +0100
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/REQUIREMENTS NEW2/gst-plugins-bad/REQUIREMENTS
+--- ORG2/gst-plugins-bad/REQUIREMENTS	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/REQUIREMENTS	2008-12-03 14:04:18.000000000 +0000
 @@ -118,9 +118,11 @@
  libmms		(for MMS protocol support)
  			(http://www.sf.net/projects/libmms)
@@ -244,10 +253,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  
  Optional (debian) packages:
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG/gst-plugins-bad/tests/check/Makefile.am NEW/gst-plugins-bad/tests/check/Makefile.am
---- ORG/gst-plugins-bad/tests/check/Makefile.am	2008-09-13 11:26:46.000000000 +0100
-+++ NEW/gst-plugins-bad/tests/check/Makefile.am	2008-09-13 11:33:15.000000000 +0100
-@@ -63,6 +63,12 @@
+diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/tests/check/Makefile.am NEW2/gst-plugins-bad/tests/check/Makefile.am
+--- ORG2/gst-plugins-bad/tests/check/Makefile.am	2008-12-03 14:06:23.000000000 +0000
++++ NEW2/gst-plugins-bad/tests/check/Makefile.am	2008-12-03 14:05:10.000000000 +0000
+@@ -69,6 +69,12 @@
  check_x264enc=
  endif
  
@@ -260,23 +269,25 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  VALGRIND_TO_FIX = \
  	elements/mpeg2enc \
-@@ -80,6 +86,7 @@
+@@ -86,6 +92,7 @@
  	$(check_neon)      \
  	$(check_ofa)        \
  	$(check_timidity)  \
 +	$(check_kate)  \
  	$(check_x264enc)   \
- 	elements/selector \
- 	elements/y4menc
-@@ -94,3 +101,6 @@
+ 	elements/aacparse \
+ 	elements/amrparse \
+@@ -105,5 +112,8 @@
  elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
  elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
  
 +elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
+ elements_speexresample_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
+ elements_speexresample_LDADD = $(GST_PLUGINS_BASE_LIBS) $(LDADD) -lgstaudio-$(GST_MAJORMINOR)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkate.c	2008-09-27 17:50:07.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkate.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,154 @@
 +/*
 + * GStreamer
@@ -397,9 +408,9 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      0, "Kate Tiger renderer");
 +#endif
 +
-+  /* if we have don't build tiger, we'll want to autoplug and convert to
-+     text, but if we do build tiger, we'll want to use it preferentially
-+     as it can play non text streams too */
++  /* if we don't build tiger, we'll want to autoplug and convert to text,
++     but if we do build tiger, we'll want to use it preferentially as it
++     can play non text streams too */
 +  if (!gst_element_register (plugin, "katedec",
 +      GST_RANK_PRIMARY, GST_TYPE_KATE_DEC))
 +    return FALSE;
@@ -433,7 +444,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatedec.c	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkatedec.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,314 @@
 +/*
 + * GStreamer
@@ -750,7 +761,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatedec.h	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkatedec.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,91 @@
 +/*
 + * GStreamer
@@ -844,7 +855,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_DEC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateenc.c	2008-09-21 19:45:01.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateenc.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,1762 @@
 +/*
 + * GStreamer
@@ -2609,7 +2620,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateenc.h	2008-09-17 20:28:43.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateenc.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,123 @@
 +/*
 + * GStreamer
@@ -2735,7 +2746,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_ENC_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkate.h	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkate.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,55 @@
 +/*
 + * GStreamer
@@ -2793,7 +2804,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateparse.c	2008-09-17 12:35:15.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateparse.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,606 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
@@ -3402,7 +3413,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return ret;
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateparse.h	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateparse.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,79 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -3484,7 +3495,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_PARSE_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetag.c	2008-09-13 19:15:40.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetag.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,343 @@
 +/*
 + * GStreamer
@@ -3830,7 +3841,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
 +}
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetag.h	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetag.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,68 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -3901,8 +3912,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TAG_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-09-27 17:59:21.000000000 +0100
-@@ -0,0 +1,594 @@
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-12-03 14:07:08.000000000 +0000
+@@ -0,0 +1,770 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -4003,9 +4014,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +enum
 +{
 +  ARG_DEFAULT_FONT_DESC = DECODER_BASE_ARG_COUNT,
++  ARG_QUALITY,
++  ARG_DEFAULT_FONT_EFFECT,
++  ARG_DEFAULT_FONT_EFFECT_STRENGTH,
 +  ARG_DEFAULT_FONT_RED,
 +  ARG_DEFAULT_FONT_GREEN,
 +  ARG_DEFAULT_FONT_BLUE,
++  ARG_DEFAULT_FONT_ALPHA,
++  ARG_DEFAULT_BACKGROUND_RED,
++  ARG_DEFAULT_BACKGROUND_GREEN,
++  ARG_DEFAULT_BACKGROUND_BLUE,
++  ARG_DEFAULT_BACKGROUND_ALPHA,
 +};
 +
 +static GstStaticPadTemplate kate_sink_factory = GST_STATIC_PAD_TEMPLATE ("kate_sink",
@@ -4028,6 +4047,24 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +GST_BOILERPLATE (GstKateTiger, gst_kate_tiger, GstElement,
 +    GST_TYPE_ELEMENT);
++
++static GType
++gst_kate_tiger_font_effect_get_type ()
++{
++    static GType font_effect_type = 0;
++
++    if (!font_effect_type) {
++        static const GEnumValue font_effects[] = {
++            { tiger_font_plain, "none", "none" },
++            { tiger_font_shadow, "shadow", "shadow" },
++            { tiger_font_outline, "outline", "outline" },
++            { 0, NULL, NULL }
++        };
++        font_effect_type = g_enum_register_static ("GstFontEffect", font_effects);
++    }
++
++    return font_effect_type;
++}
 +
 +static void gst_kate_tiger_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec);
@@ -4080,10 +4117,26 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  gst_kate_util_install_decoder_base_properties (gobject_class);
 +
++  g_object_class_install_property (gobject_class, ARG_QUALITY,
++      g_param_spec_double ("quality", "Rendering quality",
++                            "Rendering quality (0 is faster, 1 is best and slower)",
++          0.0, 1.0, 1.0, G_PARAM_READWRITE));
++
 +  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_DESC,
 +      g_param_spec_string ("default-font-desc", "Default font description",
 +                           "Default font description (Pango style) to render text with",
 +          "", G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_EFFECT,
++      g_param_spec_enum ("default-font-effect", "Default font effect",
++                         "Whether to apply an effect to text by default, for increased readability",
++                         gst_kate_tiger_font_effect_get_type(),
++                         tiger_font_plain, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_EFFECT_STRENGTH,
++      g_param_spec_double ("default-font-effect-strength", "Default font effect strength",
++                           "How pronounced should the font effect be (effect dependent)",
++          0.0, 1.0, 0.5, G_PARAM_READWRITE));
 +
 +  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_RED,
 +      g_param_spec_int ("default-font-red", "Default font color (red component)",
@@ -4098,6 +4151,31 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_BLUE,
 +      g_param_spec_int ("default-font-blue", "Default font color (blue component)",
 +                        "Default font color (blue component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_FONT_ALPHA,
++      g_param_spec_int ("default-font-alpha", "Default font color (alpha component)",
++                        "Default font color (alpha component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_RED,
++      g_param_spec_int ("default-background-red", "Default background color (red component)",
++                        "Default background color (red component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_GREEN,
++      g_param_spec_int ("default-background-green", "Default background color (green component)",
++                        "Default background color (green component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_BLUE,
++      g_param_spec_int ("default-background-blue", "Default background color (blue component)",
++                        "Default background color (blue component, between 0 and 255) to render text with",
++          0, 255, 255, G_PARAM_READWRITE));
++
++  g_object_class_install_property (gobject_class, ARG_DEFAULT_BACKGROUND_ALPHA,
++      g_param_spec_int ("default-background-alpha", "Default background color (alpha component)",
++                        "Default background color (alpha component, between 0 and 255) to render text with",
 +          0, 255, 255, G_PARAM_READWRITE));
 +
 +  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_kate_tiger_change_state);
@@ -4141,9 +4219,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  tiger->tr = NULL;
 +
 +  tiger->default_font_desc = NULL;
++  tiger->quality = -1.0;
++  tiger->default_font_effect = tiger_font_plain;
++  tiger->default_font_effect_strength = 0.5;
 +  tiger->default_font_r = 255;
 +  tiger->default_font_g = 255;
 +  tiger->default_font_b = 255;
++  tiger->default_font_a = 255;
++  tiger->default_background_r = 0;
++  tiger->default_background_g = 0;
++  tiger->default_background_b = 0;
++  tiger->default_background_a = 0;
 +
 +  tiger->video_width = 0;
 +  tiger->video_height = 0;
@@ -4168,6 +4254,48 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 +static void
++gst_kate_tiger_update_quality (GstKateTiger *tiger)
++{
++  if (tiger->tr && tiger->quality>=0.0) {
++    tiger_renderer_set_quality (tiger->tr, tiger->quality);
++  }
++}
++
++static void
++gst_kate_tiger_update_default_font_effect (GstKateTiger *tiger)
++{
++  if (tiger->tr) {
++    tiger_renderer_set_default_font_effect (tiger->tr,
++                                            tiger->default_font_effect,
++                                            tiger->default_font_effect_strength);
++  }
++}
++
++static void
++gst_kate_tiger_update_default_font_color (GstKateTiger *tiger)
++{
++  if (tiger->tr) {
++    tiger_renderer_set_default_font_color (tiger->tr,
++                                           tiger->default_font_r/255.0,
++                                           tiger->default_font_g/255.0,
++                                           tiger->default_font_b/255.0,
++                                           tiger->default_font_a/255.0);
++  }
++}
++
++static void
++gst_kate_tiger_update_default_background_color (GstKateTiger *tiger)
++{
++  if (tiger->tr) {
++    tiger_renderer_set_default_background_fill_color (tiger->tr,
++                                                      tiger->default_background_r/255.0,
++                                                      tiger->default_background_g/255.0,
++                                                      tiger->default_background_b/255.0,
++                                                      tiger->default_background_a/255.0);
++  }
++}
++
++static void
 +gst_kate_tiger_set_property (GObject * object, guint prop_id,
 +    const GValue * value, GParamSpec * pspec)
 +{
@@ -4188,14 +4316,49 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +        if (tiger->tr) tiger_renderer_set_default_font_description (tiger->tr, tiger->default_font_desc);
 +      }
 +      break;
++    case ARG_QUALITY:
++      tiger->quality = g_value_get_double (value);
++      gst_kate_tiger_update_quality (tiger);
++      break;
++    case ARG_DEFAULT_FONT_EFFECT:
++      tiger->default_font_effect =  g_value_get_enum (value);
++      gst_kate_tiger_update_default_font_effect (tiger);
++      break;
++    case ARG_DEFAULT_FONT_EFFECT_STRENGTH:
++      tiger->default_font_effect_strength =  g_value_get_double (value);
++      gst_kate_tiger_update_default_font_effect (tiger);
++      break;
 +    case ARG_DEFAULT_FONT_RED:
 +      tiger->default_font_r = g_value_get_int (value);
++      gst_kate_tiger_update_default_font_color (tiger);
 +      break;
 +    case ARG_DEFAULT_FONT_GREEN:
 +      tiger->default_font_g = g_value_get_int (value);
++      gst_kate_tiger_update_default_font_color (tiger);
 +      break;
 +    case ARG_DEFAULT_FONT_BLUE:
 +      tiger->default_font_b = g_value_get_int (value);
++      gst_kate_tiger_update_default_font_color (tiger);
++      break;
++    case ARG_DEFAULT_FONT_ALPHA:
++      tiger->default_font_a = g_value_get_int (value);
++      gst_kate_tiger_update_default_font_color (tiger);
++      break;
++    case ARG_DEFAULT_BACKGROUND_RED:
++      tiger->default_background_r = g_value_get_int (value);
++      gst_kate_tiger_update_default_background_color (tiger);
++      break;
++    case ARG_DEFAULT_BACKGROUND_GREEN:
++      tiger->default_background_g = g_value_get_int (value);
++      gst_kate_tiger_update_default_background_color (tiger);
++      break;
++    case ARG_DEFAULT_BACKGROUND_BLUE:
++      tiger->default_background_b = g_value_get_int (value);
++      gst_kate_tiger_update_default_background_color (tiger);
++      break;
++    case ARG_DEFAULT_BACKGROUND_ALPHA:
++      tiger->default_background_a = g_value_get_int (value);
++      gst_kate_tiger_update_default_background_color (tiger);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -4217,6 +4380,15 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    case ARG_DEFAULT_FONT_DESC:
 +      g_value_set_string (value, tiger->default_font_desc ? tiger->default_font_desc : "");
 +      break;
++    case ARG_QUALITY:
++      g_value_set_double (value, tiger->quality);
++      break;
++    case ARG_DEFAULT_FONT_EFFECT:
++      g_value_set_enum (value, tiger->default_font_effect);
++      break;
++    case ARG_DEFAULT_FONT_EFFECT_STRENGTH:
++      g_value_set_double (value, tiger->default_font_effect_strength);
++      break;
 +    case ARG_DEFAULT_FONT_RED:
 +      g_value_set_int (value, tiger->default_font_r);
 +      break;
@@ -4225,6 +4397,21 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      break;
 +    case ARG_DEFAULT_FONT_BLUE:
 +      g_value_set_int (value, tiger->default_font_b);
++      break;
++    case ARG_DEFAULT_FONT_ALPHA:
++      g_value_set_int (value, tiger->default_font_a);
++      break;
++    case ARG_DEFAULT_BACKGROUND_RED:
++      g_value_set_int (value, tiger->default_background_r);
++      break;
++    case ARG_DEFAULT_BACKGROUND_GREEN:
++      g_value_set_int (value, tiger->default_background_g);
++      break;
++    case ARG_DEFAULT_BACKGROUND_BLUE:
++      g_value_set_int (value, tiger->default_background_b);
++      break;
++    case ARG_DEFAULT_BACKGROUND_ALPHA:
++      g_value_set_int (value, tiger->default_background_a);
 +      break;
 +    default:
 +      if (!gst_kate_util_decoder_base_get_property (&tiger->decoder, object, prop_id, value, pspec)) {
@@ -4320,7 +4507,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +      GST_WARNING_OBJECT (tiger, "Failed to get a pointer to video buffer data");
 +    }
 +    else {
-+      ret = tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width, tiger->video_height, tiger->video_width*4); // TODO: stride ?
++      ret = tiger_renderer_set_buffer (tiger->tr, ptr, tiger->video_width, tiger->video_height, tiger->video_width*4, 0); // TODO: stride ?
 +      if (G_UNLIKELY(ret < 0)) {
 +        GST_WARNING_OBJECT (tiger, "Tiger renderer failed to set buffer to video frame: %d", ret);
 +      }
@@ -4387,10 +4574,10 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +          if (ret < 0) {
 +            GST_WARNING_OBJECT (tiger, "failed to set tiger default font description: %d", ret);
 +          }
-+          ret = tiger_renderer_set_default_font_color (tiger->tr, tiger->default_font_r/255.0, tiger->default_font_g/255.0, tiger->default_font_b/255.0, 1.0);
-+          if (ret < 0) {
-+            GST_WARNING_OBJECT (tiger, "failed to set tiger default font color: %d", ret);
-+          }
++          gst_kate_tiger_update_default_font_color (tiger);
++          gst_kate_tiger_update_default_background_color (tiger);
++          gst_kate_tiger_update_default_font_effect (tiger);
++          gst_kate_tiger_update_quality (tiger);
 +        }
 +      }
 +      g_mutex_unlock (tiger->mutex);
@@ -4498,8 +4685,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-09-18 09:09:11.000000000 +0100
-@@ -0,0 +1,103 @@
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-12-03 14:07:08.000000000 +0000
+@@ -0,0 +1,111 @@
 +/*
 + * GStreamer
 + * Copyright 2005 Thomas Vander Stichele <thomas@apestaart.org>
@@ -4582,10 +4769,18 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  tiger_renderer *tr;
 +
++  gdouble quality;
 +  gchar *default_font_desc;
++  gboolean default_font_effect;
++  gdouble default_font_effect_strength;
 +  guchar default_font_r;
 +  guchar default_font_g;
 +  guchar default_font_b;
++  guchar default_font_a;
++  guchar default_background_r;
++  guchar default_background_g;
++  guchar default_background_b;
++  guchar default_background_a;
 +
 +  gint video_width;
 +  gint video_height;
@@ -4604,7 +4799,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_TIGER_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateutil.c	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateutil.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,341 @@
 +/* GStreamer
 + * Copyright (C) 2008 ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
@@ -4948,7 +5143,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +}
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/gstkateutil.h	2008-09-13 11:32:42.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/gstkateutil.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,65 @@
 +/* -*- c-basic-offset: 2 -*-
 + * GStreamer
@@ -5016,8 +5211,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +#endif /* __GST_KATE_UTIL_H__ */
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/Makefile.am	2008-09-13 11:32:42.000000000 +0100
-@@ -0,0 +1,19 @@
++++ NEW2/gst-plugins-bad/ext/kate/Makefile.am	2008-12-03 14:08:07.000000000 +0000
+@@ -0,0 +1,20 @@
 +# plugindir is set in configure
 +
 +plugin_LTLIBRARIES = libgstkate.la
@@ -5032,13 +5227,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +libgstkate_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(TIGER_CFLAGS) $(KATE_CFLAGS)
 +libgstkate_la_LIBADD = $(GST_PLUGIN_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) $(GST_LIBS) $(TIGER_LIBS) $(KATE_LIBS)
 +libgstkate_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
++libgstkate_la_LIBTOOLFLAGS = --tag=disable-static
 +
 +# headers we need but don't want installed
 +noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatetiger.h
 +
 +EXTRA_DIST=README
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/ext/kate/README	2008-09-13 20:21:35.000000000 +0100
++++ NEW2/gst-plugins-bad/ext/kate/README	2008-12-03 14:08:13.000000000 +0000
 @@ -0,0 +1,20 @@
 +Kate is a free codec for text based data, which can also carry images.
 +It is typically used to create overlays on a video.
@@ -5051,17 +5247,17 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +The Kate plugin contains various elements to manipulate Kate streams:
 +
-+ - katedec: decodes Kate streams (text only for now)
++ - katedec: decodes Kate streams to text
 + - kateenc: encodes Kate streams from text and SPU images
 + - kateparse: parses Kate streams
 + - katetag: allows changing metadata in Kate streams
-+ - tiger: renders Kate streams using libtiger (needs libtiger)
++ - tiger: decodes and renders Kate streams using libtiger (needs libtiger)
 +
 +More information about Kate can be found at:
 +http://wiki.xiph.org/index.php/OggKate
 +
 --- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW/gst-plugins-bad/tests/check/elements/kate.c	2008-09-17 21:10:49.000000000 +0100
++++ NEW2/gst-plugins-bad/tests/check/elements/kate.c	2008-12-03 14:08:36.000000000 +0000
 @@ -0,0 +1,804 @@
 +/* GStreamer
 + *
