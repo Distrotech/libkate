@@ -11,11 +11,14 @@ if HAVE_PNG
 kateenc_SOURCES+=kpng.c
 endif
 katedec_SOURCES=katedec.c kkate.c ksrt.c klrc.c kutil.c kfuzz.c kstream.c kread.c
+katalyzer_SOURCES=katalyzer.c kutil.c kstream.c kread.c
 kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
+katalyzer_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@ @PNG_CFLAGS@
 katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@
-bin_PROGRAMS=katedec kateenc
+katalyzer_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@
+bin_PROGRAMS=katedec kateenc katalyzer
 BUILT_SOURCES=kate_parser.h
 endif
 

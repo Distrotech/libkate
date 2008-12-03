@@ -158,7 +158,7 @@ int kstream_init(kate_stream *ks,ogg_page *og,int stream_index)
     ogg_stream_clear(&ks->os);
     return ret;
   }
-  ks->init=kstream_header_info;
+  ks->init=kstream_uninitialized;
   ks->filename=NULL;
   ks->fout=NULL;
   ks->stream_index=stream_index;
