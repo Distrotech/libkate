@@ -27,6 +27,7 @@
 #include "kstream.h"
 #include "kread.h"
 #include "kutil.h"
+#include "kstrings.h"
 
 typedef struct {
   kate_stream_set kate_streams;
@@ -38,18 +39,27 @@ typedef struct {
 typedef enum {
   klt_misc,
   klt_error,
-  klt_ogg,
+  klt_packet,
+  klt_container,
+  klt_timing,
+  klt_text,
+  klt_event,
 } katalyzer_log_type;
 
 static const struct {
   katalyzer_log_type type;
   char id;
   int by_default;
+  const char *tag;
   const char *desc;
 } log_types_info[]={
-  { klt_misc, '-', 1, "All the rest" },
-  { klt_error, 'e', 1, "Errors" },
-  { klt_ogg, 'o', 1, "Ogg page/packet information" },
+  { klt_misc,      '-', 1, "misc",  "All the rest" },
+  { klt_error,     'e', 1, "error", "Errors" },
+  { klt_packet,    'p', 1, "pack",  "Packet information" },
+  { klt_container, 'c', 0, "cont",  "Container specific information (eg, Ogg)" },
+  { klt_timing,    'T', 1, "cont",  "Timing information" },
+  { klt_text,      't', 1, "cont",  "Text information" },
+  { klt_event,     'v', 0, "event", "Event information" },
 };
 static char *log_types=NULL;
 
@@ -60,6 +70,7 @@ static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,.
   if (!strchr(log_types,log_types_info[type].id)) return;
 
   va_start(ap,format);
+  printf("[%-5s] ",log_types_info[type].tag);
   if (ks) {
     printf("[%08x] ",(int)ks->os.serialno);
   }
@@ -68,6 +79,7 @@ static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,.
   }
   vprintf(format,ap);
   va_end(ap);
+  fflush(stdout);
 }
 
 static const char *packet_type_to_string(unsigned char type)
@@ -100,10 +112,43 @@ static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
   else {
     strcpy(stype,"");
   }
-  kprintf(ks,klt_ogg,"ogg packet %lld, %ld bytes%s\n",
+  kprintf(ks,klt_packet,"packet %lld, %ld bytes%s\n",
       (long long)op->packetno,
       (long)op->bytes,
       stype);
+}
+
+static size_t get_num_glyphs(const kate_event *ev)
+{
+  size_t nglyphs=0;
+  const char *text=ev->text;
+  size_t rlen0=ev->len0;
+  while (kate_text_get_character(ev->text_encoding,&text,&rlen0)>0)
+    ++nglyphs;
+  return nglyphs;
+}
+
+static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
+{
+  int ret;
+
+  kprintf(ks,klt_misc,"An event was found\n");
+
+  kprintf(ks,klt_timing,"event start: %f (%llx)\n",ev->start_time,(long long)ev->start);
+  kprintf(ks,klt_timing,"event end: %f\n",ev->end_time);
+  kprintf(ks,klt_timing,"event duration: %f\n",ev->end_time-ev->start_time);
+  kprintf(ks,klt_timing,"event backlink: %f (%llx)\n",kate_granule_duration(ev->ki,ev->backlink),(long long)ev->backlink);
+
+  ret=kate_text_validate(ev->text_encoding,ev->text,ev->len0);
+  if (ret<0) {
+    kprintf(ks,klt_error,"Text is invalid\n");
+  }
+  else {
+    kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
+    kprintf(ks,klt_text,"Text language %s, directionality %s\n",ev->language,directionality2text(ev->text_directionality));
+    kprintf(ks,klt_text,"Text length %zu bytes, %zu glyphs\n",ev->len,get_num_glyphs(ev));
+    /* kprintf(ks,klt_text,"Text: %s\n",ev->text); */
+  }
 }
 
 static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
@@ -119,7 +164,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
 
   kate_stream *ks=find_kate_stream_for_page(&opd->kate_streams,og);
   if (ks) {
-    kprintf(NULL,klt_ogg,"Ogg page, granpos %016llx, %d bytes, %d packets on this page\n",
+    kprintf(NULL,klt_container,"Ogg page, granpos %016llx, %d bytes, %d packets on this page\n",
         (long long)ogg_page_granulepos(og),
         og->header_len+og->body_len,ogg_page_packets(og));
     while (ogg_stream_packetout(&ks->os,&op)) {
@@ -145,7 +190,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
               ks->ki.language,
               ks->ki.category,
               ks->ki.text_encoding,
-              ks->ki.text_encoding==kate_utf8?"UTF-8":"unknown");
+              encoding2text(ks->ki.text_encoding));
 
             ret=kate_decode_init(&ks->k,&ks->ki);
             if (ret<0) {
@@ -187,11 +232,10 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
             ks->ret=ret;
           }
           else if (ret>0) {
-            /* printf("No event to go with this packet\n"); */
+            kprintf(ks,klt_event,"No event to go with this packet\n");
           }
           else if (ret==0) {
-            kprintf(ks,klt_misc,"event found\n");
-            ++ks->event_index;
+            katalyzer_on_event(ks,ev);
           }
         }
       }
@@ -347,7 +391,6 @@ int main(int argc,char **argv)
     /* raw Kate stream */
     kate_state k;
     FILE *fout;
-    int event_index=0;
     int ret;
 
     bytes=64;
@@ -398,7 +441,6 @@ int main(int argc,char **argv)
       }
       if (ev) {
         kprintf(NULL,klt_misc,"event found\n");
-        ++event_index;
       }
 
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */

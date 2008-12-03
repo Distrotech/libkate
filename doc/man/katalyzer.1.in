@@ -36,8 +36,13 @@ Show version information.
 \fB\-l\fR types
 Selet the types of information to log:
     e: errors
-    o: Ogg related information (pages, packets)
+    p: packet
+    c: container specific information
+    T: Timing
+    t: text
+    v: event
     -: miscellaneous information that doesn't belong in any other type
+
 
 .SH EXAMPLES
 
