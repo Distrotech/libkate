@@ -24,7 +24,6 @@
 #endif
 #include <ogg/ogg.h>
 #include "kate/oggkate.h"
-#include "kate_internal.h"
 #include "kstream.h"
 #include "kread.h"
 #include "kutil.h"
