@@ -33,13 +33,33 @@ typedef struct {
   kate_stream_set kate_streams;
   int n_streams;
 
-  int verbose;
   const char *output_filename;
 } ogg_parser_data;
 
-static void kprintf(kate_stream *ks,const char *format,...)
+typedef enum {
+  klt_misc,
+  klt_error,
+  klt_ogg,
+} katalyzer_log_type;
+
+static const struct {
+  katalyzer_log_type type;
+  char id;
+  int by_default;
+  const char *desc;
+} log_types_info[]={
+  { klt_misc, '-', 1, "All the rest" },
+  { klt_error, 'e', 1, "Errors" },
+  { klt_ogg, 'o', 1, "Ogg page/packet information" },
+};
+static char *log_types=NULL;
+
+static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,...)
 {
   va_list ap;
+
+  if (!strchr(log_types,log_types_info[type].id)) return;
+
   va_start(ap,format);
   if (ks) {
     printf("[%08x] ",(int)ks->os.serialno);
@@ -81,7 +101,7 @@ static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
   else {
     strcpy(stype,"");
   }
-  kprintf(ks,"ogg packet %lld, %ld bytes%s\n",
+  kprintf(ks,klt_ogg,"ogg packet %lld, %ld bytes%s\n",
       (long long)op->packetno,
       (long)op->bytes,
       stype);
@@ -100,8 +120,9 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
 
   kate_stream *ks=find_kate_stream_for_page(&opd->kate_streams,og);
   if (ks) {
-    ogg_int64_t granpos=ogg_page_granulepos(og);
-    kprintf(NULL,"Ogg page, %d bytes, %d packets on this page\n",og->header_len+og->body_len,ogg_page_packets(og));
+    kprintf(NULL,klt_ogg,"Ogg page, granpos %016llx, %d bytes, %d packets on this page\n",
+        (long long)ogg_page_granulepos(og),
+        og->header_len+og->body_len,ogg_page_packets(og));
     while (ogg_stream_packetout(&ks->os,&op)) {
       int is_kate=(ks->init>=kstream_header_info);
       if (!is_kate) {
@@ -115,12 +136,12 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
         if (ret>=0) {
           /* we found a Kate bitstream */
           if (op.packetno==0) {
-            kprintf(ks,"Bitstream looks like Kate\n");
+            kprintf(ks,klt_misc,"Bitstream looks like Kate\n");
             ks->init=kstream_header_info;
           }
           if (ret>0) {
             /* we're done parsing headers, go for data */
-            kprintf(ks,"Bitstream is Kate (bitstream v%d.%d, language \"%s\" category \"%s\", encoding %d (%s))\n",
+            kprintf(ks,klt_misc,"Bitstream is Kate (bitstream v%d.%d, language \"%s\" category \"%s\", encoding %d (%s))\n",
               ks->ki.bitstream_version_major,ks->ki.bitstream_version_minor,
               ks->ki.language,
               ks->ki.category,
@@ -129,19 +150,19 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
 
             ret=kate_decode_init(&ks->k,&ks->ki);
             if (ret<0) {
-              kprintf(ks,"kate_decode_init failed: %d\n",ret);
+              kprintf(ks,klt_error,"kate_decode_init failed: %d\n",ret);
               exit(-1);
             }
             ks->init=kstream_data;
-            kprintf(ks,"headers parsed\n");
+            kprintf(ks,klt_misc,"headers parsed\n");
           }
         }
         else {
           if (ret==KATE_E_NOT_KATE) {
-            kprintf(ks,"Bitstream is not Kate\n");
+            kprintf(ks,klt_misc,"Bitstream is not Kate\n");
           }
           else {
-            kprintf(ks,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
+            kprintf(ks,klt_error,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
             ks->ret=ret;
           }
           clear_and_remove_kate_stream(ks,&opd->kate_streams);
@@ -150,12 +171,12 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
       else {
         ret=kate_ogg_decode_packetin(&ks->k,&op);
         if (ret<0) {
-          kprintf(ks,"error in kate_decode_packetin: %d\n",ret);
+          kprintf(ks,klt_error,"error in kate_decode_packetin: %d\n",ret);
           ks->ret=ret;
         }
         else if (ret>0) {
           /* we're done */
-          kprintf(ks,"eof packet\n");
+          kprintf(ks,klt_misc,"eof packet\n");
           eos=1;
           break;
         }
@@ -163,14 +184,14 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
           const kate_event *ev=NULL;
           ret=kate_decode_eventout(&ks->k,&ev);
           if (ret<0) {
-            kprintf(ks,"error in kate_decode_eventout: %d\n",ret);
+            kprintf(ks,klt_error,"error in kate_decode_eventout: %d\n",ret);
             ks->ret=ret;
           }
           else if (ret>0) {
             /* printf("No event to go with this packet\n"); */
           }
           else if (ret==0) {
-            kprintf(ks,"event found\n");
+            kprintf(ks,klt_misc,"event found\n");
             ++ks->event_index;
           }
         }
@@ -179,6 +200,60 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
   }
 
   return 0;
+}
+
+static int type_sorter(const void *e1,const void *e2)
+{
+  const char *c1=(const char*)e1;
+  const char *c2=(const char*)e2;
+  return *c1-*c2;
+}
+
+static void add_log_types(char **log_types,const char *new_log_types)
+{
+  char *ptr,*w,prevc=0;
+
+  if (*log_types) {
+    *log_types=(char*)kate_realloc(*log_types,strlen(*log_types)+strlen(new_log_types)+1);
+  }
+  else {
+    *log_types=(char*)kate_malloc(strlen(new_log_types)+1);
+    if (*log_types) **log_types=0;
+  }
+
+  if (!*log_types) {
+    fprintf(stderr,"Failed to allocate memory for log types\n");
+    exit(-1);
+  }
+  strcat(*log_types,new_log_types);
+
+  /* now sort them */
+  qsort(*log_types,strlen(*log_types),1,&type_sorter);
+
+  /* uniq */
+  ptr=w=*log_types;
+  while (*ptr) {
+    if (*ptr!=prevc) *w++=*ptr;
+    prevc=*ptr++;
+  }
+  *w=0;
+}
+
+static char *get_default_log_types(void)
+{
+  size_t n,idx;
+  char *types=(char*)kate_malloc(sizeof(log_types_info)/sizeof(log_types_info[0])+1);
+  if (!types) {
+    fprintf(stderr,"Failed to allocate memory for default log types\n");
+    exit(-1);
+  }
+  for (n=0,idx=0;n<sizeof(log_types_info)/sizeof(log_types_info[0]);++n) {
+    if (log_types_info[n].by_default) {
+      types[idx++]=log_types_info[n].id;
+    }
+  }
+  types[idx]=0;
+  return types;
 }
 
 static void print_version(void)
@@ -192,8 +267,8 @@ int main(int argc,char **argv)
   int ret=-1;
   const char *input_filename=NULL;
   const char *output_filename=NULL;
+  const char *new_log_types;
   FILE *fin;
-  int verbose=0;
   int arg;
   char signature[64]; /* matches the size of the Kate ID header */
   size_t signature_size;
@@ -203,6 +278,7 @@ int main(int argc,char **argv)
   int headers_written=0;
   ogg_parser_data opd;
   ogg_parser_funcs opf;
+  size_t n;
 
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
@@ -214,9 +290,15 @@ int main(int argc,char **argv)
           print_version();
           printf("usage: %s [options] [filename]\n",argv[0]);
           printf("   -V                  version\n");
-          printf("   -v                  verbose\n");
           printf("   -h                  help\n");
           printf("   -o <filename>       set output filename\n");
+          printf("   -l <types>          select information to log\n");
+          for (n=0;n<sizeof(log_types_info)/sizeof(log_types_info[0]);++n) {
+            printf("       %c        %s (default %s)\n",
+                log_types_info[n].id,
+                log_types_info[n].desc,
+                log_types_info[n].by_default?"on":"off");
+          }
           exit(0);
         case 'o':
           if (!output_filename) {
@@ -227,8 +309,9 @@ int main(int argc,char **argv)
             exit(-1);
           }
           break;
-        case 'v':
-          ++verbose;
+        case 'l':
+          new_log_types=eat_arg(argc,argv,&arg);
+          add_log_types(&log_types,new_log_types);
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[arg]);
@@ -245,6 +328,9 @@ int main(int argc,char **argv)
       }
     }
   }
+
+  /* defaults if no log types are specified */
+  if (!log_types) log_types=get_default_log_types();
 
   fin=open_and_probe_stream(input_filename);
   if (!fin) exit(-1);
@@ -304,15 +390,15 @@ int main(int argc,char **argv)
         exit(-1);
       }
       if (k.ki->probe<0 && !headers_written) {
-        kprintf(NULL,"headers parsed\n");
+        kprintf(NULL,klt_misc,"headers parsed\n");
         headers_written=1;
       }
       if (ret>0) {
-        kprintf(NULL,"eos\n");
+        kprintf(NULL,klt_misc,"eos\n");
         break; /* last packet decoded */
       }
       if (ev) {
-        kprintf(NULL,"event found\n");
+        kprintf(NULL,klt_misc,"event found\n");
         ++event_index;
       }
 
@@ -336,7 +422,6 @@ int main(int argc,char **argv)
 
     init_kate_stream_set(&opd.kate_streams);
     opd.n_streams=0;
-    opd.verbose=verbose;
     opd.output_filename=output_filename;
 
     opf.on_page=&ogg_parser_on_page;
@@ -345,6 +430,7 @@ int main(int argc,char **argv)
     clear_kate_stream_set(&opd.kate_streams);
   }
 
+  if (log_types) kate_free(log_types);
   if (fin!=stdin) fclose(fin);
 
   return 0;
