@@ -51,11 +51,11 @@ char base_path[4096]="";
 static char str[4096];
 static int headers_written=0;
 static int raw=0;
-static unsigned char utf8bom[3]={0xef,0xbb,0xbf};
-static unsigned char utf16lebom[2]={0xff,0xfe};
-static unsigned char utf16bebom[2]={0xfe,0xff};
-static unsigned char utf32lebom[4]={0xff,0xfe,0x00,0x00};
-static unsigned char utf32bebom[4]={0x00,0x00,0xfe,0xff};
+static const unsigned char utf8bom[3]={0xef,0xbb,0xbf};
+static const unsigned char utf16lebom[2]={0xff,0xfe};
+static const unsigned char utf16bebom[2]={0xfe,0xff};
+static const unsigned char utf32lebom[4]={0xff,0xfe,0x00,0x00};
+static const unsigned char utf32bebom[4]={0x00,0x00,0xfe,0xff};
 
 static const char *language=NULL;
 static const char *category=NULL;
