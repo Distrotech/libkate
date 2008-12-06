@@ -41,7 +41,7 @@ AC_C_INLINE
 # headers
 
 AC_HEADER_STDC
-AC_CHECK_HEADERS([unistd.h time.h limits.h])
+AC_CHECK_HEADERS([unistd.h time.h limits.h ctype.h])
 
 dnl Work out which int types to use
 AC_CHECK_HEADERS(

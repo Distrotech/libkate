@@ -22,6 +22,9 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#ifdef HAVE_CTYPE_H
+#include <ctype.h>
+#endif
 #include <ogg/ogg.h>
 #include "kate/oggkate.h"
 #include "kstream.h"
@@ -57,19 +60,19 @@ static const struct {
   { klt_error,     'e', 1, "error", "Errors" },
   { klt_packet,    'p', 1, "pack",  "Packet information" },
   { klt_container, 'c', 0, "cont",  "Container specific information (eg, Ogg)" },
-  { klt_timing,    'T', 1, "cont",  "Timing information" },
-  { klt_text,      't', 1, "cont",  "Text information" },
+  { klt_timing,    'T', 1, "time",  "Timing information" },
+  { klt_text,      't', 1, "text",  "Text information" },
   { klt_event,     'v', 0, "event", "Event information" },
 };
 static char *log_types=NULL;
 
-static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,...)
+static int is_log_type_enabled(katalyzer_log_type type)
 {
-  va_list ap;
+  return (strchr(log_types,log_types_info[type].id)!=NULL);
+}
 
-  if (!strchr(log_types,log_types_info[type].id)) return;
-
-  va_start(ap,format);
+static void print_log_header(kate_stream *ks,katalyzer_log_type type)
+{
   printf("[%-5s] ",log_types_info[type].tag);
   if (ks) {
     printf("[%08x] ",(int)ks->os.serialno);
@@ -77,6 +80,16 @@ static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,.
   else {
     printf("[--------] ");
   }
+}
+
+static void kprintf(kate_stream *ks,katalyzer_log_type type,const char *format,...)
+{
+  va_list ap;
+
+  if (!is_log_type_enabled(type)) return;
+
+  print_log_header(ks,type);
+  va_start(ap,format);
   vprintf(format,ap);
   va_end(ap);
   fflush(stdout);
@@ -128,6 +141,28 @@ static size_t get_num_glyphs(const kate_event *ev)
   return nglyphs;
 }
 
+static void katalyzer_dump_data(kate_stream *ks,katalyzer_log_type type,const char *data,size_t len)
+{
+  size_t offset=0;
+
+  if (!strchr(log_types,log_types_info[type].id)) return;
+
+  while (len>0) {
+    size_t n,limit;
+    print_log_header(ks,type);
+    printf("%08x:  ",offset);
+    limit=len>16?16:len;
+    for (n=0;n<limit;++n) printf("%02x ",(int)(unsigned char)data[n]);
+    for (;n<16;++n) printf("   ");
+    printf("    ");
+    for (n=0;n<limit;++n) printf("%c",isprint(data[n])?data[n]:'.');
+    printf("\n");
+    len-=limit;
+    offset+=limit;
+    data+=limit;
+  }
+}
+
 static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
 {
   int ret;
@@ -139,16 +174,19 @@ static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
   kprintf(ks,klt_timing,"event duration: %f\n",ev->end_time-ev->start_time);
   kprintf(ks,klt_timing,"event backlink: %f (%llx)\n",kate_granule_duration(ev->ki,ev->backlink),(long long)ev->backlink);
 
+  kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
+  kprintf(ks,klt_text,"Text language \"%s\" (%s)\n",ev->language?ev->language:ev->ki->language,ev->language?"overridden":"default");
+  kprintf(ks,klt_text,"Text directionality %s\n",directionality2text(ev->text_directionality));
+
   ret=kate_text_validate(ev->text_encoding,ev->text,ev->len0);
   if (ret<0) {
-    kprintf(ks,klt_error,"Text is invalid\n");
+    kprintf(ks,klt_error,"Text length %zu bytes, invalid\n",ev->len);
   }
   else {
-    kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
-    kprintf(ks,klt_text,"Text language %s, directionality %s\n",ev->language,directionality2text(ev->text_directionality));
     kprintf(ks,klt_text,"Text length %zu bytes, %zu glyphs\n",ev->len,get_num_glyphs(ev));
-    /* kprintf(ks,klt_text,"Text: %s\n",ev->text); */
   }
+
+  katalyzer_dump_data(ks,klt_text,ev->text,ev->len);
 }
 
 static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
