@@ -1214,6 +1214,31 @@ static void set_event_text(kd_event *ev,const char *text,int pre,int markup)
   ev->text=newtext;
 }
 
+static void set_event_text_from(kd_event *ev,const char *source,int pre,int markup)
+{
+  FILE *f;
+  char *text=NULL;
+  char s[4096];
+
+  f=fopen(source,"rt");
+  if (!f) {
+    yyerrorf("Failed to open file %s\n",source);
+    exit(-1);
+  }
+  fgets(s,sizeof(s),f);
+  while (!feof(f)) {
+    /* This implicitely forbids embedded zeros - could this be a problem ? */
+    text=catstrings(text,s);
+    fgets(s,sizeof(s),f);
+  }
+  fclose(f);
+
+  if (text) {
+    set_event_text(ev,text,pre,markup);
+    kate_free(text);
+  }
+}
+
 static void set_event_t0_t1(kd_event *ev,kate_float t0,kate_float t1)
 {
   if (ev->t0>=0) { yyerror("start time already set"); return; }
@@ -2421,6 +2446,10 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
             | PRE TEXT strings { set_event_text(&kevent,$3,1,0); kate_free($3); }
             | MARKUP strings { set_event_text(&kevent,$2,0,1); kate_free($2); }
             | PRE MARKUP strings { set_event_text(&kevent,$3,1,1); kate_free($3); }
+            | TEXT SOURCE STRING { set_event_text_from(&kevent,$3,0,0); }
+            | PRE TEXT SOURCE STRING { set_event_text_from(&kevent,$4,1,0); }
+            | MARKUP SOURCE STRING { set_event_text_from(&kevent,$3,0,1); }
+            | PRE MARKUP SOURCE STRING { set_event_text_from(&kevent,$4,1,1); }
             | strings { set_event_text(&kevent,$1,0,0); kate_free($1); }
             | MOTION { init_motion(); } '{' kd_motion_defs '}' { kd_add_event_motion(kmotion); }
             | MOTION kd_motion_name_or_index { kd_add_event_motion_index($2); }
