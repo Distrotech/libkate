@@ -67,6 +67,7 @@ static int kate_text_utf8_read(const char *s,int *cp)
     s++;
     if (((*s)&0xc0)!=0x80) return KATE_E_TEXT;
     c|=((*s)&0x3f);
+    if (c<=0x7f) return KATE_E_TEXT;
 
     *cp=c;
     return 2;
@@ -80,6 +81,7 @@ static int kate_text_utf8_read(const char *s,int *cp)
     s++;
     if (((*s)&0xc0)!=0x80) return KATE_E_TEXT;
     c|=(((*s)&0x3f));
+    if (c<=0x7ff) return KATE_E_TEXT;
 
     *cp=c;
     return 3;
@@ -96,6 +98,7 @@ static int kate_text_utf8_read(const char *s,int *cp)
     s++;
     if (((*s)&0xc0)!=0x80) return KATE_E_TEXT;
     c|=(((*s)&0x3f));
+    if (c<=0xffff) return KATE_E_TEXT;
 
     *cp=c;
     return 4;
@@ -117,6 +120,7 @@ static int kate_text_utf8_read(const char *s,int *cp)
     s++;
     if (((*s)&0xc0)!=0x80) return KATE_E_TEXT;
     c|=(((*s)&0x3f));
+    if (c<=0x001fffff) return KATE_E_TEXT;
 
     *cp=c;
     return 5;
@@ -139,6 +143,7 @@ static int kate_text_utf8_read(const char *s,int *cp)
     s++;
     if (((*s)&0xc0)!=0x80) return KATE_E_TEXT;
     c|=(((*s)&0x3f));
+    if (c<=0x03ffffff) return KATE_E_TEXT;
 
     *cp=c;
     return 6;
