@@ -21,7 +21,6 @@ inline int kate_is_valid_code_point(int c)
 {
   /* surrogate range is invalid */
   if (c>=0xd800 && c<=0xdfff) return 0;
-  if (c>=0xfffe && c<=0xffff) return 0;
 
 #ifdef ENABLE_CODE_POINTS_ABOVE_0x10ffff
   return c>=0 && c<=0x7fffffff;
