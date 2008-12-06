@@ -1,5 +1,6 @@
   kateenc can now read an event's text from an external file
   new code in the UTF-8 decoder to protect against overlong sequences
+  add more tests to make check
 
 0.2.7 - 24 november 2008
   fix wildly embarassing bug - forgot to copy data in kate_packet_init
