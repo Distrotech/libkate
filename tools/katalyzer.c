@@ -535,7 +535,7 @@ int main(int argc,char **argv)
               break;
             default:
               fprintf(stderr,"Invalid log type modifier: %s\n",argv[arg]);
-              break;
+              exit(-1);
           }
           break;
         default:
