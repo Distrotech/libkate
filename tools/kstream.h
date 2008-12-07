@@ -10,12 +10,13 @@
 #ifndef KATE_kstream_h_GUARD
 #define KATE_kstream_h_GUARD
 
+#include <stdio.h>
 #include <ogg/ogg.h>
 #include "kate/kate.h"
 
 enum { kstream_uninitialized, kstream_header_info, kstream_data };
 
-typedef struct {
+typedef struct kate_stream {
   ogg_stream_state os;
   kate_state k;
   kate_info ki;
@@ -30,7 +31,7 @@ typedef struct {
 
 typedef struct {
   size_t n_kate_streams;
-  kate_stream *kate_streams;
+  kate_stream **kate_streams;
 } kate_stream_set;
 
 extern int kstream_init(kate_stream *ks,ogg_page *og,int stream_index);

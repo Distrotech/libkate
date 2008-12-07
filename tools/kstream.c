@@ -60,7 +60,7 @@ static int is_filename_used(const char *filename,const kate_stream_set *streams)
   size_t n;
   if (streams) {
     for (n=0;n<streams->n_kate_streams;++n) {
-      const kate_stream *ks=streams->kate_streams+n;
+      const kate_stream *ks=streams->kate_streams[n];
       if (ks->filename && !strcmp(filename,ks->filename)) return 1;
     }
   }
@@ -171,16 +171,22 @@ int kstream_init(kate_stream *ks,ogg_page *og,int stream_index)
 kate_stream *add_kate_stream(kate_stream_set *streams,ogg_page *og,int stream_index)
 {
   int ret;
-  kate_stream *new_streams;
+  kate_stream **new_streams;
   kate_stream *ks;
 
-  new_streams=(kate_stream*)kate_realloc(streams->kate_streams,(streams->n_kate_streams+1)*sizeof(kate_stream));
+  ks=(kate_stream*)kate_malloc(sizeof(kate_stream));
+  if (!ks) {
+    fprintf(stderr,"failed to allocate %zu bytes\n",sizeof(kate_stream));
+    exit(-1);
+  }
+  new_streams=(kate_stream**)kate_realloc(streams->kate_streams,(streams->n_kate_streams+1)*sizeof(kate_stream*));
   if (!new_streams) {
-    fprintf(stderr,"failed to allocate %zu bytes\n",(streams->n_kate_streams+1)*sizeof(kate_stream));
+    kate_free(ks);
+    fprintf(stderr,"failed to allocate %zu bytes\n",(streams->n_kate_streams+1)*sizeof(kate_stream*));
     exit(-1);
   }
   streams->kate_streams=new_streams;
-  ks=&streams->kate_streams[streams->n_kate_streams];
+  streams->kate_streams[streams->n_kate_streams]=ks;
   ret=kstream_init(ks,og,stream_index);
   if (ret<0) return NULL;
   ++streams->n_kate_streams;
@@ -236,7 +242,7 @@ kate_stream *find_kate_stream_for_page(kate_stream_set *streams,ogg_page *og)
 {
   size_t n;
   for (n=0;n<streams->n_kate_streams;++n) {
-    kate_stream *ks=streams->kate_streams+n;
+    kate_stream *ks=streams->kate_streams[n];
     int pagein_ret=ogg_stream_pagein(&ks->os,og);
     if (pagein_ret==0) {
       return ks;
@@ -249,9 +255,9 @@ void remove_kate_stream(const kate_stream *ks,kate_stream_set *streams)
 {
   size_t n;
   for (n=0;n<streams->n_kate_streams;++n) {
-    if (ks==&streams->kate_streams[n]) {
+    if (ks==streams->kate_streams[n]) {
       if (n!=streams->n_kate_streams-1) {
-        memmove(streams->kate_streams+n,streams->kate_streams+n+1,(streams->n_kate_streams-1-n)*sizeof(kate_stream));
+        memmove(streams->kate_streams+n,streams->kate_streams+n+1,(streams->n_kate_streams-1-n)*sizeof(kate_stream*));
       }
       --streams->n_kate_streams;
     }
@@ -268,7 +274,8 @@ void clear_kate_stream_set(kate_stream_set *streams)
 {
   size_t n;
   for (n=0;n<streams->n_kate_streams;++n) {
-    kstream_clear(&streams->kate_streams[n]);
+    kstream_clear(streams->kate_streams[n]);
+    kate_free(streams->kate_streams[n]);
   }
   kate_free(streams->kate_streams);
   streams->n_kate_streams=0;
@@ -280,8 +287,8 @@ kate_stream *find_kate_stream_for_file(kate_stream_set *streams,FILE *f)
   size_t n;
 
   for (n=0;n<streams->n_kate_streams;++n) {
-    if (streams->kate_streams[n].fout==f) {
-      return &streams->kate_streams[n];
+    if (streams->kate_streams[n]->fout==f) {
+      return streams->kate_streams[n];
     }
   }
 
