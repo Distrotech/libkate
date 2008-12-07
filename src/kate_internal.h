@@ -45,7 +45,6 @@
 
 /* granule operations */
 extern kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float offset) kate_internal;
-extern int kate_granule_split_time(const kate_info *ki,kate_int64_t granulepos,kate_float *base,kate_float *offset);
 
 /* motions */
 extern int kate_motion_destroy(const kate_info *ki,kate_motion **motions,const int *destroy,size_t nmotions,int force) kate_internal;

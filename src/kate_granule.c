@@ -55,20 +55,14 @@ kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float of
 
 /**
   \ingroup granule
-  Converts a granule position to a time in seconds.
+  Converts a granule position to a base+offset time representation in seconds.
   \param ki the kate_info structure describing the granule encoding setup
-  \param granulepos the granulepos to convert to a time
-  \returns >=0 the time corresponding to the granulepos
+  \param granulepos the granulepos to convert to a time representation
+  \param base a pointer where to store the base part of the time corresponding to the granulepos
+  \param offset a pointer where to store the offset part of the time corresponding to the granulepos
+  \returns 0 success
   \returns KATE_E_* error
   */
-kate_float kate_granule_time(const kate_info *ki,kate_int64_t granulepos)
-{
-  if (!ki) return (kate_float)-1.0;
-  if (granulepos<0) return KATE_E_INVALID_PARAMETER;
-
-  return (granulepos>>ki->granule_shift)*(kate_float)ki->gps_denominator/ki->gps_numerator;
-}
-
 int kate_granule_split_time(const kate_info *ki,kate_int64_t granulepos,kate_float *base,kate_float *offset)
 {
   kate_int64_t gbase,goffset;
@@ -82,6 +76,24 @@ int kate_granule_split_time(const kate_info *ki,kate_int64_t granulepos,kate_flo
   *offset=goffset*(kate_float)ki->gps_denominator/ki->gps_numerator;
 
   return 0;
+}
+
+/**
+  \ingroup granule
+  Converts a granule position to a time in seconds.
+  \param ki the kate_info structure describing the granule encoding setup
+  \param granulepos the granulepos to convert to a time
+  \returns >=0 the time corresponding to the granulepos
+  \returns KATE_E_* error
+  */
+kate_float kate_granule_time(const kate_info *ki,kate_int64_t granulepos)
+{
+  kate_float base,offset;
+  int ret;
+
+  ret=kate_granule_split_time(ki,granulepos,&base,&offset);
+  if (ret<0) return (kate_float)ret;
+  return base+offset;
 }
 
 /**

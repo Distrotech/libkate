@@ -548,6 +548,7 @@ extern int kate_info_clear(kate_info *ki);
 
 /** \defgroup granule Granule calculations */
 extern int kate_granule_shift(const kate_info *ki);
+extern int kate_granule_split_time(const kate_info *ki,kate_int64_t granulepos,kate_float *base,kate_float *offset);
 extern kate_float kate_granule_time(const kate_info *ki,kate_int64_t granulepos);
 extern kate_int64_t kate_duration_granule(const kate_info *ki,kate_float duration);
 extern kate_float kate_granule_duration(const kate_info *ki,kate_int64_t duration);
