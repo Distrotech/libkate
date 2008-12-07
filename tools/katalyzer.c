@@ -116,6 +116,7 @@ static const char *packet_type_to_string(unsigned char type)
 
     case 0x00: return "text data";
     case 0x01: return "keepalive";
+    case 0x02: return "repeat";
     case 0x7f: return "eos packet";
 
     default: return "unknown";
