@@ -238,7 +238,7 @@ kate_stream *find_kate_stream_for_page(kate_stream_set *streams,ogg_page *og)
   for (n=0;n<streams->n_kate_streams;++n) {
     kate_stream *ks=streams->kate_streams+n;
     int pagein_ret=ogg_stream_pagein(&ks->os,og);
-    if (pagein_ret>=0) {
+    if (pagein_ret==0) {
       return ks;
     }
   }
