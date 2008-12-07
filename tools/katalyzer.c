@@ -194,7 +194,7 @@ static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
 
   kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
   kprintf(ks,klt_text,"Text language \"%s\" (%s)\n",ev->language?ev->language:ev->ki->language,ev->language?"overridden":"default");
-  kprintf(ks,klt_text,"Text directionality %s\n",directionality2text(ev->text_directionality));
+  kprintf(ks,klt_text,"Text directionality %d (%s)\n",ev->text_directionality,directionality2text(ev->text_directionality));
 
   ret=kate_text_validate(ev->text_encoding,ev->text,ev->len0);
   if (ret<0) {
