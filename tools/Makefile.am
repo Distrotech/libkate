@@ -11,7 +11,7 @@ if HAVE_PNG
 kateenc_SOURCES+=kpng.c
 endif
 katedec_SOURCES=katedec.c kkate.c ksrt.c klrc.c kutil.c kfuzz.c kstream.c kread.c kstrings.c
-katalyzer_SOURCES=katalyzer.c kutil.c kstream.c kread.c kstrings.c
+katalyzer_SOURCES=katalyzer.c kutil.c kstream.c kread.c kstrings.c kstats.c
 kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 katalyzer_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@

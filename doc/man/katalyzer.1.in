@@ -15,8 +15,8 @@ katalyzer \- analyzes Kate streams and displays various information about them.
 .SH SYNOPSIS
 .B katalyzer
 .B "[\-hV]"
-.BI "[\-o " outfile ]
 .BI "[\-l " types ]
+.B "[\-l!]"
 [ infile ]
 
 .SH DESCRIPTION
@@ -34,7 +34,9 @@ Show command line help.
 Show version information.
 .TP
 \fB\-l\fR types
-Selet the types of information to log:
+Select the types of information to log, from the list below. These characters may be
+concatenated in a single -l option, as, eg, \fBls\fR does (eg, \fBkatalyzer\fR -l Ttv).
+Refer to the \fBkatalyzer\fR command line help for a fully up to date list of types.
     e: errors
     p: packet
     c: container specific information
@@ -42,6 +44,9 @@ Selet the types of information to log:
     t: text
     v: event
     -: miscellaneous information that doesn't belong in any other type
+.TP
+\fB\-l!\fR
+Shorthand to select all information to log.
 
 
 .SH EXAMPLES
