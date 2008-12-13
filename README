@@ -22,6 +22,10 @@ More information can be found at the xiph wiki:
 
 http://wiki.xiph.org/index.php/OggKate
 
+A Git repository can be found at:
+
+http://git.xiph.org/?p=users/oggk/kate.git;a=summary
+
 libtiger, a rendering library for Kate streams using Pango and Cairo, is at:
 
 http://libtiger.googlecode.com/
