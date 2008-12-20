@@ -296,9 +296,25 @@ static int convert_srt(FILE *fin,FILE *fout)
           ogg_packet op;
           size_t len=strlen(text);
           if (len>0 && text[len-1]=='\n') text[--len]=0;
-          kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
-          ret=send_packet(fout,&op);
-          if (ret<0) return ret;
+          ret=kate_text_validate(kate_utf8,text,len+1);
+          if (ret<0) {
+            if (ret==KATE_E_TEXT) {
+              fprintf(stderr,"Text is not valid UTF-8: %s\n",text);
+            }
+            else {
+              fprintf(stderr,"Failed to validate text: %d\n",ret);
+            }
+            return ret;
+          }
+          ret=kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
+          if (ret<0) {
+            fprintf(stderr,"Error encoding text: %d\n",ret);
+            return ret;
+          }
+          else {
+            ret=send_packet(fout,&op);
+            if (ret<0) return ret;
+          }
           need=need_id;
         }
         else {
@@ -479,6 +495,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
   int has_karaoke;
   kate_motion *km;
   int f0,f1;
+  size_t len;
 
   fgets2(str,sizeof(str),fin,1);
   ++line;
@@ -569,7 +586,18 @@ static int convert_lrc(FILE *fin,FILE *fout)
             return ret;
           }
         }
-        ret=kate_ogg_encode_text(&k,start_time,t,text,strlen(text),&op);
+        len=strlen(text);
+        ret=kate_text_validate(kate_utf8,text,len+1);
+        if (ret<0) {
+          if (ret==KATE_E_TEXT) {
+            fprintf(stderr,"Text is not valid UTF-8: %s\n",text);
+          }
+          else {
+            fprintf(stderr,"Failed to validate text: %d\n",ret);
+          }
+          return ret;
+        }
+        ret=kate_ogg_encode_text(&k,start_time,t,text,len,&op);
         if (ret<0) {
           fprintf(stderr,"Failed to add lyrics (%d)\n",ret);
           return ret;
