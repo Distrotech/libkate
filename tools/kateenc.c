@@ -491,7 +491,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
   double t,start_time=-1.0;
   int offset;
   int line=0;
-  long start;
+  fpos_t start;
   int has_karaoke;
   kate_motion *km;
   int f0,f1;
@@ -530,7 +530,10 @@ static int convert_lrc(FILE *fin,FILE *fout)
      a timing motion for the appropriate events, as well as two styles
      in the headers, but we need to know beforehand if we'll need to
      add those styles, so they can go into headers  */
-  start=ftell(fin);
+  if (fgetpos(fin,&start)<0) {
+    fprintf(stderr,"Failed to get current file position\n");
+    return -1;
+  }
   has_karaoke=0;
   strcpy(text,str); /* we'll need to restore str after peeking */
   while (!feof(fin)) {
@@ -548,7 +551,10 @@ static int convert_lrc(FILE *fin,FILE *fout)
     }
     fgets2(str,sizeof(str),fin,1);
   }
-  fseek(fin,start,SEEK_SET);
+  if (fsetpos(fin,&start)<0) {
+    fprintf(stderr,"Failed to reset file position\n");
+    return -1;
+  }
   strcpy(str,text);
   if (has_karaoke) {
     add_kate_karaoke_style(&ki, 255, 255, 255, 255);
