@@ -903,5 +903,5 @@ int main(int argc,char **argv)
   print_rle_stats();
 #endif
 
-  return failed;
+  return failed?failed:ret;
 }
