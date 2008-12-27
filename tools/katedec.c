@@ -29,6 +29,7 @@
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
+#include <ctype.h>
 #include <ogg/ogg.h>
 #include "kate/oggkate.h"
 #include "kate_internal.h"
@@ -81,6 +82,17 @@ static int is_filename_used(const char *filename,const kate_stream *streams,size
   return 0;
 }
 
+static int is_ok_for_filename(const char *s)
+{
+  int c;
+  while ((c=*s++)) {
+    if (isalnum(c)) continue;
+    if (strchr("-_",c)) continue;
+    return 0;
+  }
+  return 1;
+}
+
 static char *get_filename(const char *basename,const kate_stream *ks,const kate_stream *streams,size_t nstreams)
 {
   char tmp[32];
@@ -107,10 +119,22 @@ static char *get_filename(const char *basename,const kate_stream *ks,const kate_
         fcats(&filename,"%",1);
         break;
       case 'c':
-        fcat(&filename,ks->ki.category);
+        if (!is_ok_for_filename(ks->ki.category)) {
+          fprintf(stderr,"Category '%s' not suitable for using in a filename, using 'INVCAT'",ks->ki.category);
+          fcat(&filename,"INVCAT");
+        }
+        else {
+          fcat(&filename,ks->ki.category);
+        }
         break;
       case 'l':
-        fcat(&filename,ks->ki.language);
+        if (!is_ok_for_filename(ks->ki.language)) {
+          fprintf(stderr,"Language '%s' not suitable for using in a filename, using 'INVLANG'",ks->ki.language);
+          fcat(&filename,"INVLANG");
+        }
+        else {
+          fcat(&filename,ks->ki.language);
+        }
         break;
       case 's':
         snprintf(tmp,sizeof(tmp),"%08x",(ogg_uint32_t)ks->os.serialno);
