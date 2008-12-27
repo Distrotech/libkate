@@ -651,7 +651,7 @@ static void print_rle_stats(void)
 
 int main(int argc,char **argv)
 {
-  int n,ret;
+  int n,ret,failed=0;
   const char *input_filename=NULL;
   const char *output_filename=NULL;
   const char *input_file_type=NULL;
@@ -843,21 +843,28 @@ int main(int argc,char **argv)
     fprintf(stderr,"Invalid format type: %s\n",input_file_type);
     ret=-1;
   }
+  if (ret<0) failed=ret;
 
   if (ret==0) {
     ogg_packet op;
     ret=kate_ogg_encode_finish(&k,-1,&op);
     if (ret<0) {
       fprintf(stderr,"error encoding end packet: %d\n",ret);
+      failed=ret;
     }
     else {
       ret=send_packet(fout,&op);
       if (ret<0) {
         fprintf(stderr,"error sending end packet: %d\n",ret);
+        failed=ret;
       }
       else {
         if (!raw) {
           ret=flush_page(fout);
+          if (ret<0) {
+            fprintf(stderr,"error flushing page: %d\n",ret);
+            failed=ret;
+          }
         }
       }
     }
@@ -896,5 +903,5 @@ int main(int argc,char **argv)
   print_rle_stats();
 #endif
 
-  return ret;
+  return failed;
 }
