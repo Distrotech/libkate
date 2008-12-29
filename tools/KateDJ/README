@@ -1,0 +1,15 @@
+KateDJ is a simple UI driven program that can extract Kate
+streams from Ogg files, and merge them back in. It can be
+used to make alterations to Kate streams easily, or to add
+new Kate streams to an Ogg file.
+Its components can also be used as simple command line tools.
+
+KateDJ depends on oggz-tools.
+
+Demuxing and remuxing a stream will keep the stream serial
+numbers unchanged.
+
+There are a few options available, but they are not saved,
+so will be reset to the default values when the program is
+run again.
+

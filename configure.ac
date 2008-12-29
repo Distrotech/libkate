@@ -107,6 +107,9 @@ else
 fi
 AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 
+AM_PATH_PYTHON(, HAVE_PYTHON=yes, HAVE_PYTHON=no)
+AM_CONDITIONAL(HAVE_PYTHON,test "${HAVE_PYTHON}" = "yes")
+
 VERSION_MAJOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\1/'`
 VERSION_MINOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\2/'`
 VERSION_PATCH=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\3/'`
@@ -210,6 +213,8 @@ AC_SUBST([STREAMS])
 AC_CONFIG_FILES(
   [Makefile]
   [tools/Makefile]
+  [tools/KateDJ/Makefile]
+  [tools/KateDJ/kdj/constants.py]
   [doc/Makefile]
   [doc/man/kateenc.1 doc/man/katedec.1 doc/man/katalyzer.1]
   [include/kate/kate.h]
