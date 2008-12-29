@@ -14,7 +14,9 @@ class Tools:
   kateenc_command=None
   katedec_command=None
 
-  def __init__(self):
+  def __init__(self,on_start=None,on_end=None):
+    self.on_start=on_start
+    self.on_end=on_end
     self.find_tools()
 
   def probe_command(self,command,options,magic):
@@ -70,17 +72,23 @@ class Tools:
     self.check()
 
   def run(self,params):
-    popen=subprocess.Popen(params,stderr=subprocess.PIPE,universal_newlines=True)
-    popen.wait()
-    ret=popen.returncode
-    # oggz tools can return 0 when they fail, so do not test ret
-    msg=''
-    line=popen.stderr.readline()
-    while line:
-      msg+=line
+    if self.on_start!=None: self.on_start()
+    try:
+      popen=subprocess.Popen(params,stderr=subprocess.PIPE,universal_newlines=True)
+      popen.wait()
+      ret=popen.returncode
+      # oggz tools can return 0 when they fail, so do not test ret
+      msg=''
       line=popen.stderr.readline()
-    if msg!='':
-      raise Exception,msg
+      while line:
+        msg+=line
+        line=popen.stderr.readline()
+      if msg!='':
+        raise Exception,msg
+    except:
+      raise
+    finally:
+      if self.on_end!=None: self.on_end()
   
   def run_demux(self,params):
     if self.demux_command==None:

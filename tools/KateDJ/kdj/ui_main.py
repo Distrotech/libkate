@@ -28,7 +28,7 @@ class UIMain(wx.Frame):
     self.SetupOptions()
 
     try:
-      self.tools=Tools()
+      self.tools=Tools(wx.BeginBusyCursor,wx.EndBusyCursor)
     except Exception,e:
       wx.MessageBox('Failed to find necessary tools:\n'+e.args[0],'Error',style=wx.OK|wx.CENTRE)
       sys.exit(1)
