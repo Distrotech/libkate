@@ -12,15 +12,17 @@ hpadding=16
 vpadding=8
 
 class UIOptions(wx.Dialog):
-  def __init__(self,parent,remove_temporary_files,save_as_copy):
+  def __init__(self,parent,options):
     pre=wx.PreDialog()
     pre.Create(parent,wx.ID_ANY,title=kdj_name+' options',pos=(1,1),size=(1,1),style=wx.DEFAULT_DIALOG_STYLE)
     self.PostCreate(pre)
 
+    self.options=options
+
     self.y=vpadding
     self.opt_save_as_copy=self.AddCheckBox(
       'Save remuxed file as a copy of the original Ogg file',
-      save_as_copy,
+      options.save_as_copy,
       'If enabled, remuxed files will be saved on a different file, so the source\n'+
       'file is left untouched. The new file will be named similarly to the old file,\n'+
       'but with \'.remuxed\' inserted before the extension.'
@@ -28,7 +30,7 @@ class UIOptions(wx.Dialog):
     self.y+=vpadding
     self.opt_remove=self.AddCheckBox(
       'Remove all temporary files on exit',
-      remove_temporary_files,
+      options.remove_temporary_files,
       'If enabled, any temporary files extracted from an Ogg stream will be,\n'+
       'removed, even if the file was not remuxed. Any changes that may have\n'+
       'been made to the Kate streams in these temporary files will be lost.'
@@ -47,6 +49,7 @@ class UIOptions(wx.Dialog):
 
     self.accept_button=wx.Button(self,wx.ID_OK,'OK',(hpadding,self.y),((base_width-hpadding)/2,button_height))
     self.cancel_button=wx.Button(self,wx.ID_CANCEL,'Cancel',(hpadding*2+base_width/2,self.y),((base_width-hpadding)/2,button_height))
+    self.accept_button.Bind(wx.EVT_BUTTON,self.OnOK)
     self.y+=button_height
 
     self.y+=vpadding
@@ -72,9 +75,9 @@ class UIOptions(wx.Dialog):
     self.y+=option_height
     return checkbox
 
-  def GetSaveAsCopy(self):
-    return self.opt_save_as_copy.IsChecked()
-
-  def GetRemoveTemporaryFiles(self):
-    return self.opt_remove.IsChecked()
+  def OnOK(self,event):
+    self.options.save_as_copy=self.opt_save_as_copy.IsChecked()
+    self.options.remove_temporary_files=self.opt_remove.IsChecked()
+    self.options.Save()
+    event.Skip()
 

@@ -9,7 +9,3 @@ KateDJ depends on oggz-tools.
 Demuxing and remuxing a stream will keep the stream serial
 numbers unchanged.
 
-There are a few options available, but they are not saved,
-so will be reset to the default values when the program is
-run again.
-

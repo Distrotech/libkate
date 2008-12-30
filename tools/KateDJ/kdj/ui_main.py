@@ -11,6 +11,7 @@ from tools import Tools
 from demuxer import Demuxer
 from muxer import Muxer
 from finder import FindKateStreams
+from options import Options
 
 base_width=480
 serial_width=(base_width/4)
@@ -25,7 +26,7 @@ class UIMain(wx.Frame):
   def __init__(self):
     wx.Frame.__init__(self,None,wx.ID_ANY,kdj_name_version,size=(1,1))
 
-    self.SetupOptions()
+    self.options=Options(wx.StandardPaths.Get().GetUserConfigDir())
 
     try:
       self.tools=Tools(wx.BeginBusyCursor,wx.EndBusyCursor)
@@ -183,7 +184,7 @@ class UIMain(wx.Frame):
   def OnMuxButton(self,event):
     directory=self.demuxer.GetDirectory()
     try:
-      if self.save_as_copy:
+      if self.options.save_as_copy:
         root,ext=os.path.splitext(self.filename)
         remuxed_name=root+'.remuxed'+ext
       else:
@@ -200,14 +201,9 @@ class UIMain(wx.Frame):
       wx.MessageBox('Failed to remux file:\n'+e.args[0],'Error',style=wx.OK|wx.CENTRE)
 
   def OnOptionsButton(self,event):
-    dlg=UIOptions(self,self.remove_temporary_files,self.save_as_copy)
+    dlg=UIOptions(self,self.options)
 #    dlg.CenterOnScreen()
-    ret=dlg.ShowModal()
-    if ret==wx.ID_OK:
-      print 'updating options'
-      self.SetupOptions(dlg)
-    else:
-      print 'Not changing'
+    dlg.ShowModal()
     dlg.Destroy()
 
   def OnHelpButton(self,event):
@@ -237,15 +233,11 @@ class UIMain(wx.Frame):
   def OnQuitButton(self,event):
     if not self.CheckAndContinue():
       return
-    if self.demuxer!=None and self.remove_temporary_files:
+    if self.demuxer!=None and self.options.remove_temporary_files:
       directory=self.demuxer.GetDirectory()
       try:
         self.RemoveTemporaryFiles(directory)
       except:
         wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',style=wx.OK|wx.CENTRE)
     sys.exit(0)
-
-  def SetupOptions(self,dlg=None):
-    self.remove_temporary_files=(dlg!=None and dlg.GetRemoveTemporaryFiles())
-    self.save_as_copy=(dlg==None or dlg.GetSaveAsCopy())
 
