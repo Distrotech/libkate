@@ -67,7 +67,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
     add_kate_stream(&opd->kate_streams,og,opd->n_streams++);
     ks=find_kate_stream_for_page(&opd->kate_streams,og);
     if (opd->verbose) {
-      printf("found BOS page, serial %08x, ks %p\n",ogg_page_serialno(og),ks);
+      printf("found BOS page, serial %08x\n",ogg_page_serialno(og));
     }
   }
   else {
