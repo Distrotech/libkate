@@ -360,8 +360,6 @@ int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float 
       ((unsigned char*)ket->repeat_data)[0]=0x02;
     }
 
-//TODO: some kind of packet ref counting ? Would screw up ABI though :/
-//    kate_packet_wrap(kp,ket->repeat_size,ket->repeat_data);
     kate_packet_init(kp,ket->repeat_size,ket->repeat_data);
 
     return 1;
