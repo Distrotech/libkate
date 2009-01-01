@@ -1,9 +1,13 @@
 LIBTOOLFLAGS=--silent
 
-AM_CPPFLAGS=-I $(top_srcdir)/src -I $(top_srcdir)/include
+AM_CPPFLAGS=-I $(top_srcdir)/src -I $(top_srcdir)/include -I $(top_srcdir)/tools
 
 noinst_HEADERS=\
-  kpng.h
+  kpng.h \
+  kkate.h ksrt.h klrc.h \
+  kread.h kstream.h \
+  kstrings.h kfuzz.h kutil.h \
+  kstats.h
 
 if HAVE_OGG
 kateenc_SOURCES=kateenc.c kate_lexer.l kate_parser.y
