@@ -1,4 +1,4 @@
-kdj_modules=__init__ constants finder tools muxer demuxer ui_main ui_editor ui_options
+kdj_modules=__init__ constants finder tools muxer demuxer options ui_main ui_editor ui_options
 
 install-exec-local:
 	${mkinstalldirs} "$(DESTDIR)$(pythondir)/kdj"
