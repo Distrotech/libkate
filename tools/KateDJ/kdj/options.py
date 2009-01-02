@@ -21,13 +21,14 @@ class Options:
     if not f:
       return
     try:
-      line=f.readline()
-      while line:
-        line=self.Frob(line)
-        self.Parse(line)
+      try:
         line=f.readline()
-    except:
-      pass
+        while line:
+          line=self.Frob(line)
+          self.Parse(line)
+          line=f.readline()
+      except:
+        pass
     finally:
       f.close()
     

@@ -74,19 +74,20 @@ class Tools:
   def run(self,params):
     if self.on_start!=None: self.on_start()
     try:
-      popen=subprocess.Popen(params,stderr=subprocess.PIPE,universal_newlines=True)
-      popen.wait()
-      ret=popen.returncode
-      # oggz tools can return 0 when they fail, so do not test ret
-      msg=''
-      line=popen.stderr.readline()
-      while line:
-        msg+=line
+      try:
+        popen=subprocess.Popen(params,stderr=subprocess.PIPE,universal_newlines=True)
+        popen.wait()
+        ret=popen.returncode
+        # oggz tools can return 0 when they fail, so do not test ret
+        msg=''
         line=popen.stderr.readline()
-      if msg!='':
-        raise Exception,msg
-    except:
-      raise
+        while line:
+          msg+=line
+          line=popen.stderr.readline()
+        if msg!='':
+          raise Exception,msg
+      except:
+        raise
     finally:
       if self.on_end!=None: self.on_end()
   
