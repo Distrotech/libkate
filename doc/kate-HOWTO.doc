@@ -45,7 +45,7 @@ create Kate streams from SubRip files as well. These can then be merged
 with a video with oggz-tools:
 
 \verbatim
-    kateenc -t srt -c subtitles -l it -o subtitles.ogg italian-subtitles.srt
+    kateenc -t srt -c SUB -l it -o subtitles.ogg italian-subtitles.srt
 
     oggz merge -o movie-with-subtitles.ogg movie-without-subtitles.ogg subtitles.ogg
 \endverbatim
@@ -89,7 +89,7 @@ be merged with a Vorbis only song with oggz-tools:
 \verbatim
     oggenc -o song.ogg song.wav
 
-    kateenc -t kate -c lyrics -l en_US -o lyrics.ogg lyrics-with-karaoke.kate
+    kateenc -t kate -c LRC -l en_US -o lyrics.ogg lyrics-with-karaoke.kate
 
     oggz merge -o song-with-karaoke.ogg lyrics-with-karaoke.ogg song.ogg
 \endverbatim

@@ -16,8 +16,8 @@ recognizable automatically (eg, it is kept as non localized ASCII). This
 page lists examples of categories to use for various purposes.
 It is suggested that applications recognizing well known categories such
 as the ones described below may display to the user a localized version
-of them (eg, when a stream has a category of "subtitles", an application
-set up for the French locale might display the category as "sous-titres".
+of them (eg, when a stream has a category of "SUB", an application set
+up for the French locale might display the category as "sous-titres".
 If a particular category is not recognized, it may still be displayed as
 a string, albeit non localized.
 
@@ -25,7 +25,10 @@ If using custom categories for your own use, you may use category names
 prefixed by "x-". These are reserved for private use. Category names not
 starting with "x-" are reserved for future "standard" use.
 
-\li \c subtitles Movie (or other) subtitles, as text, possibly including
+\li \c SUB, or \c subtitles Movie (or other) subtitles, as text, possibly including
+simple inline markup.
+
+\li \c CC Movie (or other) closed captions, as text, possibly including
 simple inline markup.
 
 For instance, ffmpeg2theora can create such streams, which can be played
@@ -38,7 +41,7 @@ on screen positioning and size information.
 For instance, Thoggen (if patched) can create such streams, which can be
 played back by VLC, and MPlayer (if patched).
 
-\li \c lyrics Song lyrics (typically in the language they are sung in) as
+\li \c LRC, or \c lyrics Song lyrics (typically in the language they are sung in) as
 plain text.
 
 For instance, oggenc (if patched) can create such streams, which can be
