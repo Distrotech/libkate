@@ -1,0 +1,59 @@
+.\" Copyright (C) 2009 Vincent Penquerc'h.
+.\" This file is part of the Kate codec library.
+.\" Written by Vincent Penquerc'h.
+.\"
+.\" Use, distribution and reproduction of this library is governed
+.\" by a BSD style source license included with this source in the
+.\" file 'COPYING'. Please read these terms before distributing. */
+
+
+.TH "KATEDJ" 1 "2 january 2009" "libkate @VERSION@ "libkate documentation"
+
+.SH NAME
+KateDJ \- remixes Kate streams in Ogg
+
+.SH SYNOPSIS
+.B KateDJ
+.B "[\-hV]"
+
+.SH DESCRIPTION
+.B KateDJ
+allows extracting Kate tracks embedded in an Ogg stream, and rebuilding this Ogg stream after the
+Kate tracks are modified.
+
+.B KateDJ
+is a simple GUI program, so usage is UI driven, rather than command line driven.
+
+This is a walkthrough of the usual program flow:
+
+Select \fB'Load Ogg stream'\fR to select the Ogg file you want to remix.
+
+Select \fB'Demux file'\fR to extract Kate streams from this file to a temporary directory.
+Depending on the size of the Ogg file, that step may take a while.
+A message will then tell you where the temporary files have been placed.
+All Kate streams will be decoded to a text description and placed in this temporary directory,
+and a list of them, along with their serial number, language, and category, will be displayed
+in a list.
+
+Those files may then be edited with your favorite text editor. Any modification may be done,
+including removing some of those files altogether, or even adding some. However, in order
+to be recognized, any new files \fBmust\fR be named according to the same naming convention
+as the existing ones.
+
+Once the desired modifications are done, select \fB'Remux file from parts'\fR to attempt to
+recreate the Ogg stream. If any error occurs (eg, syntax error in the Kate files), a message
+will inform you. Once the errors are fixed, select \fB'Remux file from parts'\fR again, until
+the operation succeeds.
+
+.SH OPTIONS
+.TP
+\fB\-h\fR
+Show command line help.
+.TP
+\fB\-V\fR
+Show version information.
+
+.SH SEE ALSO
+.PP
+\fBkatedec\fR(1), \fBkateenc\fR(1), \fBkatalyzer\fR(1)
+

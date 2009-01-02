@@ -216,7 +216,7 @@ AC_CONFIG_FILES(
   [tools/KateDJ/Makefile]
   [tools/KateDJ/kdj/constants.py]
   [doc/Makefile]
-  [doc/man/kateenc.1 doc/man/katedec.1 doc/man/katalyzer.1]
+  [doc/man/kateenc.1 doc/man/katedec.1 doc/man/katalyzer.1 doc/man/KateDJ.1]
   [include/kate/kate.h]
   [tests/Makefile]
   [misc/pkgconfig/kate.pc]
