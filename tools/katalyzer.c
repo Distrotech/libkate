@@ -135,7 +135,7 @@ static void katalyzer_dump_data(kate_stream *ks,katalyzer_log_type type,const ch
   while (len>0) {
     size_t n,limit;
     print_log_header(ks,type);
-    printf("%08x:  ",offset);
+    printf("%08zx:  ",offset);
     limit=len>16?16:len;
     for (n=0;n<16;++n) {
       if (n<limit)
