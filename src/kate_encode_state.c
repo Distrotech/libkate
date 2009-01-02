@@ -1,4 +1,4 @@
-/* Copyright (C) 2008 Vincent Penquerc'h.
+/* Copyright (C) 2008, 2009 Vincent Penquerc'h.
    This file is part of the Kate codec library.
    Written by Vincent Penquerc'h.
 
