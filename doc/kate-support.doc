@@ -46,6 +46,11 @@ It can play simple text Kate streams.
 mkvtoolnix is a tool to manipulate Matroska streams.
 It can manipulate Kate streams in Matroska.
 
+\subsection support-cortado Cortado
+
+Cortado is a streaming media player in Java that can be embedded in a web browser.
+The Wikimedia maintained version can play simple text and image based Kate streams.
+
 
 
 
