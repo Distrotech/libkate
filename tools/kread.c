@@ -104,6 +104,7 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   ogg_page og;
   ogg_int64_t bytes_read;
   int eos=0;
+  static const size_t buffer_size=4096;
 
   ogg_sync_init(&oy);
 
@@ -119,12 +120,12 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   }
 
   while (1) {
-    ptr=ogg_sync_buffer(&oy,4096);
+    ptr=ogg_sync_buffer(&oy,buffer_size);
     if (!ptr) {
-      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",4096);
+      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",buffer_size);
       goto error;
     }
-    bytes_read=fread(ptr,1,4096,f);
+    bytes_read=fread(ptr,1,buffer_size,f);
     if (bytes_read==0) {
       eos=1;
       break;
