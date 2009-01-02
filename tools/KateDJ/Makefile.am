@@ -1,5 +1,11 @@
 kdj_modules=__init__ constants finder tools muxer demuxer options ui_main ui_editor ui_options
 
+# dummy - this is just for automake to copy py-compile, as it won't do it
+# if it doesn't see anything in a PYTHON variable. KateDJ is Python, but
+# is installed as a normal script manually. This works as automake doesn't
+# do anything for Python sources at build time, only at install time.
+noinst_PYTHON=KateDJ
+
 install-exec-local:
 	${mkinstalldirs} "$(DESTDIR)$(pythondir)/kdj"
 	for module in $(kdj_modules); do \
