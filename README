@@ -50,10 +50,19 @@ To decode a Kate stream:
 $ katedec -o output.kate input.kate.ogg
 
 
-For more info on kateenc and katedec, see the man pages in the doc/man
-directory.
+In addition, two more tools are available:
+
+katalyzer displays various information about Kate streams.
+
+KateDJ is a GUI remixing program for Kate streams in Ogg. It uses wxPython,
+a set of Python bindings for wxWidgets, which might not be universally
+available.
+KateDJ also depends on the oggz tools, available from www.annodex.net.
+
+For more info on those tools, see the man pages in the doc/man directory.
 
 VLC 0.9 can decode and display basic text and SPU based Kate streams.
+VLC 1.0, soon to be released, will have full rendering support using libtiger.
 I have preliminary support for Kate streams for MPlayer, xine, and GStreamer
 (and thus all players that rely on them for decoding), which will be contributed
 to those projects once the Kate bitstream format is stable. The current diffs
