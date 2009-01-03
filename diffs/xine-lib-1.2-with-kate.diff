@@ -1,18 +1,29 @@
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine/buffer.h ../xine-lib-1-2-767ccb7795a2/include/xine/buffer.h
---- xine-lib-1-2-767ccb7795a2/include/xine/buffer.h	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/include/xine/buffer.h	2008-07-22 21:56:36.000000000 +0100
-@@ -284,6 +284,7 @@
- #define BUF_SPU_CVD             0x04050000
- #define BUF_SPU_OGM             0x04060000
- #define BUF_SPU_CMML            0x04070000
-+#define BUF_SPU_KATE            0x04080000
- /*@}*/
- 
- /**
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/include/xine.h ../xine-lib-1-2-767ccb7795a2/include/xine.h
---- xine-lib-1-2-767ccb7795a2/include/xine.h	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/include/xine.h	2008-07-22 21:48:34.000000000 +0100
-@@ -1645,6 +1645,7 @@
+From 4a76312fac74b6c2b6aaa83a9dd04cb5eb7956ad Mon Sep 17 00:00:00 2001
+From: ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
+Date: Sat, 3 Jan 2009 11:52:39 +0000
+Subject: [PATCH] merge of initial kate plugin, plus libtiger detection
+
+---
+ include/xine.h                  |   12 +
+ include/xine/buffer.h           |    1 +
+ m4/decoders.m4                  |   30 +
+ m4/summary.m4                   |    7 +
+ src/combined/Makefile.am        |    5 +
+ src/combined/xine_ogg_demuxer.c |   96 ++-
+ src/demuxers/demux_matroska.c   |   66 ++-
+ src/demuxers/matroska.h         |    1 +
+ src/spu_dec/Makefile.am         |    8 +
+ src/spu_dec/xine_kate_decoder.c | 1937 +++++++++++++++++++++++++++++++++++++++
+ src/xine-engine/audio_decoder.c |  141 +++-
+ src/xine-engine/osd.c           |   14 +-
+ 12 files changed, 2297 insertions(+), 21 deletions(-)
+ create mode 100644 src/spu_dec/xine_kate_decoder.c
+
+diff --git a/include/xine.h b/include/xine.h
+index d92c480..f3c6ca0 100644
+--- a/include/xine.h
++++ b/include/xine.h
+@@ -1646,6 +1646,7 @@ void xine_config_reset (xine_t *self) XINE_PROTECTED;
  #define XINE_EVENT_DROPPED_FRAMES        12 /* number of dropped frames is too high */
  #define XINE_EVENT_MRL_REFERENCE_EXT     13 /* demuxer->frontend: MRL reference(s) for the real stream */
  #define XINE_EVENT_AUDIO_AMP_LEVEL       14 /* report current audio amp level (l/r/mute) */
@@ -20,7 +31,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  
  
  /* input events coming from frontend */
-@@ -1800,6 +1801,17 @@
+@@ -1801,6 +1802,17 @@ typedef struct {
  
  
  /*
@@ -38,21 +49,94 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
   * notify frame format change
   */
  typedef struct {
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am
---- xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/combined/Makefile.am	2008-07-23 08:34:02.000000000 +0100
-@@ -64,3 +64,8 @@
+diff --git a/include/xine/buffer.h b/include/xine/buffer.h
+index e64246a..4004b9b 100644
+--- a/include/xine/buffer.h
++++ b/include/xine/buffer.h
+@@ -284,6 +284,7 @@ extern "C" {
+ #define BUF_SPU_CVD             0x04050000
+ #define BUF_SPU_OGM             0x04060000
+ #define BUF_SPU_CMML            0x04070000
++#define BUF_SPU_KATE            0x04080000
+ /*@}*/
+ 
+ /**
+diff --git a/m4/decoders.m4 b/m4/decoders.m4
+index d8e3ac5..a91bf92 100644
+--- a/m4/decoders.m4
++++ b/m4/decoders.m4
+@@ -411,6 +411,36 @@ AC_DEFUN([XINE_DECODER_PLUGINS], [
+     AM_CONDITIONAL([ENABLE_VORBIS], [test x"$have_vorbis" = x"yes"])
+ 
+ 
++    dnl Ogg/Kate (optional; enabled by default; external)
++    AC_ARG_WITH([kate],
++                [AS_HELP_STRING([--with-kate], [Enable Kate overlay decoder support (default: enabled)])],
++                [test x"$withval" != x"no" && with_kate="yes"])
++    if test x"$with_kate" != x"no"; then
++        PKG_CHECK_MODULES([KATE], [ogg kate], [have_kate=yes], [have_kate=no])
++        if test x"$with_kate" = x"yes" && test x"$have_kate" = "xno"; then
++            AC_MSG_ERROR([Kate support requested, but libkate not found])
++        elif test x"$have_kate" = x"yes"; then
++            AC_DEFINE([HAVE_KATE], 1, [Define this if you have kate])
++        fi
++    fi
++    AM_CONDITIONAL([ENABLE_KATE], [test x"$have_kate" = x"yes"])
++
++
++    dnl Tiger renderer for Kate streams (optional; enabled by default; external)
++    AC_ARG_WITH([tiger],
++                [AS_HELP_STRING([--with-tiger], [Enable Tiger rendering for Kate streams (default: enabled)])],
++                [test x"$withval" != x"no" && with_tiger="yes"])
++    if test x"$with_tiger" != x"no"; then
++        PKG_CHECK_MODULES([TIGER], [tiger], [have_tiger=yes], [have_tiger=no])
++        if test x"$with_tiger" = x"yes" && test x"$have_tiger" = "xno"; then
++            AC_MSG_ERROR([Tiger support requested, but libtiger not found])
++        elif test x"$have_tiger" = x"yes"; then
++            AC_DEFINE([HAVE_TIGER], 1, [Define this if you have tiger])
++        fi
++    fi
++    AM_CONDITIONAL([ENABLE_TIGER], [test x"$have_tiger" = x"yes"])
++
++
+     dnl real (optional; enabled by default)
+     dnl On some systems, we cannot enable Real codecs support to begin with.
+     dnl This includes Darwin, because it uses Mach-O rather than ELF.
+diff --git a/m4/summary.m4 b/m4/summary.m4
+index 9437401..bf79d95 100644
+--- a/m4/summary.m4
++++ b/m4/summary.m4
+@@ -160,6 +160,13 @@ AC_DEFUN([XINE_LIB_SUMMARY], [
+     echo "   - spucmml         - sputext"
+     echo "   - spudvb"
+     test x"$have_dxr3" = x"yes" && echo "   - dxr3_spu"
++    if test x"$have_kate" = x"yes"; then
++        if test x"$have_tiger" = x"yes"; then
++            echo "   - Kate (with Tiger rendering)"
++        else
++            echo "   - Kate (basic rendering)"
++        fi
++    fi
+     echo ""
+ 
+     dnl post plugins
+diff --git a/src/combined/Makefile.am b/src/combined/Makefile.am
+index 92d49a3..b2c322d 100644
+--- a/src/combined/Makefile.am
++++ b/src/combined/Makefile.am
+@@ -64,3 +64,8 @@ xineplug_xiph_la_SOURCES += xine_speex_decoder.c
  xineplug_xiph_la_LIBADD += $(SPEEX_LIBS)
  xineplug_xiph_la_CFLAGS += $(SPEEX_CFLAGS)
  endif
 +
 +if ENABLE_KATE
-+xineplug_xiph_la_LIBADD += $(KATE_LIBS)
-+xineplug_xiph_la_CFLAGS += $(KATE_CFLAGS)
++xineplug_xiph_la_LIBADD += $(TIGER_LIBS) $(KATE_LIBS)
++xineplug_xiph_la_CFLAGS += $(TIGER_CFLAGS) $(KATE_CFLAGS)
 +endif
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c ../xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c
---- xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/combined/xine_ogg_demuxer.c	2008-07-23 16:31:13.000000000 +0100
+diff --git a/src/combined/xine_ogg_demuxer.c b/src/combined/xine_ogg_demuxer.c
+index 036d2f0..65c0c15 100644
+--- a/src/combined/xine_ogg_demuxer.c
++++ b/src/combined/xine_ogg_demuxer.c
 @@ -53,6 +53,11 @@
  #include <theora/theora.h>
  #endif
@@ -65,7 +149,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  #define LOG_MODULE "demux_ogg"
  #define LOG_VERBOSE
  
-@@ -217,7 +222,8 @@
+@@ -217,7 +222,8 @@ static int64_t get_pts (demux_ogg_t *this, int stream_num , int64_t granulepos )
      } else
        return 0;
    } else if (this->si[stream_num]->buf_types == BUF_VIDEO_THEORA ||
@@ -75,7 +159,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
      int64_t iframe, pframe;
      int granuleshift;
      granuleshift = this->si[stream_num]->granuleshift;
-@@ -296,7 +302,7 @@
+@@ -296,7 +302,7 @@ static void get_stream_length (demux_ogg_t *this) {
    }
  }
  
@@ -84,7 +168,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  static void send_ogg_packet (demux_ogg_t *this,
                                 fifo_buffer_t *fifo,
                                 ogg_packet *op,
-@@ -314,8 +320,16 @@
+@@ -314,8 +320,16 @@ static void send_ogg_packet (demux_ogg_t *this,
      buf = fifo->buffer_pool_alloc (fifo);
      buf->decoder_flags = decoder_flags;
      if (done==0) {
@@ -103,7 +187,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
        buf->decoder_flags = buf->decoder_flags | BUF_FLAG_FRAME_START;
      }
  
-@@ -733,6 +747,23 @@
+@@ -733,6 +747,23 @@ static void send_ogg_buf (demux_ogg_t *this,
               stream_num, op->bytes, buf->pts, str);
  
      this->video_fifo->put (this->video_fifo, buf);
@@ -127,7 +211,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
    } else if ((this->si[stream_num]->buf_types & 0xFF000000) == BUF_SPU_BASE) {
  
      buf_element_t *buf;
-@@ -1206,6 +1237,59 @@
+@@ -1206,6 +1237,59 @@ static void decode_theora_header (demux_ogg_t *this, const int stream_num, ogg_p
  #endif
  }
  
@@ -187,7 +271,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  static void decode_flac_header (demux_ogg_t *this, const int stream_num, ogg_packet *op) {
    xine_flac_metadata_header header;
    xine_flac_streaminfo_block streaminfo = {};
-@@ -1430,6 +1514,8 @@
+@@ -1430,6 +1514,8 @@ static void send_header (demux_ogg_t *this) {
            decode_anxdata_header(this, stream_num, &op);
  	} else if (!memcmp (&op.packet[0], "CMML", 4)) {
  	  decode_cmml_header(this, stream_num, &op);
@@ -196,7 +280,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
          } else {
            xprintf(this->stream->xine, XINE_VERBOSITY_DEBUG,
                    "demux_ogg: unknown stream type (signature >%.8s<). hex dump of bos packet follows:\n",
-@@ -1918,6 +2004,8 @@
+@@ -1924,6 +2010,8 @@ static int demux_ogg_get_optional_data(demux_plugin_t *this_gen,
        strcpy( str, "none");
        return DEMUX_OPTIONAL_SUCCESS;
      } else if ((channel>=0) && (channel<this->num_streams)) {
@@ -205,10 +289,11 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
        return format_lang_string (this, 0xFFFFFFFF, BUF_SPU_OGM+channel, channel, str);
      }
      return DEMUX_OPTIONAL_UNSUPPORTED;
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c ../xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c
---- xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/demuxers/demux_matroska.c	2008-07-22 21:59:48.000000000 +0100
-@@ -640,6 +640,61 @@
+diff --git a/src/demuxers/demux_matroska.c b/src/demuxers/demux_matroska.c
+index 18fb23f..f88f337 100644
+--- a/src/demuxers/demux_matroska.c
++++ b/src/demuxers/demux_matroska.c
+@@ -640,6 +640,61 @@ static void init_codec_xiph(demux_matroska_t *this, matroska_track_t *track) {
  }
  
  
@@ -270,7 +355,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  static int aac_get_sr_index (uint32_t sample_rate) {
    if (92017 <= sample_rate)
      return 0;
-@@ -1455,6 +1510,10 @@
+@@ -1459,6 +1514,10 @@ static int parse_track_entry(demux_matroska_t *this, matroska_track_t *track) {
        if (track->compress_algo == MATROSKA_COMPRESS_NONE) {
          track->compress_algo = MATROSKA_COMPRESS_UNKNOWN;
        }
@@ -281,7 +366,7 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
      } else {
        lprintf("unknown codec\n");
      }
-@@ -1473,7 +1532,12 @@
+@@ -1477,7 +1536,12 @@ static int parse_track_entry(demux_matroska_t *this, matroska_track_t *track) {
            this->num_audio_tracks++;
            break;
          case MATROSKA_TRACK_SUBTITLE:
@@ -295,10 +380,11 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
            track->buf_type |= this->num_sub_tracks;
            this->num_sub_tracks++;
            break;
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h ../xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h
---- xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/demuxers/matroska.h	2008-07-22 22:00:16.000000000 +0100
-@@ -289,6 +289,7 @@
+diff --git a/src/demuxers/matroska.h b/src/demuxers/matroska.h
+index 3872057..b093cc3 100644
+--- a/src/demuxers/matroska.h
++++ b/src/demuxers/matroska.h
+@@ -289,6 +289,7 @@ struct matroska_track_s {
  #define MATROSKA_CODEC_ID_S_SSA          "S_SSA"         /* deprecated */
  #define MATROSKA_CODEC_ID_S_ASS          "S_ASS"         /* deprecated */
  #define MATROSKA_CODEC_ID_S_VOBSUB       "S_VOBSUB"
@@ -306,10 +392,11 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
  
  /* block lacing */
  #define MATROSKA_NO_LACING               0x0
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am ../xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am
---- xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/spu_dec/Makefile.am	2008-07-23 08:43:09.000000000 +0100
-@@ -34,3 +34,11 @@
+diff --git a/src/spu_dec/Makefile.am b/src/spu_dec/Makefile.am
+index 98048fe..df3604d 100644
+--- a/src/spu_dec/Makefile.am
++++ b/src/spu_dec/Makefile.am
+@@ -34,3 +34,11 @@ xineplug_decode_spudvb_la_LIBADD  = $(XINE_LIB) $(PTHREAD_LIBS) $(LTLIBINTL)
  
  xineplug_sputext_la_SOURCES = sputext_demuxer.c sputext_decoder.c
  xineplug_sputext_la_LIBADD  = $(XINE_LIB) $(LTLIBINTL)
@@ -317,270 +404,15 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
 +if ENABLE_KATE
 +xineplug_LTLIBRARIES += xineplug_kate.la
 +xineplug_kate_la_SOURCES = xine_kate_decoder.c
-+xineplug_kate_la_LIBADD = $(KATE_LIBS) $(XINE_LIB) $(LTLIBINTL)
-+xineplug_kate_la_CFLAGS = $(KATE_CFLAGS)
++xineplug_kate_la_LIBADD = $(TIGER_LIBS) $(KATE_LIBS) $(XINE_LIB) $(LTLIBINTL)
++xineplug_kate_la_CFLAGS = $(TIGER_CFLAGS) $(KATE_CFLAGS)
 +endif
 +
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c
---- xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/xine-engine/audio_decoder.c	2008-07-22 22:04:04.000000000 +0100
-@@ -42,6 +42,36 @@
- #include <xine/xine_internal.h>
- #include <xine/xineutils.h>
- 
-+/* if updating SPU decoders for audio only streams, the decoders might crash
-+   as they'll expect a valid video out - so only allow the ones we know are ok */
-+static int is_suitable_audio_spu(int type)
-+{
-+  int streamtype = type & 0xFFFF0000;
-+  switch (streamtype) {
-+    case BUF_SPU_KATE:
-+      return 1;
-+    default:
-+      return 0;
-+  }
-+}
-+
-+static void update_spu_decoder (xine_stream_t *stream, int type) {
-+
-+  int streamtype = (type>>16) & 0xFF;
-+  
-+  if( stream->spu_decoder_streamtype != streamtype ||
-+      !stream->spu_decoder_plugin ) {
-+    
-+    if (stream->spu_decoder_plugin)
-+      _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
-+          
-+    stream->spu_decoder_streamtype = streamtype;
-+    stream->spu_decoder_plugin = _x_get_spu_decoder (stream, streamtype);
-+
-+  }
-+  return ;
-+}
-+
- static void *audio_decoder_loop (void *stream_gen) {
- 
-   buf_element_t   *buf = NULL;
-@@ -52,11 +82,14 @@
-   xine_ticket_t   *running_ticket = stream->xine->port_ticket;
-   int              running = 1;
-   int              prof_audio_decode = -1;
-+  int              prof_spu_decode = -1;
-   uint32_t         buftype_unknown = 0;
-   int              audio_channel_user = stream->audio_channel_user;
- 
-   if (prof_audio_decode == -1)
-     prof_audio_decode = xine_profiler_allocate_slot ("audio decoder/output");
-+  if (!stream->video_out && prof_spu_decode == -1)
-+    prof_spu_decode = xine_profiler_allocate_slot ("SPU decoder/output");
- 
-   while (running) {
- 
-@@ -96,6 +129,12 @@
- 	stream->audio_type = 0;
-       }
-       
-+      if (!stream->video_out && stream->spu_decoder_plugin) {
-+        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
-+        stream->spu_decoder_plugin = NULL;
-+        stream->spu_track_map_entries = 0;
-+      }
-+
-       running_ticket->release(running_ticket, 0);
-       
-       if( !stream->gapless_switch )
-@@ -173,6 +212,11 @@
- 	stream->audio_track_map_entries = 0;
- 	stream->audio_type = 0;
-       }
-+      if (!stream->video_out && stream->spu_decoder_plugin) {
-+        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
-+        stream->spu_decoder_plugin = NULL;
-+        stream->spu_track_map_entries = 0;
-+      }
-       
-       running_ticket->release(running_ticket, 0);
-       running = 0;
-@@ -185,11 +229,14 @@
-       lprintf ("reset\n");
- 
-       _x_extra_info_reset( stream->audio_decoder_extra_info );
-+      running_ticket->acquire(running_ticket, 0);
-       if (stream->audio_decoder_plugin) {
--	running_ticket->acquire(running_ticket, 0);
- 	stream->audio_decoder_plugin->reset (stream->audio_decoder_plugin);
--	running_ticket->release(running_ticket, 0);
-       }
-+      if (stream->spu_decoder_plugin) {
-+        stream->spu_decoder_plugin->reset (stream->spu_decoder_plugin);
-+      }
-+      running_ticket->release(running_ticket, 0);
-       break;
-           
-     case BUF_CONTROL_DISCONTINUITY:
-@@ -240,19 +287,19 @@
- 
-     default:
- 
--      if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
--        break;
--
--      xine_profiler_start_count (prof_audio_decode);
--
--      running_ticket->acquire(running_ticket, 0);
--	  
-       if ( (buf->type & 0xFF000000) == BUF_AUDIO_BASE ) {
- 	
- 	uint32_t audio_type = 0;
- 	int      i,j;
- 	uint32_t chan=buf->type&0x0000FFFF;
- 
-+        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
-+          break;
-+
-+        xine_profiler_start_count (prof_audio_decode);
-+
-+        running_ticket->acquire(running_ticket, 0);
-+	  
- 	/*
-         printf("audio_decoder: buf_type=%08x auto=%08x user=%08x\n",
- 	       buf->type, 
-@@ -377,17 +424,81 @@
- 	    }
- 	  }
- 	}
-+
-+        if (running_ticket->ticket_revoked)
-+          running_ticket->renew(running_ticket, 0);
-+        running_ticket->release(running_ticket, 0);
-+      
-+        xine_profiler_stop_count (prof_audio_decode);
-+
-+///
-+      } else if ( (buf->type & 0xFF000000) == BUF_SPU_BASE ) {
-+
-+        int      i,j;
-+
-+        if (stream->video_out || !is_suitable_audio_spu(buf->type))
-+          break;
-+
-+        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_SPU))
-+          break;
-+
-+        xine_profiler_start_count (prof_spu_decode);
-+
-+        running_ticket->acquire(running_ticket, 0);
-+      
-+        update_spu_decoder(stream, buf->type);
-+
-+        /* update track map */
-+
-+        i = 0;
-+        while ( (i<stream->spu_track_map_entries) && (stream->spu_track_map[i]<buf->type) ) 
-+          i++;
-+        
-+        if ( (i==stream->spu_track_map_entries)
-+             || (stream->spu_track_map[i] != buf->type) ) {
-+          xine_event_t  ui_event;
-+
-+          j = stream->spu_track_map_entries;
-+
-+          if (j >= 50)
-+            break;
-+
-+          while (j>i) {
-+            stream->spu_track_map[j] = stream->spu_track_map[j-1];
-+            j--;
-+          }
-+          stream->spu_track_map[i] = buf->type;
-+          stream->spu_track_map_entries++;
-+
-+	  ui_event.type        = XINE_EVENT_UI_CHANNELS_CHANGED;
-+	  ui_event.data_length = 0;
-+	  xine_event_send (stream, &ui_event);
-+        }
-+
-+        if (stream->spu_channel_user >= 0) {
-+          if (stream->spu_channel_user < stream->spu_track_map_entries)
-+            stream->spu_channel = (stream->spu_track_map[stream->spu_channel_user] & 0xFF);
-+          else
-+            stream->spu_channel = stream->spu_channel_auto;
-+        }
-+
-+        if (stream->spu_decoder_plugin) {
-+          stream->spu_decoder_plugin->decode_data (stream->spu_decoder_plugin, buf);
-+        }
-+
-+        if (running_ticket->ticket_revoked)
-+          running_ticket->renew(running_ticket, 0);
-+        running_ticket->release(running_ticket, 0);
-+      
-+        xine_profiler_stop_count (prof_spu_decode);
-+
-+///
-+
-       } else if( buf->type != buftype_unknown ) {
- 	  xine_log (stream->xine, XINE_LOG_MSG, 
- 		    _("audio_decoder: error, unknown buffer type: %08x\n"), buf->type );
- 	  buftype_unknown = buf->type;
-       }
--
--      if (running_ticket->ticket_revoked)
--        running_ticket->renew(running_ticket, 0);
--      running_ticket->release(running_ticket, 0);
--      
--      xine_profiler_stop_count (prof_audio_decode);
-     }
- 
-     /* some decoders require a full reinitialization when audio
-diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.sub -x configure -x SlackBuild -x '*.m4' -x ltmain.sh -x libtool -x Makefile -x Makefile.in -ru xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c
---- xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c	2008-07-17 16:50:59.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/xine-engine/osd.c	2008-09-28 12:02:45.000000000 +0100
-@@ -282,6 +282,7 @@
-   rle_elem_t rle, *rle_p=0;
-   int x, y;
-   uint8_t *c;
-+  int ret;
- 
-   lprintf("osd=%p vpts=%"PRId64"\n", osd, vpts);
-   
-@@ -386,15 +387,18 @@
-     this->event.event_type = OVERLAY_EVENT_SHOW;
-     this->event.vpts = vpts;
-     ovl_manager->add_event(ovl_manager, (void *)&this->event);
-+
-+    ret = 1;
-   } else {
-     /* osd empty - hide it */
-     _osd_hide(osd, vpts);
-+    ret = 0;
-   }
-   pthread_mutex_unlock (&this->osd_mutex);  
-   
-   this->stream->xine->port_ticket->release(this->stream->xine->port_ticket, 1);
-   
--  return 1;
-+  return ret;
- }
- 
- /* normal OSD show
-@@ -1646,6 +1650,14 @@
- 
-   lprintf("osd=%p at (%d,%d) %dx%d\n",osd, x1,y1, width,height );
- 
-+  /* prevent overflowing to right and bottom */
-+  if (x1+width > osd->width) {
-+    width = osd->width-x1;
-+  }
-+  if (y1+height > osd->height) {
-+    height = osd->height-y1;
-+  }
-+
-   /* update clipping area */
-   osd->x1 = MIN( osd->x1, x1 );
-   osd->x2 = MAX( osd->x2, x1+width );
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ ../xine-lib-1-2-767ccb7795a2/src/spu_dec/xine_kate_decoder.c	2008-09-28 12:09:31.000000000 +0100
+diff --git a/src/spu_dec/xine_kate_decoder.c b/src/spu_dec/xine_kate_decoder.c
+new file mode 100644
+index 0000000..8756b84
+--- /dev/null
++++ b/src/spu_dec/xine_kate_decoder.c
 @@ -0,0 +1,1937 @@
 +/*
 + * Copyright (C) 2000-2003 the xine project
@@ -2519,3 +2351,266 @@ diff -x xine-config -x configure.ac -x 'configure.h*' -x config.guess -x config.
 +  { PLUGIN_NONE, 0, "", 0, NULL, NULL }
 +};
 +
+diff --git a/src/xine-engine/audio_decoder.c b/src/xine-engine/audio_decoder.c
+index 6a0688f..3d3ae0c 100644
+--- a/src/xine-engine/audio_decoder.c
++++ b/src/xine-engine/audio_decoder.c
+@@ -42,6 +42,36 @@
+ #include <xine/xine_internal.h>
+ #include <xine/xineutils.h>
+ 
++/* if updating SPU decoders for audio only streams, the decoders might crash
++   as they'll expect a valid video out - so only allow the ones we know are ok */
++static int is_suitable_audio_spu(int type)
++{
++  int streamtype = type & 0xFFFF0000;
++  switch (streamtype) {
++    case BUF_SPU_KATE:
++      return 1;
++    default:
++      return 0;
++  }
++}
++
++static void update_spu_decoder (xine_stream_t *stream, int type) {
++
++  int streamtype = (type>>16) & 0xFF;
++  
++  if( stream->spu_decoder_streamtype != streamtype ||
++      !stream->spu_decoder_plugin ) {
++    
++    if (stream->spu_decoder_plugin)
++      _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++          
++    stream->spu_decoder_streamtype = streamtype;
++    stream->spu_decoder_plugin = _x_get_spu_decoder (stream, streamtype);
++
++  }
++  return ;
++}
++
+ static void *audio_decoder_loop (void *stream_gen) {
+ 
+   buf_element_t   *buf = NULL;
+@@ -52,11 +82,14 @@ static void *audio_decoder_loop (void *stream_gen) {
+   xine_ticket_t   *running_ticket = stream->xine->port_ticket;
+   int              running = 1;
+   int              prof_audio_decode = -1;
++  int              prof_spu_decode = -1;
+   uint32_t         buftype_unknown = 0;
+   int              audio_channel_user = stream->audio_channel_user;
+ 
+   if (prof_audio_decode == -1)
+     prof_audio_decode = xine_profiler_allocate_slot ("audio decoder/output");
++  if (!stream->video_out && prof_spu_decode == -1)
++    prof_spu_decode = xine_profiler_allocate_slot ("SPU decoder/output");
+ 
+   while (running) {
+ 
+@@ -96,6 +129,12 @@ static void *audio_decoder_loop (void *stream_gen) {
+ 	stream->audio_type = 0;
+       }
+       
++      if (!stream->video_out && stream->spu_decoder_plugin) {
++        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++        stream->spu_decoder_plugin = NULL;
++        stream->spu_track_map_entries = 0;
++      }
++
+       running_ticket->release(running_ticket, 0);
+       
+       if( !stream->gapless_switch )
+@@ -173,6 +212,11 @@ static void *audio_decoder_loop (void *stream_gen) {
+ 	stream->audio_track_map_entries = 0;
+ 	stream->audio_type = 0;
+       }
++      if (!stream->video_out && stream->spu_decoder_plugin) {
++        _x_free_spu_decoder (stream, stream->spu_decoder_plugin);
++        stream->spu_decoder_plugin = NULL;
++        stream->spu_track_map_entries = 0;
++      }
+       
+       running_ticket->release(running_ticket, 0);
+       running = 0;
+@@ -185,11 +229,14 @@ static void *audio_decoder_loop (void *stream_gen) {
+       lprintf ("reset\n");
+ 
+       _x_extra_info_reset( stream->audio_decoder_extra_info );
++      running_ticket->acquire(running_ticket, 0);
+       if (stream->audio_decoder_plugin) {
+-	running_ticket->acquire(running_ticket, 0);
+ 	stream->audio_decoder_plugin->reset (stream->audio_decoder_plugin);
+-	running_ticket->release(running_ticket, 0);
+       }
++      if (stream->spu_decoder_plugin) {
++        stream->spu_decoder_plugin->reset (stream->spu_decoder_plugin);
++      }
++      running_ticket->release(running_ticket, 0);
+       break;
+           
+     case BUF_CONTROL_DISCONTINUITY:
+@@ -240,19 +287,19 @@ static void *audio_decoder_loop (void *stream_gen) {
+ 
+     default:
+ 
+-      if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
+-        break;
+-
+-      xine_profiler_start_count (prof_audio_decode);
+-
+-      running_ticket->acquire(running_ticket, 0);
+-	  
+       if ( (buf->type & 0xFF000000) == BUF_AUDIO_BASE ) {
+ 	
+ 	uint32_t audio_type = 0;
+ 	int      i,j;
+ 	uint32_t chan=buf->type&0x0000FFFF;
+ 
++        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_AUDIO))
++          break;
++
++        xine_profiler_start_count (prof_audio_decode);
++
++        running_ticket->acquire(running_ticket, 0);
++	  
+ 	/*
+         printf("audio_decoder: buf_type=%08x auto=%08x user=%08x\n",
+ 	       buf->type, 
+@@ -377,17 +424,81 @@ static void *audio_decoder_loop (void *stream_gen) {
+ 	    }
+ 	  }
+ 	}
++
++        if (running_ticket->ticket_revoked)
++          running_ticket->renew(running_ticket, 0);
++        running_ticket->release(running_ticket, 0);
++      
++        xine_profiler_stop_count (prof_audio_decode);
++
++///
++      } else if ( (buf->type & 0xFF000000) == BUF_SPU_BASE ) {
++
++        int      i,j;
++
++        if (stream->video_out || !is_suitable_audio_spu(buf->type))
++          break;
++
++        if (_x_stream_info_get(stream, XINE_STREAM_INFO_IGNORE_SPU))
++          break;
++
++        xine_profiler_start_count (prof_spu_decode);
++
++        running_ticket->acquire(running_ticket, 0);
++      
++        update_spu_decoder(stream, buf->type);
++
++        /* update track map */
++
++        i = 0;
++        while ( (i<stream->spu_track_map_entries) && (stream->spu_track_map[i]<buf->type) ) 
++          i++;
++        
++        if ( (i==stream->spu_track_map_entries)
++             || (stream->spu_track_map[i] != buf->type) ) {
++          xine_event_t  ui_event;
++
++          j = stream->spu_track_map_entries;
++
++          if (j >= 50)
++            break;
++
++          while (j>i) {
++            stream->spu_track_map[j] = stream->spu_track_map[j-1];
++            j--;
++          }
++          stream->spu_track_map[i] = buf->type;
++          stream->spu_track_map_entries++;
++
++	  ui_event.type        = XINE_EVENT_UI_CHANNELS_CHANGED;
++	  ui_event.data_length = 0;
++	  xine_event_send (stream, &ui_event);
++        }
++
++        if (stream->spu_channel_user >= 0) {
++          if (stream->spu_channel_user < stream->spu_track_map_entries)
++            stream->spu_channel = (stream->spu_track_map[stream->spu_channel_user] & 0xFF);
++          else
++            stream->spu_channel = stream->spu_channel_auto;
++        }
++
++        if (stream->spu_decoder_plugin) {
++          stream->spu_decoder_plugin->decode_data (stream->spu_decoder_plugin, buf);
++        }
++
++        if (running_ticket->ticket_revoked)
++          running_ticket->renew(running_ticket, 0);
++        running_ticket->release(running_ticket, 0);
++      
++        xine_profiler_stop_count (prof_spu_decode);
++
++///
++
+       } else if( buf->type != buftype_unknown ) {
+ 	  xine_log (stream->xine, XINE_LOG_MSG, 
+ 		    _("audio_decoder: error, unknown buffer type: %08x\n"), buf->type );
+ 	  buftype_unknown = buf->type;
+       }
+-
+-      if (running_ticket->ticket_revoked)
+-        running_ticket->renew(running_ticket, 0);
+-      running_ticket->release(running_ticket, 0);
+-      
+-      xine_profiler_stop_count (prof_audio_decode);
+     }
+ 
+     /* some decoders require a full reinitialization when audio
+diff --git a/src/xine-engine/osd.c b/src/xine-engine/osd.c
+index 1d3754d..ddf46a5 100644
+--- a/src/xine-engine/osd.c
++++ b/src/xine-engine/osd.c
+@@ -299,6 +299,7 @@ static int _osd_show (osd_object_t *osd, int64_t vpts, int unscaled ) {
+   rle_elem_t rle, *rle_p=0;
+   int x, y;
+   uint8_t *c;
++  int ret;
+ 
+   lprintf("osd=%p vpts=%"PRId64"\n", osd, vpts);
+   
+@@ -415,15 +416,18 @@ static int _osd_show (osd_object_t *osd, int64_t vpts, int unscaled ) {
+     this->event.event_type = OVERLAY_EVENT_SHOW;
+     this->event.vpts = vpts;
+     ovl_manager->add_event(ovl_manager, (void *)&this->event);
++
++    ret = 1;
+   } else {
+     /* osd empty - hide it */
+     _osd_hide(osd, vpts);
++    ret = 0;
+   }
+   pthread_mutex_unlock (&this->osd_mutex);  
+   
+   this->stream->xine->port_ticket->release(this->stream->xine->port_ticket, 1);
+   
+-  return 1;
++  return ret;
+ }
+ 
+ /* normal OSD show
+@@ -1683,6 +1687,14 @@ static void osd_draw_bitmap(osd_object_t *osd, uint8_t *bitmap,
+ 
+   lprintf("osd=%p at (%d,%d) %dx%d\n",osd, x1,y1, width,height );
+ 
++  /* prevent overflowing to right and bottom */
++  if (x1+width > osd->width) {
++    width = osd->width-x1;
++  }
++  if (y1+height > osd->height) {
++    height = osd->height-y1;
++  }
++
+   /* update clipping area */
+   osd->x1 = MIN( osd->x1, x1 );
+   osd->x2 = MAX( osd->x2, x1+width );
+-- 
+1.6.0
+
