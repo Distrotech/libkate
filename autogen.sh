@@ -13,6 +13,9 @@ test -z "$srcdir" && srcdir=.
 cd "$srcdir"
 DIE=0
 
+# libtoolize won't create it, and fail on a git checkout
+mkdir -p misc/autotools
+
 echo "checking for autoconf... "
 (autoconf --version) < /dev/null > /dev/null 2>&1 || {
         echo
