@@ -126,7 +126,7 @@ typedef uintptr_t kate_uintptr_t;
 #elif defined uintptr_t
 typedef uintptr_t kate_uintptr_t;
 #else
-typedef union { unsigned int i; void *p; } kate_uintptr_t;
+typedef size_t kate_uintptr_t;
 #endif
 
 typedef float kate_float;
