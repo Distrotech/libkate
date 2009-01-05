@@ -1,6 +1,7 @@
 MSVC 2005 build files
 
 Contributed by Roman Vorobets
+Updated by Barry Duncan (sirlemonhead)
 ---
 
 In order to build liboggkate, kateenc and katedec (both example and tools), you

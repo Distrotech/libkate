@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="katedec"
-	ProjectGUID="{CDD79978-B9EB-491D-AFBA-0896B899A6B4}"
-	RootNamespace="katedec"
+	Name="katalyzer"
+	ProjectGUID="{230C0C10-874B-4663-B06F-8B98C9538A18}"
+	RootNamespace="katalyzer"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions=".\debug\liboggkate.lib .\debug\libkate.lib"
 				AdditionalDependencies="libogg.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -133,6 +134,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions=".\release\liboggkate.lib .\release\libkate.lib"
 				AdditionalDependencies="libogg.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -173,35 +175,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\tools\katedec.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="snprintf=_snprintf"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="snprintf=_snprintf"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\kfuzz.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\kkate.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\klrc.c"
+				RelativePath="..\..\..\..\tools\katalyzer.c"
 				>
 			</File>
 			<File
@@ -209,7 +183,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\tools\ksrt.c"
+				RelativePath="..\..\..\..\tools\kstats.c"
 				>
 			</File>
 			<File

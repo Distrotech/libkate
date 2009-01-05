@@ -18,3 +18,7 @@ Alexis Ballier
 
 j
   reported and suggested a fix for the uninstalled pc files using libtool
+
+Barry Duncan (sirlemonhead)
+  updated the win32 build files, and created one for katalyzer
+

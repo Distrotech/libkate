@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="libkate"
 	ProjectGUID="{36E06940-9229-4F15-BAF1-5E414CC2FF71}"
 	RootNamespace="libkate"
@@ -105,7 +105,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\include;..\..\..\..\..\libogg\include"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;__STDC__;snprintf=_snprintf"
 				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
@@ -235,7 +235,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\src\kate_config.h"
+				RelativePath="..\..\..\..\include\kate\kate_config.h"
 				>
 			</File>
 			<File

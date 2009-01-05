@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="windows-1251"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
-	Name="katedec"
-	ProjectGUID="{CDD79978-B9EB-491D-AFBA-0896B899A6B4}"
-	RootNamespace="katedec"
+	Version="8.00"
+	Name="katalyzer"
+	ProjectGUID="{C5D22420-77A1-4C1B-955C-C9EA0F8AFC01}"
+	RootNamespace="katalyzer"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -47,6 +46,7 @@
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="4"
 			/>
 			<Tool
@@ -60,6 +60,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions=".\debug\liboggkate.lib .\debug\libkate.lib"
 				AdditionalDependencies="libogg.lib"
 				LinkIncremental="2"
 				GenerateDebugInformation="true"
@@ -83,6 +84,9 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
+			/>
+			<Tool
+				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -113,13 +117,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="..\include;..\..\..\..\include;..\..\..\..\src;..\include;..\..\..\..\..\libogg\include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;snprintf=_snprintf"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
+				Detect64BitPortabilityProblems="true"
 				DebugInformationFormat="3"
 			/>
 			<Tool
@@ -133,6 +135,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
+				AdditionalOptions=".\release\liboggkate.lib .\release\libkate.lib"
 				AdditionalDependencies="libogg.lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
@@ -160,6 +163,9 @@
 				Name="VCAppVerifierTool"
 			/>
 			<Tool
+				Name="VCWebDeploymentTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
@@ -173,35 +179,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\..\..\tools\katedec.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="snprintf=_snprintf"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PreprocessorDefinitions="snprintf=_snprintf"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\kfuzz.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\kkate.c"
-				>
-			</File>
-			<File
-				RelativePath="..\..\..\..\tools\klrc.c"
+				RelativePath="..\..\..\..\tools\katalyzer.c"
 				>
 			</File>
 			<File
@@ -209,7 +187,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\..\..\tools\ksrt.c"
+				RelativePath="..\..\..\..\tools\kstats.c"
 				>
 			</File>
 			<File
