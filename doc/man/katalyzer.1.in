@@ -35,7 +35,7 @@ Show version information.
 .TP
 \fB\-l\fR types
 Select the types of information to log, from the list below. These characters may be
-concatenated in a single -l option, as, eg, \fBls\fR does (eg, \fBkatalyzer\fR -l Ttv).
+concatenated in a single \-l option, as, eg, \fBls\fR does (eg, \fBkatalyzer\fR \-l Ttv).
 Refer to the \fBkatalyzer\fR command line help for a fully up to date list of types.
     e: errors
     p: packet
@@ -43,7 +43,10 @@ Refer to the \fBkatalyzer\fR command line help for a fully up to date list of ty
     T: Timing
     t: text
     v: event
-    -: miscellaneous information that doesn't belong in any other type
+    d: dump page and packets
+    S: statistics
+    \-: miscellaneous information that doesn't belong in any other type
+
 .TP
 \fB\-l!\fR
 Shorthand to select all information to log.
@@ -57,7 +60,7 @@ Analyzes any Kate stream in an Ogg file:
 
 Analyzes any Kate stream in an Ogg file, displaying only errors:
 
-    katalyzer -l e input.ogg
+    katalyzer \-l e input.ogg
 
 .SH SEE ALSO
 .PP
