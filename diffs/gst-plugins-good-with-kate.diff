@@ -1,7 +1,11 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-good/gst/matroska/matroska-demux.c NEW2/gst-plugins-good/gst/matroska/matroska-demux.c
---- ORG2/gst-plugins-good/gst/matroska/matroska-demux.c	2008-12-03 14:06:24.000000000 +0000
-+++ NEW2/gst-plugins-good/gst/matroska/matroska-demux.c	2008-12-03 14:03:30.000000000 +0000
-@@ -106,7 +106,7 @@
+Index: NEW2/gst-plugins-good/gst/matroska/matroska-demux.c
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-good/gst/matroska/matroska-demux.c,v
+retrieving revision 1.138
+diff -u -r1.138 matroska-demux.c
+--- NEW2/gst-plugins-good/gst/matroska/matroska-demux.c	8 Jan 2009 15:56:45 -0000	1.138
++++ NEW2/gst-plugins-good/gst/matroska/matroska-demux.c	17 Jan 2009 15:46:07 -0000
+@@ -120,7 +120,7 @@
      GST_PAD_SRC,
      GST_PAD_SOMETIMES,
      GST_STATIC_CAPS ("text/plain; application/x-ssa; application/x-ass; "
@@ -10,7 +14,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
          "application/x-subtitle-unknown")
      );
  
-@@ -5562,6 +5562,9 @@
+@@ -5583,6 +5583,9 @@
    } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
      caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
      ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;
@@ -20,9 +24,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
    } else {
      GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);
      caps = gst_caps_new_simple ("application/x-subtitle-unknown", NULL);
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-good/gst/matroska/matroska-ids.h NEW2/gst-plugins-good/gst/matroska/matroska-ids.h
---- ORG2/gst-plugins-good/gst/matroska/matroska-ids.h	2008-12-03 14:06:24.000000000 +0000
-+++ NEW2/gst-plugins-good/gst/matroska/matroska-ids.h	2008-12-03 14:03:30.000000000 +0000
+Index: NEW2/gst-plugins-good/gst/matroska/matroska-ids.h
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-good/gst/matroska/matroska-ids.h,v
+retrieving revision 1.38
+diff -u -r1.38 matroska-ids.h
+--- NEW2/gst-plugins-good/gst/matroska/matroska-ids.h	16 Nov 2008 14:41:32 -0000	1.38
++++ NEW2/gst-plugins-good/gst/matroska/matroska-ids.h	17 Jan 2009 15:46:07 -0000
 @@ -376,6 +376,7 @@
  #define GST_MATROSKA_CODEC_ID_SUBTITLE_USF       "S_TEXT/USF"
  #define GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB    "S_VOBSUB"
@@ -31,10 +39,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
  /*
   * Matroska tags. Strings.
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-good/gst/matroska/matroska-mux.c NEW2/gst-plugins-good/gst/matroska/matroska-mux.c
---- ORG2/gst-plugins-good/gst/matroska/matroska-mux.c	2008-12-03 14:06:24.000000000 +0000
-+++ NEW2/gst-plugins-good/gst/matroska/matroska-mux.c	2008-12-03 14:03:30.000000000 +0000
-@@ -205,6 +205,8 @@
+Index: NEW2/gst-plugins-good/gst/matroska/matroska-mux.c
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-good/gst/matroska/matroska-mux.c,v
+retrieving revision 1.79
+diff -u -r1.79 matroska-mux.c
+--- NEW2/gst-plugins-good/gst/matroska/matroska-mux.c	8 Jan 2009 15:56:46 -0000	1.79
++++ NEW2/gst-plugins-good/gst/matroska/matroska-mux.c	17 Jan 2009 15:46:09 -0000
+@@ -224,6 +224,8 @@
      GstMatroskaTrackContext * context);
  static gboolean vorbis_streamheader_to_codecdata (const GValue * streamheader,
      GstMatroskaTrackContext * context);
@@ -43,7 +55,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  static gboolean flac_streamheader_to_codecdata (const GValue * streamheader,
      GstMatroskaTrackContext * context);
  
-@@ -808,14 +810,16 @@
+@@ -894,14 +896,16 @@
    return FALSE;
  }
  
@@ -64,7 +76,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  
    if (streamheader == NULL)
      goto no_stream_headers;
-@@ -824,44 +828,51 @@
+@@ -910,44 +914,51 @@
      goto wrong_type;
  
    bufarr = g_value_peek_pointer (streamheader);
@@ -132,7 +144,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      memcpy (priv_data + offset, GST_BUFFER_DATA (buf[i]),
          GST_BUFFER_SIZE (buf[i]));
      offset += GST_BUFFER_SIZE (buf[i]);
-@@ -873,6 +884,8 @@
+@@ -959,6 +970,8 @@
    if (p_buf0)
      *p_buf0 = gst_buffer_ref (buf[0]);
  
@@ -141,7 +153,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
    return TRUE;
  
  /* ERRORS */
-@@ -905,7 +918,7 @@
+@@ -991,7 +1004,7 @@
  {
    GstBuffer *buf0 = NULL;
  
@@ -150,7 +162,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      return FALSE;
  
    if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 4) {
-@@ -934,7 +947,7 @@
+@@ -1020,7 +1033,7 @@
  {
    GstBuffer *buf0 = NULL;
  
@@ -159,7 +171,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      return FALSE;
  
    if (buf0 == NULL || GST_BUFFER_SIZE (buf0) < 1 + 6 + 26) {
-@@ -986,6 +999,27 @@
+@@ -1072,6 +1085,27 @@
  }
  
  static gboolean
@@ -187,7 +199,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  flac_streamheader_to_codecdata (const GValue * streamheader,
      GstMatroskaTrackContext * context)
  {
-@@ -1368,6 +1402,57 @@
+@@ -1454,6 +1488,57 @@
     * no single subtitle creation element in GStreamer,
     * neither do I know how subtitling works at all. */
  

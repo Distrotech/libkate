@@ -1,7 +1,56 @@
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/configure.ac NEW2/gst-plugins-bad/configure.ac
---- ORG2/gst-plugins-bad/configure.ac	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/configure.ac	2008-12-03 14:21:19.000000000 +0000
-@@ -800,6 +800,30 @@
+Index: NEW2/gst-plugins-bad/LICENSE_readme
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/LICENSE_readme,v
+retrieving revision 1.10
+diff -u -r1.10 LICENSE_readme
+--- NEW2/gst-plugins-bad/LICENSE_readme	9 Nov 2004 10:18:19 -0000	1.10
++++ NEW2/gst-plugins-bad/LICENSE_readme	17 Jan 2009 15:45:58 -0000
+@@ -85,6 +85,8 @@
+ dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
+ effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
+ musepack 			  (http://www.musepack.net/)
++kate             libtiger         (http://libtiger.googlecode.com/)
++                                   Optional, only for the tiger element
+ 
+ Plugins which use a BSD covered library are as follows:
+ 
+@@ -93,6 +95,7 @@
+ gsttheora        libtheora        (http://www.theora.org/)
+ speex                             (http://www.speex.org/)
+ flac             libFLAC          (http://flac.sourceforge.net/)
++kate             libkate          (http://libkate.googlecode.com/)
+ 
+ Plugins based on libraries with other free licenses:
+ 
+Index: NEW2/gst-plugins-bad/REQUIREMENTS
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/REQUIREMENTS,v
+retrieving revision 1.19
+diff -u -r1.19 REQUIREMENTS
+--- NEW2/gst-plugins-bad/REQUIREMENTS	9 Jul 2007 06:05:45 -0000	1.19
++++ NEW2/gst-plugins-bad/REQUIREMENTS	17 Jan 2009 15:45:58 -0000
+@@ -118,9 +118,11 @@
+ libmms		(for MMS protocol support)
+ 			(http://www.sf.net/projects/libmms)
+ libamrnb	(for AMR-NB support)
+-			(http://http://www.penguin.cz/~utx/amr)
++			(http://www.penguin.cz/~utx/amr)
+ libamrwb	(for AMR-WB support)
+-			(http://http://www.penguin.cz/~utx/amr)
++			(http://www.penguin.cz/~utx/amr)
++libkate		(for Kate support)
++			(http://libkate.googlecode.com/)
+ 
+ 
+ Optional (debian) packages:
+Index: NEW2/gst-plugins-bad/configure.ac
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/configure.ac,v
+retrieving revision 1.920
+diff -u -r1.920 configure.ac
+--- NEW2/gst-plugins-bad/configure.ac	9 Jan 2009 23:44:38 -0000	1.920
++++ NEW2/gst-plugins-bad/configure.ac	17 Jan 2009 15:45:58 -0000
+@@ -799,6 +799,30 @@
    AC_SUBST(JP2K_LIBS)
  ])
  
@@ -32,7 +81,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  dnl *** ladspa ***
  translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
  AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
-@@ -1321,6 +1345,7 @@
+@@ -1320,6 +1344,7 @@
  AM_CONDITIONAL(USE_X264, false)
  AM_CONDITIONAL(USE_XVID, false)
  AM_CONDITIONAL(USE_WILDMIDI, false)
@@ -40,7 +89,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  AM_CONDITIONAL(USE_WININET, false)
  AM_CONDITIONAL(USE_ACM, false)
  
-@@ -1471,6 +1496,7 @@
+@@ -1467,6 +1492,7 @@
  ext/ivorbis/Makefile
  ext/jack/Makefile
  ext/jp2k/Makefile
@@ -48,9 +97,47 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  ext/ladspa/Makefile
  ext/libmms/Makefile
  ext/Makefile
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
---- ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	2008-12-03 14:05:46.000000000 +0000
+Index: NEW2/gst-plugins-bad/gst-plugins-bad.spec.in
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/gst-plugins-bad.spec.in,v
+retrieving revision 1.55
+diff -u -r1.55 gst-plugins-bad.spec.in
+--- NEW2/gst-plugins-bad/gst-plugins-bad.spec.in	28 Nov 2008 14:22:50 -0000	1.55
++++ NEW2/gst-plugins-bad/gst-plugins-bad.spec.in	17 Jan 2009 15:45:58 -0000
+@@ -150,6 +150,7 @@
+ @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
+ @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
+ @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
++@USE_KATE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
+ 
+ %changelog
+ * Thu Oct 9 2008 Christian Schaller <chrisian.schaller at collabora dot co uk>
+Index: NEW2/gst-plugins-bad/docs/plugins/Makefile.am
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/docs/plugins/Makefile.am,v
+retrieving revision 1.65
+diff -u -r1.65 Makefile.am
+--- NEW2/gst-plugins-bad/docs/plugins/Makefile.am	5 Jan 2009 23:03:25 -0000	1.65
++++ NEW2/gst-plugins-bad/docs/plugins/Makefile.am	17 Jan 2009 15:45:58 -0000
+@@ -99,6 +99,11 @@
+ 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
+ 	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
+ 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
++	$(top_srcdir)/ext/kate/gstkateenc.h \
++	$(top_srcdir)/ext/kate/gstkatedec.h \
++	$(top_srcdir)/ext/kate/gstkateparse.h \
++	$(top_srcdir)/ext/kate/gstkatetag.h \
++	$(top_srcdir)/ext/kate/gstkatetiger.h \
+ 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
+ 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
+ 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
+Index: NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml,v
+retrieving revision 1.71
+diff -u -r1.71 gst-plugins-bad-plugins-docs.sgml
+--- NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	5 Jan 2009 23:03:25 -0000	1.71
++++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-docs.sgml	17 Jan 2009 15:45:58 -0000
 @@ -40,6 +40,10 @@
      <xi:include href="xml/element-ivorbisdec.xml" />
      <xi:include href="xml/element-jackaudiosrc.xml" />
@@ -62,7 +149,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      <xi:include href="xml/element-legacyresample.xml" />
      <xi:include href="xml/element-metadatademux.xml" />
      <xi:include href="xml/element-metadatamux.xml" />
-@@ -56,6 +60,7 @@
+@@ -57,6 +61,7 @@
      <xi:include href="xml/element-speed.xml" />
      <xi:include href="xml/element-stereo.xml" />
      <!--xi:include href="xml/element-theoradecexp.xml" /-->
@@ -78,9 +165,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
      <xi:include href="xml/plugin-ladspa.xml" />
      <xi:include href="xml/plugin-metadata.xml" />
      <xi:include href="xml/plugin-mms.xml" />
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt
---- ORG2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	2008-12-03 14:04:18.000000000 +0000
+Index: NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt,v
+retrieving revision 1.71
+diff -u -r1.71 gst-plugins-bad-plugins-sections.txt
+--- NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	5 Jan 2009 23:03:25 -0000	1.71
++++ NEW2/gst-plugins-bad/docs/plugins/gst-plugins-bad-plugins-sections.txt	17 Jan 2009 15:45:59 -0000
 @@ -345,6 +345,76 @@
  </SECTION>
  
@@ -158,24 +249,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  <FILE>gstbasemetadata</FILE>
  <TITLE>GstBaseMetadata</TITLE>
  GstBaseMetadata
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/docs/plugins/Makefile.am NEW2/gst-plugins-bad/docs/plugins/Makefile.am
---- ORG2/gst-plugins-bad/docs/plugins/Makefile.am	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/docs/plugins/Makefile.am	2008-12-03 14:04:18.000000000 +0000
-@@ -99,6 +99,11 @@
- 	$(top_srcdir)/ext/ivorbis/vorbisdec.h \
- 	$(top_srcdir)/ext/jack/gstjackaudiosrc.h \
- 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
-+	$(top_srcdir)/ext/kate/gstkateenc.h \
-+	$(top_srcdir)/ext/kate/gstkatedec.h \
-+	$(top_srcdir)/ext/kate/gstkateparse.h \
-+	$(top_srcdir)/ext/kate/gstkatetag.h \
-+	$(top_srcdir)/ext/kate/gstkatetiger.h \
- 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
- 	$(top_srcdir)/ext/metadata/gstbasemetadata.h \
- 	$(top_srcdir)/ext/metadata/gstmetadatademux.h \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/ext/Makefile.am NEW2/gst-plugins-bad/ext/Makefile.am
---- ORG2/gst-plugins-bad/ext/Makefile.am	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/ext/Makefile.am	2008-12-03 14:04:18.000000000 +0000
+Index: NEW2/gst-plugins-bad/ext/Makefile.am
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/ext/Makefile.am,v
+retrieving revision 1.214
+diff -u -r1.214 Makefile.am
+--- NEW2/gst-plugins-bad/ext/Makefile.am	12 Oct 2008 17:04:17 -0000	1.214
++++ NEW2/gst-plugins-bad/ext/Makefile.am	17 Jan 2009 15:45:59 -0000
 @@ -142,6 +142,12 @@
  JP2K_DIR =
  endif
@@ -205,57 +285,13 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	libmms \
  	dts \
  	divx \
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/gst-plugins-bad.spec.in NEW2/gst-plugins-bad/gst-plugins-bad.spec.in
---- ORG2/gst-plugins-bad/gst-plugins-bad.spec.in	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/gst-plugins-bad.spec.in	2008-12-03 14:04:18.000000000 +0000
-@@ -150,6 +150,7 @@
- @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
- @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
- @USE_WILDMIDI_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
-+@USE_KATE_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
- 
- %changelog
- * Thu Oct 9 2008 Christian Schaller <chrisian.schaller at collabora dot co uk>
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/LICENSE_readme NEW2/gst-plugins-bad/LICENSE_readme
---- ORG2/gst-plugins-bad/LICENSE_readme	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/LICENSE_readme	2008-12-03 14:30:42.000000000 +0000
-@@ -85,6 +85,8 @@
- dirac                             (http://www.bbc.co.uk/rd/projects/dirac/)
- effectv (Our ports was relicensed)(http://effectv.sourceforge.net/)
- musepack 			  (http://www.musepack.net/)
-+kate             libtiger         (http://libtiger.googlecode.com/)
-+                                   Optional, only for the tiger element
- 
- Plugins which use a BSD covered library are as follows:
- 
-@@ -93,6 +95,7 @@
- gsttheora        libtheora        (http://www.theora.org/)
- speex                             (http://www.speex.org/)
- flac             libFLAC          (http://flac.sourceforge.net/)
-+kate             libkate          (http://libkate.googlecode.com/)
- 
- Plugins based on libraries with other free licenses:
- 
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/REQUIREMENTS NEW2/gst-plugins-bad/REQUIREMENTS
---- ORG2/gst-plugins-bad/REQUIREMENTS	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/REQUIREMENTS	2008-12-03 14:04:18.000000000 +0000
-@@ -118,9 +118,11 @@
- libmms		(for MMS protocol support)
- 			(http://www.sf.net/projects/libmms)
- libamrnb	(for AMR-NB support)
--			(http://http://www.penguin.cz/~utx/amr)
-+			(http://www.penguin.cz/~utx/amr)
- libamrwb	(for AMR-WB support)
--			(http://http://www.penguin.cz/~utx/amr)
-+			(http://www.penguin.cz/~utx/amr)
-+libkate		(for Kate support)
-+			(http://libkate.googlecode.com/)
- 
- 
- Optional (debian) packages:
-diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x '*.spec' -x po ORG2/gst-plugins-bad/tests/check/Makefile.am NEW2/gst-plugins-bad/tests/check/Makefile.am
---- ORG2/gst-plugins-bad/tests/check/Makefile.am	2008-12-03 14:06:23.000000000 +0000
-+++ NEW2/gst-plugins-bad/tests/check/Makefile.am	2008-12-03 14:05:10.000000000 +0000
+Index: NEW2/gst-plugins-bad/tests/check/Makefile.am
+===================================================================
+RCS file: /cvs/gstreamer/gst-plugins-bad/tests/check/Makefile.am,v
+retrieving revision 1.70
+diff -u -r1.70 Makefile.am
+--- NEW2/gst-plugins-bad/tests/check/Makefile.am	6 Jan 2009 22:51:37 -0000	1.70
++++ NEW2/gst-plugins-bad/tests/check/Makefile.am	17 Jan 2009 15:45:59 -0000
 @@ -69,6 +69,12 @@
  check_x264enc=
  endif
@@ -277,16 +313,14 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
  	$(check_x264enc)   \
  	elements/aacparse \
  	elements/amrparse \
-@@ -105,5 +112,8 @@
+@@ -106,3 +113,6 @@
  elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
  elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
  
 +elements_kate_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 +elements_kate_LDADD = $(GST_BASE_LIBS) $(LDADD)
 +
- elements_speexresample_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(AM_CFLAGS)
- elements_speexresample_LDADD = $(GST_PLUGINS_BASE_LIBS) $(LDADD) -lgstaudio-$(GST_MAJORMINOR)
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkate.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,154 @@
 +/*
@@ -443,8 +477,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +    "kate",
 +    "Kate plugin",
 +    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/gstkatedec.c	2008-12-03 14:07:08.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/gstkatedec.c	2009-01-17 15:16:01.000000000 +0000
 @@ -0,0 +1,314 @@
 +/*
 + * GStreamer
@@ -576,12 +610,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static void
 +gst_kate_dec_base_init (gpointer gclass)
 +{
-+  static GstElementDetails element_details = {
++  static GstElementDetails element_details = GST_ELEMENT_DETAILS (
 +    "Kate stream text decoder",
 +    "Codec/Decoder/Subtitle",
 +    "Decodes Kate text streams",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
-+  };
++  );
 +  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 +
 +  gst_element_class_add_pad_template (element_class,
@@ -760,7 +794,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return res;
 +}
 +
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkatedec.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,91 @@
 +/*
@@ -854,8 +888,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_DEC_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/gstkateenc.c	2008-12-03 14:07:08.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/gstkateenc.c	2009-01-17 15:35:40.000000000 +0000
 @@ -0,0 +1,1762 @@
 +/*
 + * GStreamer
@@ -1015,12 +1049,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static void
 +gst_kate_enc_base_init (gpointer gclass)
 +{
-+  static const GstElementDetails element_details = {
++  static const GstElementDetails element_details = GST_ELEMENT_DETAILS (
 +    "Kate stream encoder",
 +    "Codec/Encoder/Subtitle",
 +    "Encodes Kate streams from text or subpictures",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
-+  };
++  );
 +  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 +
 +  gst_element_class_add_pad_template (element_class,
@@ -2128,7 +2162,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +             events are the arrival of a subsequent SPU (eg, this SPU will replace the one
 +             with no end), EOS, a new segment event, or a time threshold being reached */
 +          if (ke->hide_time <= ke->show_time) {
-+            GST_INFO_OBJECT (ke, "Cannot encode SPU packet now, hide time is now known (starting at %d) - delaying", t0);
++            GST_INFO_OBJECT (ke, "Cannot encode SPU packet now, hide time is now known (starting at %f) - delaying", t0);
 +            ke->delayed_spu = TRUE;
 +            ke->delayed_start = start;
 +            rflow = GST_FLOW_OK;
@@ -2619,7 +2653,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return ret;
 +}
 +
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkateenc.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,123 @@
 +/*
@@ -2745,7 +2779,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_ENC_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkate.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,55 @@
 +/*
@@ -2803,8 +2837,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/gstkateparse.c	2008-12-03 14:07:08.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/gstkateparse.c	2009-01-17 15:18:05.000000000 +0000
 @@ -0,0 +1,606 @@
 +/* GStreamer
 + * Copyright (C) <2004> Thomas Vander Stichele <thomas at apestaart dot org>
@@ -2877,12 +2911,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +GST_DEBUG_CATEGORY_EXTERN (gst_kateparse_debug);
 +#define GST_CAT_DEFAULT gst_kateparse_debug
 +
-+static const GstElementDetails gst_kate_parse_details = {
++static const GstElementDetails gst_kate_parse_details = GST_ELEMENT_DETAILS (
 +  "Kate stream parser",
 +  "Codec/Parser/Subtitle",
 +  "parse raw kate streams",
 +  "ogg.k.ogg.k <ogg.k.ogg.k at googlemail dot com>"
-+};
++);
 +
 +static GstStaticPadTemplate gst_kate_parse_sink_factory =
 +GST_STATIC_PAD_TEMPLATE ("sink",
@@ -3412,7 +3446,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  return ret;
 +}
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkateparse.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,79 @@
 +/* -*- c-basic-offset: 2 -*-
@@ -3494,8 +3528,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_PARSE_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/gstkatetag.c	2008-12-03 14:07:08.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetag.c	2009-01-17 15:17:16.000000000 +0000
 @@ -0,0 +1,343 @@
 +/*
 + * GStreamer
@@ -3615,12 +3649,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +GST_BOILERPLATE_FULL (GstKateTag, gst_kate_tag, GstKateParse,
 +    GST_TYPE_KATE_PARSE, _do_init);
 +
-+static GstElementDetails kate_tag_details = {
++static GstElementDetails kate_tag_details = GST_ELEMENT_DETAILS (
 +  "Kate stream tagger",
 +  "Formatter/Metadata",
 +  "Retags kate streams",
 +  "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
-+};
++);
 +
 +
 +static void
@@ -3840,7 +3874,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +
 +  return GST_KATE_PARSE_CLASS (parent_class)->parse_packet (parse, buffer);
 +}
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkatetag.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,68 @@
 +/* -*- c-basic-offset: 2 -*-
@@ -3911,8 +3945,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_TAG_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/gstkatetiger.c	2008-12-03 14:07:08.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/gstkatetiger.c	2009-01-17 15:16:49.000000000 +0000
 @@ -0,0 +1,770 @@
 +/*
 + * GStreamer
@@ -4084,12 +4118,12 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +static void
 +gst_kate_tiger_base_init (gpointer gclass)
 +{
-+  static GstElementDetails element_details = {
++  static GstElementDetails element_details = GST_ELEMENT_DETAILS (
 +    "Kate stream renderer",
 +    "Codec/Decoder/Video/Overlay",
 +    "Decodes and renders Kate streams on top of a video",
 +    "ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>"
-+  };
++  );
 +  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 +
 +  gst_element_class_add_pad_template (element_class,
@@ -4684,7 +4718,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  return res;
 +}
 +
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkatetiger.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,111 @@
 +/*
@@ -4798,7 +4832,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_TIGER_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkateutil.c	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,341 @@
 +/* GStreamer
@@ -5142,7 +5176,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +  }
 +}
 +
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/gstkateutil.h	2008-12-03 14:07:08.000000000 +0000
 @@ -0,0 +1,65 @@
 +/* -*- c-basic-offset: 2 -*-
@@ -5210,7 +5244,7 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +G_END_DECLS
 +
 +#endif /* __GST_KATE_UTIL_H__ */
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
 +++ NEW2/gst-plugins-bad/ext/kate/Makefile.am	2008-12-03 14:08:07.000000000 +0000
 @@ -0,0 +1,20 @@
 +# plugindir is set in configure
@@ -5233,8 +5267,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +noinst_HEADERS = gstkate.h gstkatedec.h gstkateenc.h gstkateparse.h gstkatetag.h gstkateutil.h gstkatetiger.h
 +
 +EXTRA_DIST=README
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/ext/kate/README	2008-12-03 14:08:13.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/ext/kate/README	2008-12-04 20:41:34.000000000 +0000
 @@ -0,0 +1,20 @@
 +Kate is a free codec for text based data, which can also carry images.
 +It is typically used to create overlays on a video.
@@ -5256,8 +5290,8 @@ diff -ur -x Makefile.in -x aclocal.m4 -x configure -x 'config.*' -x ltmain.sh -x
 +More information about Kate can be found at:
 +http://wiki.xiph.org/index.php/OggKate
 +
---- /dev/null	2008-04-05 19:24:09.000000000 +0100
-+++ NEW2/gst-plugins-bad/tests/check/elements/kate.c	2008-12-03 14:08:36.000000000 +0000
+--- /dev/null	2009-01-10 13:26:22.310008636 +0000
++++ NEW2/gst-plugins-bad/tests/check/elements/kate.c	2009-01-17 15:35:05.000000000 +0000
 @@ -0,0 +1,804 @@
 +/* GStreamer
 + *
