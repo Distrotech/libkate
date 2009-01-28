@@ -37,11 +37,12 @@ class Tools:
     f.close()
     return None
 
-  def probe_command_in(self,command,options,magic,paths):
-    for path in paths:
-      found=self.probe_command(path+command,options,magic)
-      if found!=None:
-        return found
+  def probe_command_in(self,commands,options,magic,paths):
+    for command in commands:
+      for path in paths:
+        found=self.probe_command(path+command,options,magic)
+        if found!=None:
+          return found
     return None
 
   def check(self):
@@ -64,11 +65,11 @@ class Tools:
       raise Exception,msg
 
   def find_tools(self):
-    self.mux_command=self.probe_command_in('oggz-merge','-v','oggz-merge version',external_tools_path)
-    self.demux_command=self.probe_command_in('oggz-rip','-v','oggz-rip version',external_tools_path)
-    self.codecs_command=self.probe_command_in('oggz-known-codecs','-v','oggz-known-codecs version',external_tools_path)
-    self.kateenc_command=self.probe_command_in('kateenc','-V','Kate reference encoder - libkate',internal_tools_path)
-    self.katedec_command=self.probe_command_in('katedec','-V','Kate reference decoder - libkate',internal_tools_path)
+    self.mux_command=self.probe_command_in(['oggz-merge','oggzmerge'],'-v','oggz-merge version',external_tools_path)
+    self.demux_command=self.probe_command_in(['oggz-rip','oggzrip'],'-v','oggz-rip version',external_tools_path)
+    self.codecs_command=self.probe_command_in(['oggz-known-codecs'],'-v','oggz-known-codecs version',external_tools_path)
+    self.kateenc_command=self.probe_command_in(['kateenc'],'-V','Kate reference encoder - libkate',internal_tools_path)
+    self.katedec_command=self.probe_command_in(['katedec'],'-V','Kate reference decoder - libkate',internal_tools_path)
     self.check()
 
   def run(self,params):
