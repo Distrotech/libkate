@@ -16,8 +16,9 @@ static void ksz_print(const char *type,size_t sz)
   printf("sizeof %-24s   %6zu      ",type,sz);
 }
 
-#define KSZA(type,sz) \
+#define KSZA(type,size) \
   do { \
+    size_t sz=size; \
     ksz_print(#type,sizeof(type)); \
     if (sz!=sizeof(type)) { \
       printf("ERROR (expected %zu)",sz); \
