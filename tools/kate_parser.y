@@ -1230,18 +1230,26 @@ static void set_event_text_from(kd_event *ev,const char *source,int pre,int mark
 {
   FILE *f;
   char *text=NULL;
-  char s[4096];
+  char s[4096],*sret;
 
   f=fopen(source,"rt");
   if (!f) {
     yyerrorf("Failed to open file %s\n",source);
     exit(-1);
   }
-  fgets(s,sizeof(s),f);
+  sret=fgets(s,sizeof(s),f);
+  if (!sret) {
+    yyerrorf("Failed to read from file %s\n",source);
+    exit(-1);
+  }
   while (!feof(f)) {
     /* This implicitely forbids embedded zeros - could this be a problem ? */
     text=catstrings(text,s);
-    fgets(s,sizeof(s),f);
+    sret=fgets(s,sizeof(s),f);
+    if (!sret) {
+      yyerrorf("Failed to read from file %s\n",source);
+      exit(-1);
+    }
   }
   fclose(f);
 
