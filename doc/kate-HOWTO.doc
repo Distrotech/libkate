@@ -97,4 +97,27 @@ be merged with a Vorbis only song with oggz-tools:
 This latter method may also be used if you already have an encoded Vorbis song
 with no lyrics, and just want to add the lyrics without reencoding.
 
+
+\section HOWTO-remuxing Changing a Kate stream embedded in an Ogg stream
+
+If you need to change a Kate stream already embedded in an Ogg stream
+(eg, you have a movie with subtitles, and you want to fix a spelling
+mistake, or want to bring one of the subtitles forward in time, etc),
+you can do this easily with KateDJ, a tool that will extract Kate streams,
+decode them to a temporary location, and rebuild the original stream
+after you've made whatever changes you want.
+
+KateDJ (included with the libkate distribution) is a GUI program using
+wxPython, a Python module for the wxWidgets GUI library, and the oggz
+tools (both needing installing separately if they are not already).
+
+The procedure consists of:
+- Run KateDJ
+- Click 'Load Ogg stream' and select the file to load
+- Click 'Demux file' to decode Kate streams in a temporary location
+- Edit the Kate streams (a message box tells you where they are placed)
+- When done, click 'Remux file from parts'
+- If any errors are reported, continue editing until the remux step succeeds
+
+
 */
