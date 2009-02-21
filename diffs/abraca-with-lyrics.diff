@@ -1,265 +1,210 @@
-diff -ru abraca/src/client.c abraca-with-lyrics/src/client.c
---- abraca/src/client.c	2008-04-06 15:19:21.000000000 +0100
-+++ abraca-with-lyrics/src/client.c	2008-10-28 20:33:59.000000000 +0000
-@@ -33,6 +33,7 @@
- 	xmmsc_result_t* _result_playlist_changed;
- 	xmmsc_result_t* _result_playlist_position;
- 	xmmsc_result_t* _result_collection_changed;
-+	xmmsc_result_t* _result_playback_lyrics;
- };
- #define ABRACA_CLIENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), ABRACA_TYPE_CLIENT, AbracaClientPrivate))
- enum  {
-@@ -46,6 +47,7 @@
- static gboolean abraca_client_reconnect (AbracaClient* self);
- static void _abraca_client_on_playback_status_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void _abraca_client_on_playback_current_id_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
-+static void _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void _abraca_client_on_playback_playtime_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void _abraca_client_on_playlist_loaded_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void _abraca_client_on_playlist_changed_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
-@@ -55,6 +57,7 @@
- static void abraca_client_create_callbacks (AbracaClient* self);
- static void abraca_client_on_playback_status (AbracaClient* self, xmmsc_result_t* res);
- static void abraca_client_on_playback_current_id (AbracaClient* self, xmmsc_result_t* res);
-+static void abraca_client_on_playback_lyrics (AbracaClient* self, xmmsc_result_t* res);
- static void abraca_client_on_playback_playtime (AbracaClient* self, xmmsc_result_t* res);
- static void abraca_client_on_playlist_loaded (AbracaClient* self, xmmsc_result_t* res);
- static void abraca_client_on_playlist_position (AbracaClient* self, xmmsc_result_t* res);
-@@ -87,6 +90,7 @@
- 	xmmsc_result_t* _tmp4;
- 	xmmsc_result_t* _tmp5;
- 	xmmsc_result_t* _tmp6;
-+	xmmsc_result_t* _tmp7;
- 	g_return_if_fail (ABRACA_IS_CLIENT (self));
- 	g_signal_emit_by_name (G_OBJECT (self), "disconnected");
- 	_tmp0 = NULL;
-@@ -103,6 +107,8 @@
- 	self->priv->_result_playlist_position = (_tmp5 = NULL, (self->priv->_result_playlist_position == NULL ? NULL : (self->priv->_result_playlist_position = (xmmsc_result_unref (self->priv->_result_playlist_position), NULL))), _tmp5);
- 	_tmp6 = NULL;
- 	self->priv->_result_collection_changed = (_tmp6 = NULL, (self->priv->_result_collection_changed == NULL ? NULL : (self->priv->_result_collection_changed = (xmmsc_result_unref (self->priv->_result_collection_changed), NULL))), _tmp6);
-+	_tmp7 = NULL;
-+	self->priv->_result_playback_lyrics = (_tmp7 = NULL, (self->priv->_result_playback_lyrics == NULL ? NULL : (self->priv->_result_playback_lyrics = (xmmsc_result_unref (self->priv->_result_playback_lyrics), NULL))), _tmp7);
- 	g_timeout_add (((guint) 500), _abraca_client_reconnect_gsource_func, self);
- 	xmmsc_mainloop_gmain_shutdown (self->priv->_xmms, self->priv->_gmain);
- }
-@@ -165,6 +171,11 @@
- }
+From 2bccb68306b6f72f1fb6019ad82ca475c6d2ebd0 Mon Sep 17 00:00:00 2001
+From: ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
+Date: Fri, 20 Feb 2009 17:32:14 +0000
+Subject: [PATCH] Display lyrics in toolbar, when available
+
+---
+ src/client.vala        |   18 ++++++++++++++
+ src/toolbar.vala       |   61 +++++++++++++++++++++++++++++++++++++++++++++--
+ vapi/xmms2-client.vapi |    2 +
+ 3 files changed, 78 insertions(+), 3 deletions(-)
+
+diff --git a/src/client.vala b/src/client.vala
+index 0067d54..86065a5 100644
+--- a/src/client.vala
++++ b/src/client.vala
+@@ -32,6 +32,7 @@ namespace Abraca {
+ 		public signal void playback_current_id(uint mid);
+ 		public signal void playback_playtime(uint pos);
+ 		public signal void playback_volume(Xmms.Value res);
++		public signal void playback_lyrics(string lyrics);
  
+ 		public signal void playlist_loaded(string name);
+ 		public signal void playlist_add(string playlist, uint mid);
+@@ -159,6 +160,13 @@ namespace Abraca {
+ 				on_playback_volume
+ 			);
  
-+static void _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self) {
-+	abraca_client_on_playback_lyrics (self, res);
-+}
++			_xmms.playback_lyrics().notifier_set(
++				on_playback_lyrics
++			);
++			_xmms.signal_playback_lyrics().notifier_set(
++				on_playback_lyrics
++			);
 +
-+
- static void _abraca_client_on_playback_playtime_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self) {
- 	abraca_client_on_playback_playtime (self, res);
- }
-@@ -208,6 +219,8 @@
- 	xmmsc_result_t* _tmp9;
- 	xmmsc_result_t* _tmp10;
- 	xmmsc_result_t* _tmp11;
-+	xmmsc_result_t* _tmp12;
-+	xmmsc_result_t* _tmp13;
- 	g_return_if_fail (ABRACA_IS_CLIENT (self));
- 	_tmp0 = NULL;
- 	xmmsc_result_notifier_set ((_tmp0 = xmmsc_playback_status (self->priv->_xmms)), _abraca_client_on_playback_status_xmmsc_result_notifier_t, self);
-@@ -245,6 +258,12 @@
- 	_tmp11 = NULL;
- 	xmmsc_result_notifier_set ((_tmp11 = xmmsc_broadcast_playlist_current_pos (self->priv->_xmms)), _abraca_client_on_playlist_position_xmmsc_result_notifier_t, self);
- 	(_tmp11 == NULL ? NULL : (_tmp11 = (xmmsc_result_unref (_tmp11), NULL)));
-+	_tmp12 = NULL;
-+	xmmsc_result_notifier_set ((_tmp12 = xmmsc_playback_lyrics (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
-+	(_tmp12 == NULL ? NULL : (_tmp12 = (xmmsc_result_unref (_tmp12), NULL)));
-+	_tmp13 = NULL;
-+	xmmsc_result_notifier_set ((_tmp13 = xmmsc_signal_playback_lyrics (self->priv->_xmms)), _abraca_client_on_playback_lyrics_xmmsc_result_notifier_t, self);
-+	(_tmp13 == NULL ? NULL : (_tmp13 = (xmmsc_result_unref (_tmp13), NULL)));
- }
+ 			_xmms.playlist_current_active().notifier_set(
+ 				on_playlist_loaded
+ 			);
+@@ -230,6 +238,16 @@ namespace Abraca {
+ 			return true;
+ 		}
  
- 
-@@ -284,6 +303,31 @@
- }
- 
- 
-+static void abraca_client_on_playback_lyrics (AbracaClient* self, xmmsc_result_t* res) {
-+	const gchar *lyrics;
-+	g_return_if_fail (ABRACA_IS_CLIENT (self));
-+	lyrics = NULL;
-+	if (xmmsc_result_get_string (res, &lyrics)) {
-+		g_signal_emit_by_name (G_OBJECT (self), "playback-lyrics", lyrics);
-+	}
-+	if (xmmsc_result_get_class (res) != XMMSC_RESULT_CLASS_DEFAULT) {
-+		xmmsc_result_t* _tmp1;
-+		xmmsc_result_t* _tmp0;
-+		_tmp1 = NULL;
-+		_tmp0 = NULL;
-+		self->priv->_result_playback_lyrics = (_tmp1 = (_tmp0 = res, (_tmp0 == NULL ? NULL : xmmsc_result_ref (_tmp0))), (self->priv->_result_playback_lyrics == NULL ? NULL : (self->priv->_result_playback_lyrics = (xmmsc_result_unref (self->priv->_result_playback_lyrics), NULL))), _tmp1);
-+		xmmsc_result_ref (self->priv->_result_playback_lyrics);
-+	}
-+	if (xmmsc_result_get_class (res) == XMMSC_RESULT_CLASS_SIGNAL) {
-+		xmmsc_result_t* _tmp0;
-+		_tmp0 = NULL;
-+		_tmp0 = xmmsc_result_restart (res);
-+		(_tmp0 == NULL ? NULL : (_tmp0 = (xmmsc_result_unref (_tmp0), NULL)));
-+	}
-+	(res == NULL ? NULL : (res = (xmmsc_result_unref (res), NULL)));
-+}
++		private bool on_playback_lyrics(Xmms.Value val) {
++			weak string lyrics;
 +
++			if (val.get_string(out lyrics)) {
++				playback_lyrics(lyrics);
++			}
 +
- /**
-  * Emit the current playback position in ms.
-  */
-@@ -596,6 +640,7 @@
- 	g_signal_new ("disconnected", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
- 	g_signal_new ("playback_status", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
- 	g_signal_new ("playback_current_id", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
-+	g_signal_new ("playback_lyrics", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
- 	g_signal_new ("playback_playtime", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
- 	g_signal_new ("playlist_loaded", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
- 	g_signal_new ("playlist_add", ABRACA_TYPE_CLIENT, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__STRING_UINT, G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_UINT);
-@@ -624,6 +669,7 @@
- 	self->priv->_playlist = (g_free (self->priv->_playlist), NULL);
- 	(self->priv->_result_playback_status == NULL ? NULL : (self->priv->_result_playback_status = (xmmsc_result_unref (self->priv->_result_playback_status), NULL)));
- 	(self->priv->_result_playback_current_id == NULL ? NULL : (self->priv->_result_playback_current_id = (xmmsc_result_unref (self->priv->_result_playback_current_id), NULL)));
-+	(self->priv->_result_playback_lyrics == NULL ? NULL : (self->priv->_result_playback_lyrics = (xmmsc_result_unref (self->priv->_result_playback_lyrics), NULL)));
- 	(self->priv->_result_medialib_entry_changed == NULL ? NULL : (self->priv->_result_medialib_entry_changed = (xmmsc_result_unref (self->priv->_result_medialib_entry_changed), NULL)));
- 	(self->priv->_result_playlist_loaded == NULL ? NULL : (self->priv->_result_playlist_loaded = (xmmsc_result_unref (self->priv->_result_playlist_loaded), NULL)));
- 	(self->priv->_result_playlist_changed == NULL ? NULL : (self->priv->_result_playlist_changed = (xmmsc_result_unref (self->priv->_result_playlist_changed), NULL)));
-diff -ru abraca/src/toolbar.c abraca-with-lyrics/src/toolbar.c
---- abraca/src/toolbar.c	2008-04-06 15:19:22.000000000 +0100
-+++ abraca-with-lyrics/src/toolbar.c	2008-10-26 19:41:35.000000000 +0000
-@@ -36,6 +36,7 @@
- 	GtkImage* _coverart;
- 	GtkLabel* _track_label;
- 	GtkLabel* _time_label;
-+	GtkLabel* _lyrics_label;
- 	GtkHScale* _time_slider;
- };
- #define ABRACA_TOOL_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), ABRACA_TYPE_TOOL_BAR, AbracaToolBarPrivate))
-@@ -54,7 +55,9 @@
- static void abraca_tool_bar_create_track_label (AbracaToolBar* self);
- static void _abraca_tool_bar_on_medialib_get_info_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void abraca_tool_bar_on_playback_current_id (AbracaToolBar* self, AbracaClient* c, guint mid);
-+static void abraca_tool_bar_on_playback_lyrics (AbracaToolBar* self, AbracaClient* c, const gchar *lyrics);
- static void abraca_tool_bar_update_time (AbracaToolBar* self, guint pos);
-+static void abraca_tool_bar_update_lyrics (AbracaToolBar* self, const gchar *lyrics);
- static void abraca_tool_bar_on_playback_playtime (AbracaToolBar* self, AbracaClient* c, guint pos);
- static void _abraca_tool_bar_on_bindata_retrieve_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self);
- static void abraca_tool_bar_on_medialib_get_info (AbracaToolBar* self, xmmsc_result_t* res);
-@@ -70,6 +73,7 @@
- static void _abraca_tool_bar_on_media_next_gtk_button_clicked (GtkButton* sender, gpointer self);
- static void _abraca_tool_bar_on_playback_status_change_abraca_client_playback_status (AbracaClient* sender, gint status, gpointer self);
- static void _abraca_tool_bar_on_playback_current_id_abraca_client_playback_current_id (AbracaClient* sender, guint mid, gpointer self);
-+static void _abraca_tool_bar_on_playback_lyrics_abraca_client_playback_lyrics (AbracaClient* sender, const gchar *lyrics, gpointer self);
- static void _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime (AbracaClient* sender, guint pos, gpointer self);
- static GObject * abraca_tool_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
- static gpointer abraca_tool_bar_parent_class = NULL;
-@@ -186,11 +190,46 @@
- 
- 
- static void abraca_tool_bar_create_track_label (AbracaToolBar* self) {
-+	GtkVBox* vbox;
- 	GtkLabel* _tmp0;
-+	GtkLabel* _tmp1;
- 	g_return_if_fail (ABRACA_IS_TOOL_BAR (self));
-+	vbox = g_object_ref_sink (gtk_vbox_new (FALSE, 0));
- 	_tmp0 = NULL;
- 	self->priv->_track_label = (_tmp0 = g_object_ref_sink (gtk_label_new ("No Track")), (self->priv->_track_label == NULL ? NULL : (self->priv->_track_label = (g_object_unref (self->priv->_track_label), NULL))), _tmp0);
--	gtk_box_pack_start (GTK_BOX (self), GTK_WIDGET (self->priv->_track_label), FALSE, TRUE, ((guint) 4));
-+	gtk_misc_set_alignment (GTK_MISC (self->priv->_track_label), 0.0f, 0.5f);
-+	gtk_box_pack_start (GTK_BOX (vbox), GTK_WIDGET (self->priv->_track_label), FALSE, TRUE, ((guint) 4));
-+	self->priv->_lyrics_label = (_tmp1 = g_object_ref_sink (gtk_label_new ("")), (self->priv->_lyrics_label == NULL ? NULL : (self->priv->_lyrics_label = (g_object_unref (self->priv->_lyrics_label), NULL))), _tmp1);
-+	gtk_misc_set_alignment (GTK_MISC (self->priv->_lyrics_label), 0.0f, 0.5f);
-+	gtk_box_pack_start (GTK_BOX (vbox), GTK_WIDGET (self->priv->_lyrics_label), FALSE, TRUE, ((guint) 4));
-+	gtk_widget_hide (GTK_WIDGET (self->priv->_lyrics_label)); /* hide by default, as we don't know if there are any lyrics yet */
-+	gtk_box_pack_start (GTK_BOX (self), GTK_WIDGET (vbox), FALSE, TRUE, ((guint) 0));
-+	(vbox == NULL ? NULL : (vbox = (g_object_unref (vbox), NULL)));
-+}
-+
-+
-+static void abraca_tool_bar_update_lyrics (AbracaToolBar* self, const gchar *lyrics) {
-+	char* info;
-+	char* _tmp0;
-+	g_return_if_fail (ABRACA_IS_TOOL_BAR (self));
-+
-+	if (self->priv->_status == XMMS_PLAYBACK_STATUS_STOP) {
-+		lyrics = NULL;
-+	}
-+
-+	if (lyrics) {
-+		info = NULL;
-+		_tmp0 = NULL;
-+		info = (_tmp0 = g_markup_printf_escaped ("%s", lyrics), (info = (g_free (info), NULL)), _tmp0);
-+		gtk_label_set_markup (self->priv->_lyrics_label, info);
-+		if (strcmp (lyrics, "")) {
-+			/* show when lyrics appear - this will pop up when we get non empty lyrics,
-+		   	but won't go away when lyrics disappear, only when switching to a new song,
-+		   	so we won't get flicker when lyrics have pauses within them */
-+			gtk_widget_show (GTK_WIDGET (self->priv->_lyrics_label));
++			return true;
 +		}
-+		info = (g_free (info), NULL);
-+	}
- }
- 
- 
-@@ -206,6 +245,11 @@
- 	_tmp0 = NULL;
- 	xmmsc_result_notifier_set ((_tmp0 = xmmsc_medialib_get_info (abraca_client_get_xmms (c), ((guint32) mid))), _abraca_tool_bar_on_medialib_get_info_xmmsc_result_notifier_t, self);
- 	(_tmp0 == NULL ? NULL : (_tmp0 = (xmmsc_result_unref (_tmp0), NULL)));
 +
-+	/* clear lyrics to ensure we don't end up with stale ones for a new song */
-+	abraca_tool_bar_update_lyrics (self, "");
-+	/* hide by default, as we don't know if there are any lyrics yet */
-+	gtk_widget_hide (GTK_WIDGET (self->priv->_lyrics_label));
- }
+ 		private bool on_playlist_loaded(Xmms.Value val) {
+ 			weak string name;
+ 
+diff --git a/src/toolbar.vala b/src/toolbar.vala
+index 05ebcd3..25e2820 100644
+--- a/src/toolbar.vala
++++ b/src/toolbar.vala
+@@ -28,16 +28,19 @@ namespace Abraca {
+ 		private int _duration;
+ 		private uint _pos;
+ 		private bool _seek;
++		private string _lyrics;
+ 
+ 		private Gtk.Image _coverart;
+ 		private Gtk.Label _track_label;
+ 		private Gtk.Label _time_label;
++		private Gtk.Label _lyrics_label;
+ 		private Gtk.HScale _time_slider;
  
  
-@@ -255,6 +299,13 @@
- }
+ 		construct {
+ 			Client c = Client.instance();
+ 			Gtk.Button btn;
++			Gtk.VBox vbox;
+ 
+ 			homogeneous = false;
+ 			spacing = 0;
+@@ -60,7 +63,10 @@ namespace Abraca {
+ 
+ 			create_seekbar();
+ 			create_cover_image();
+-			create_track_label();
++			vbox = new Gtk.VBox(false, 0);
++			create_track_label(vbox);
++			create_lyrics_label(vbox);
++			pack_start(vbox, true, true, 0);
+ 
+ 			btn = new VolumeButton();
+ 			pack_end(btn, false, false, 0);
+@@ -68,6 +74,7 @@ namespace Abraca {
+ 			c.playback_status += on_playback_status_change;
+ 			c.playback_current_id += on_playback_current_id;
+ 			c.playback_playtime += on_playback_playtime;
++			c.playback_lyrics += on_playback_lyrics;
+ 
+ 			c.medialib_entry_changed += (client, res) => {
+ 				on_media_info(res);
+@@ -155,13 +162,30 @@ namespace Abraca {
+ 		}
  
  
-+static void abraca_tool_bar_on_playback_lyrics (AbracaToolBar* self, AbracaClient* c, const gchar *lyrics) {
-+	g_return_if_fail (ABRACA_IS_TOOL_BAR (self));
-+	g_return_if_fail (c == NULL || ABRACA_IS_CLIENT (c));
-+	abraca_tool_bar_update_lyrics (self, lyrics);
-+}
+-		private void create_track_label() {
++		private void create_track_label(Gtk.VBox vbox) {
+ 			_track_label = new Gtk.Label(
+ 				_("No Track")
+ 			);
+ 			_track_label.ellipsize = Pango.EllipsizeMode.END;
+ 
+-			pack_start(_track_label, true, true, 4);
++			vbox.pack_start(_track_label, true, true, 4);
++		}
 +
 +
- static void _abraca_tool_bar_on_bindata_retrieve_xmmsc_result_notifier_t (xmmsc_result_t* res, gpointer self) {
- 	abraca_tool_bar_on_bindata_retrieve (self, res);
- }
-@@ -454,6 +505,7 @@
- 	}
- 	if (self->priv->_status == XMMS_PLAYBACK_STATUS_STOP) {
- 		abraca_tool_bar_update_time (self, ((guint) 0));
-+		abraca_tool_bar_update_lyrics (self, "");
- 	}
- 	(image == NULL ? NULL : (image = (g_object_unref (image), NULL)));
- }
-@@ -496,6 +548,11 @@
- }
- 
- 
-+static void _abraca_tool_bar_on_playback_lyrics_abraca_client_playback_lyrics (AbracaClient* sender, const gchar *lyrics, gpointer self) {
-+	abraca_tool_bar_on_playback_lyrics (self, sender, lyrics);
-+}
++		private void create_lyrics_label(Gtk.VBox vbox) {
++			_lyrics_label = new Gtk.Label(
++				""
++			);
++			_lyrics_label.ellipsize = Pango.EllipsizeMode.END;
++
++			vbox.pack_start(_lyrics_label, true, true, 4);
++
++			hide_lyrics_label();
++		}
 +
 +
- static void _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime (AbracaClient* sender, guint pos, gpointer self) {
- 	abraca_tool_bar_on_playback_playtime (self, sender, pos);
- }
-@@ -544,6 +601,7 @@
- 		abraca_tool_bar_create_track_label (self);
- 		g_signal_connect_object (c, "playback-status", ((GCallback) _abraca_tool_bar_on_playback_status_change_abraca_client_playback_status), self, 0);
- 		g_signal_connect_object (c, "playback-current-id", ((GCallback) _abraca_tool_bar_on_playback_current_id_abraca_client_playback_current_id), self, 0);
-+		g_signal_connect_object (c, "playback-lyrics", ((GCallback) _abraca_tool_bar_on_playback_lyrics_abraca_client_playback_lyrics), self, 0);
- 		g_signal_connect_object (c, "playback-playtime", ((GCallback) _abraca_tool_bar_on_playback_playtime_abraca_client_playback_playtime), self, 0);
- 		(c == NULL ? NULL : (c = (g_object_unref (c), NULL)));
- 		(btn == NULL ? NULL : (btn = (g_object_unref (btn), NULL)));
-@@ -572,6 +630,7 @@
- 	(self->priv->_coverart == NULL ? NULL : (self->priv->_coverart = (g_object_unref (self->priv->_coverart), NULL)));
- 	(self->priv->_track_label == NULL ? NULL : (self->priv->_track_label = (g_object_unref (self->priv->_track_label), NULL)));
- 	(self->priv->_time_label == NULL ? NULL : (self->priv->_time_label = (g_object_unref (self->priv->_time_label), NULL)));
-+	(self->priv->_lyrics_label == NULL ? NULL : (self->priv->_lyrics_label = (g_object_unref (self->priv->_lyrics_label), NULL)));
- 	(self->priv->_time_slider == NULL ? NULL : (self->priv->_time_slider = (g_object_unref (self->priv->_time_slider), NULL)));
- 	G_OBJECT_CLASS (abraca_tool_bar_parent_class)->dispose (obj);
- }
++		private void hide_lyrics_label() {
++			_lyrics_label.hide();
+ 		}
+ 
+ 
+@@ -172,6 +196,14 @@ namespace Abraca {
+ 			c.xmms.medialib_get_info(mid).notifier_set(
+ 				on_media_info
+ 			);
++
++			clear_lyrics();
++		}
++
++
++		private void clear_lyrics() {
++			_lyrics = "";
++			update_lyrics_label();
+ 		}
+ 
+ 
+@@ -208,6 +240,21 @@ namespace Abraca {
+ 		}
+ 
+ 
++		private void update_lyrics_label() {
++			string lyrics;
++			lyrics = GLib.Markup.printf_escaped(
++				"%s",
++				_lyrics
++			);
++
++			_lyrics_label.set_markup(lyrics);
++
++			if (_lyrics != null && _lyrics != "") {
++				_lyrics_label.show();
++			}
++		}
++
++
+ 		private void on_playback_playtime(Client c, uint pos) {
+ 			if (_seek == false) {
+ 				_pos = pos;
+@@ -216,6 +263,12 @@ namespace Abraca {
+ 		}
+ 
+ 
++		private void on_playback_lyrics(Client c, string lyrics) {
++			_lyrics = lyrics;
++			update_lyrics_label();
++		}
++
++
+ 		private bool on_media_info(Xmms.Value propdict) {
+ 			string title, cover, info, url;
+ 			int duration, id;
+@@ -271,6 +324,8 @@ namespace Abraca {
+ 
+ 			update_time_label();
+ 
++			update_lyrics_label();
++
+ 			return true;
+ 		}
+ 
+diff --git a/vapi/xmms2-client.vapi b/vapi/xmms2-client.vapi
+index aa3b413..130fb02 100644
+--- a/vapi/xmms2-client.vapi
++++ b/vapi/xmms2-client.vapi
+@@ -173,10 +173,12 @@ namespace Xmms {
+ 		public Result playback_status();
+ 		public Result playback_volume_set(string channel, uint volume);
+ 		public Result playback_volume_get();
++		public Result playback_lyrics();
+ 		public Result broadcast_playback_volume_changed();
+ 		public Result broadcast_playback_status();
+ 		public Result broadcast_playback_current_id();
+ 		public Result signal_playback_playtime();
++		public Result signal_playback_lyrics();
+ 
+ 		/*
+ 		 * Playlist functions
+-- 
+1.6.1
+
