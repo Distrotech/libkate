@@ -1,0 +1,140 @@
+From afc78079c8598d29b8bab2fc235a177d00dcff38 Mon Sep 17 00:00:00 2001
+From: ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
+Date: Sat, 21 Feb 2009 19:18:59 +0000
+Subject: [PATCH] Promoe lyrics support
+
+---
+ lib/xclientcache.cpp           |   12 ++++++++++++
+ lib/xclientcache.h             |    2 ++
+ src/mainwindow/maindisplay.cpp |   26 ++++++++++++++++++++++++++
+ src/mainwindow/maindisplay.h   |    4 ++++
+ 4 files changed, 44 insertions(+), 0 deletions(-)
+
+diff --git a/lib/xclientcache.cpp b/lib/xclientcache.cpp
+index 04089ad..d3d0017 100644
+--- a/lib/xclientcache.cpp
++++ b/lib/xclientcache.cpp
+@@ -44,6 +44,11 @@ XClientCache::got_connection (XClient *client)
+ 	client->playback ()->getPlaytime () (
+ 	         Xmms::bind (&XClientCache::handle_playtime, this));
+ 
++	client->playback ()->signalLyrics () (
++	         Xmms::bind (&XClientCache::handle_lyrics, this));
++	client->playback ()->getLyrics () (
++	         Xmms::bind (&XClientCache::handle_lyrics, this));
++
+ 	client->medialib ()->broadcastEntryChanged () (
+ 	         Xmms::bind (&XClientCache::handle_mlib_entry_changed, this));
+ 
+@@ -195,3 +200,10 @@ XClientCache::handle_playtime (const unsigned int &tme)
+ 	emit playtime(tme);
+ 	return true;
+ }
++
++bool
++XClientCache::handle_lyrics (const std::string &s)
++{
++	emit lyrics(s);
++	return true;
++}
+diff --git a/lib/xclientcache.h b/lib/xclientcache.h
+index d381379..047d91d 100644
+--- a/lib/xclientcache.h
++++ b/lib/xclientcache.h
+@@ -76,6 +76,7 @@ class XClientCache : public QObject
+ 		void entryChanged (uint32_t);
+         void entryRemoved (uint32_t);
+ 		void playtime (uint32_t);
++		void lyrics (const std::string&);
+ 
+ 		void activeEntryChanged (QVariantHash);
+ 
+@@ -91,6 +92,7 @@ class XClientCache : public QObject
+ 		bool handle_bindata (const Xmms::bin &, const QString &);
+ 
+ 		bool handle_playtime (const unsigned int &tme);
++		bool handle_lyrics (const std::string &lyrics);
+ 
+ 		QHash< uint32_t, QHash<QString, QVariant> > m_info;
+ 
+diff --git a/src/mainwindow/maindisplay.cpp b/src/mainwindow/maindisplay.cpp
+index 4426a05..dbb8cc7 100644
+--- a/src/mainwindow/maindisplay.cpp
++++ b/src/mainwindow/maindisplay.cpp
+@@ -85,6 +85,8 @@ MainDisplay::MainDisplay (MainWindow *parent) : SkinDisplay(parent)
+ 	m_clutterbar = new ClutterBar (this);
+ 	m_clutterbar->move (10, 22);
+ 
++	m_has_lyrics = false;
++
+ 	m_posbar = new PosBar (this, Skin::POSBAR, 
+ 						   Skin::POSBAR_BTN_0, 
+ 						   Skin::POSBAR_BTN_1);
+@@ -123,6 +125,8 @@ MainDisplay::MainDisplay (MainWindow *parent) : SkinDisplay(parent)
+ 	         this, SLOT(setStatus(Xmms::Playback::Status)));
+ 	connect (client->cache () , SIGNAL (playtime (uint32_t)),
+ 	         this,  SLOT (setPlaytime (uint32_t)));
++	connect (client->cache () , SIGNAL (lyrics (std::string)),
++	         this,  SLOT (setLyrics (std::string)));
+ 
+ 	setupServerConfig ();
+ }
+@@ -214,9 +218,31 @@ MainDisplay::setPlaytime (uint32_t time)
+ }
+ 
+ void
++MainDisplay::setLyrics (const std::string &lyrics)
++{
++	if (!lyrics.empty())
++		m_has_lyrics = true;
++
++	if (m_has_lyrics) {
++		m_text->setText(QString(lyrics.c_str()));
++	}
++}
++
++void
++MainDisplay::clearLyrics ()
++{
++	setLyrics("");
++	m_has_lyrics = false;
++}
++
++void
+ MainDisplay::setMediainfo (const QVariantHash info)
+ {
+ 	QString n;
++
++	// clear lyrics upon changing track, before we set the text below
++	clearLyrics ();
++
+ 	if (info.contains ("title")) {
+ 		if (info.contains ("artist")) {
+ 			n = info["artist"].toString () + " - ";
+diff --git a/src/mainwindow/maindisplay.h b/src/mainwindow/maindisplay.h
+index 6f87ac0..2cbf70b 100644
+--- a/src/mainwindow/maindisplay.h
++++ b/src/mainwindow/maindisplay.h
+@@ -75,6 +75,7 @@ class MainDisplay : public SkinDisplay
+ 		void setPixmaps(Skin *skin);
+ 		void setStatus (Xmms::Playback::Status status);
+ 		void setPlaytime (uint32_t time);
++		void setLyrics (const std::string &lyrics);
+ //		void setMediainfo (const Xmms::PropDict &);
+ 		void setMediainfo (const QVariantHash);
+ 
+@@ -105,8 +106,11 @@ class MainDisplay : public SkinDisplay
+ 
+ 		ClutterBar *m_clutterbar;
+ 
++		bool m_has_lyrics;
++
+ 	private:
+ 		void setupServerConfig ();
++		void clearLyrics ();
+ 
+ 		XConfig *m_xconfig;
+ 
+-- 
+1.6.1
+
