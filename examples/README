@@ -9,9 +9,6 @@ a dark background is suggested). This also needs either oggz_tools, or
 a patch oggmerge (from ogg-tools). Both of these packages can be found
 at the Xiph website: http://www.xiph.org/.
 
-Note that the oggmerge patch found in the diffs directory is needed to
-merge the Kate streams to the Theora streams.
-
 Built streams are placed in the built-streams directory.
 
 Several players can play the resulting streams, though most will need
