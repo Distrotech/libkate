@@ -10,6 +10,9 @@
 #define KATE_INTERNAL
 #include "kate_internal.h"
 
+#ifdef HAVE_STDLIB_H
+#include <stdlib.h>
+#endif
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -249,5 +252,19 @@ int kate_motion_init(kate_motion *km)
   if (!km) return KATE_E_INVALID_PARAMETER;
   memcpy(km,&default_motion,sizeof(kate_motion));
   return 0;
+}
+
+void *kate_checked_malloc(size_t n,size_t sz)
+{
+  size_t mul;
+  if (kate_check_mul_overflow(n,sz,&mul)) return NULL;
+  return kate_malloc(mul);
+}
+
+void *kate_checked_realloc(void *ptr,size_t n,size_t sz)
+{
+  size_t mul;
+  if (kate_check_mul_overflow(n,sz,&mul)) return NULL;
+  return kate_realloc(ptr,mul);
 }
 

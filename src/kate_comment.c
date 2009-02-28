@@ -92,6 +92,11 @@ int kate_comment_add_length(kate_comment *kc,const char *comment,size_t len)
 
   if (!kc || !comment) return KATE_E_INVALID_PARAMETER;
 
+  ret=kate_check_add_overflow(kc->comments,1,NULL);
+  if (ret<0) return ret;
+  ret=kate_check_add_overflow(len,1,NULL);
+  if (ret<0) return ret;
+
   equals=memchr(comment,'=',len);
   if (!equals) return KATE_E_BAD_TAG;
   ret=kate_comment_check_tag(comment,equals-comment);
@@ -99,10 +104,10 @@ int kate_comment_add_length(kate_comment *kc,const char *comment,size_t len)
   ret=kate_text_validate(kate_utf8,equals,len-(equals-comment));
   if (ret<0) return ret;
 
-  uc=kate_realloc(kc->user_comments,(kc->comments+1)*sizeof(char*));
+  uc=kate_checked_realloc(kc->user_comments,(kc->comments+1),sizeof(char*));
   if (!uc) return KATE_E_OUT_OF_MEMORY;
   kc->user_comments=uc;
-  cl=kate_realloc(kc->comment_lengths,(kc->comments+1)*sizeof(int));
+  cl=kate_checked_realloc(kc->comment_lengths,(kc->comments+1),sizeof(int));
   if (!cl) return KATE_E_OUT_OF_MEMORY;
   kc->comment_lengths=cl;
 

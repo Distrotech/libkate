@@ -83,9 +83,13 @@ int kate_decode_state_add_event(kate_decode_state *kds,const kate_event *ev)
 {
   size_t n;
   kate_active_event *events;
+  int ret;
 
   if (!kds) return KATE_E_INVALID_PARAMETER;
   if (!ev) return KATE_E_INVALID_PARAMETER;
+
+  ret=kate_check_add_overflow(kds->n_active_events,1,NULL);
+  if (ret<0) return ret;
 
   /* check if it is there already */
   for (n=0;n<kds->n_active_events;++n) {
@@ -95,7 +99,7 @@ int kate_decode_state_add_event(kate_decode_state *kds,const kate_event *ev)
   }
 
   /* if it is not there, add it */
-  events=(kate_active_event*)kate_realloc(kds->active_events,(kds->n_active_events+1)*sizeof(kate_active_event));
+  events=(kate_active_event*)kate_checked_realloc(kds->active_events,(kds->n_active_events+1),sizeof(kate_active_event));
   if (!events) return KATE_E_OUT_OF_MEMORY;
 
   kds->active_events=events;

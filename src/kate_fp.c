@@ -142,7 +142,7 @@ int kate_fp_encode_kate_float(size_t count,const kate_float *values,size_t strea
 #endif
   }
 
-  fp_values=(kate_fp*)kate_malloc(count*sizeof(kate_fp));
+  fp_values=(kate_fp*)kate_checked_malloc(count,sizeof(kate_fp));
   if (!fp_values) return KATE_E_OUT_OF_MEMORY;
 
   for (s=0;s<streams;++s) {
@@ -214,7 +214,7 @@ int kate_fp_decode_kate_float(size_t count,kate_float *values,size_t streams,kat
     }
   }
 
-  fp_values=(kate_fp*)kate_malloc(count*sizeof(kate_fp));
+  fp_values=(kate_fp*)kate_checked_malloc(count,sizeof(kate_fp));
   if (!fp_values) return KATE_E_OUT_OF_MEMORY;
 
   for (s=0;s<streams;++s) {

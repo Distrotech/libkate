@@ -136,8 +136,12 @@ int kate_info_set_granule_encoding(kate_info *ki,kate_float resolution,kate_floa
 static int kate_replace_string(char **sptr,const char *s,size_t len)
 {
   char *l=NULL;
+  int ret;
 
   if (!sptr) return KATE_E_INVALID_PARAMETER;
+
+  ret=kate_check_add_overflow(len,1,NULL);
+  if (ret<0) return ret;
 
   if (s) {
     l=(char*)kate_malloc(len+1);
@@ -323,10 +327,14 @@ int kate_info_set_original_canvas_size(kate_info *ki,size_t width,size_t height)
 static int kate_info_add_item(kate_info *ki,size_t *nitems,void ***items,void *item)
 {
   void **newitems;
+  int ret;
 
   if (!ki || !nitems || !items || !item) return KATE_E_INVALID_PARAMETER;
 
-  newitems=(void**)kate_realloc(*items,((*nitems)+1)*sizeof(void*));
+  ret=kate_check_add_overflow(*nitems,1,NULL);
+  if (ret<0) return ret;
+
+  newitems=(void**)kate_checked_realloc(*items,(*nitems)+1,sizeof(void*));
   if (!newitems) return KATE_E_OUT_OF_MEMORY;
   *items=newitems;
   newitems[*nitems]=item;

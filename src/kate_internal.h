@@ -43,6 +43,49 @@
 #define kate_internal
 #endif
 
+/* from http://www.fefe.de/intof.html */
+#define KATE_TYPE_HALF_MAX_SIGNED(type) ((type)1 << (sizeof(type)*8-2))
+#define KATE_TYPE_MAX_SIGNED(type) (KATE_TYPE_HALF_MAX_SIGNED(type) - 1 + KATE_TYPE_HALF_MAX_SIGNED(type))
+#define KATE_TYPE_MIN_SIGNED(type) (-1 - KATE_TYPE_MAX_SIGNED(type))
+#define KATE_TYPE_MIN(type) ((type)-1 < 1?KATE_TYPE_MIN_SIGNED(type):(type)0)
+#define KATE_TYPE_MAX(type) ((type)~KATE_TYPE_MIN(type))
+
+static inline int kate_check_add_overflow(size_t x,size_t y,size_t *res) __attribute__((pure));
+static inline int kate_check_add_overflow(size_t x,size_t y,size_t *res)
+{
+  if (KATE_TYPE_MAX(size_t)-(y)>=x) {
+    if (res) *res=x+y;
+    return 0;
+  }
+  return KATE_E_LIMIT;
+}
+
+static inline int kate_check_mul_overflow_generic(size_t x,size_t y,size_t *res) __attribute__((pure));
+static inline int kate_check_mul_overflow_generic(size_t x,size_t y,size_t *res)
+{
+  kate_uint64_t r,mask;
+  if ((x&y)>>(sizeof(size_t)*4)) return KATE_E_LIMIT;
+  mask=KATE_TYPE_MAX(size_t)>>(sizeof(size_t)*4);
+  r=(x>>(sizeof(size_t)*4))*(y&mask)+(y>>(sizeof(size_t)*4))*(x&mask);
+  if (r>>(sizeof(size_t)*4)) return KATE_E_LIMIT;
+  r<<=(sizeof(size_t)*4);
+  return kate_check_add_overflow(r,(x&mask)*(y&mask),res);
+}
+
+static inline int kate_check_mul_overflow(size_t x,size_t y,size_t *res) __attribute__((pure));
+static inline int kate_check_mul_overflow(size_t x,size_t y,size_t *res)
+{
+  if (sizeof(size_t)>4) {
+    return kate_check_mul_overflow_generic(x,y,res);
+  }
+  else {
+    kate_uint64_t r=((kate_uint64_t)x)*y;
+    if (r>>(sizeof(size_t)*8)) return KATE_E_LIMIT;
+    if (res) *res=(size_t)r;
+    return 0;
+  }
+}
+
 /* granule operations */
 extern kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float offset) kate_internal;
 
@@ -71,6 +114,9 @@ extern int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n) kate_i
 extern int kate_is_valid_code_point(int c) kate_internal __attribute__((const));
 
 extern int kate_font_check_ranges(const kate_font_mapping *kfm);
+
+extern void *kate_checked_malloc(size_t n,size_t sz) kate_internal __attribute__((malloc));
+extern void *kate_checked_realloc(void *ptr,size_t n,size_t sz) kate_internal;
 
 #endif
 

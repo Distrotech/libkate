@@ -112,10 +112,14 @@ static int kate_encode_state_add_motion_or_index(kate_encode_state *kes,kate_mot
   size_t *motion_indices;
   kate_motion_semantics semantics;
   size_t n;
+  int ret;
 
   if (!kes) return KATE_E_INVALID_PARAMETER;
   if (!kes->ki) return KATE_E_INIT;
   if (!km && motion>=kes->ki->nmotions) return KATE_E_INVALID_PARAMETER;
+
+  ret=kate_check_add_overflow(kes->nmotions,1,NULL);
+  if (ret<0) return ret;
 
   /* check if we have that semantic already */
   semantics=km?km->semantics:kes->ki->motions[motion]->semantics;
@@ -125,15 +129,15 @@ static int kate_encode_state_add_motion_or_index(kate_encode_state *kes,kate_mot
     if (km2->semantics==semantics) return KATE_E_LIMIT;
   }
 
-  motions=(kate_motion**)kate_realloc(kes->motions,(kes->nmotions+1)*sizeof(kate_motion*));
+  motions=(kate_motion**)kate_checked_realloc(kes->motions,(kes->nmotions+1),sizeof(kate_motion*));
   if (!motions) return KATE_E_OUT_OF_MEMORY;
   kes->motions=motions;
 
-  destroy_motions=(int*)kate_realloc(kes->destroy_motions,(kes->nmotions+1)*sizeof(int));
+  destroy_motions=(int*)kate_checked_realloc(kes->destroy_motions,(kes->nmotions+1),sizeof(int));
   if (!destroy_motions) return KATE_E_OUT_OF_MEMORY;
   kes->destroy_motions=destroy_motions;
 
-  motion_indices=(size_t*)kate_realloc(kes->motion_indices,(kes->nmotions+1)*sizeof(size_t));
+  motion_indices=(size_t*)kate_checked_realloc(kes->motion_indices,(kes->nmotions+1),sizeof(size_t));
   if (!motion_indices) return KATE_E_OUT_OF_MEMORY;
   kes->motion_indices=motion_indices;
 
@@ -161,16 +165,20 @@ static int kate_encode_state_add_bitmap_or_index(kate_encode_state *kes,const ka
 {
   const kate_bitmap **bitmaps;
   size_t *bitmap_indices;
+  int ret;
 
   if (!kes) return KATE_E_INVALID_PARAMETER;
   if (!kes->ki) return KATE_E_INIT;
   if (!kb && bitmap>=kes->ki->nbitmaps) return KATE_E_INVALID_PARAMETER;
 
-  bitmaps=(const kate_bitmap**)kate_realloc(kes->bitmaps,(kes->nbitmaps+1)*sizeof(const kate_bitmap*));
+  ret=kate_check_add_overflow(kes->nbitmaps,1,NULL);
+  if (ret<0) return ret;
+
+  bitmaps=(const kate_bitmap**)kate_checked_realloc(kes->bitmaps,(kes->nbitmaps+1),sizeof(const kate_bitmap*));
   if (!bitmaps) return KATE_E_OUT_OF_MEMORY;
   kes->bitmaps=bitmaps;
 
-  bitmap_indices=(size_t*)kate_realloc(kes->bitmap_indices,(kes->nbitmaps+1)*sizeof(size_t));
+  bitmap_indices=(size_t*)kate_checked_realloc(kes->bitmap_indices,(kes->nbitmaps+1),sizeof(size_t));
   if (!bitmap_indices) return KATE_E_OUT_OF_MEMORY;
   kes->bitmap_indices=bitmap_indices;
 
@@ -221,11 +229,15 @@ int kate_encode_state_destroy(kate_encode_state *kes)
 int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_float end)
 {
   kate_event_timing *new_timings;
+  int ret;
 
   if (!kes) return KATE_E_INVALID_PARAMETER;
   if (start<0 || end<0 || end<start) return KATE_E_INVALID_PARAMETER;
 
-  new_timings=(kate_event_timing*)kate_realloc(kes->timings,(kes->ntimings+1)*sizeof(kate_event_timing));
+  ret=kate_check_add_overflow(kes->ntimings,1,NULL);
+  if (ret<0) return ret;
+
+  new_timings=(kate_event_timing*)kate_checked_realloc(kes->timings,(kes->ntimings+1),sizeof(kate_event_timing));
   if (!new_timings) return KATE_E_OUT_OF_MEMORY;
   kes->timings=new_timings;
 

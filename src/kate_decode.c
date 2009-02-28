@@ -29,9 +29,15 @@ typedef struct kate_memory_guard {
 static void *kate_memory_guard_malloc(kate_memory_guard *kmg,size_t size)
 {
   void **new_pointers;
-  void *ptr=kate_malloc(size);
+  void *ptr;
+  int ret;
+
+  ret=kate_check_add_overflow(kmg->size,1,NULL);
+  if (ret<0) return ret;
+
+  ptr=kate_malloc(size);
   if (!ptr) return NULL;
-  new_pointers=(void**)kate_realloc(kmg->pointers,(kmg->size+1)*sizeof(void*));
+  new_pointers=(void**)kate_checked_realloc(kmg->pointers,(kmg->size+1),sizeof(void*));
   if (!new_pointers) {
     kate_free(ptr);
     return NULL;
@@ -53,14 +59,20 @@ static void kate_memory_guard_destroy(kate_memory_guard *kmg,int free_pointers)
 static int kate_memory_guard_merge(kate_memory_guard *kmg,kate_memory_guard *parent_kmg)
 {
   void **new_pointers;
-  new_pointers=(void**)kate_realloc(parent_kmg->pointers,(parent_kmg->size+kmg->size)*sizeof(void*));
+  int ret;
+  size_t new_size;
+
+  ret=kate_check_add_overflow(parent_kmg->size,kmg->size,&new_size);
+  if (ret<0) return ret;
+
+  new_pointers=(void**)kate_checked_realloc(parent_kmg->pointers,new_size,sizeof(void*));
   if (!new_pointers) {
     kate_memory_guard_destroy(kmg,1);
     return KATE_E_OUT_OF_MEMORY;
   }
   parent_kmg->pointers=new_pointers;
   memcpy(parent_kmg->pointers+parent_kmg->size,kmg->pointers,kmg->size*sizeof(void*));
-  parent_kmg->size+=kmg->size;
+  parent_kmg->size=new_size;
   kate_memory_guard_destroy(kmg,0);
   return 0;
 }
@@ -615,7 +627,7 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
 
   kp->ncolors=kate_pack_read(kpb,8)+1;
 
-  colors=(kate_color*)kate_malloc(kp->ncolors*sizeof(kate_color));
+  colors=(kate_color*)kate_checked_malloc(kp->ncolors,sizeof(kate_color));
   if (!colors) return KATE_E_OUT_OF_MEMORY;
 
   for (n=0;n<kp->ncolors;++n) {
@@ -693,7 +705,7 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
           case 1: /* RLE encoded */
             kb->bpp=kate_read32v(kpb);
             kb->palette=kate_read32v(kpb);
-            pixels=(unsigned char*)kate_malloc(kb->width*kb->height);
+            pixels=(unsigned char*)kate_checked_malloc(kb->width,kb->height);
             if (!pixels) return KATE_E_OUT_OF_MEMORY;
             ret=kate_rle_decode(kb->width,kb->height,pixels,kb->bpp,kpb);
             if (ret<0) return ret;
@@ -718,7 +730,8 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     kb->type=kate_bitmap_type_paletted;
     kb->palette=kate_read32v(kpb);
 
-    npixels=kb->width*kb->height;
+    ret=kate_check_mul_overflow(kb->width,kb->height,&npixels);
+    if (ret<0) return ret;
     pixels=(unsigned char*)kate_malloc(npixels);
     if (!pixels) return KATE_E_OUT_OF_MEMORY;
 
