@@ -91,6 +91,5 @@ EXTRA_DIST=\
   misc/pkgconfig/kate.pc.in misc/pkgconfig/kate-uninstalled.pc.in \
   misc/pkgconfig/oggkate.pc.in misc/pkgconfig/oggkate-uninstalled.pc.in \
   examples \
-  diffs \
   contrib
 

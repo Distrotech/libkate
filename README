@@ -69,6 +69,8 @@ to those projects once the Kate bitstream format is stable. The current diffs
 for those can be found in the diffs directory. See the README in the diffs
 directory for more information on those patches. If you want to run some of
 the example streams, you will have to patch GStreamer, xine, or MPlayer.
+NOTE: the diffs tree is not shipped in the tarballs anymore, it is now only
+available in the git tree.
 
 
 This distribution is Copyright (C) 2008 Vincent Penquerc'h.
