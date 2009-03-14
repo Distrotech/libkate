@@ -33,7 +33,7 @@ static void *kate_memory_guard_malloc(kate_memory_guard *kmg,size_t size)
   int ret;
 
   ret=kate_check_add_overflow(kmg->size,1,NULL);
-  if (ret<0) return ret;
+  if (ret<0) return NULL;
 
   ptr=kate_malloc(size);
   if (!ptr) return NULL;
