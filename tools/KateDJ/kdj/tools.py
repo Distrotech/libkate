@@ -65,8 +65,8 @@ class Tools:
       raise Exception,msg
 
   def find_tools(self):
-    self.mux_command=self.probe_command_in(['oggz-merge','oggzmerge'],'-v','oggz-merge version',external_tools_path)
-    self.demux_command=self.probe_command_in(['oggz-rip','oggzrip'],'-v','oggz-rip version',external_tools_path)
+    self.mux_command=self.probe_command_in(['oggz-merge','oggzmerge'],'-v','merge version',external_tools_path)
+    self.demux_command=self.probe_command_in(['oggz-rip','oggzrip'],'-v','rip version',external_tools_path)
     self.codecs_command=self.probe_command_in(['oggz-known-codecs'],'-v','oggz-known-codecs version',external_tools_path)
     self.kateenc_command=self.probe_command_in(['kateenc'],'-V','Kate reference encoder - libkate',internal_tools_path)
     self.katedec_command=self.probe_command_in(['katedec'],'-V','Kate reference decoder - libkate',internal_tools_path)
