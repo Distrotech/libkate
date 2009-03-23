@@ -10,7 +10,11 @@ install-exec-local:
 	${mkinstalldirs} "$(DESTDIR)$(pythondir)/kdj"
 	for module in $(kdj_modules); do \
 	  $(INSTALL_DATA) "${top_srcdir}/tools/KateDJ/kdj/$$module.py" "$(DESTDIR)$(pythondir)/kdj"; \
-	  ${top_srcdir}/misc/autotools/py-compile --destdir="$(DESTDIR)" --basedir="${prefix}" "${DESTDIR}$(pythondir)/kdj/$$module.py"; \
+	  if test -z "${DESTDIR}"; then \
+	    ${top_srcdir}/misc/autotools/py-compile --basedir "${pythondir}/kdj" "$$module.py"; \
+	  else \
+	    ${top_srcdir}/misc/autotools/py-compile --destdir "$(DESTDIR)" --basedir "${pythondir}/kdj" "$$module.py"; \
+	  fi \
 	done
 	${mkinstalldirs} "$(DESTDIR)$(bindir)"
 	${INSTALL_SCRIPT} "${top_srcdir}/tools/KateDJ/KateDJ" "$(DESTDIR)$(bindir)"
