@@ -1012,7 +1012,7 @@ static char *expand_numeric_entities(const char *text)
   return newtext;
 }
 
-static char *getline(const char **text)
+static char *getrawline(const char **text)
 {
   size_t rlen0;
   int newline,in_newline=0;
@@ -1020,7 +1020,7 @@ static char *getline(const char **text)
   int c;
 
   if (!text || !*text) {
-    yyerror("error: getline passed invalid text pointer");
+    yyerror("error: getrawline passed invalid text pointer");
     exit(-1);
   }
 
@@ -1126,7 +1126,7 @@ static char *trimtext(const char *text)
   char *newtext=(char*)kate_malloc(1);
   *newtext=0;
   while (text && *text) {
-    char *line=getline(&text);
+    char *line=getrawline(&text);
     char *trimmed=trimline(line);
     kate_free(line);
     if (*trimmed && strcmp(trimmed,"\n")) {
