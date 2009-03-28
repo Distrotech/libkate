@@ -12,7 +12,10 @@ Optional dependencies:
 
 Of course, if you want to make use of the patches to third party
 software found in the diffs directory, you will need the relevant
-software to which they apply as well as their dependencies.
+software to which they apply as well as their dependencies. Note
+that the diffs directory does not ship with the tarball anymore,
+and are available from the libkate git repository:
+http://git.xiph.org/?p=users/oggk/kate.git;a=summary
 
 Windows users without Cygwin or MSYS may find build files in the
 contrib/build/win32 tree, for Microsoft's VC2005 and VC2008 compilers.
