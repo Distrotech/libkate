@@ -80,7 +80,7 @@ static inline int kate_check_mul_overflow(size_t x,size_t y,size_t *res)
   }
   else {
     kate_uint64_t r=((kate_uint64_t)x)*y;
-    if (r>>(sizeof(size_t)*8)) return KATE_E_LIMIT;
+    if ((r>>(sizeof(size_t)*4))>>(sizeof(size_t)*4)) return KATE_E_LIMIT;
     if (res) *res=(size_t)r;
     return 0;
   }
