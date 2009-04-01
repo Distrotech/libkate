@@ -106,6 +106,44 @@ fi
 	DIE=1
 }
 
+echo -n "checking for flex or lex... "
+for LEX in flex lex nope; do
+  ($LEX --version) < /dev/null > /dev/null 2>&1 && break
+done
+if test x$LEX = xnope; then
+  echo "nope."
+  LEX=flex
+else
+  echo $LEX
+fi
+($LEX --version) < /dev/null > /dev/null 2>&1 || {
+	echo
+	echo "You must have flex or lex installed to compile $package."
+	echo "Download the appropriate package for your system,"
+	echo "or get the source from one of the GNU ftp sites"
+	echo "listed in http://www.gnu.org/order/ftp.html"
+	DIE=1
+}
+
+echo -n "checking for bison or yacc... "
+for YACC in bison yacc nope; do
+  ($YACC --version) < /dev/null > /dev/null 2>&1 && break
+done
+if test x$YACC = xnope; then
+  echo "nope."
+  YACC=bison
+else
+  echo $YACC
+fi
+($YACC --version) < /dev/null > /dev/null 2>&1 || {
+	echo
+	echo "You must have bison or yacc installed to compile $package."
+	echo "Download the appropriate package for your system,"
+	echo "or get the source from one of the GNU ftp sites"
+	echo "listed in http://www.gnu.org/order/ftp.html"
+	DIE=1
+}
+
 if test "$DIE" -eq 1; then
         exit 1
 fi
