@@ -85,9 +85,12 @@ static int kate_memory_guard_merge(kate_memory_guard *kmg,kate_memory_guard *par
 
 
 
-static void kate_readbuf(kate_pack_buffer *kpb,char *s,int len)
+static int kate_readbuf(kate_pack_buffer *kpb,char *s,int len)
 {
+  if (len<0) return KATE_E_INVALID_PARAMETER;
+  if (kate_pack_bits(kpb)<len*8) return KATE_E_BAD_PACKET;
   while (len--) *s++=kate_pack_read(kpb,8);
+  return 0;
 }
 
 static kate_int32_t kate_read32(kate_pack_buffer *kpb)
@@ -136,10 +139,12 @@ static int kate_warp(kate_pack_buffer *kpb)
 static int kate_decode_check_magic(kate_pack_buffer *kpb)
 {
   char magic[8];
+  int ret;
 
   if (!kpb) return KATE_E_INVALID_PARAMETER;
 
-  kate_readbuf(kpb,magic,7);
+  ret=kate_readbuf(kpb,magic,7);
+  if (ret<0) return ret;
   if (memcmp(magic,"kate\0\0\0",7)) return KATE_E_NOT_KATE;
 
   return 0;
@@ -249,13 +254,15 @@ static int kate_decode_info_header(kate_info *ki,kate_pack_buffer *kpb)
   len=16;
   language=(char*)KMG_MALLOC(len);
   if (!language) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-  kate_readbuf(kpb,language,len); /* a terminating null is included */
+  ret=kate_readbuf(kpb,language,len); /* a terminating null is included */
+  if (ret<0) return KMG_ERROR(ret);
   if (language[len-1]) return KMG_ERROR(KATE_E_BAD_PACKET); /* but do check it to be sure */
 
   len=16;
   category=(char*)KMG_MALLOC(len);
   if (!category) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-  kate_readbuf(kpb,category,len); /* a terminating null is included */
+  ret=kate_readbuf(kpb,category,len); /* a terminating null is included */
+  if (ret<0) return KMG_ERROR(ret);
   if (category[len-1]) return KMG_ERROR(KATE_E_BAD_PACKET); /* but do check it to be sure */
 
   ret=kate_check_eop(kpb);
@@ -281,7 +288,8 @@ static int kate_decode_comment_packet(const kate_info *ki,kate_comment *kc,kate_
   if (!ki->no_limits && len>KATE_LIMIT_COMMENT_LENGTH) return KMG_ERROR(KATE_E_LIMIT);
   vendor=(char*)KMG_MALLOC(len+1);
   if (!vendor) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-  kate_readbuf(kpb,vendor,len);
+  ret=kate_readbuf(kpb,vendor,len);
+  if (ret<0) return KMG_ERROR(ret);
   vendor[len]=0;
 
   comments=kate_read32(kpb);
@@ -299,7 +307,8 @@ static int kate_decode_comment_packet(const kate_info *ki,kate_comment *kc,kate_
     user_comments[nc]=(char*)KMG_MALLOC(len+1);
     if (!user_comments[nc]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
     if (len) {
-      kate_readbuf(kpb,user_comments[nc],len);
+      ret=kate_readbuf(kpb,user_comments[nc],len);
+      if (ret<0) return KMG_ERROR(ret);
     }
     user_comments[nc][len]=0;
     comment_lengths[nc]=len;
@@ -426,7 +435,8 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
     else if (len>0) {
       ks->font=(char*)KMG_MALLOC(len+1);
       if (!ks->font) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
-      kate_readbuf(kpb,ks->font,len);
+      ret=kate_readbuf(kpb,ks->font,len);
+      if (ret<0) return KMG_ERROR(ret);
       ks->font[len]=0;
     }
     else {
@@ -719,7 +729,11 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
         if (!ki->no_limits && kb->size>KATE_LIMIT_BITMAP_RAW_SIZE) return KATE_E_LIMIT;
         pixels=(unsigned char*)kate_malloc(kb->size);
         if (!pixels) return KATE_E_OUT_OF_MEMORY;
-        kate_readbuf(kpb,(char*)pixels,kb->size);
+        ret=kate_readbuf(kpb,(char*)pixels,kb->size);
+        if (ret<0) {
+          kate_free(pixels);
+          return ret;
+        }
         break;
       default:
         return KATE_E_BAD_PACKET;
@@ -1068,7 +1082,8 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
   text=(char*)KMG_MALLOC(len+4);
   if (!text) goto error_out_of_memory;
   RNDERR(error_out_of_memory);
-  kate_readbuf(kpb,text,len);
+  ret=kate_readbuf(kpb,text,len);
+  if (ret<0) goto error_bad_packet;
   text[len]=0;
   text[len+1]=0;
   text[len+2]=0;
@@ -1139,7 +1154,8 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
           ev->language=(char*)KMG_MALLOC(len+1);
           if (!ev->language) goto error_out_of_memory;
         RNDERR(error_out_of_memory);
-          kate_readbuf(kpb,ev->language,len);
+          ret=kate_readbuf(kpb,ev->language,len);
+          if (ret<0) goto error_bad_packet;
           ev->language[len]=0;
         }
       } while(0)
