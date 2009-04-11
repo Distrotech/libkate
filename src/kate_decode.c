@@ -88,7 +88,7 @@ static int kate_memory_guard_merge(kate_memory_guard *kmg,kate_memory_guard *par
 static int kate_readbuf(kate_pack_buffer *kpb,char *s,int len)
 {
   if (len<0) return KATE_E_INVALID_PARAMETER;
-  if (kate_pack_bits(kpb)<len*8) return KATE_E_BAD_PACKET;
+  if (kate_pack_readable_bits(kpb)<len*8) return KATE_E_BAD_PACKET;
   while (len--) *s++=kate_pack_read(kpb,8);
   return 0;
 }

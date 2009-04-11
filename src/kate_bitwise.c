@@ -278,4 +278,8 @@ unsigned char *kate_pack_get_buffer(kate_pack_buffer *b){
   return(b->buffer);
 }
 
+long kate_pack_readable_bits(kate_pack_buffer *b){
+  return b->storage*8-kate_pack_bits(b);
+}
+
 #undef BUFFER_INCREMENT
