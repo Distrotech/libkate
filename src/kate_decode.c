@@ -125,6 +125,11 @@ static kate_int64_t kate_read64(kate_pack_buffer *kpb)
   return (0xffffffff&(kate_int64_t)vl)|(((kate_int64_t)vh)<<32);
 }
 
+static int kate_overread(kate_pack_buffer *kpb)
+{
+  return kate_pack_look(kpb,0)<0;
+}
+
 static int kate_warp(kate_pack_buffer *kpb)
 {
   while (1) {
@@ -364,6 +369,7 @@ static int kate_decode_regions_packet(kate_info *ki,kate_pack_buffer *kpb)
     regions[n]=(kate_region*)KMG_MALLOC(sizeof(kate_region));
     if (!regions[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
     ret=kate_decode_region(ki,regions[n],kpb);
+    if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
     if (ret<0) return KMG_ERROR(ret);
   }
 
@@ -480,6 +486,7 @@ static int kate_decode_styles_packet(kate_info *ki,kate_pack_buffer *kpb)
     styles[n]=(kate_style*)KMG_MALLOC(sizeof(kate_style));
     if (!styles[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
     ret=kate_decode_style(ki,styles[n],kpb,&kmg);
+    if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
     if (ret<0) return KMG_ERROR(ret);
   }
 
@@ -536,6 +543,7 @@ static int kate_decode_curves_packet(kate_info *ki,kate_pack_buffer *kpb)
       curves[n]=(kate_curve*)KMG_MALLOC(sizeof(kate_curve));
       if (!curves[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_curve(ki,curves[n],kpb,&kmg);
+      if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -577,6 +585,7 @@ static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buff
       km->curves[n]=(kate_curve*)KMG_MALLOC(sizeof(kate_curve));
       if (!km->curves[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_curve(ki,km->curves[n],kpb,&kmg);
+      if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -611,6 +620,7 @@ static int kate_decode_motions_packet(kate_info *ki,kate_pack_buffer *kpb)
       motions[n]=(kate_motion*)KMG_MALLOC(sizeof(kate_motion));
       if (!motions[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_motion(ki,motions[n],kpb,&kmg);
+      if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -642,6 +652,10 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
 
   for (n=0;n<kp->ncolors;++n) {
     ret=kate_decode_color(colors+n,kpb);
+    if (kate_overread(kpb)) {
+      kate_free(colors);
+      return ret;
+    }
     if (ret<0) {
       kate_free(colors);
       return ret;
@@ -674,6 +688,7 @@ static int kate_decode_palettes_packet(kate_info *ki,kate_pack_buffer *kpb)
       palettes[n]=(kate_palette*)KMG_MALLOC(sizeof(kate_palette));
       if (!palettes[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_palette(ki,palettes[n],kpb);
+      if (kate_overread(kpb)) return KMG_ERROR(ret);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -748,9 +763,17 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     if (ret<0) return ret;
     pixels=(unsigned char*)kate_malloc(npixels);
     if (!pixels) return KATE_E_OUT_OF_MEMORY;
+    if ((size_t)kate_pack_bits(kpb)<npixels*kb->bpp) {
+      kate_free(pixels);
+      return KATE_E_BAD_PACKET;
+    }
 
     for (n=0;n<npixels;++n) {
       pixels[n]=kate_pack_read(kpb,kb->bpp);
+    }
+    if (kate_overread(kpb)) {
+      kate_free(pixels);
+      return KATE_E_BAD_PACKET;
     }
   }
 
@@ -792,6 +815,7 @@ static int kate_decode_bitmaps_packet(kate_info *ki,kate_pack_buffer *kpb)
       bitmaps[n]=(kate_bitmap*)KMG_MALLOC(sizeof(kate_bitmap));
       if (!bitmaps[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_bitmap(ki,bitmaps[n],kpb);
+      if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -840,6 +864,7 @@ static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
       font_ranges[n]=(kate_font_range*)KMG_MALLOC(sizeof(kate_font_range));
       if (!font_ranges[n]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
       ret=kate_decode_font_range(ki,font_ranges[n],kpb);
+      if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
       if (ret<0) return KMG_ERROR(ret);
     }
   }
@@ -878,6 +903,7 @@ static int kate_decode_font_ranges_packet(kate_info *ki,kate_pack_buffer *kpb)
             font_ranges[l]=(kate_font_range*)KMG_MALLOC(sizeof(kate_font_range));
             if (!font_ranges[l]) return KMG_ERROR(KATE_E_OUT_OF_MEMORY);
             ret=kate_decode_font_range(ki,font_ranges[l],kpb);
+            if (kate_overread(kpb)) return KMG_ERROR(KATE_E_BAD_PACKET);
             if (ret<0) return KMG_ERROR(ret);
           }
         }
@@ -1130,6 +1156,7 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
         if (!motions[n]) goto error_out_of_memory;
         RNDERR(error_out_of_memory);
         ret=kate_decode_motion(k->ki,motions[n],kpb,&kmg);
+        if (kate_overread(kpb)) goto error_bad_packet;
         if (ret<0) goto error;
         RNDERR(error);
       }
@@ -1270,6 +1297,7 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
           if (!bitmaps[n]) goto error_out_of_memory;
           RNDERR(error_out_of_memory);
           ret=kate_decode_bitmap(k->ki,bitmaps[n],kpb);
+          if (kate_overread(kpb)) goto error_bad_packet;
           if (ret<0) goto error;
         }
         ++nbitmaps;
