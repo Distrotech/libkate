@@ -1,3 +1,8 @@
+0.3.2 - 12 april 2009
+  increased robustness against corrupt/malicious streams
+  misc build and compatibility tweaks
+  fix py-compile invokation and older oggz tools names (Christian Morales Vega)
+
 0.3.1 - 14 march 2009
   fix various integer overflows
   KateDJ now recognizes old names for oggz tools
