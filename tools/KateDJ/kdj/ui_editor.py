@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import sys
 import wx
 #import wx.py.editor as editor
