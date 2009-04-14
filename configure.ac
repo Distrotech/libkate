@@ -97,12 +97,20 @@ else
   AC_PATH_PROG(OGG_MERGE,oggz-merge,)
   if test "x$OGG_MERGE" = "x"
   then
-    AC_PATH_PROG(OGG_MERGE,oggmerge,)
+    AC_PATH_PROG(OGG_MERGE,oggzmerge,)
+    if test "x$OGG_MERGE" = "x"
+    then
+      AC_PATH_PROG(OGG_MERGE,oggmerge,)
+    fi
   fi
   AC_PATH_PROG(OGG_DIFF,oggz-diff,)
   if test "x$OGG_DIFF" = "x"
   then
-    AC_PATH_PROG(OGG_DIFF,cmp,)
+    AC_PATH_PROG(OGG_DIFF,oggzdiff,)
+    if test "x$OGG_DIFF" = "x"
+    then
+      AC_PATH_PROG(OGG_DIFF,cmp,)
+    fi
   fi
 fi
 AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
