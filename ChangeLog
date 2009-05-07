@@ -1,3 +1,7 @@
+0.3.3 - 07 may 2009
+  recognize old oggz tools names in configure
+  remove unnecessary shebangs from python source
+
 0.3.2 - 12 april 2009
   increased robustness against corrupt/malicious streams
   misc build and compatibility tweaks
