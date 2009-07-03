@@ -1,0 +1,413 @@
+From a893b6144240fde14440929692b4bf13b0741dcd Mon Sep 17 00:00:00 2001
+From: ogg.k.ogg.k <ogg.k.ogg.k@googlemail.com>
+Date: Wed, 3 Jun 2009 22:39:51 +0100
+Subject: [PATCH] first pass kate decoding support
+
+---
+ libavformat/Makefile       |    1 +
+ libavformat/oggdec.c       |   31 +++++-
+ libavformat/oggdec.h       |    3 +
+ libavformat/oggparsekate.c |  248 ++++++++++++++++++++++++++++++++++++++++++++
+ 4 files changed, 277 insertions(+), 6 deletions(-)
+ create mode 100644 libavformat/oggparsekate.c
+
+diff --git a/libavformat/Makefile b/libavformat/Makefile
+index 8e8a869..0293b5b 100644
+--- a/libavformat/Makefile
++++ b/libavformat/Makefile
+@@ -132,6 +132,7 @@ OBJS-$(CONFIG_OGG_DEMUXER)               += oggdec.o         \
+                                             oggparsespeex.o  \
+                                             oggparsetheora.o \
+                                             oggparsevorbis.o \
++                                            oggparsekate.o \
+                                             riff.o
+ OBJS-$(CONFIG_OGG_MUXER)                 += oggenc.o
+ OBJS-$(CONFIG_OMA_DEMUXER)               += oma.o raw.o
+diff --git a/libavformat/oggdec.c b/libavformat/oggdec.c
+index 5d42db7..b887e87 100644
+--- a/libavformat/oggdec.c
++++ b/libavformat/oggdec.c
+@@ -42,6 +42,7 @@ static const struct ogg_codec * const ogg_codecs[] = {
+     &ff_vorbis_codec,
+     &ff_theora_codec,
+     &ff_flac_codec,
++    &ff_kate_codec,
+     &ff_old_flac_codec,
+     &ff_ogm_video_codec,
+     &ff_ogm_audio_codec,
+@@ -115,8 +116,10 @@ ogg_reset (struct ogg * ogg)
+         os->bufpos = 0;
+         os->pstart = 0;
+         os->psize = 0;
++        os->skip = 0;
+         os->granule = -1;
+         os->lastgp = -1;
++        os->duration = -1;
+         os->nsegs = 0;
+         os->segp = 0;
+     }
+@@ -300,7 +303,7 @@ ogg_read_page (AVFormatContext * s, int *str)
+ }
+ 
+ static int
+-ogg_packet (AVFormatContext * s, int *str, int *dstart, int *dsize)
++ogg_packet (AVFormatContext * s, int *str, int *dstart, int *dsize, int64_t *duration)
+ {
+     struct ogg *ogg = s->priv_data;
+     int idx;
+@@ -380,6 +383,8 @@ ogg_packet (AVFormatContext * s, int *str, int *dstart, int *dsize)
+ 
+     if (os->header > -1 && os->seq > os->header){
+         os->pflags = 0;
++        os->duration = -1;
++        os->skip = 0;
+         if (os->codec && os->codec->packet)
+             os->codec->packet (s, idx);
+         if (str)
+@@ -388,7 +393,9 @@ ogg_packet (AVFormatContext * s, int *str, int *dstart, int *dsize)
+             *dstart = os->pstart;
+         if (dsize)
+             *dsize = os->psize;
+-        os->pstart += os->psize;
++        if (duration)
++            *duration = os->duration;
++        os->pstart += os->psize+os->skip;
+         os->psize = 0;
+     }
+ 
+@@ -405,7 +412,7 @@ ogg_get_headers (AVFormatContext * s)
+     struct ogg *ogg = s->priv_data;
+ 
+     do{
+-        if (ogg_packet (s, NULL, NULL, NULL) < 0)
++        if (ogg_packet (s, NULL, NULL, NULL, NULL) < 0)
+             return -1;
+     }while (!ogg->headers);
+ 
+@@ -450,7 +457,7 @@ ogg_get_length (AVFormatContext * s)
+     size = url_fsize(s->pb);
+     if(size < 0)
+         return 0;
+-    end = size > MAX_PAGE_SIZE? size - MAX_PAGE_SIZE: 0;
++    end = size > MAX_PAGE_SIZE? size - MAX_PAGE_SIZE: size;
+ 
+     ogg_save (s);
+     url_fseek (s->pb, end, SEEK_SET);
+@@ -498,25 +505,37 @@ ogg_read_packet (AVFormatContext * s, AVPacket * pkt)
+     struct ogg_stream *os;
+     int idx = -1;
+     int pstart, psize;
++    int64_t duration;
+ 
+     //Get an ogg packet
+     do{
+-        if (ogg_packet (s, &idx, &pstart, &psize) < 0)
++        if (ogg_packet (s, &idx, &pstart, &psize, &duration) < 0)
+             return AVERROR(EIO);
+     }while (idx < 0 || !s->streams[idx]);
+ 
+     ogg = s->priv_data;
+     os = ogg->streams + idx;
+ 
++    if (psize == 0)
++        return 0;
++
+     //Alloc a pkt
+     if (av_new_packet (pkt, psize) < 0)
+         return AVERROR(EIO);
+     pkt->stream_index = idx;
+     memcpy (pkt->data, os->buf + pstart, psize);
+-    if (os->lastgp != -1LL){
++
++    /* ffmpeg assumes timing by end of buffer, as vorbis, newer theora, etc - kate is not */
++    if (os->codec == &ff_kate_codec) {
++        pkt->pts = ogg_gptopts (s, idx, os->granule);
++    }
++    else if (os->lastgp != -1LL){
+         pkt->pts = ogg_gptopts (s, idx, os->lastgp);
+         os->lastgp = -1;
+     }
++    if (os->duration >= 0) {
++        pkt->duration = duration;
++    }
+ 
+     pkt->flags = os->pflags;
+ 
+diff --git a/libavformat/oggdec.h b/libavformat/oggdec.h
+index 91a5974..ab86d93 100644
+--- a/libavformat/oggdec.h
++++ b/libavformat/oggdec.h
+@@ -53,6 +53,8 @@ struct ogg_stream {
+     uint32_t serial;
+     uint32_t seq;
+     uint64_t granule, lastgp;
++    int64_t duration;
++    unsigned int skip;
+     int flags;
+     const struct ogg_codec *codec;
+     int header;
+@@ -91,6 +93,7 @@ extern const struct ogg_codec ff_old_flac_codec;
+ extern const struct ogg_codec ff_speex_codec;
+ extern const struct ogg_codec ff_theora_codec;
+ extern const struct ogg_codec ff_vorbis_codec;
++extern const struct ogg_codec ff_kate_codec;
+ 
+ extern const AVMetadataConv ff_vorbiscomment_metadata_conv[];
+ 
+diff --git a/libavformat/oggparsekate.c b/libavformat/oggparsekate.c
+new file mode 100644
+index 0000000..d095ee2
+--- /dev/null
++++ b/libavformat/oggparsekate.c
+@@ -0,0 +1,248 @@
++/*
++ *    Copyright (C) 2009 ogg.k.ogg.k@googlemail.com
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++#include <stdlib.h>
++#include "libavutil/intreadwrite.h"
++#include "libavcodec/bytestream.h"
++#include "avlanguage.h"
++#include "avformat.h"
++#include "oggdec.h"
++
++struct kate_params {
++    int major, minor;
++    uint32_t gps_num;
++    uint32_t gps_den;
++    int granule_shift;
++
++    int canvas_width;
++    int canvas_height;
++
++    int num_headers;
++    int text_encoding;
++    int directionality;
++
++    char language[16];
++    char category[16];
++};
++
++static const char * const kate_magic = "kate\0\0\0";
++
++static int
++parse_kate_header (AVFormatContext * s, int idx)
++{
++    struct ogg *ogg = s->priv_data;
++    struct ogg_stream *os = ogg->streams + idx;
++    AVStream *st = s->streams[idx];
++    struct kate_params *thp = os->private;
++    int cds = st->codec->extradata_size + os->psize + 2;
++    uint8_t *cdp;
++    const uint8_t *ptr;
++    uint16_t v16;
++
++    if (!(os->buf[os->pstart] & 0x80))
++        return 0;
++
++    if(!thp){
++        thp = av_mallocz(sizeof(*thp));
++        os->private = thp;
++    }
++
++    if (os->buf[os->pstart] == 0x80) {
++        if (os->psize < 64) {
++            av_log(NULL, AV_LOG_ERROR, "BOS header is too small\n");
++            return -1;
++        }
++
++        ptr = os->buf + os->pstart+1; // skip the packet type now
++
++        for (int n=0; n<7; ++n) {
++            if (bytestream_get_byte(&ptr) != kate_magic[n]) {
++                av_log(NULL, AV_LOG_ERROR, "Header has wrong magic\n");
++                return -1;
++            }
++        }
++
++        (void)bytestream_get_byte(&ptr); /* reserved zero byte, may be non zero in future stream revs */
++        thp->major = bytestream_get_byte(&ptr);
++        thp->minor = bytestream_get_byte(&ptr);
++        thp->num_headers = bytestream_get_byte(&ptr);
++        thp->text_encoding = bytestream_get_byte(&ptr);
++        thp->directionality = bytestream_get_byte(&ptr);
++        (void)bytestream_get_byte(&ptr); /* reserved */
++        thp->granule_shift = bytestream_get_byte(&ptr);
++        v16 = bytestream_get_le16(&ptr);
++        thp->canvas_width = (v16 & ((1<<12)-1)) << (v16 >> 12);
++        v16 = bytestream_get_le16(&ptr);
++        thp->canvas_height = (v16 & ((1<<12)-1)) << (v16 >> 12);
++        (void)bytestream_get_le32(&ptr); /* reserved */
++        thp->gps_num = bytestream_get_le32(&ptr);
++        thp->gps_den = bytestream_get_le32(&ptr);
++        bytestream_get_buffer(&ptr, thp->language, 16);
++        bytestream_get_buffer(&ptr, thp->category, 16);
++
++        if (thp->major > 0) {
++            av_log(NULL, AV_LOG_ERROR, "Major bitstream version %d not supported\n", thp->major);
++            return -1;
++        }
++        if (thp->num_headers <= 0) {
++            av_log(NULL, AV_LOG_ERROR, "Invalid number of headers (%d)\n", thp->num_headers);
++            return -1;
++        }
++        if (thp->text_encoding != 0) {
++            av_log(NULL, AV_LOG_ERROR, "Unsupported text encoding (%d)\n", thp->text_encoding);
++            return -1;
++        }
++        if (thp->granule_shift >= 64) {
++            av_log(NULL, AV_LOG_ERROR, "Invalid granule shift (%d)\n", thp->granule_shift);
++            return -1;
++        }
++        if (thp->gps_num == 0 || thp->gps_den == 0) {
++            av_log(NULL, AV_LOG_ERROR, "Invalid granule rate (%u/%u)\n", thp->gps_num, thp->gps_den);
++            return -1;
++        }
++        if (thp->language[15]) {
++            av_log(NULL, AV_LOG_ERROR, "Invalid language\n");
++            return -1;
++        }
++        if (thp->category[15]) {
++            av_log(NULL, AV_LOG_ERROR, "Invalid category\n");
++            return -1;
++        }
++
++        st->codec->codec_type = CODEC_TYPE_SUBTITLE;
++        st->codec->codec_id = CODEC_ID_TEXT;
++        st->codec->time_base.num = thp->gps_den; // time_base = 1 / granule_rate
++        st->codec->time_base.den = thp->gps_num;
++        st->time_base = st->codec->time_base;
++
++        if (thp->language[0]) {
++            // nicked off asfdec.c
++            const char primary_tag[3] = { tolower(thp->language[0]), tolower(thp->language[1]), '\0' }; // ignore country code if any
++            const char *iso6392 = av_convert_lang_to(primary_tag, AV_LANG_ISO639_2_BIBL);
++            if (iso6392)
++                av_metadata_set(&st->metadata, "language", iso6392);
++        }
++    } else if (os->buf[os->pstart] == 0x83) {
++        vorbis_comment (s, os->buf + os->pstart + 9, os->psize - 10);
++    }
++
++    st->codec->extradata = av_realloc (st->codec->extradata,
++                                       cds + FF_INPUT_BUFFER_PADDING_SIZE);
++    cdp = st->codec->extradata + st->codec->extradata_size;
++    *cdp++ = os->psize >> 8;
++    *cdp++ = os->psize & 0xff;
++    memcpy (cdp, os->buf + os->pstart, os->psize);
++    st->codec->extradata_size = cds;
++
++    return 1;
++}
++
++static int
++parse_kate_packet (AVFormatContext * s, int idx)
++{
++    struct ogg *ogg = s->priv_data;
++    struct ogg_stream *os = ogg->streams + idx;
++    uint8_t *p = os->buf + os->pstart, packtype;
++    const uint8_t *ptr = p;
++    int64_t start, duration, backlink;
++    int32_t len;
++    static const int text_offset = 1+3*8+4;
++
++    if (os->psize < 1) {
++        av_log(NULL, AV_LOG_ERROR, "Data packet should be at least 1 byte long\n");
++        return -1;
++    }
++
++    packtype = bytestream_get_byte(&ptr);
++
++    // we ignore any non text data packet for now (repeats, etc)
++    if (packtype != 0) {
++        av_log(NULL, AV_LOG_DEBUG, "Packet type %02x ignored\n", packtype);
++        os->psize = 0;
++        return 0;
++    }
++
++    if (os->psize < text_offset) {
++        av_log(NULL, AV_LOG_ERROR, "Text data packet should be at least %d bytes long\n",text_offset);
++        return -1;
++    }
++
++    start = bytestream_get_le64(&ptr);
++    duration = bytestream_get_le64(&ptr);
++    backlink = bytestream_get_le64(&ptr);
++
++    if (start < 0) {
++        av_log(NULL, AV_LOG_ERROR, "Invalid start time (%lld)\n", (long long)start);
++        return -1;
++    }
++    if (duration < 0) {
++        av_log(NULL, AV_LOG_ERROR, "Invalid duration (%lld)\n", (long long)duration);
++        return -1;
++    }
++    if (backlink < 0 || backlink > start) {
++        av_log(NULL, AV_LOG_ERROR, "Invalid backlink (%lld)\n", (long long)backlink);
++        return -1;
++    }
++
++    len = bytestream_get_le32(&ptr);
++    if (len < 0) {
++        av_log(NULL, AV_LOG_ERROR, "Invalid text length (%d)\n", len);
++        return -1;
++    }
++    ptr += len;
++
++    os->pstart += text_offset;
++    os->psize -= text_offset;
++    if (len > os->psize) {
++      av_log(NULL, AV_LOG_WARNING, "Text length greater than packet size - clipped\n");
++      os->skip = 0;
++      len = os->psize;
++    }
++    else {
++      os->skip = os->psize - len;
++      os->psize = len;
++    }
++    os->duration = duration;
++
++    return 0;
++}
++
++static uint64_t
++parse_kate_granpos (AVFormatContext * s, int i, uint64_t gp)
++{
++    struct ogg *ogg = s->priv_data;
++    struct ogg_stream *os = ogg->streams + i;
++    struct kate_params *thp = os->private;
++    uint64_t base, offset;
++
++    if (!thp)
++        return 0;
++    base = gp >> thp->granule_shift;
++    offset = gp & ((1<<thp->granule_shift)-1);
++    return base+offset;
++}
++
++const struct ogg_codec ff_kate_codec = {
++    .magic = "\200kate\0\0\0",
++    .magicsize = 8,
++    .header = parse_kate_header,
++    .packet = parse_kate_packet,
++    .gptopts = parse_kate_granpos
++};
+-- 
+1.6.3.1
+

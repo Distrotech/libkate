@@ -148,3 +148,9 @@ an acompanying stream.
 
 
 
+ * ffmpeg (ffmpeg-with-kate.diff)
+
+This allows ffmpeg to decode raw UTF-8 text from a Kate stream.
+
+
+
