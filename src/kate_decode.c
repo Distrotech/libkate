@@ -203,15 +203,13 @@ static int kate_check_eop(kate_pack_buffer *kpb)
 
 static int kate_decode_read_canvas_size(kate_pack_buffer *kpb)
 {
-  size_t value;
   size_t base,shift;
 
   if (!kpb) return KATE_E_INVALID_PARAMETER;
 
-  value=kate_pack_read(kpb,8);
-  value|=(kate_pack_read(kpb,8)<<8);
-  base=value>>4;
-  shift=value&15;
+  shift=kate_pack_read(kpb,4);
+  base=kate_pack_read(kpb,4);
+  base|=(kate_pack_read(kpb,8)<<4);
 
   return base<<shift;
 }

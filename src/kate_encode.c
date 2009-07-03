@@ -164,7 +164,6 @@ static int kate_encode_write_canvas_size(kate_pack_buffer *kpb,size_t size)
 {
   size_t base=size;
   size_t shift=0;
-  int value;
 
   if (!kpb) return KATE_E_INVALID_PARAMETER;
 
@@ -177,10 +176,9 @@ static int kate_encode_write_canvas_size(kate_pack_buffer *kpb,size_t size)
   if (shift>=16) return KATE_E_LIMIT;
 
   /* the size can be represented in our encoding */
-  value=(base<<4)|shift;
-
-  kate_pack_write(kpb,value&0xff,8);
-  kate_pack_write(kpb,(value>>8)&0xff,8);
+  kate_pack_write(kpb,shift,4);
+  kate_pack_write(kpb,base&0x0f,4);
+  kate_pack_write(kpb,base>>4,8);
 
   return 0;
 }
