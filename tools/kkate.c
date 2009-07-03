@@ -488,11 +488,13 @@ void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gra
   if (granpos>=0) {
     kate_float base,offset;
     kate_granule_split_time(ki,granpos,&base,&offset);
+#ifdef DEBUG
     fprintf(fout,"    # granule %llx composition: base %02d:%02d:%02.8g, offset %02d:%02d:%02.8g\n",
       (long long)granpos,
       time_hours(base),time_minutes(base),time_float_seconds(base),
       time_hours(offset),time_minutes(offset),time_float_seconds(offset)
     );
+#endif
   }
   fprintf(fout,"    %02d:%02d:%02.8g --> %02d:%02d:%02.8g\n",
     time_hours(t0),time_minutes(t0),time_float_seconds(t0),
