@@ -57,10 +57,8 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
 {
   ogg_parser_data *opd=(ogg_parser_data*)data;
   ogg_packet op;
-  int eos=0;
   int ret;
   kate_stream *ks;
-  int is_kate;
 
   /* add the page in the correct stream */
   if (ogg_page_bos(og)) {
@@ -79,12 +77,6 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
       if (ret<0) {
         fprintf(stderr,"Hole in data\n");
         break;
-      }
-      is_kate=(ks->init>=kstream_header_info);
-      if (!is_kate) {
-        kate_packet kp;
-        kate_packet_wrap(&kp,op.bytes,op.packet);
-        if (kate_decode_is_idheader(&kp)) is_kate=1;
       }
 
       if (ks->init<kstream_data) {
@@ -169,8 +161,6 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
         else if (ret>0) {
           /* we're done */
           if (opd->write_end_function) (*opd->write_end_function)(ks->fout);
-          eos=1;
-          break;
         }
         else {
           const kate_event *ev=NULL;
@@ -209,7 +199,6 @@ int main(int argc,char **argv)
   int arg;
   char signature[64]; /* matches the size of the Kate ID header */
   size_t signature_size;
-  int raw;
   char *buffer=NULL;
   ogg_int64_t bytes;
   int headers_written=0;
@@ -345,8 +334,6 @@ int main(int argc,char **argv)
       kate_free(filename);
     }
 
-    raw=1;
-
     ret=kate_high_decode_init(&k);
     if (ret<0) {
       fprintf(stderr,"failed to init raw kate packet decoding (%d)\n",ret);
@@ -394,7 +381,6 @@ int main(int argc,char **argv)
     if (fout!=stdout) fclose(fout);
   }
   else {
-    raw=0;
     signature_size=bytes_read;
 
     init_kate_stream_set(&opd.kate_streams);

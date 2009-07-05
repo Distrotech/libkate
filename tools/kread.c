@@ -103,7 +103,6 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   ogg_sync_state oy;
   ogg_page og;
   ogg_int64_t bytes_read;
-  int eos=0;
   static const size_t buffer_size=4096;
 
   ogg_sync_init(&oy);
@@ -127,7 +126,6 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
     }
     bytes_read=fread(ptr,1,buffer_size,f);
     if (bytes_read==0) {
-      eos=1;
       break;
     }
     ogg_sync_wrote(&oy,bytes_read);
