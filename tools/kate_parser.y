@@ -157,7 +157,7 @@ static char *catstrings(char *s1,const char *s2)
   size_t len;
   char *s;
 
-  if (!s2) yyerror("internal error: no string to append");
+  if (!s2) { yyerror("internal error: no string to append"); exit(-1); }
   len=(s1?strlen(s1):0)+strlen(s2)+1;
   s=(char*)kate_realloc(s1,len);
   if (!s) { yyerror("out of memory"); exit(-1); }
@@ -1478,7 +1478,7 @@ static int get_glyph_pointer_offset(unsigned int pointer_id)
 static kate_float get_last_glyph_x(const kate_motion *km)
 {
   const kate_curve *kc;
-  if (!km) yyerror("internal error: no motion");
+  if (!km) { yyerror("internal error: no motion"); exit(-1); }
   if (km->ncurves==0) return (kate_float)-0.5; /* by default, center of the glyph before the first one (eg, marks nothing yet) */
   kc=km->curves[km->ncurves-1];
   if (kc->npts<1) yyerror("internal error: no points in last curve");
