@@ -74,6 +74,7 @@ char *get_filename(const char *basename,const kate_stream *ks,const kate_stream_
   const char *ptr=basename;
 
   if (!basename) return NULL;
+  if (!ks) return NULL;
   while (*ptr) {
     const char *percent=strchr(ptr,'%');
     if (!percent) {
