@@ -25,3 +25,5 @@ Barry Duncan (sirlemonhead)
 Christian Morales Vega
   fixes for py-compile invokation and older oggz tools detection
 
+Gregory Maxwell
+  testing with Clang
