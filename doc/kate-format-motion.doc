@@ -37,6 +37,10 @@ Then, in all cases:
 
 Next, a \ref format_warp "warp".
 
+Kate bitstream 0.6 makes use of this warp to add:
+
+\li a \ref format_metadata "metadata" set.
+
 Next, the data ends.
 
 

@@ -110,6 +110,7 @@ extern int kate_find_font_mapping(const kate_info *ki,const kate_font_mapping *k
 
 /* utility */
 extern int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n) kate_internal __attribute__((pure));
+extern int kate_ascii_strcasecmp(const char *s0,const char *s1) kate_internal __attribute__((pure));
 
 extern int kate_is_valid_code_point(int c) kate_internal __attribute__((const));
 

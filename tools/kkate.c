@@ -103,6 +103,64 @@ static void write_color(FILE *f,const char *name,const kate_color *kc,size_t ind
   kate_free(sindent);
 }
 
+static int is_suitable_string(const char *value,size_t len)
+{
+  const char *p;
+  int ret;
+  size_t n;
+  static const char *list="\"\r\n";
+
+  ret=kate_text_validate(kate_utf8,value,len);
+  if (ret<0) return 0;
+  if (len>0) for (n=0;n<len-1;++n) if (!value[n]) return 0;
+  for (p=list;*p;++p) if (memchr(value,*p,len)) return 0;
+  return 1;
+}
+
+static void write_metadata(FILE *f,const kate_meta *km,size_t indent)
+{
+  char *sindent=(char*)kate_malloc(1+indent);
+  size_t count,n,b;
+  int ret;
+
+  for (n=0;n<indent;++n) sindent[n]=' ';
+  sindent[indent]=0;
+
+  ret=kate_meta_query_count(km);
+  if (ret<0) {
+    fprintf(stderr,"Error retrieving medata: %d\n",ret);
+  }
+  else {
+    count=ret;
+    for (n=0;n<count;++n) {
+      const char *tag,*value;
+      size_t len;
+      ret=kate_meta_query(km,n,&tag,&value,&len);
+      if (ret<0) {
+        fprintf(stderr,"Error retrieving medata: %d\n",ret);
+      }
+      else {
+        fprintf(f,"%smeta \"%s\"=",sindent,tag);
+        if (is_suitable_string(value,len)) {
+          fprintf(f,"\"%s\"",value);
+        }
+        else {
+          fprintf(f," %lu {\n",(unsigned long)len);
+          for (b=0;b<len;++b) {
+            if (b%16==0) fprintf(f,"%s  ",sindent);
+            fprintf(f," 0x%02x",value[b]);
+            if (b%16==15 || b==len-1) fprintf(f,"\n");
+          }
+          fprintf(f,"%s}",sindent);
+        }
+        fprintf(f,"\n");
+      }
+    }
+  }
+
+  kate_free(sindent);
+}
+
 static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
 {
   char *sindent=(char*)kate_malloc(1+indent);
@@ -151,6 +209,7 @@ static void write_style_defs(FILE *f,const kate_style *ks,size_t indent)
     if (ks->strike) fprintf(f,"%sstrike\n",sindent);
     if (ks->justify) fprintf(f,"%sjustify\n",sindent);
     fprintf(f,"%swrap %s\n",sindent,wrap2text(ks->wrap_mode));
+    if (ks->meta) write_metadata(f,ks->meta,indent);
   }
 
   kate_free(sindent);
@@ -166,6 +225,7 @@ static void write_region_defs(FILE *f,const kate_region *kr,size_t indent)
   fprintf(f,"%s%s position %d %d size %d %d\n",sindent,metric2text(kr->metric),kr->x,kr->y,kr->w,kr->h);
   if (kr->style>=0) fprintf(f,"%sdefault style %d\n",sindent,kr->style);
   if (kr->clip) fprintf(f,"%sclip\n",sindent);
+  if (kr->meta) write_metadata(f,kr->meta,indent);
 
   kate_free(sindent);
 }
@@ -227,6 +287,7 @@ static void write_motion_defs(FILE *f,const kate_info *ki,const kate_motion *km,
       fprintf(f,"\n");
     }
   }
+  if (km->meta) write_metadata(f,km->meta,indent);
 
   kate_free(sindent);
 }
@@ -245,6 +306,7 @@ static void write_palette_defs(FILE *f,const kate_palette *kp,size_t indent)
     fprintf(f,"%s  { %d %d %d %d },\n",sindent,kc->r,kc->g,kc->b,kc->a);
   }
   fprintf(f,"%s}\n",sindent);
+  if (kp->meta) write_metadata(f,kp->meta,indent);
 
   kate_free(sindent);
 }
@@ -303,7 +365,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
       fprintf(f,"%s%lux%lu png %lu {\n",sindent,(unsigned long)kb->width,(unsigned long)kb->height,(unsigned long)kb->size);
       for (p=0;p<kb->size;++p) {
         if (p%16==0) fprintf(f,"%s",sindent);
-        fprintf(f," %3d",kb->pixels[p]);
+        fprintf(f," 0x%02x",kb->pixels[p]);
         if (p%16==15 || p==kb->size-1) fprintf(f,"\n");
       }
       fprintf(f,"%s}\n",sindent);
@@ -328,6 +390,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
     fprintf(f,"%soffset %d %d\n",sindent,kb->x_offset,kb->y_offset);
   }
   if (kb->palette>=0) fprintf(f,"%sdefault palette %d\n",sindent,kb->palette);
+  if (kb->meta) write_metadata(f,kb->meta,indent);
 
   kate_free(sindent);
 }
@@ -662,6 +725,7 @@ void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gra
       }
     }
   }
+  if (ev->meta) write_metadata(fout,ev->meta,4);
   fprintf(fout,"  }\n");
   fprintf(fout,"\n");
 }

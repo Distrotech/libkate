@@ -25,7 +25,7 @@ lib_libkate_la_SOURCES=\
   src/kate_motion.c src/kate_text.c src/kate_tracker.c src/kate_fp.c src/kate_font.c \
   src/kate_encode_state.c src/kate_encode.c \
   src/kate_decode_state.c src/kate_decode.c \
-  src/kate_packet.c src/kate_bitwise.c src/kate_rle.c \
+  src/kate_packet.c src/kate_bitwise.c src/kate_rle.c src/kate_meta.c \
   src/kate_high.c
 
 lib_liboggkate_la_SOURCES=\
@@ -34,7 +34,7 @@ lib_liboggkate_la_SOURCES=\
 noinst_HEADERS=\
   src/kate_internal.h \
   src/kate_encode_state.h src/kate_decode_state.h \
-  src/kate_bitwise.h src/kate_fp.h src/kate_rle.h
+  src/kate_bitwise.h src/kate_fp.h src/kate_rle.h src/kate_meta.h
 
 lib_libkate_la_CFLAGS=@CWARNFLAGS_FULL@ @CFLAGS_FORTIFY_SOURCE@ @CFLAGS_DEBUG@
 lib_libkate_la_LDFLAGS=-version-info @LIBKATE_SHARED_VERSION@ -no-undefined

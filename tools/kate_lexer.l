@@ -205,6 +205,7 @@ local                        {return LOCAL;}
 offset                       {return OFFSET;}
 wrap                         {return WRAP;}
 word                         {return WORD;}
+meta                         {return META;}
 
 
 

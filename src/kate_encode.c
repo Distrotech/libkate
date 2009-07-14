@@ -20,6 +20,7 @@
 #include "kate_encode_state.h"
 #include "kate_fp.h"
 #include "kate_rle.h"
+#include "kate_meta.h"
 
 #define NUM_HEADERS 9
 
@@ -123,6 +124,27 @@ static void kate_warp(kate_pack_buffer *kpb)
   kate_pack_buffer warp;
   kate_open_warp(&warp);
   kate_close_warp(&warp,kpb);
+}
+
+static void kate_write_metadata(kate_pack_buffer *kpb,const kate_meta *km)
+{
+  size_t n;
+
+  kate_pack_write1(kpb,km?1:0);
+  if (km) {
+    kate_meta_leaf *kml=km->meta;
+    kate_write32v(kpb,km->nmeta);
+    for (n=0;n<km->nmeta;++n,++kml) {
+      size_t len=strlen(kml->tag);
+      kate_write32v(kpb,len);
+      kate_writebuf(kpb,kml->tag,len);
+      kate_write32v(kpb,kml->len);
+      kate_writebuf(kpb,kml->value,kml->len);
+      kate_warp(kpb);
+    }
+
+    kate_warp(kpb);
+  }
 }
 
 static int kate_finalize_packet_buffer(kate_pack_buffer *kpb,kate_packet *kp,kate_state *k)
@@ -298,6 +320,14 @@ static int kate_encode_region(const kate_region *kr,kate_pack_buffer *kpb)
     kate_close_warp(&warp,kpb);
   }
 
+  {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write_metadata(&warp,kr->meta);
+    kate_close_warp(&warp,kpb);
+  }
+
   kate_warp(kpb);
 
   return 0;
@@ -391,6 +421,14 @@ static int kate_encode_style(const kate_style *ks,kate_pack_buffer *kpb)
     kate_pack_buffer warp;
     kate_open_warp(&warp);
     kate_write32v(&warp,ks->wrap_mode);
+    kate_close_warp(&warp,kpb);
+  }
+
+  {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write_metadata(&warp,ks->meta);
     kate_close_warp(&warp,kpb);
   }
 
@@ -496,6 +534,16 @@ static int kate_encode_motion(const kate_info *ki,const kate_motion *km,kate_pac
   kate_pack_write(kpb,km->y_mapping,8);
   kate_pack_write(kpb,km->semantics,8);
   kate_pack_write1(kpb,km->periodic);
+
+  {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write_metadata(&warp,km->meta);
+    kate_close_warp(&warp,kpb);
+  }
+
+
   kate_warp(kpb);
 
   return 0;
@@ -543,6 +591,16 @@ static int kate_encode_palette(const kate_palette *kp,kate_pack_buffer *kpb)
     int ret=kate_encode_color(kp->colors+n,kpb);
     if (ret<0) return ret;
   }
+
+  {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write_metadata(&warp,kp->meta);
+    kate_close_warp(&warp,kpb);
+  }
+
+
   kate_warp(kpb);
 
   return 0;
@@ -657,6 +715,15 @@ static int kate_encode_bitmap(const kate_bitmap *kb,kate_pack_buffer *kpb)
     kate_open_warp(&warp);
     kate_write32v(&warp,kb->x_offset);
     kate_write32v(&warp,kb->y_offset);
+    kate_close_warp(&warp,kpb);
+  }
+
+  {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    /* for backward binary compatiblity, old code did not initialize 'meta', but had 'internal' set to 0 */
+    kate_write_metadata(&warp,kb->internal?kb->meta:NULL);
     kate_close_warp(&warp,kpb);
   }
 
@@ -853,6 +920,14 @@ static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
         if (ret<0) break;
       }
     }
+    kate_close_warp(&warp,kpb);
+  }
+
+  if (ret==0) {
+    /* bitstream 0.6: add metadata */
+    kate_pack_buffer warp;
+    kate_open_warp(&warp);
+    kate_write_metadata(&warp,kes->meta);
     kate_close_warp(&warp,kpb);
   }
 
@@ -1589,6 +1664,38 @@ int kate_encode_set_markup_type(kate_state *k,int text_markup_type)
   k->kes->overrides.text_markup_type=text_markup_type;
 
   return 0;
+}
+
+/**
+  \ingroup encoding
+  Adds a set of metadata to this event
+  \param k the kate_state to encode to
+  \param km the metadata to add (a reference is taken, km must be live until the event is encoded)
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_add_meta(kate_state *k,const kate_meta *km)
+{
+  if (!k || !km) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  return kate_encode_state_add_meta(k->kes,km);
+}
+
+/**
+  \ingroup encoding
+  Adds a set of metadata to this event
+  \param k the kate_state to encode to
+  \param km the metadata to add (will become invalid after this call returns successfully)
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_merge_meta(kate_state *k,kate_meta *km)
+{
+  if (!k || !km) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+
+  return kate_encode_state_merge_meta(k->kes,km);
 }
 
 /**

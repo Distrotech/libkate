@@ -44,6 +44,8 @@ static int kate_event_init(kate_event *ev,const kate_info *ki)
   ev->nbitmaps=0;
   ev->bitmaps=NULL;
 
+  ev->meta=NULL;
+
   /* internal */
   ev->ki=ki;
   ev->trackers=0;
@@ -112,6 +114,8 @@ int kate_event_destroy(kate_event *ev)
     kate_free(ev->bitmap->pixels);
     kate_free(ev->bitmap);
   }
+
+  if (ev->meta) kate_meta_destroy(ev->meta);
 
   kate_free(ev);
 

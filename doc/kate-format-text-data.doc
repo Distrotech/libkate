@@ -61,6 +61,10 @@ For this many bitmaps:
 \li if the bitmap is already present in the stream headers, a \ref format_32v "variable length integer" representing its index in the stream headers.
 \li if the bitmap is not already present in the stream headers, a \ref format_bitmap "bitmap" definition.
 
+Bitstream 0.6 makes further use of this warp to add:
+
+\li a \ref format_metadata "metadata" set.
+
 \note
 Since a \ref format_warp "warp" may contain any number of chained warps, it is important to note that the bistream
 will contain another warp after any non empty warps. This means that a warp is a chain of single warps, where the

@@ -46,7 +46,7 @@ int main()
   KSZ(kate_curve,32,64);
   KSZ(kate_motion,48,80);
   KSZ(kate_palette,16,32);
-  KSZ(kate_bitmap,40,56);
+  KSZ(kate_bitmap,100,176);
   KSZ(kate_font_range,32,56);
   KSZ(kate_font_mapping,32,64);
   KSZ(kate_info,216,400);

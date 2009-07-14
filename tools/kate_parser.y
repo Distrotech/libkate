@@ -92,6 +92,9 @@ static int open_ended_curve=0;
 static int n_curve_pts=-1;
 static int n_palette_colors=-1;
 static int n_bitmap_pixels=-1;
+static size_t n_bytes_in_stream=0;
+static char *byte_stream=NULL;
+static size_t byte_stream_size=0;
 
 static kate_float karaoke_base_height=(kate_float)0;
 static kate_float karaoke_top_height=(kate_float)0;
@@ -150,6 +153,27 @@ int yywarning(const char *s)
   KDTRACE("Warning line %d: %s (token %s)\n",nlines,s,katedesc_text);
   nwarnings++;
   return 1;
+}
+
+static void add_meta(kate_meta **km,const char *tag,const char *value)
+{
+  if (!*km) {
+    CHECK_KATE_API_ERROR(kate_meta_create(km));
+  }
+  CHECK_KATE_API_ERROR(kate_meta_add_string(*km,tag,value));
+}
+
+static void add_meta_byte_stream(kate_meta **km,const char *tag)
+{
+  if (!*km) {
+    CHECK_KATE_API_ERROR(kate_meta_create(km));
+  }
+  CHECK_KATE_API_ERROR(kate_meta_add(*km,tag,byte_stream,byte_stream_size));
+
+  kate_free(byte_stream);
+  byte_stream=NULL;
+  n_bytes_in_stream=0;
+  byte_stream_size=0;
 }
 
 static char *catstrings(char *s1,const char *s2)
@@ -266,7 +290,7 @@ static void init_bitmap(void)
 {
   kbitmap.bitmap=(kate_bitmap*)kate_malloc(sizeof(kate_bitmap));
   if (!kbitmap.bitmap) { yyerror("out of memory"); exit(-1); }
-  if (kate_bitmap_init(kbitmap.bitmap)<0) {
+  if (kate_bitmap_init_new(kbitmap.bitmap)<0) {
     yyerror("bitmap init failed");
     exit(-1);
   }
@@ -829,6 +853,18 @@ static void init_png_bitmap_pixels(int width,int height,int size)
   n_bitmap_pixels=0;
 }
 
+static void init_byte_stream(int nbytes)
+{
+  if (nbytes<0) { yyerror("internal error: negative number of bytes"); exit(-1); }
+  byte_stream=(char*)kate_malloc(nbytes);
+  if (!byte_stream) {
+    yyerror("Out of memory");
+    exit(-1);
+  }
+  n_bytes_in_stream=0;
+  byte_stream_size=nbytes;
+}
+
 static void set_color(kate_color *kc,uint32_t c)
 {
   int r=(c>>24)&0xff;
@@ -1380,6 +1416,53 @@ static void set_event_bitmap(kd_event *ev,kate_bitmap *kb)
   if (ret<0) yyerrorf("failed to set bitmap: %d",ret);
 }
 
+static void kd_add_event_meta(const char *tag,const char *value)
+{
+  kate_meta *meta;
+  int ret;
+
+  ret=kate_meta_create(&meta);
+  if (ret>=0) {
+    ret=kate_meta_add_string(meta,tag,value);
+    if (ret>=0) {
+      ret=kate_encode_merge_meta(&k,meta);
+      if (ret<0) {
+        kate_meta_destroy(meta);
+      }
+    }
+    else {
+      kate_meta_destroy(meta);
+    }
+  }
+  if (ret<0) yyerrorf("failed to add metadata: %d",ret);
+}
+
+static void kd_add_event_meta_byte_stream(const char *tag)
+{
+  kate_meta *meta;
+  int ret;
+
+  ret=kate_meta_create(&meta);
+  if (ret>=0) {
+    ret=kate_meta_add(meta,tag,byte_stream,byte_stream_size);
+    if (ret>=0) {
+      ret=kate_encode_merge_meta(&k,meta);
+      if (ret<0) {
+        kate_meta_destroy(meta);
+      }
+    }
+    else {
+      kate_meta_destroy(meta);
+    }
+  }
+  if (ret<0) yyerrorf("failed to add metadata: %d",ret);
+
+  kate_free(byte_stream);
+  byte_stream=NULL;
+  n_bytes_in_stream=0;
+  byte_stream_size=0;
+}
+
 static kd_event *check_event(kd_event *ev)
 {
   /* we can set:
@@ -1635,6 +1718,7 @@ static void clear_local_bitmaps(void)
     for (n=0;n<n_local_bitmaps;++n) {
       if (local_bitmap_names[n]) kate_free(local_bitmap_names[n]);
       if (local_bitmaps[n]) {
+        if(local_bitmaps[n]->meta) kate_meta_destroy(local_bitmaps[n]->meta);
         kate_free(local_bitmaps[n]->pixels);
         kate_free(local_bitmaps[n]);
       }
@@ -2149,7 +2233,7 @@ static void cleanup_memory(void)
 %token <number> BASE OFFSET GRANULE RATE SHIFT WIDTH HEIGHT CANVAS
 %token <number> LEFT TOP RIGHT BOTTOM MARGIN MARGINS
 %token <number> HORIZONTAL VERTICAL CLIP PRE MARKUP
-%token <number> LOCAL WRAP WORD
+%token <number> LOCAL WRAP WORD META
 
 %token <number> NUMBER
 %token <unumber> UNUMBER
@@ -2195,6 +2279,7 @@ static void cleanup_memory(void)
 %type <number> directionality
 %type <number> kd_opt_space_metric
 %type <number> kd_wrap_mode
+%type <number> kd_meta_byte_stream_def kd_byte_stream
 
 %%
 
@@ -2260,6 +2345,8 @@ kd_style_def: HALIGN float { kstyle.halign=$2; }
             | BOTTOM MARGIN float kd_opt_space_metric { set_margin(&kstyle,&kstyle.bottom_margin,$3,$4); }
             | MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
                   { set_margins(&kstyle,$2,$3,$4,$5,$6,$7,$8,$9); }
+            | META STRING '=' STRING { add_meta(&kstyle.meta,$2,$4); }
+            | META STRING '=' UNUMBER {init_byte_stream($4);} '{' kd_byte_stream '}' { add_meta_byte_stream(&kstyle.meta,$2); }
             ;
 
 kd_opt_space_metric: '%' { $$=kate_percentage; }
@@ -2276,6 +2363,8 @@ kd_region_def: METRIC {kregion.metric=$1; }
              | SIZE float float { kregion.w=$2;kregion.h=$3; }
              | CLIP { kregion.clip=1; }
              | DEFAULT STYLE kd_style_name_or_index { kregion.style=$3; }
+             | META STRING '=' STRING { add_meta(&kregion.meta,$2,$4); }
+             | META STRING '=' UNUMBER {init_byte_stream($4);} '{' kd_byte_stream '}' { add_meta_byte_stream(&kregion.meta,$2); }
              ;
 
 kd_curve_defs: kd_curve_defs kd_curve_def
@@ -2318,6 +2407,8 @@ kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER { init_bitmap_pixels($1,$3,$5); }
              | SOURCE STRING { load_bitmap($2,0); }
              | DEFAULT PALETTE kd_palette_name_or_index { kbitmap.bitmap->palette=$3; }
              | OFFSET bitmap_x_offset bitmap_y_offset { kbitmap.bitmap->x_offset=$2; kbitmap.bitmap->y_offset=$3; }
+             | META STRING '=' STRING { add_meta(&kbitmap.bitmap->meta,$2,$4); }
+             | META STRING '=' UNUMBER {init_byte_stream($4);} '{' kd_byte_stream '}' { add_meta_byte_stream(&kbitmap.bitmap->meta,$2); }
              ;
 
 kd_color: UNUMBER UNUMBER UNUMBER { $$=make_color($1,$2,$3,255); }
@@ -2383,6 +2474,17 @@ kd_png_bitmap_pixels: kd_png_bitmap_pixels UNUMBER kd_opt_comma {
                       }
                     | {}
                     ;
+
+kd_byte_stream: kd_byte_stream UNUMBER kd_opt_comma {
+                        if (n_bytes_in_stream>=byte_stream_size) {
+                          katedesc_error("Too many bytes in byte stream");
+                        }
+                        else {
+                          byte_stream[n_bytes_in_stream++]=$2;
+                        }
+                      }
+              | {}
+              ;
 
 kd_opt_name: STRING { $$=$1; }
            | { $$=NULL; }
@@ -2505,7 +2607,12 @@ kd_event_def: ID UNUMBER { kd_encode_set_id(&k,$2); }
             | BITMAP { init_bitmap(); } '{' kd_bitmap_defs '}' { set_event_bitmap(&kevent,kbitmap.bitmap); }
             | DEFINE LOCAL BITMAP kd_opt_name {init_bitmap();} '{' kd_bitmap_defs '}' { add_local_bitmap(&k,$4,kbitmap.bitmap); }
             | DEFINE LOCAL BITMAP kd_opt_name '=' kd_bitmap_name_or_index { add_local_bitmap_index(&k,$4,$6); }
+            | META STRING '=' STRING { kd_add_event_meta($2,$4); }
+            | META STRING '=' kd_meta_byte_stream_def { kd_add_event_meta_byte_stream($2); }
             ;
+
+kd_meta_byte_stream_def: UNUMBER {init_byte_stream($1);} '{' kd_byte_stream '}' { $$=0; }
+                       ;
 
 kd_optional_secondary: SECONDARY { $$=1; }
                      | { $$=0; }

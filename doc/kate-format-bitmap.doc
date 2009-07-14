@@ -52,6 +52,10 @@ Bitstream version 0.4 starts making use of this warp:
 \li a \ref format_32v "variable length integer" representing the horizontal offset to the logical center of the bitmap.
 \li a \ref format_32v "variable length integer" representing the vertical offset to the logical center of the bitmap.
 
+Kate bitstream 0.6 makes further use of this warp to add:
+
+\li a \ref format_metadata "metadata" set.
+
 Next, the data ends.
 
 */

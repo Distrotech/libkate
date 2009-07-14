@@ -15,6 +15,7 @@
 #endif
 #include <string.h>
 #include "kate/kate.h"
+#include "kate_meta.h"
 #include "kate_encode_state.h"
 
 static void kate_encode_state_init_helper(kate_encode_state *kes)
@@ -27,6 +28,8 @@ static void kate_encode_state_init_helper(kate_encode_state *kes)
   kes->bitmaps=NULL;
   kes->bitmap_indices=NULL;
   kes->nbitmaps=0;
+
+  kes->meta=NULL;
 
   kes->overrides.region_index=-1;
   kes->overrides.region=NULL;
@@ -83,6 +86,10 @@ int kate_encode_state_clear_overrides(kate_encode_state *kes)
   }
   if (kes->motion_indices) {
     kate_free(kes->motion_indices);
+  }
+
+  if (kes->meta) {
+    kate_meta_destroy(kes->meta);
   }
 
   if (kes->bitmaps) {
@@ -201,6 +208,35 @@ int kate_encode_state_add_bitmap_index(kate_encode_state *kes,size_t bitmap)
   return kate_encode_state_add_bitmap_or_index(kes,NULL,bitmap);
 }
 
+int kate_encode_state_merge_meta(kate_encode_state *kes,kate_meta *km)
+{
+  int ret;
+
+  if (!kes || !km) return KATE_E_INVALID_PARAMETER;
+
+  if (!kes->meta) {
+    ret=kate_meta_create(&kes->meta);
+    if (ret<0) return ret;
+  }
+  return kate_meta_merge(kes->meta,km);
+}
+
+int kate_encode_state_add_meta(kate_encode_state *kes,const kate_meta *km)
+{
+  kate_meta *tmp;
+  int ret;
+
+  if (!kes || !km) return KATE_E_INVALID_PARAMETER;
+
+  ret=kate_meta_create_copy(&tmp,km);
+  if (ret<0) return ret;
+  ret=kate_encode_state_merge_meta(kes,tmp);
+  if (ret<0) {
+    kate_meta_destroy(tmp);
+  }
+  return ret;
+}
+
 int kate_encode_state_destroy(kate_encode_state *kes)
 {
   size_t n;
@@ -220,6 +256,7 @@ int kate_encode_state_destroy(kate_encode_state *kes)
   if (kes->motion_indices) kate_free(kes->motion_indices);
   if (kes->bitmaps) kate_free(kes->bitmaps);
   if (kes->bitmap_indices) kate_free(kes->bitmap_indices);
+  if (kes->meta) kate_meta_destroy(kes->meta);
   if (kes->overrides.language) kate_free(kes->overrides.language);
   kate_free(kes);
 

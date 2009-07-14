@@ -211,7 +211,7 @@ then
   CFLAGS_FORTIFY_SOURCE="-D_FORTIFY_SOURCE=2"
 fi
 
-STREAMS="bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z"
+STREAMS="bspline kate empty demo minimal karaoke unicode path bom markup font utf8test z metadata"
 STREAMS="$STREAMS style periodic granule justify"
 if test "x$HAVE_PNG" = "xyes"
 then

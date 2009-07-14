@@ -105,6 +105,11 @@ int kate_ascii_strncasecmp(const char *s0,const char *s1,size_t n)
   return 0;
 }
 
+int kate_ascii_strcasecmp(const char *s0,const char *s1)
+{
+  return kate_ascii_strncasecmp(s0,s1,(size_t)-1);
+}
+
 /**
   \ingroup misc
   Initializes a kate region to sensible defaults
@@ -120,7 +125,8 @@ int kate_region_init(kate_region *kr)
     -1,
     0,
     0,
-    {0,0,0,0,0,0}
+    NULL,
+    {0,0,0,0,0}
   };
 
   if (!kr) return KATE_E_INVALID_PARAMETER;
@@ -154,7 +160,8 @@ int kate_style_init(kate_style *ks)
     kate_wrap_word,
     0,
     NULL,
-    {0,0,0,0,0,0,0,0,0}
+    NULL,
+    {0,0,0,0,0,0,0,0}
   };
 
   if (!ks) return KATE_E_INVALID_PARAMETER;
@@ -174,11 +181,51 @@ int kate_palette_init(kate_palette *kp)
   static const kate_palette default_palette={
     0,
     NULL,
-    {0,0}
+    NULL,
+    {0}
   };
 
   if (!kp) return KATE_E_INVALID_PARAMETER;
   memcpy(kp,&default_palette,sizeof(kate_palette));
+  return 0;
+}
+
+/**
+  \ingroup misc
+  Initializes a kate bitmap to sensible defaults. Obsolete, use kate_bitmap_init_new in new code.
+  \param kb the bitmap to initialize
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_bitmap_init(kate_bitmap *kb)
+{
+  typedef struct kate_bitmap_old_equivalent {
+    size_t width;                                  /**< width in pixels */
+    size_t height;                                 /**< height in pixels */
+    unsigned char bpp;                             /**< bits per pixel, from 1 to 8, or 0 for a raw PNG bitmap */
+    kate_bitmap_type type;                         /**< the type of this bitmap */
+    unsigned char pad0[1];
+    unsigned char internal;
+    int palette;                                   /**< index of the default palette to use */
+    unsigned char *pixels;                         /**< pixels, rows first, one byte per pixel regardless of bpp */
+    size_t size;                                   /**< for raw bitmaps, number of bytes in pixels */
+    int x_offset;                                  /**< the horizontal offset to the logical origin of the bitmap */
+    int y_offset;                                  /**< the vertical offset to the logical origin of the bitmap */
+  } kate_bitmap_old_equivalent;
+  static const kate_bitmap_old_equivalent default_bitmap={
+    0,0,
+    0,
+    kate_bitmap_type_png,
+    {0},
+    0, /* internal flag - meta and later not initialized */
+    -1,
+    NULL,
+    0,
+    0,0,
+  };
+
+  if (!kb) return KATE_E_INVALID_PARAMETER;
+  memcpy(kb,&default_bitmap,sizeof(kate_bitmap_old_equivalent));
   return 0;
 }
 
@@ -189,17 +236,20 @@ int kate_palette_init(kate_palette *kp)
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_bitmap_init(kate_bitmap *kb)
+int kate_bitmap_init_new(kate_bitmap *kb)
 {
   static const kate_bitmap default_bitmap={
     0,0,
     0,
     kate_bitmap_type_png,
-    {0,0},
+    {0},
+    1, /* internal flag - all initialized */
     -1,
     NULL,
     0,
-    0,0
+    0,0,
+    NULL,
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0}
   };
 
   if (!kb) return KATE_E_INVALID_PARAMETER;
@@ -246,7 +296,8 @@ int kate_motion_init(kate_motion *km)
     kate_motion_semantics_time,
     0,
     0,
-    {0,0,0,0,0}
+    NULL,
+    {0,0,0,0}
   };
 
   if (!km) return KATE_E_INVALID_PARAMETER;

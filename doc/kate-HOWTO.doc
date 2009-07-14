@@ -120,4 +120,56 @@ The procedure consists of:
 - If any errors are reported, continue editing until the remux step succeeds
 
 
+\section HOWTO-metadata Adding metadata
+
+Metadata can be attached to events, or to styles, bitmaps, regions, etc.
+Metadata are free form tag/value pairs, and can be used to enrich their
+attached data with extra information. However, how this information is
+interpreted is up to the application layer.
+
+It is worth noting that an event may not have attached text, so it is
+possible to create an empty timed event with attached metadata.
+
+For instance, let's say we have a documentary, with footage from various
+places, as well as short interviews, and we want two things:
+- tag footage with metadata about the location and date that footage was shot
+- subtitle the interviews and tag those subtitles with information about the speaker
+
+You can then create an empty Kate event for each footage part, synchronized
+with the footage, and attach a new metadata item called GEO_LOCATION, filled
+with latitude and longitude of the place the footage was shot at.
+Similarly, for each subtitle event, a metadata item called SPEAKER can be
+attached.
+
+An empty event to tag a long 4:20 footage shot in Tokyo on 2011/08/12, and
+inserted at 18:30 in the documentary could look like:
+
+  event {
+    00:18:30,000 --> 00:22:50,000
+    meta "GEO_LOCATION" = "35.42; 139.42"
+    meta "DATE" = "2011-08-12"
+  }
+
+
+Here's a example for a line spoken by Dr Joe Bloggs at 18:30 into the documentary:
+
+  event {
+    00:18:30,000 --> 00:18:32,000
+    "Notice how the subtitles for my words have metadata attached to them"
+    meta "SPEAKER" = "Dr Joe Bloggs"
+    meta "URL" = "http://www.example.com/biography?name=Joe+Bloggs"
+  }
+
+Notice how another metadata item, URL, is also present. The application
+will have to be aware of those metadata in order to do something with it
+though. Since those are free form, it is up to you to think of what
+metadata you want, and make use of it.
+
+Note that metadata may be attached to other objects, such as regions.
+This way, you can for example create a region tagged with a name, and
+track a person's movements with that region. Or you can tag a bitmap
+with a copyright and a URL to a larger version of the image.
+
+
+
 */

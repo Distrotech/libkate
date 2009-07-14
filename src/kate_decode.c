@@ -55,12 +55,18 @@ static void *kate_memory_guard_checked_malloc(kate_memory_guard *kmg,size_t size
   return kate_memory_guard_malloc(kmg,size);
 }
 
-static void kate_memory_guard_destroy(kate_memory_guard *kmg,int free_pointers)
+static void kate_memory_guard_flush(kate_memory_guard *kmg,int free_pointers)
 {
   size_t n;
   if (free_pointers) {
     for (n=0;n<kmg->size;++n) kate_free(kmg->pointers[n]);
   }
+  kmg->size=0;
+}
+
+static void kate_memory_guard_destroy(kate_memory_guard *kmg,int free_pointers)
+{
+  kate_memory_guard_flush(kmg,free_pointers);
   if (kmg->pointers) kate_free(kmg->pointers);
 }
 
@@ -91,6 +97,7 @@ static int kate_memory_guard_merge(kate_memory_guard *kmg,kate_memory_guard *par
 #define KMG_MERGE(parent_kmg) kate_memory_guard_merge(&kmg,parent_kmg)
 #define KMG_ERROR(ret) (kate_memory_guard_destroy(&kmg,1),ret)
 #define KMG_OK() (kate_memory_guard_destroy(&kmg,0),0)
+#define KMG_FLUSH(free_pointers) kate_memory_guard_flush(&kmg,free_pointers)
 
 
 
@@ -148,6 +155,62 @@ static int kate_warp(kate_pack_buffer *kpb)
     kate_pack_adv(kpb,bits);
   }
   return 0;
+}
+
+static int kate_read_metadata(kate_pack_buffer *kpb,kate_meta **km)
+{
+  KMG_GUARD();
+  kate_meta *tmp;
+  size_t n,nmeta;
+  char *tag,*value;
+  int len;
+  int ret;
+
+  *km=NULL;
+  if (!kate_pack_read1(kpb)) return 0;
+
+  ret=kate_meta_create(&tmp);
+  if (ret<0) return ret;
+  nmeta=kate_read32v(kpb);
+  for (n=0;n<nmeta;++n) {
+    len=kate_read32v(kpb);
+    if (len<=0) goto error_bad_packet;
+    tag=(char*)KMG_MALLOC(len+1);
+    if (!tag) goto error_out_of_memory;
+    kate_readbuf(kpb,tag,len);
+    tag[len]=0;
+
+    len=kate_read32v(kpb);
+    if (len<=0) goto error_bad_packet;
+    value=(char*)KMG_MALLOC(len+1);
+    if (!value) goto error_out_of_memory;
+    kate_readbuf(kpb,value,len);
+    value[len]=0;
+
+    kate_warp(kpb);
+
+    ret=kate_meta_add(tmp,tag,value,len);
+    if (ret<0) goto error;
+
+    KMG_FLUSH(1); /* TODO: unnecessary temporary allocations */
+  }
+
+  kate_warp(kpb);
+
+  *km=tmp;
+  return KMG_OK();
+
+error_bad_packet:
+  ret=KATE_E_BAD_PACKET;
+  goto error;
+
+error_out_of_memory:
+  ret=KATE_E_OUT_OF_MEMORY;
+  goto error;
+
+error:
+  kate_meta_destroy(tmp);
+  return KMG_ERROR(ret);
 }
 
 static int kate_decode_check_magic(kate_pack_buffer *kpb)
@@ -339,7 +402,10 @@ static int kate_decode_comment_packet(const kate_info *ki,kate_comment *kc,kate_
 
 static int kate_decode_region(const kate_info *ki,kate_region *kr,kate_pack_buffer *kpb)
 {
+  int ret;
+
   if (!kr || !kpb) return KATE_E_INVALID_PARAMETER;
+
   kr->metric=kate_pack_read(kpb,8);
   kr->x=kate_read32v(kpb);
   kr->y=kate_read32v(kpb);
@@ -354,6 +420,16 @@ static int kate_decode_region(const kate_info *ki,kate_region *kr,kate_pack_buff
   }
   else {
     kr->clip=0;
+  }
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+    ret=kate_read_metadata(kpb,&kr->meta);
+    if (ret<0) return ret;
+  }
+  else {
+    kr->meta=NULL;
   }
 
   return kate_warp(kpb);
@@ -468,6 +544,16 @@ static int kate_decode_style(const kate_info *ki,kate_style *ks,kate_pack_buffer
   }
   else {
     ks->wrap_mode=kate_wrap_word;
+  }
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+    ret=kate_read_metadata(kpb,&ks->meta);
+    if (ret<0) return KMG_ERROR(ret);
+  }
+  else {
+    ks->meta=NULL;
   }
 
   ret=kate_warp(kpb);
@@ -602,6 +688,17 @@ static int kate_decode_motion(const kate_info *ki,kate_motion *km,kate_pack_buff
   km->y_mapping=kate_pack_read(kpb,8);
   km->semantics=kate_pack_read(kpb,8);
   km->periodic=kate_pack_read1(kpb);
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+    ret=kate_read_metadata(kpb,&km->meta);
+    if (ret<0) return KMG_ERROR(ret);
+  }
+  else {
+    km->meta=NULL;
+  }
+
   ret=kate_warp(kpb);
   if (ret<0) return KMG_ERROR(ret);
 
@@ -668,6 +765,17 @@ static int kate_decode_palette(const kate_info *ki,kate_palette *kp,kate_pack_bu
       return ret;
     }
   }
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+    ret=kate_read_metadata(kpb,&kp->meta);
+    if (ret<0) return ret;
+  }
+  else {
+    kp->meta=NULL;
+  }
+
   ret=kate_warp(kpb);
   if (ret<0) return ret;
 
@@ -794,6 +902,17 @@ static int kate_decode_bitmap(const kate_info *ki,kate_bitmap *kb,kate_pack_buff
     kb->x_offset=0;
     kb->y_offset=0;
   }
+
+  if (((ki->bitstream_version_major<<8)|ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+    ret=kate_read_metadata(kpb,&kb->meta);
+    if (ret<0) return ret;
+  }
+  else {
+    kb->meta=NULL;
+  }
+  kb->internal=1;
 
   ret=kate_warp(kpb);
   if (ret<0) return ret;
@@ -1318,6 +1437,14 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
   else {
     ev->bitmaps=NULL;
     ev->nbitmaps=0;
+  }
+
+  if (((k->ki->bitstream_version_major<<8)|k->ki->bitstream_version_minor)>=0x0006) {
+    /* 0.6 adds a warp for metadata */
+    kate_read32v(kpb); /* the size of the warp */
+
+    ret=kate_read_metadata(kpb,&ev->meta);
+    if (ret<0) goto error;
   }
 
   ret=kate_warp(kpb);

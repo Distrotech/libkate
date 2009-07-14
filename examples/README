@@ -62,3 +62,6 @@ kate.kate
 z.kate
   changes the depth of two texts so they change draw priority
 
+metadata.kate
+  demonstrates attaching metadata to various objects
+

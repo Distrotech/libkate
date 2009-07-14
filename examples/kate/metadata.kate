@@ -1,0 +1,35 @@
+/* attaching metadata on various objects */
+
+kate {
+
+  defs {
+
+    /* Global to the stream */
+    comment "TITLE=Hamlet"
+    comment "AUTHOR=William Shakespeare"
+
+    /* attached to a bitmap */
+    define bitmap {
+      source "ball_blue.png"
+      meta "description" = "A blue ball"
+    }
+
+    /* attached to a style */
+    define style "hamlet" {
+      meta "speaker" = "Hamlet"
+    }
+  }
+
+  /* attached to a time event */
+  event {
+    00:01:30 --> 00:01:40
+    "To be, or not to be, that is the question"
+    style "hamlet"
+    meta "original" = "To be, or not to be, aye there's the point"
+    meta "url" = "https://secure.wikimedia.org/wikipedia/en/wiki/To_be,_or_not_to_be"
+    meta "act" = "III"
+    meta "scene" = "1"
+  }
+}
+
+

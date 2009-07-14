@@ -26,7 +26,7 @@
 /** \name Bitstream version */
 /** @{ */
 #define KATE_BITSTREAM_VERSION_MAJOR 0   /**< major version number of the highest bitstream version this version of libkate supports */
-#define KATE_BITSTREAM_VERSION_MINOR 5   /**< minor version number of the highest bitstream version this version of libkate supports */
+#define KATE_BITSTREAM_VERSION_MINOR 6   /**< minor version number of the highest bitstream version this version of libkate supports */
 /** @} */
 
 /** defines the character encoding used by text */
@@ -47,6 +47,9 @@ typedef enum {
   kate_millionths                /**< dimensions are in millionths of total size */
 } kate_space_metric;
 
+struct kate_meta;
+typedef struct kate_meta kate_meta;
+
 /** defines an area where to draw */
 typedef struct kate_region {
   kate_space_metric metric;      /**< how to interpret the xywh values */
@@ -57,7 +60,8 @@ typedef struct kate_region {
   int style;                     /**< default style to apply to text in this region */
   unsigned int clip:1;           /**< text/images will be clipped to the region */
   unsigned int pad0:31;
-  kate_uintptr_t pad1[6];
+  kate_meta *meta;
+  kate_uintptr_t pad1[5];
 } kate_region;
 
 /** defines an RGBA color */
@@ -103,7 +107,9 @@ typedef struct kate_style {
 
   kate_const char *font;             /**< name of the font to use */
 
-  kate_uintptr_t pad1[9];
+  kate_meta *meta;
+
+  kate_uintptr_t pad1[8];
 } kate_style;
 
 /** defines a type of curve */
@@ -202,7 +208,8 @@ typedef struct kate_motion {
   kate_motion_semantics semantics;               /**< what use this motion has */
   unsigned int periodic:1;                       /**< if true, repeats periodically (loops) */
   unsigned int pad0:31;
-  kate_uintptr_t pad1[5];
+  kate_meta *meta;
+  kate_uintptr_t pad1[4];
 } kate_motion;
 
 /** defines the direction in which glyphs within a text are drawn */
@@ -217,7 +224,8 @@ typedef enum kate_text_directionality {
 typedef struct kate_palette {
   size_t ncolors;                                /**< number of colors in this palette */
   kate_color *colors;                            /**< the list of colors in this palette */
-  kate_uintptr_t pad[2];
+  kate_meta *meta;
+  kate_uintptr_t pad[1];
 } kate_palette;
 
 /** defines a particular type of bitmap */
@@ -232,12 +240,15 @@ typedef struct kate_bitmap {
   size_t height;                                 /**< height in pixels */
   unsigned char bpp;                             /**< bits per pixel, from 1 to 8, or 0 for a raw PNG bitmap */
   kate_bitmap_type type;                         /**< the type of this bitmap */
-  unsigned char pad0[2];
+  unsigned char pad0[1];
+  unsigned char internal;
   int palette;                                   /**< index of the default palette to use */
   unsigned char *pixels;                         /**< pixels, rows first, one byte per pixel regardless of bpp */
   size_t size;                                   /**< for raw bitmaps, number of bytes in pixels */
   int x_offset;                                  /**< the horizontal offset to the logical origin of the bitmap */
   int y_offset;                                  /**< the vertical offset to the logical origin of the bitmap */
+  kate_meta *meta;
+  kate_uintptr_t pad1[14];
 } kate_bitmap;
 
 /** defines a set of images to map to a range of Unicode code points */
@@ -376,7 +387,9 @@ typedef struct kate_event {
   size_t nbitmaps;                              /**< number of attached bitmaps (may be zero) */
   kate_const kate_bitmap *kate_const *bitmaps;  /**< the list of attached bitmaps (may be NULL if none) */
 
-  kate_uintptr_t pad0[6];
+  kate_meta *meta;
+
+  kate_uintptr_t pad0[5];
 
   /* internal */
   const kate_info *ki;
@@ -561,6 +574,7 @@ extern int kate_region_init(kate_region *kr);
 extern int kate_style_init(kate_style *ks);
 extern int kate_palette_init(kate_palette *kp);
 extern int kate_bitmap_init(kate_bitmap *kb);
+extern int kate_bitmap_init_new(kate_bitmap *kb);
 extern int kate_curve_init(kate_curve *kc);
 extern int kate_motion_init(kate_motion *km);
 
@@ -610,6 +624,8 @@ extern int kate_encode_set_bitmap(kate_state *k,const kate_bitmap *kb);
 extern int kate_encode_add_bitmap(kate_state *k,const kate_bitmap *kb);
 extern int kate_encode_add_bitmap_index(kate_state *k,size_t bitmap);
 extern int kate_encode_set_markup_type(kate_state *k,int markup_type);
+extern int kate_encode_merge_meta(kate_state *k,kate_meta *meta);
+extern int kate_encode_add_meta(kate_state *k,const kate_meta *meta);
 extern kate_int64_t kate_encode_get_granule(const kate_state *k);
 
 /** \defgroup decoding Decoding */
@@ -642,6 +658,19 @@ extern const kate_comment *kate_high_decode_get_comments(kate_state *k);
 extern int kate_packet_wrap(kate_packet *kp,size_t nbytes,const void *data);
 extern int kate_packet_init(kate_packet *kp,size_t nbytes,const void *data);
 extern int kate_packet_clear(kate_packet *kp);
+
+/** \defgroup metadata Meta data */
+extern int kate_meta_create(kate_meta **km);
+extern int kate_meta_destroy(kate_meta *km);
+extern int kate_meta_add(kate_meta *km,const char *tag,const char *value,size_t len);
+extern int kate_meta_add_string(kate_meta *km,const char *tag,const char *value);
+extern int kate_meta_query_tag_count(const kate_meta *km,const char *tag);
+extern int kate_meta_query_tag(const kate_meta *km,const char *tag,unsigned int idx,const char **value,size_t *len);
+extern int kate_meta_remove_tag(kate_meta *km,const char *tag,unsigned int idx);
+extern int kate_meta_query_count(const kate_meta *km);
+extern int kate_meta_query(const kate_meta *km,unsigned int idx,const char **tag,const char **value,size_t *len);
+extern int kate_meta_remove(kate_meta *km,unsigned int idx);
+extern int kate_meta_merge(kate_meta *km,kate_meta *km2);
 
 #ifdef __cplusplus
 }

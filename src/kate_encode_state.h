@@ -49,6 +49,8 @@ typedef struct kate_encode_state {
   const kate_bitmap **bitmaps;
   size_t *bitmap_indices;
 
+  kate_meta *meta;
+
   int eos;
 
   size_t ntimings;
@@ -88,5 +90,7 @@ extern int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_int64_
 extern int kate_encode_state_trim_events(kate_encode_state *kes,kate_int64_t t) kate_internal;
 extern int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const void *data) kate_internal;
 extern int kate_encode_state_get_repeat(kate_encode_state *kes,kate_int64_t t,kate_int64_t threshold,kate_packet *kp) kate_internal;
+extern int kate_encode_state_add_meta(kate_encode_state *kes,const kate_meta *km);
+extern int kate_encode_state_merge_meta(kate_encode_state *kes,kate_meta *km);
 
 #endif

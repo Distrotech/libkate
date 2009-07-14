@@ -544,6 +544,9 @@ int kate_info_clear(kate_info *ki)
 
   if (ki->bitmaps) {
     for (n=0;n<ki->nbitmaps;++n) {
+      if (ki->bitmaps[n]->internal) {
+        if (ki->bitmaps[n]->meta) kate_meta_destroy(ki->bitmaps[n]->meta);
+      }
       kate_free(ki->bitmaps[n]->pixels);
       kate_free(ki->bitmaps[n]);
     }
@@ -551,6 +554,7 @@ int kate_info_clear(kate_info *ki)
   }
   if (ki->palettes) {
     for (n=0;n<ki->npalettes;++n) {
+      if (ki->palettes[n]->meta) kate_meta_destroy(ki->palettes[n]->meta);
       kate_free(ki->palettes[n]->colors);
       kate_free(ki->palettes[n]);
     }
@@ -567,12 +571,16 @@ int kate_info_clear(kate_info *ki)
     kate_free(ki->curves);
   }
   if (ki->regions) {
-    for (n=0;n<ki->nregions;++n) kate_free(ki->regions[n]);
+    for (n=0;n<ki->nregions;++n) {
+      if (ki->regions[n]->meta) kate_meta_destroy(ki->regions[n]->meta);
+      kate_free(ki->regions[n]);
+    }
     kate_free(ki->regions);
   }
   if (ki->styles) {
     for (n=0;n<ki->nstyles;++n) {
       kate_style *ks=ki->styles[n];
+      if (ks->meta) kate_meta_destroy(ks->meta);
       if (ks->font) kate_free(ks->font);
       kate_free(ks);
     }

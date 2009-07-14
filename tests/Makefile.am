@@ -6,7 +6,7 @@ LIBKATE=../lib/libkate.la
 
 TESTS_ENVIRONMENT=$(LIBTOOL) -dlopen $(LIBKATE) --mode=execute $(VALGRIND)
 
-TESTS=check_sizes language text overflow
+TESTS=check_sizes language text overflow metadata
 
 noinst_PROGRAMS=$(TESTS) gen_srt gen_lrc
 
@@ -25,6 +25,9 @@ overflow_LDADD=$(LIBKATE)
 gen_srt_SOURCES=gen_srt.c
 
 gen_lrc_SOURCES=gen_lrc.c
+
+metadata_SOURCES=metadata.c
+metadata_LDADD=$(LIBKATE)
 
 STREAMS=@STREAMS@
 

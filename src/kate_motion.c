@@ -13,6 +13,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include "kate_meta.h"
 #include "kate/kate.h"
 
 static kate_float kate_catmull_rom(kate_float t,const kate_float *pts,int k0,int k1,int k2,int k3)
@@ -252,6 +253,7 @@ int kate_motion_destroy(const kate_info *ki,kate_motion **motions,const int *des
         kate_free(km->curves);
       }
       if (km->durations) kate_free(km->durations);
+      if (km->meta) kate_meta_destroy(km->meta);
       kate_free(km);
     }
   }
