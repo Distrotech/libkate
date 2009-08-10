@@ -1,0 +1,366 @@
+=== modified file 'gst2ogg/__init__.py'
+--- gst2ogg/__init__.py	2009-05-28 07:21:13 +0000
++++ gst2ogg/__init__.py	2009-08-09 23:58:14 +0000
+@@ -13,6 +13,7 @@
+ pygst.require('0.10')
+ import gst
+ from gst.extend import discoverer
++import iso639
+ 
+ from avinfo import AVInfo
+ 
+@@ -60,12 +61,26 @@
+               parse_fraction(info['framerate']),info['framerate'])
+     if 'audio_codec' in info:
+         print "\tAudio: %s, %s channels, %s Hz" % (info['audio_codec'], info['channels'], info['samplerate'])
++    subtitles = ''
++    for sub in output['subs']:
++        language = output['subs'][sub]['source-language']
++        if language == '': language = 'unknown'
++        subtitles = "%s %s" % (subtitles, language)
++    if subtitles != '':
++        print "\tSubtitles: %s" % subtitles
+     print "Output '%s'" % outputfile
+     if 'video_codec' in output:
+         print "\tVideo: %s, %sx%s, %0.2f (%s) fps" % (output['video_codec'], output['width'], output['height'],
+               parse_fraction(output['framerate']), output['framerate'])
+     if 'audio_codec' in output:
+         print "\tAudio: %s, %s channels, %s Hz" % (output['audio_codec'], output['channels'], output['samplerate'])
++    subtitles = ''
++    for sub in output['subs']:
++        language = output['subs'][sub]['language']
++        if language == '': language = 'unknown'
++        subtitles = "%s, %s %s" % (subtitles, output['subs'][sub]['language'],output['subs'][sub]['category'])
++    if subtitles != '':
++        print "\tSubtitles: kate%s" % subtitles
+ 
+     #print inputfile, outputfile, str(options).replace(",", '\n')
+ 
+@@ -76,6 +91,10 @@
+         self.options = options
+         self.info = AVInfo(inputfile)
+         self.output = {}
++        self.output['subs'] = {}
++        self.has_kateenc = False
++        if gst.element_factory_find('kateenc') != None:
++            self.has_kateenc = True
+ 
+         gst.Pipeline.__init__(self)
+ 
+@@ -115,12 +134,24 @@
+         self.set_state(gst.STATE_PAUSED)
+         self.get_state()
+ 
++    def onSubtitlesPad(self, pad, category):
++        if self.has_kateenc:
++            self.linkSubtitles(pad, category)
++        else:
++            print 'kateenc not found, ignoring subtitles stream'
++
+     def _padAddedCb(self, unused_sbin, pad):
+         caps = pad.get_caps()
+         if caps:
+-            if caps[0].to_string().startswith('audio') and not self.options.noaudio:
++            strcaps = caps[0].to_string()
++            # subs first as video/x-dvd-subpicture would fall onto video, and likely fail
++            if strcaps == 'video/x-dvd-subpicture' and not self.options.nosubtitles:
++                self.onSubtitlesPad(pad, 'K-SPU')
++            elif strcaps.startswith('text/') and not self.options.nosubtitles:
++                self.onSubtitlesPad(pad, 'SUB')
++            elif strcaps.startswith('audio') and not self.options.noaudio:
+                 self.linkAudio(pad)
+-            elif caps[0].to_string().startswith('video') and not self.options.novideo:
++            elif strcaps.startswith('video') and not self.options.novideo:
+                 self.linkVideo(pad)
+ 
+     def linkAudio(self, pad):
+@@ -329,6 +360,45 @@
+         gamma.set_state(gst.STATE_PAUSED)
+         enc.set_state(gst.STATE_PAUSED)
+ 
++    def _onProbeCB(self, pad, event, encoder):
++        structure = event.get_structure()
++        if structure != None:
++            if structure.has_name('taglist'):
++                taglist = event.parse_tag()
++                if 'language-code' in taglist.keys():
++                    language = iso639.get_iso639_1(taglist['language-code'])
++                    encoder.set_property('language', language)
++                    encoder.set_state(gst.STATE_NULL)
++                    encoder.set_state(gst.STATE_PAUSED)
++                    self.output['subs'][pad.get_name()]['source-language'] = taglist['language-code']
++                    self.output['subs'][pad.get_name()]['language'] = language
++                if 'subtitles-codec' in taglist.keys():
++                    self.output['subs'][pad.get_name()]['subtitles-codec'] = taglist['subtitles-codec']
++        return True
++
++    def linkSubtitles(self, pad, category):
++        options = self.options
++
++        queue = gst.element_factory_make("queue")
++        queue.set_property("max-size-buffers", 100)
++        queue.set_property("max-size-time", 0)
++        queue.set_property("max-size-bytes", 0)
++        self.add(queue)
++        pad.link(queue.get_pad("sink"))
++
++        enc = gst.element_factory_make("kateenc")
++        enc.set_property('category', category)
++        pad.add_event_probe(self._onProbeCB, enc)
++
++        self.output['subs'][pad.get_name()] = { 'category': category, 'language': '' }
++
++        self.add(enc)
++        queue.link(enc)
++        enc.link(self.mux)
++
++        queue.set_state(gst.STATE_PAUSED)
++        enc.set_state(gst.STATE_PAUSED)
++
+     def onBusMessage(self, bus, message):
+         if message.src == self and message.type == gst.MESSAGE_EOS:
+             self.mainloop.quit()
+@@ -377,6 +447,7 @@
+     parser.add_option('', '--nosound', dest='noaudio', help='', action="store_true")
+     parser.add_option('', '--noaudio', dest='noaudio', help='', action="store_true")
+     parser.add_option('', '--novideo', dest='novideo', help='', action="store_true")
++    parser.add_option('', '--nosubtitles', dest='nosubtitles', help='', action="store_true")
+     #parser.add_option('', '--vhook', dest='vhook', help='') #unlikely, needs other gst replacement
+     parser.add_option('', '--aspect', dest='aspect', help='')
+ 
+
+=== added file 'gst2ogg/iso639.py'
+--- gst2ogg/iso639.py	1970-01-01 00:00:00 +0000
++++ gst2ogg/iso639.py	2009-08-09 20:47:22 +0000
+@@ -0,0 +1,230 @@
++#!/usr/bin/python
++# vi:si:et:sw=4:sts=4:ts=4
++# -*- coding: utf-8 -*-
++
++def get_iso639_1(code):
++  table = {
++    'aar': 'aa',
++    'abk': 'ab',
++    'ave': 'ae',
++    'afr': 'af',
++    'aka': 'ak',
++    'amh': 'am',
++    'arg': 'an',
++    'ara': 'ar',
++    'asm': 'as',
++    'ava': 'av',
++    'aym': 'ay',
++    'aze': 'az',
++    'bak': 'ba',
++    'bel': 'be',
++    'bul': 'bg',
++    'bih': 'bh',
++    'bis': 'bi',
++    'bam': 'bm',
++    'ben': 'bn',
++    'bod': 'bo',
++    'tib': 'bo',
++    'bre': 'br',
++    'bos': 'bs',
++    'cat': 'ca',
++    'che': 'ce',
++    'cha': 'ch',
++    'cos': 'co',
++    'cre': 'cr',
++    'ces': 'cs',
++    'cze': 'cs',
++    'chu': 'cu',
++    'chv': 'cv',
++    'cym': 'cy',
++    'we;': 'cy',
++    'dan': 'da',
++    'deu': 'de',
++    'ger': 'de',
++    'div': 'dv',
++    'dzo': 'dz',
++    'ewe': 'ee',
++    'ell': 'el',
++    'gre': 'el',
++    'eng': 'en',
++    'epo': 'eo',
++    'spa': 'es',
++    'est': 'et',
++    'eus': 'eu',
++    'baq': 'eu',
++    'fas': 'fa',
++    'per': 'fa',
++    'ful': 'ff',
++    'fin': 'fi',
++    'fij': 'fj',
++    'fao': 'fo',
++    'fra': 'fr',
++    'fre': 'fr',
++    'fry': 'fy',
++    'gle': 'ga',
++    'gla': 'gd',
++    'glg': 'gl',
++    'grn': 'gn',
++    'guj': 'gu',
++    'glv': 'gv',
++    'hau': 'ha',
++    'heb': 'he',
++    'hin': 'hi',
++    'hmo': 'ho',
++    'hrv': 'hr',
++    'scr': 'hr',
++    'hat': 'ht',
++    'hun': 'hu',
++    'hye': 'my',
++    'arm': 'my',
++    'her': 'hz',
++    'ina': 'ia',
++    'ind': 'id',
++    'ile': 'ie',
++    'ibo': 'ig',
++    'iii': 'ii',
++    'ipk': 'ik',
++    'ido': 'io',
++    'isl': 'is',
++    'ice': 'is',
++    'ita': 'it',
++    'iku': 'iu',
++    'jpn': 'ja',
++    'jav': 'jv',
++    'kat': 'ka',
++    'geo': 'ka',
++    'kon': 'kg',
++    'kik': 'ki',
++    'kua': 'kj',
++    'kaz': 'kk',
++    'kal': 'kl',
++    'khm': 'km',
++    'kan': 'kn',
++    'kor': 'ko',
++    'kau': 'kr',
++    'kas': 'ks',
++    'kur': 'ku',
++    'kom': 'kv',
++    'cor': 'kw',
++    'kir': 'ky',
++    'lat': 'la',
++    'ltz': 'lb',
++    'lug': 'lg',
++    'lim': 'li',
++    'lin': 'ln',
++    'lao': 'lo',
++    'lit': 'lt',
++    'lub': 'lu',
++    'lav': 'lv',
++    'mlg': 'mg',
++    'mah': 'mh',
++    'mri': 'mi',
++    'mao': 'mi',
++    'mkd': 'mk',
++    'mac': 'mk',
++    'mal': 'ml',
++    'mon': 'mn',
++    'mar': 'mr',
++    'msa': 'ms',
++    'may': 'ms',
++    'mlt': 'mt',
++    'mya': 'my',
++    'bur': 'my',
++    'nau': 'na',
++    'nob': 'nb',
++    'nde': 'nd',
++    'nep': 'ne',
++    'ndo': 'ng',
++    'nld': 'nl',
++    'dut': 'nl',
++    'nno': 'nn',
++    'nor': 'no',
++    'nbl': 'nr',
++    'nav': 'nv',
++    'nya': 'ny',
++    'oci': 'oc',
++    'oji': 'oj',
++    'orm': 'om',
++    'ori': 'or',
++    'oss': 'os',
++    'pan': 'pa',
++    'pli': 'pi',
++    'pol': 'pl',
++    'pus': 'ps',
++    'por': 'pt',
++    'que': 'qu',
++    'roh': 'rm',
++    'run': 'rn',
++    'ron': 'ro',
++    'rum': 'ro',
++    'rus': 'ru',
++    'kin': 'rw',
++    'san': 'sa',
++    'srd': 'sc',
++    'snd': 'sd',
++    'sme': 'se',
++    'sag': 'sg',
++    'sin': 'si',
++    'slk': 'sk',
++    'slo': 'sk',
++    'slv': 'sl',
++    'smo': 'sm',
++    'sna': 'sn',
++    'som': 'so',
++    'sqi': 'sq',
++    'alb': 'sq',
++    'srp': 'sr',
++    'scc': 'sr',
++    'ssw': 'ss',
++    'sot': 'st',
++    'sun': 'su',
++    'swe': 'sv',
++    'swa': 'sw',
++    'tam': 'ta',
++    'tel': 'te',
++    'tgk': 'tg',
++    'tha': 'th',
++    'tir': 'ti',
++    'tuk': 'tk',
++    'tgl': 'tl',
++    'tsn': 'tn',
++    'ton': 'to',
++    'tur': 'tr',
++    'tso': 'ts',
++    'tat': 'tt',
++    'twi': 'tw',
++    'tah': 'ty',
++    'uig': 'ug',
++    'ukr': 'uk',
++    'urd': 'ur',
++    'uzb': 'uz',
++    'ven': 've',
++    'vie': 'vi',
++    'vol': 'vo',
++    'wln': 'wa',
++    'wol': 'wo',
++    'xho': 'xh',
++    'yid': 'yi',
++    'yor': 'yo',
++    'zha': 'za',
++    'zho': 'zh',
++    'chi': 'zh',
++    'zul': 'zu',
++  }
++
++  # first off, canonicalize
++  code = code.lower()
++  if len(code) > 2:
++    if code[2] == '_' or code[2] == '-':
++      code = code[0:2]
++
++  # already 639-1 ?
++  if len(code) == 2:
++    return code
++
++  if code in table:
++    return table[code]
++
++  print 'Warning: unknown language: %s.' % code
++  return ''
++
+

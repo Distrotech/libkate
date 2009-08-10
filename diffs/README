@@ -39,17 +39,6 @@ This adds support for Kate bitstreams.
 
 
 
- * GStreamer (gst-plugins-bad-with-kate.diff, gst-plugins-good-with-kate.diff,
-              gst-plugins-good-with-kate.diff)
-
-This adds Kate decoding support (kateenc is a text only (eg, no styles, regions,
-or motions support) decoder, and tiger is a full featured decoder and renderer
-based on libtiger). Encoding supports both text and DVD SPU subtitles (needed
-for encoding DVD subtitles using Thoggen).
-There is also support for Kate in Matroska.
-
-
-
  * Annodex Mozilla browser plugin (browser_plugin-with-kate.diff)
 
 This adds support for text Kate streams as subtitles, and a simple Javascript
@@ -68,14 +57,6 @@ This patch needs the GStreamer patch above to be applied.
 
 Adds support for text only Kate streams embedded in Ogg.
 This patch needs the GStreamer patch above to be applied.
-
-
-
- * oggenc (oggenc-with-kate-lyrics.diff)
-
-Adds support for encoding lyrics as text Kate streams from .srt and .lrc files.
-These can be read back bu XMMS, Audacious, and XMMS2, by applying the patches
-included.
 
 
 
@@ -134,13 +115,6 @@ Displays lyrics sent by XMMS2 in sync.
 
 
 
- * liboggplay (liboggplay-with-tiger.diff)
-
-Adds support for rendering Kate streams using libtiger, so non text streams can
-be rendered as well. Kate streams can be either overlaid on top of a video, or
-rendered to a separate buffer.
-
-
  * gxine (gxine-with-lyrics.diff)
 
 This allows displaying Kate lyrics on the player window in sync with
@@ -152,5 +126,16 @@ an acompanying stream.
 
 This allows ffmpeg to decode raw UTF-8 text from a Kate stream.
 
+
+
+ * OggConvert (oggconvert-subtitles.diff)
+
+Adds support for transcoding internal subtitles from a source video.
+
+
+
+ * gst2ogg (gst2ogg-subtitles.diff)
+
+Adds support for transcoding internal subtitles from a source video.
 
 

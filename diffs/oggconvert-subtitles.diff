@@ -1,0 +1,525 @@
+=== modified file 'OggConvert/ocv_constants.py'
+--- OggConvert/ocv_constants.py	2008-09-12 20:51:44 +0000
++++ OggConvert/ocv_constants.py	2009-08-05 19:18:21 +0000
+@@ -38,6 +38,12 @@
+ # to disable choosing an alternative container format
+ HAVE_MATROSKA = None
+ 
++# Leave this set to None to have OggConvert detect whether kateenc is installed
++# on this computer. This is recommended. If you really want to though, you can
++# set this to True or False as you like. Be aware that setting it to True when
++# kateenc doesn't exist will cause problems if you try to encode subtitles
++HAVE_KATE = None
++
+ FORMATS = ["THEORA", "SCHRO"]
+ 
+ 
+@@ -88,3 +94,6 @@
+ OGGMUX_OPTS = {}
+ 
+ MATROSKAMUX_OPTS = { "writing-app" : "OggConvert " + version}
++
++KATE_OPTS = {}
++ 
+
+=== modified file 'OggConvert/ocv_in_progress.py'
+--- OggConvert/ocv_in_progress.py	2008-09-12 22:41:32 +0000
++++ OggConvert/ocv_in_progress.py	2009-08-09 12:01:16 +0000
+@@ -25,7 +25,7 @@
+ from gettext import gettext as _
+ 
+ from ocv_util import timeremaining, hourminsec, confirm_overwrite, \
+-                        cancel_check
++                        cancel_check, no_subtitles_warning
+ 
+ 
+ class ProgressWindow:
+@@ -70,6 +70,8 @@
+         self._window.show_all()
+         self._transcoder.play()
+         self._timer = Timer()
++        if self._transcoder.has_unhandled_subtitles():
++            no_subtitles_warning(self._window)
+         gtk.main()
+         
+     def _on_paused(self, unused):
+
+=== modified file 'OggConvert/ocv_info.py'
+--- OggConvert/ocv_info.py	2008-09-14 17:05:40 +0000
++++ OggConvert/ocv_info.py	2009-08-06 13:51:41 +0000
+@@ -32,7 +32,8 @@
+           ,"with generous contributions from:"
+           ,"Alex Kabakov <ak.anapa@gmail.com>"
+           ,"Carlos Perelló Marín <carlos.perello@canonical.com>"
+-          ,"David Scheef <ds@schleef.org>"]
++          ,"David Scheef <ds@schleef.org>"
++          ,"<ogg.k.ogg.k@googlemail.com>"]
+ 
+ artists = ["A. Bram Neijt <bneijt@gmail.com>"]
+ 
+
+=== modified file 'OggConvert/ocv_init.py'
+--- OggConvert/ocv_init.py	2008-09-12 20:51:44 +0000
++++ OggConvert/ocv_init.py	2009-08-05 19:13:21 +0000
+@@ -48,3 +48,11 @@
+         ocv_constants.HAVE_MATROSKA = False
+     else:
+         ocv_constants.HAVE_MATROSKA = True
++
++if ocv_constants.HAVE_KATE is None:
++    ocv_constants.HAVE_KATE = False
++    katefac = gst.element_factory_find("kateenc")
++    if katefac is not None:
++        print "Kate encoder found, using"
++        ocv_constants.HAVE_KATE = True
++            
+
+=== added file 'OggConvert/ocv_iso639.py'
+--- OggConvert/ocv_iso639.py	1970-01-01 00:00:00 +0000
++++ OggConvert/ocv_iso639.py	2009-08-09 20:42:08 +0000
+@@ -0,0 +1,246 @@
++#
++# OggConvert -- Converts media files to Free formats
++# (c) 2009 Tristan Brindle <tcbrindle at gmail dot com>
++#
++# This program is free software; you can redistribute it and/or
++# modify it under the terms of the GNU Lesser General Public
++# License as published by the Free Software Foundation; either
++# version 2.1 of the License, or (at your option) any later version.
++# 
++# This program is distributed in the hope that it will be useful,
++# but WITHOUT ANY WARRANTY; without even the implied warranty of
++# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++# Lesser General Public License for more details.
++# 
++# You should have received a copy of the GNU Lesser General Public
++# License along with this program; if not, write to the Free Software
++# Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
++#
++
++
++def get_iso639_1(code):
++  table = {
++    'aar': 'aa',
++    'abk': 'ab',
++    'ave': 'ae',
++    'afr': 'af',
++    'aka': 'ak',
++    'amh': 'am',
++    'arg': 'an',
++    'ara': 'ar',
++    'asm': 'as',
++    'ava': 'av',
++    'aym': 'ay',
++    'aze': 'az',
++    'bak': 'ba',
++    'bel': 'be',
++    'bul': 'bg',
++    'bih': 'bh',
++    'bis': 'bi',
++    'bam': 'bm',
++    'ben': 'bn',
++    'bod': 'bo',
++    'tib': 'bo',
++    'bre': 'br',
++    'bos': 'bs',
++    'cat': 'ca',
++    'che': 'ce',
++    'cha': 'ch',
++    'cos': 'co',
++    'cre': 'cr',
++    'ces': 'cs',
++    'cze': 'cs',
++    'chu': 'cu',
++    'chv': 'cv',
++    'cym': 'cy',
++    'we;': 'cy',
++    'dan': 'da',
++    'deu': 'de',
++    'ger': 'de',
++    'div': 'dv',
++    'dzo': 'dz',
++    'ewe': 'ee',
++    'ell': 'el',
++    'gre': 'el',
++    'eng': 'en',
++    'epo': 'eo',
++    'spa': 'es',
++    'est': 'et',
++    'eus': 'eu',
++    'baq': 'eu',
++    'fas': 'fa',
++    'per': 'fa',
++    'ful': 'ff',
++    'fin': 'fi',
++    'fij': 'fj',
++    'fao': 'fo',
++    'fra': 'fr',
++    'fre': 'fr',
++    'fry': 'fy',
++    'gle': 'ga',
++    'gla': 'gd',
++    'glg': 'gl',
++    'grn': 'gn',
++    'guj': 'gu',
++    'glv': 'gv',
++    'hau': 'ha',
++    'heb': 'he',
++    'hin': 'hi',
++    'hmo': 'ho',
++    'hrv': 'hr',
++    'scr': 'hr',
++    'hat': 'ht',
++    'hun': 'hu',
++    'hye': 'my',
++    'arm': 'my',
++    'her': 'hz',
++    'ina': 'ia',
++    'ind': 'id',
++    'ile': 'ie',
++    'ibo': 'ig',
++    'iii': 'ii',
++    'ipk': 'ik',
++    'ido': 'io',
++    'isl': 'is',
++    'ice': 'is',
++    'ita': 'it',
++    'iku': 'iu',
++    'jpn': 'ja',
++    'jav': 'jv',
++    'kat': 'ka',
++    'geo': 'ka',
++    'kon': 'kg',
++    'kik': 'ki',
++    'kua': 'kj',
++    'kaz': 'kk',
++    'kal': 'kl',
++    'khm': 'km',
++    'kan': 'kn',
++    'kor': 'ko',
++    'kau': 'kr',
++    'kas': 'ks',
++    'kur': 'ku',
++    'kom': 'kv',
++    'cor': 'kw',
++    'kir': 'ky',
++    'lat': 'la',
++    'ltz': 'lb',
++    'lug': 'lg',
++    'lim': 'li',
++    'lin': 'ln',
++    'lao': 'lo',
++    'lit': 'lt',
++    'lub': 'lu',
++    'lav': 'lv',
++    'mlg': 'mg',
++    'mah': 'mh',
++    'mri': 'mi',
++    'mao': 'mi',
++    'mkd': 'mk',
++    'mac': 'mk',
++    'mal': 'ml',
++    'mon': 'mn',
++    'mar': 'mr',
++    'msa': 'ms',
++    'may': 'ms',
++    'mlt': 'mt',
++    'mya': 'my',
++    'bur': 'my',
++    'nau': 'na',
++    'nob': 'nb',
++    'nde': 'nd',
++    'nep': 'ne',
++    'ndo': 'ng',
++    'nld': 'nl',
++    'dut': 'nl',
++    'nno': 'nn',
++    'nor': 'no',
++    'nbl': 'nr',
++    'nav': 'nv',
++    'nya': 'ny',
++    'oci': 'oc',
++    'oji': 'oj',
++    'orm': 'om',
++    'ori': 'or',
++    'oss': 'os',
++    'pan': 'pa',
++    'pli': 'pi',
++    'pol': 'pl',
++    'pus': 'ps',
++    'por': 'pt',
++    'que': 'qu',
++    'roh': 'rm',
++    'run': 'rn',
++    'ron': 'ro',
++    'rum': 'ro',
++    'rus': 'ru',
++    'kin': 'rw',
++    'san': 'sa',
++    'srd': 'sc',
++    'snd': 'sd',
++    'sme': 'se',
++    'sag': 'sg',
++    'sin': 'si',
++    'slk': 'sk',
++    'slo': 'sk',
++    'slv': 'sl',
++    'smo': 'sm',
++    'sna': 'sn',
++    'som': 'so',
++    'sqi': 'sq',
++    'alb': 'sq',
++    'srp': 'sr',
++    'scc': 'sr',
++    'ssw': 'ss',
++    'sot': 'st',
++    'sun': 'su',
++    'swe': 'sv',
++    'swa': 'sw',
++    'tam': 'ta',
++    'tel': 'te',
++    'tgk': 'tg',
++    'tha': 'th',
++    'tir': 'ti',
++    'tuk': 'tk',
++    'tgl': 'tl',
++    'tsn': 'tn',
++    'ton': 'to',
++    'tur': 'tr',
++    'tso': 'ts',
++    'tat': 'tt',
++    'twi': 'tw',
++    'tah': 'ty',
++    'uig': 'ug',
++    'ukr': 'uk',
++    'urd': 'ur',
++    'uzb': 'uz',
++    'ven': 've',
++    'vie': 'vi',
++    'vol': 'vo',
++    'wln': 'wa',
++    'wol': 'wo',
++    'xho': 'xh',
++    'yid': 'yi',
++    'yor': 'yo',
++    'zha': 'za',
++    'zho': 'zh',
++    'chi': 'zh',
++    'zul': 'zu',
++  }
++
++  # first off, canonicalize
++  code = code.lower()
++  if len(code) > 2:
++    if code[2] == '_' or code[2] == '-':
++      code = code[0:2]
++
++  # already 639-1 ?
++  if len(code) == 2:
++    return code
++
++  if code in table:
++    return table[code]
++
++  print 'Warning: unknown language: %s.' % code
++  return ''
++
+
+=== modified file 'OggConvert/ocv_media_checker.py'
+--- OggConvert/ocv_media_checker.py	2008-01-14 18:45:57 +0000
++++ OggConvert/ocv_media_checker.py	2009-08-09 12:00:31 +0000
+@@ -72,16 +72,18 @@
+     def _on_new_decoded_pad(self, dbin, pad, notused):
+         
+         caps = pad.get_caps()
+-        pad_type = caps.to_string()[0:5]
++        pad_type = caps.to_string()
+         
+-        if pad_type == "video":
++        if pad_type[0:5] == "text/" or pad_type == "video/x-dvd-subpicture":
++            self.has_subtitles = True
++        elif pad_type[0:6] == "video/":
+             self.is_media = True
+             self.has_video = True
+-        elif pad_type == "audio":
++        elif pad_type[0:6] == "audio/":
+             self.is_media = True
+             self.has_audio = True
+         else:
+-            print "Unknown pad type detected"
++            print "Unknown pad type detected: %s" % pad_type
+         
+         # Connect the pad to a fakesink because we get errors otherwise...
+         fsink = gst.element_factory_make("fakesink")
+
+=== modified file 'OggConvert/ocv_transcoder.py'
+--- OggConvert/ocv_transcoder.py	2008-09-12 22:41:32 +0000
++++ OggConvert/ocv_transcoder.py	2009-08-09 20:35:35 +0000
+@@ -22,6 +22,7 @@
+ pygst.require("0.10")
+ import gst
+ import ocv_constants
++import ocv_iso639
+ 
+ class Transcoder(gobject.GObject):
+ 
+@@ -48,6 +49,7 @@
+             self._vquality = 0
+         self._aquality = ocv_constants.VORBIS_QUALITY_MAPPING[aquality]
+         self._fformat = fformat
++        self._has_unhandled_subtitles = False
+ 
+         self._pipeline = gst.Pipeline()
+         
+@@ -127,17 +129,30 @@
+             return self._pipeline.query_duration(gst.FORMAT_TIME)[0]
+         except gst.QueryError:
+             return None
++
++    def has_unhandled_subtitles(self):
++        return self._has_unhandled_subtitles
+         
+     def _on_new_pad(self, element, pad, args):
+         caps = pad.get_caps()
+-        pad_type = caps.to_string()[0:5]
+-        if pad_type == "video":
++        pad_type = caps.to_string()
++        if pad_type[0:5] == "text/" or pad_type == "video/x-dvd-subpicture":
++            if ocv_constants.HAVE_KATE:
++                pad.add_event_probe(self._on_probe)
++                encoder = SubtitlesEncoder(pad_type)
++                self._pipeline.add(encoder)
++                encoder.set_state(gst.STATE_PAUSED)
++                pad.link(encoder.get_pad("sink"))
++                encoder.link(self._mux)
++            else:
++                self._has_unhandled_subtitles = True
++        elif pad_type[0:6] == "video/":
+             encoder = VideoEncoder(self._vformat, self._vquality)
+             self._pipeline.add(encoder)
+             encoder.set_state(gst.STATE_PAUSED)
+             pad.link(encoder.get_pad("sink"))
+             encoder.link(self._mux)
+-        elif pad_type == "audio":
++        elif pad_type[0:6] == "audio/":
+             encoder = AudioEncoder(self._aquality)
+             self._pipeline.add(encoder)
+             encoder.set_state(gst.STATE_PAUSED)
+@@ -149,6 +164,17 @@
+     def _on_end_of_stream(self, bus, message):
+         self.emit('eos')
+         
++    def _on_probe(self, pad, event):
++        structure = event.get_structure()
++        if structure != None:
++            if structure.has_name('taglist'):
++                taglist = event.parse_tag()
++                if 'language-code' in taglist.keys():
++                    language = ocv_iso639.get_iso639_1(taglist['language-code'])
++                    encoder = pad.get_peer().get_parent_element()
++                    encoder.set_language(language)
++        return True
++
+     def _on_state_changed(self, bus, message):
+         
+         if  (message.src == self._pipeline):
+@@ -256,3 +282,41 @@
+ 
+ 
+         
++class SubtitlesEncoder(gst.Bin):
++    def __init__(self, pad_type):
++        gst.Bin.__init__(self)
++        self._queue1 = gst.element_factory_make("queue")
++        self._queue1.set_property("max-size-buffers",500)
++        self._queue2 = gst.element_factory_make("queue")
++        self._queue1.set_property("max-size-buffers",500)
++        
++        self.encoder = gst.element_factory_make("kateenc")
++        for prop in ocv_constants.KATE_OPTS:
++            self.encoder.set_property(prop, ocv_constants.KATE_OPTS[prop])            
++        # language will be set later, from tags (if present)
++
++        category = 'SUB'
++        if pad_type == "video/x-dvd-subpicture":
++            category = 'K-SPU'
++        self.encoder.set_property("category", category)
++
++        self.add(self._queue1, 
++                     self.encoder,
++                     self._queue2)
++        
++        gst.element_link_many(self._queue1,
++                              self.encoder,
++                              self._queue2)
++        
++        # Create GhostPads
++        self.add_pad(gst.GhostPad('sink', self._queue1.get_pad('sink')))
++        self.add_pad(gst.GhostPad('src', self._queue2.get_pad('src')))
++
++    def set_language(self, language):
++        self.encoder.set_property('language', language)
++        self.encoder.set_state(gst.STATE_NULL)
++        self.encoder.set_state(gst.STATE_PAUSED)
++        
++        
++        
++        
+
+=== modified file 'OggConvert/ocv_util.py'
+--- OggConvert/ocv_util.py	2008-09-12 22:41:32 +0000
++++ OggConvert/ocv_util.py	2009-08-09 11:46:16 +0000
+@@ -140,6 +140,18 @@
+ def show_url(dialog, link, userdata):
+     webbrowser.open(link)
+ 
++def no_subtitles_warning(window=None):
++    """
++    Pops up a warning message about subtitles being left out due to kateenc not being available.
++    """
++    dialogue = gtk.MessageDialog(window, gtk.DIALOG_MODAL, gtk.MESSAGE_WARNING,
++        gtk.BUTTONS_NONE, _("Kate encoder not found"))
++    dialogue.format_secondary_text(_("There are subtitles in the file, but the required kateenc GStreamer element was not found.\n"
++        "Subtitles will not be included."))
++    dialogue.add_buttons(gtk.STOCK_CLOSE, gtk.RESPONSE_CLOSE)
++    dialogue.run()
++    dialogue.destroy()
++
+ # I know this is a bit of strange place to do this, but...
+ gtk.about_dialog_set_url_hook(show_url, None)
+    
+
+=== modified file 'README'
+--- README	2008-09-14 17:05:40 +0000
++++ README	2009-08-06 13:49:37 +0000
+@@ -3,7 +3,7 @@
+ ----------------
+ 
+ This is the latest release of OggConvert, a simple Gnome utility to convert
+-media files into the patent-free Theora, Dirac and Vorbis formats.
++media files into the patent-free Theora, Dirac, Vorbis and Kate formats.
+ 
+ Dirac encoding requires version 1.0.0 or newer of the Schroedinger encoder for
+ GStreamer.
+
+=== modified file 'data/oggconvert.1'
+--- data/oggconvert.1	2007-11-21 13:30:47 +0000
++++ data/oggconvert.1	2009-08-06 13:48:38 +0000
+@@ -1,4 +1,4 @@
+-.TH oggconvert 1 2007\-07\-03
++.TH oggconvert 1 2009\-08\-06
+ .SH NAME
+ OggConvert \- Converts media files to free formats
+ .SH SYNOPSIS
+@@ -6,8 +6,8 @@
+ .SH DESCRIPTION
+ .B OggConvert
+ is a small Gnome utility which uses GStreamer to convert 
+-(almost) any media file to the patent\-free Ogg Vorbis, Theora and 
+-Dirac formats.
++(almost) any media file to the patent\-free Ogg Vorbis, Theora,
++Dirac and Kate formats.
+ .PP
+ This version of OggConvert is GUI-only and does not have a command-line 
+ interface.
+
