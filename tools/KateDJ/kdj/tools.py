@@ -19,20 +19,23 @@ class Tools:
 
   def probe_command(self,command,options,magic):
     cmdline=command+' '+options
-    fin,f,ferr=os.popen3(cmdline)
-    if not f:
+    try:
+      popen=subprocess.Popen(cmdline,stdin=None,stderr=subprocess.PIPE,stdout=subprocess.PIPE,universal_newlines=True,shell=True)
+    except OSError,e:
       return None
-    if fin:
-      fin.close()
-    if ferr:
-      ferr.close()
-    line=f.readline()
+    if not popen.stdout:
+      return None
+    if popen.stdin:
+      popen.stdin.close()
+    if popen.stderr:
+      popen.stderr.close()
+    line=popen.stdout.readline()
     while line:
       if magic in line:
-        f.close()
+        popen.stdout.close()
         return command
-      line=f.readline()
-    f.close()
+      line=popen.stdout.readline()
+    popen.stdout.close()
     return None
 
   def probe_command_in(self,commands,options,magic,paths):

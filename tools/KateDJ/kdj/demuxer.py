@@ -25,17 +25,20 @@ class Demuxer:
   def GetCodecs(self,tools):
     cmdline=tools.codecs_command
     if cmdline!=None:
-      f=os.popen(cmdline)
-      if f:
-        list=[]
-        line=f.readline()
-        while line:
-          line=line.split('\n')[0]
-          if line and 'Kate' not in line:
-            list.append(line)
-          line=f.readline()
-        f.close()
-        return list
+      try:
+        popen=subprocess.Popen(cmdline,stdin=None,stderr=subprocess.PIPE,stdout=subprocess.PIPE,universal_newlines=True,shell=True)
+        if popen.stdout:
+          list=[]
+          line=popen.stdout.readline()
+          while line:
+            line=line.split('\n')[0]
+            if line and 'Kate' not in line:
+              list.append(line)
+            line=popen.stdout.readline()
+          popen.stdout.close()
+          return list
+      except:
+        pass
     return ['theora','vorbis','dirac','speex','flac','cmml']
     
   def DemuxMisc(self,tools,filename):
