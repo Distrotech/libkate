@@ -12,17 +12,18 @@ from finder import FindKateStreams
 from options import Options
 
 base_width=480
+base_height=240
 serial_width=(base_width/4)
 language_width=(base_width/4)
 category_width=(base_width/2)
+padding=8
+button_width=(base_width-padding*2)/3
 button_height=32
 list_height=96
-hpadding=16
-vpadding=16
 
 class UIMain(wx.Frame):
   def __init__(self):
-    wx.Frame.__init__(self,None,wx.ID_ANY,kdj_name_version,size=(1,1))
+    wx.Frame.__init__(self,None,wx.ID_ANY,kdj_name_version)
 
     self.options=Options(wx.StandardPaths.Get().GetUserConfigDir())
 
@@ -34,20 +35,29 @@ class UIMain(wx.Frame):
 
     self.filename=None
     self.demuxer=None
-    self.y=vpadding
+
+    vbox=wx.BoxSizer(wx.VERTICAL)
+    self.SetSizer(vbox)
 
     self.action_button=self.AddActionButton()
-    self.y+=vpadding
-    self.AddList()
-    self.y+=vpadding
+    vbox.Add(self.action_button,0,wx.EXPAND|wx.ALL,border=padding)
 
+    self.list=self.AddList()
+    vbox.Add(self.list,1,wx.EXPAND|wx.ALL,border=padding)
+
+    bbox=wx.BoxSizer(wx.HORIZONTAL)
+    vbox.Add(bbox,0,wx.EXPAND|wx.ALL,border=padding)
     self.options_button=self.AddOptionsButton()
+    bbox.Add(self.options_button,1,wx.EXPAND)
+    bbox.Add((16,0),0,wx.EXPAND)
     self.help_button=self.AddHelpButton()
+    bbox.Add(self.help_button,1,wx.EXPAND)
     self.quit_button=self.AddQuitButton()
-    self.y+=button_height
+    bbox.Add((16,0),0,wx.EXPAND)
+    bbox.Add(self.quit_button,1,wx.EXPAND)
 
-    self.y+=vpadding
-    self.SetSize((base_width+hpadding*2,self.y))
+    self.SetMinSize((button_width+padding+button_width+padding+button_width,base_height))
+    self.Fit()
     self.Show(True)
 
   def SetupActionButton(self,button):
@@ -62,8 +72,7 @@ class UIMain(wx.Frame):
       button.Bind(wx.EVT_BUTTON,self.OnDemuxButton,button)
 
   def AddButton(self,text):
-    button=wx.Button(self,wx.ID_ANY,text,(hpadding,self.y),(base_width,button_height))
-    self.y+=button_height
+    button=wx.Button(self,wx.ID_ANY,text)
     return button
 
   def AddLoadButton(self):
@@ -77,24 +86,26 @@ class UIMain(wx.Frame):
     return button
 
   def AddOptionsButton(self):
-    button=wx.Button(self,wx.ID_ANY,'Options',(hpadding,self.y),((base_width-hpadding*2)/3,button_height))
+    button=wx.Button(self,wx.ID_ANY,'Options',size=(button_width,button_height))
     button.Bind(wx.EVT_BUTTON,self.OnOptionsButton,button)
     return button
 
   def AddHelpButton(self):
-    button=wx.Button(self,wx.ID_ANY,'Help',(hpadding*2+(base_width-hpadding*2)/3,self.y),((base_width-hpadding*2)/3,button_height))
+    button=wx.Button(self,wx.ID_ANY,'Help',size=(button_width,button_height))
     button.Bind(wx.EVT_BUTTON,self.OnHelpButton,button)
     return button
 
   def AddQuitButton(self):
-    button=wx.Button(self,wx.ID_ANY,'Quit',(hpadding*3+(base_width-hpadding*2)*2/3,self.y),((base_width-hpadding*2)/3,button_height))
+    button=wx.Button(self,wx.ID_ANY,'Quit',size=(button_width,button_height))
     button.Bind(wx.EVT_BUTTON,self.OnQuitButton,button)
     return button
 
+  def OnListSizeChanged(self,event):
+    self.Refresh()
+    event.Skip()
+
   def AddList(self):
     list=wx.ListCtrl(self,style=wx.LC_REPORT)
-    list.SetPosition((hpadding,self.y))
-    list.SetSize((base_width,list_height))
     list.ClearAll()
     list.InsertColumn(0,'Serial')
     list.InsertColumn(1,'Language')
@@ -102,8 +113,8 @@ class UIMain(wx.Frame):
     list.SetColumnWidth(0,serial_width)
     list.SetColumnWidth(1,language_width)
     list.SetColumnWidth(2,category_width)
-    self.list=list
-    self.y+=list_height
+    list.Bind(wx.EVT_SIZE,self.OnListSizeChanged)
+    return list
 
   def CheckAndContinue(self):
     if self.filename!=None and self.demuxer!=None:
