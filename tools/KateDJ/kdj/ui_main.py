@@ -104,6 +104,29 @@ class UIMain(wx.Frame):
     self.Refresh()
     event.Skip()
 
+  def Edit(self,list_idx=-1):
+    wx.BeginBusyCursor()
+    dlg=UIEditor(self)
+    try:
+      kate_streams=FindKateStreams(self.demuxer.GetDirectory())
+      if list_idx>=0:
+        idx=self.list.GetItemData(list_idx)
+        dlg.addStream(kate_streams[str(idx)]['filename'])
+      else:
+        for idx2 in kate_streams:
+          dlg.addStream(kate_streams[idx2]['filename'])
+      dlg.ShowModal()
+    except Exception,e:
+      print 'Exception: %s' % str(e)
+    dlg.Destroy()
+    wx.EndBusyCursor()
+
+  def OnListDoubleClicked(self,event):
+    idx=self.list.GetFirstSelected()
+    if idx>=0:
+      self.Edit(idx)
+    event.Skip()
+
   def AddList(self):
     list=wx.ListCtrl(self,style=wx.LC_REPORT)
     list.ClearAll()
@@ -114,6 +137,7 @@ class UIMain(wx.Frame):
     list.SetColumnWidth(1,language_width)
     list.SetColumnWidth(2,category_width)
     list.Bind(wx.EVT_SIZE,self.OnListSizeChanged)
+    list.Bind(wx.EVT_LEFT_DCLICK,self.OnListDoubleClicked)
     return list
 
   def CheckAndContinue(self):
@@ -151,10 +175,11 @@ class UIMain(wx.Frame):
     for idx in streams:
       stream=streams[idx]
       self.list.Append(['','',''])
-      idx=self.list.GetItemCount()-1
-      self.list.SetStringItem(idx,0,stream['serial'])
-      self.list.SetStringItem(idx,1,stream['language'])
-      self.list.SetStringItem(idx,2,stream['category'])
+      list_idx=self.list.GetItemCount()-1
+      self.list.SetStringItem(list_idx,0,stream['serial'])
+      self.list.SetStringItem(list_idx,1,stream['language'])
+      self.list.SetStringItem(list_idx,2,stream['category'])
+      self.list.SetItemData(list_idx,int(idx))
     return self.list.GetItemCount()>0
 
   def OnDemuxButton(self,event):
