@@ -199,7 +199,9 @@ class UIMain(wx.Frame):
     self.SetupActionButton(self.action_button)
     path=os.path.abspath(self.demuxer.GetDirectory())
     wx.MessageBox(
-      'Demuxed files are in '+path+'.\nYou may edit them with your favorite text editor.',
+      'Demuxed files are in '+path+'.\n'+
+        'Double click on any entry to edit it.\n'+
+        'You may also edit them with your favorite text editor.',
       'Edit files',
       style=wx.OK|wx.CENTRE
     )
