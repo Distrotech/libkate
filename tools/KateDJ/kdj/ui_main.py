@@ -186,11 +186,11 @@ class UIMain(wx.Frame):
     try:
       demuxer=Demuxer(self.tools,self.filename,'kate')
     except Exception,e:
-      wx.MessageBox('Failed to demux file:\n'+e.args[0],'Error',style=wx.OK|wx.CENTRE)
+      wx.MessageBox('Failed to demux file:\n'+e.args[0],'Error',parent=self,style=wx.OK|wx.CENTRE)
       return
 
     if not self.FillKateList(demuxer):
-      wx.MessageBox('No Kate streams found, or not an Ogg stream','Error',style=wx.OK|wx.CENTRE)
+      wx.MessageBox('No Kate streams found, or not an Ogg stream','Error',parent=self,style=wx.OK|wx.CENTRE)
       self.filename=None
       self.SetupActionButton(self.action_button)
       return
@@ -233,9 +233,9 @@ class UIMain(wx.Frame):
       try:
         self.RemoveTemporaryFiles(directory)
       except:
-        wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',style=wx.OK|wx.CENTRE)
+        wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',parent=self,style=wx.OK|wx.CENTRE)
     except Exception,e:
-      wx.MessageBox('Failed to remux file:\n'+e.args[0],'Error',style=wx.OK|wx.CENTRE)
+      wx.MessageBox('Failed to remux file:\n'+e.args[0],'Error',parent=self,style=wx.OK|wx.CENTRE)
 
   def OnOptionsButton(self,event):
     dlg=UIOptions(self,self.options)
@@ -264,6 +264,7 @@ class UIMain(wx.Frame):
       'process until you are happy with the resulting stream.\n'+
       '',
       kdj_name+' help',
+      parent=self,
       style=wx.OK|wx.CENTRE
     )
 
@@ -275,6 +276,6 @@ class UIMain(wx.Frame):
       try:
         self.RemoveTemporaryFiles(directory)
       except:
-        wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',style=wx.OK|wx.CENTRE)
+        wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',parent=self,style=wx.OK|wx.CENTRE)
     sys.exit(0)
 

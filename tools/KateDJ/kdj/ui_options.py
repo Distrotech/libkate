@@ -12,7 +12,7 @@ vpadding=8
 class UIOptions(wx.Dialog):
   def __init__(self,parent,options):
     pre=wx.PreDialog()
-    pre.Create(parent,wx.ID_ANY,title=kdj_name+' options',pos=(1,1),size=(1,1),style=wx.DEFAULT_DIALOG_STYLE)
+    pre.Create(parent,wx.ID_ANY,title=kdj_name+' options')
     self.PostCreate(pre)
 
     self.options=options
