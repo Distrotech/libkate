@@ -14,7 +14,7 @@
 #include <ogg/ogg.h>
 #include "kate/kate.h"
 
-enum { kstream_uninitialized, kstream_header_info, kstream_data };
+enum { kstream_uninitialized, kstream_header_info, kstream_data, kstream_eos };
 
 typedef struct kate_stream {
   ogg_stream_state os;

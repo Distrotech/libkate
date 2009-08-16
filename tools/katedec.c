@@ -161,6 +161,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
         else if (ret>0) {
           /* we're done */
           if (opd->write_end_function) (*opd->write_end_function)(ks->fout);
+          ks->init=kstream_eos;
         }
         else {
           const kate_event *ev=NULL;
@@ -206,6 +207,7 @@ int main(int argc,char **argv)
   unsigned long fuzz_seed=0;
   ogg_parser_data opd;
   ogg_parser_funcs opf;
+  size_t n;
 
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
@@ -393,6 +395,16 @@ int main(int argc,char **argv)
 
     opf.on_page=&ogg_parser_on_page;
     ret=parse_ogg_stream(fin,signature,signature_size,opf,(kate_uintptr_t)&opd);
+
+    /* Force EOS on truncated streams */
+    for (n=0;n<opd.kate_streams.n_kate_streams;++n) {
+      kate_stream *ks=opd.kate_streams.kate_streams[n];
+      if (ks->init!=kstream_eos) {
+        fprintf(stderr,"Warning: EOS not found on %s\n",ks->filename);
+        if (opd.write_end_function) (*opd.write_end_function)(ks->fout);
+        ks->init=kstream_eos;
+      }
+    }
 
     clear_kate_stream_set(&opd.kate_streams);
   }

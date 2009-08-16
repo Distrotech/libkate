@@ -199,7 +199,7 @@ int kstream_clear(kate_stream *ks)
   int ret;
 
   ogg_stream_clear(&ks->os);
-  if (ks->init==kstream_data) {
+  if (ks->init==kstream_data || ks->init==kstream_eos) {
     ret=kate_clear(&ks->k);
     if (ret<0) {
       fprintf(stderr,"kate_clear failed: %d\n",ret);
