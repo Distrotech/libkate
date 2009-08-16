@@ -142,7 +142,7 @@ class UIMain(wx.Frame):
 
   def CheckAndContinue(self):
     if self.filename!=None and self.demuxer!=None:
-      ret=wx.MessageBox('Loaded file not remuxed - Quit anyway ?','Warning',style=wx.YES|wx.NO_DEFAULT|wx.CENTRE)
+      ret=wx.MessageBox('Loaded file not remuxed - Quit anyway ?','Warning',parent=self,style=wx.YES|wx.NO_DEFAULT|wx.CENTRE)
       if ret!=wx.YES:
         return False
     return True
@@ -203,6 +203,7 @@ class UIMain(wx.Frame):
         'Double click on any entry to edit it.\n'+
         'You may also edit them with your favorite text editor.',
       'Edit files',
+      parent=self,
       style=wx.OK|wx.CENTRE
     )
 
