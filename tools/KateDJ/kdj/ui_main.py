@@ -186,7 +186,7 @@ class UIMain(wx.Frame):
     try:
       demuxer=Demuxer(self.tools,self.filename,'kate')
     except Exception,e:
-      wx.MessageBox('Failed to demux file:\n'+e.args[0],'Error',parent=self,style=wx.OK|wx.CENTRE)
+      wx.MessageBox('Failed to demux file:\n'+str(e),'Error',parent=self,style=wx.OK|wx.CENTRE)
       return
 
     if not self.FillKateList(demuxer):
@@ -235,7 +235,7 @@ class UIMain(wx.Frame):
       except:
         wx.MessageBox('Failed to remove all temporary files from\n%s' % directory,'Error',parent=self,style=wx.OK|wx.CENTRE)
     except Exception,e:
-      wx.MessageBox('Failed to remux file:\n'+e.args[0],'Error',parent=self,style=wx.OK|wx.CENTRE)
+      wx.MessageBox('Failed to remux file:\n'+str(e),'Error',parent=self,style=wx.OK|wx.CENTRE)
 
   def OnOptionsButton(self,event):
     dlg=UIOptions(self,self.options)
