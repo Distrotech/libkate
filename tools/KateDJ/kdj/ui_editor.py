@@ -3,12 +3,15 @@ import wx
 from wx.py.editor import EditorNotebook
 from wx.py.buffer import Buffer
 from wx.py.editor import Editor
+from tester import Tester
 
 class UIEditor(wx.Dialog):
-  def __init__(self,parent,filename=None):
+  def __init__(self,parent,tools,filename=None):
     pre=wx.PreDialog()
     pre.Create(parent,wx.ID_ANY,title='Editing Kate streams',pos=(100,100),size=(600,400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
     self.PostCreate(pre)
+
+    self.tools=tools
 
     box=wx.BoxSizer(wx.VERTICAL)
     self.SetSizer(box)
@@ -22,6 +25,10 @@ class UIEditor(wx.Dialog):
     buttons=wx.BoxSizer(wx.HORIZONTAL)
     box.Add(buttons)
 
+    test=wx.Button(self,wx.ID_ANY,'Test')
+    test.Bind(wx.EVT_BUTTON,self.OnTest)
+    buttons.Add(test)
+
     save=wx.Button(self,wx.ID_SAVE,'Save')
     save.Bind(wx.EVT_BUTTON,self.OnSave)
     buttons.Add(save)
@@ -32,7 +39,6 @@ class UIEditor(wx.Dialog):
 
     quit=wx.Button(self,wx.ID_OK,'Quit')
     quit.Bind(wx.EVT_BUTTON,self.OnQuit)
-    quit.SetDefault()
     buttons.Add(quit)
 
     self.buffers=[]
@@ -45,8 +51,11 @@ class UIEditor(wx.Dialog):
      panel=wx.Panel(parent=self.notebook,id=-1)
      panel.Bind(wx.EVT_ERASE_BACKGROUND,lambda x: x)
      editor=Editor(parent=panel)
+
      panel.editor=editor
      panel.buffer=buffer
+     panel.filename=filename
+
      sizer=wx.BoxSizer(wx.VERTICAL)
      sizer.Add(editor.window,1,wx.EXPAND)
      panel.SetSizer(sizer)
@@ -61,11 +70,18 @@ class UIEditor(wx.Dialog):
   def OnPageChanged(self,event):
     new=event.GetSelection()
     window=self.notebook.GetPage(new)
-    self.current_buffer=window.buffer
+    self.current_panel=window
     event.Skip()
 
+  def OnTest(self,event):
+    try:
+      tester=Tester(self.tools,self.current_panel.editor.getText(),'kate')
+      wx.MessageBox('No errors found','Success',parent=self,style=wx.OK)
+    except Exception,e:
+      wx.MessageBox('Error:\n'+str(e),'Test failed',parent=self,style=wx.OK)
+
   def OnSave(self,event):
-    self.current_buffer.save()
+    self.current_panel.buffer.save()
     event.Skip()
 
   def OnSaveAll(self,event):

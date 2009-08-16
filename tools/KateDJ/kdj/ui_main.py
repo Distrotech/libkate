@@ -106,7 +106,7 @@ class UIMain(wx.Frame):
 
   def Edit(self,list_idx=-1):
     wx.BeginBusyCursor()
-    dlg=UIEditor(self)
+    dlg=UIEditor(self,self.tools)
     try:
       kate_streams=FindKateStreams(self.demuxer.GetDirectory())
       if list_idx>=0:

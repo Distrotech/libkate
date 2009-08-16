@@ -73,45 +73,41 @@ class Tools:
     self.katedec_command=self.probe_command_in(['katedec'],'-V','Kate reference decoder - libkate',internal_tools_path)
     self.check()
 
-  def run(self,params):
+  def run(self,params,stdin):
     if self.on_start!=None: self.on_start()
     try:
       try:
-        popen=subprocess.Popen(params,stderr=subprocess.PIPE,universal_newlines=True)
-        popen.wait()
+        popen=subprocess.Popen(params,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
+        (stdoutdata,stderrdata)=popen.communicate(stdin)
         ret=popen.returncode
         # oggz tools can return 0 when they fail, so do not test ret
-        msg=''
-        line=popen.stderr.readline()
-        while line:
-          msg+=line
-          line=popen.stderr.readline()
-        if msg!='':
+        msg=stderrdata
+        if msg!=None and msg!='':
           raise Exception,msg
       except:
         raise
     finally:
       if self.on_end!=None: self.on_end()
   
-  def run_demux(self,params):
+  def run_demux(self,params,stdin=None):
     if self.demux_command==None:
       raise Exception,'No demux command found'
-    self.run([self.demux_command]+params)
+    self.run([self.demux_command]+params,stdin)
 
-  def run_mux(self,params):
+  def run_mux(self,params,stdin=None):
     if self.mux_command==None:
       raise Exception,'No mux command found'
-    self.run([self.mux_command]+params)
+    self.run([self.mux_command]+params,stdin)
 
-  def run_katedec(self,params):
+  def run_katedec(self,params,stdin=None):
     if self.katedec_command==None:
       raise Exception,'katedec was not found'
-    self.run([self.katedec_command]+params)
+    self.run([self.katedec_command]+params,stdin)
 
-  def run_kateenc(self,params):
+  def run_kateenc(self,params,stdin=None):
     if self.kateenc_command==None:
       raise Exception,'kateenc was not found'
-    self.run([self.kateenc_command]+params)
+    self.run([self.kateenc_command]+params,stdin)
 
 if __name__=='__main__':
   tools=Tools();
