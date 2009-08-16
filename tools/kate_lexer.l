@@ -248,6 +248,7 @@ pause                              {return PAUSE;}
 
 
 <<EOF>>                      {
+                               katedesc_text="<EOF>";
                                if (freeze_nlines) --freeze_nlines;
                                yy_delete_buffer(YY_CURRENT_BUFFER);
                                if (main_buffer) {
