@@ -18,7 +18,6 @@ class Demuxer:
     try:
       self.directory=tempfile.mkdtemp(dir='.',prefix='katedj-tmp-extract-')
     except OSError,e:
-      print 'Failed to create temporary directory'
       return False
     return True
 
