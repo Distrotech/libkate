@@ -33,11 +33,11 @@ class UIEditor(wx.Dialog):
     save.Bind(wx.EVT_BUTTON,self.OnSave)
     buttons.Add(save)
 
-    save_all=wx.Button(self,wx.ID_SAVE,'Save all')
-    save_all.Bind(wx.EVT_BUTTON,self.OnSaveAll)
-    buttons.Add(save_all)
+#    save_all=wx.Button(self,wx.ID_SAVE,'Save all')
+#    save_all.Bind(wx.EVT_BUTTON,self.OnSaveAll)
+#    buttons.Add(save_all)
 
-    quit=wx.Button(self,wx.ID_OK,'Quit')
+    quit=wx.Button(self,wx.ID_EXIT,'Quit')
     quit.Bind(wx.EVT_BUTTON,self.OnQuit)
     buttons.Add(quit)
 
@@ -105,5 +105,5 @@ class UIEditor(wx.Dialog):
         quit=False
       dlg.Destroy()
     if quit:
-      event.Skip()
+      self.Close(True)
 

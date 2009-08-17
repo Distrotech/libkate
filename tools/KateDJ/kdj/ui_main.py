@@ -91,12 +91,12 @@ class UIMain(wx.Frame):
     return button
 
   def AddHelpButton(self):
-    button=wx.Button(self,wx.ID_ANY,'Help',size=(button_width,button_height))
+    button=wx.Button(self,wx.ID_HELP,'Help',size=(button_width,button_height))
     button.Bind(wx.EVT_BUTTON,self.OnHelpButton,button)
     return button
 
   def AddQuitButton(self):
-    button=wx.Button(self,wx.ID_ANY,'Quit',size=(button_width,button_height))
+    button=wx.Button(self,wx.ID_EXIT,'Quit',size=(button_width,button_height))
     button.Bind(wx.EVT_BUTTON,self.OnQuitButton,button)
     return button
 
