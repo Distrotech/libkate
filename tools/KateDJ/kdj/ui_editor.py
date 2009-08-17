@@ -78,7 +78,7 @@ class UIEditor(wx.Dialog):
       tester=Tester(self.tools,self.current_panel.editor.getText(),'kate')
       wx.MessageBox('No errors found','Success',parent=self,style=wx.OK)
     except Exception,e:
-      wx.MessageBox('Error:\n'+str(e),'Test failed',parent=self,style=wx.OK)
+      wx.MessageBox('Error:\n'+str(e),'Test failed',parent=self,style=wx.OK|wx.ICON_ERROR)
 
   def OnSave(self,event):
     self.current_panel.buffer.save()
