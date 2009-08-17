@@ -1,5 +1,6 @@
   KateDJ can now edit Kate streams directly
   various other improvements to KateDJ
+  katedec now writes a footer (eg, closing brace) even for truncated streams
 
 0.3.4 - 03 july 2009
   fix canvas size encoding/decoding on big endian hosts
