@@ -400,7 +400,6 @@ int main(int argc,char **argv)
     for (n=0;n<opd.kate_streams.n_kate_streams;++n) {
       kate_stream *ks=opd.kate_streams.kate_streams[n];
       if (ks->init!=kstream_eos) {
-        fprintf(stderr,"Warning: EOS not found on %s\n",ks->filename);
         if (opd.write_end_function) (*opd.write_end_function)(ks->fout);
         ks->init=kstream_eos;
       }
