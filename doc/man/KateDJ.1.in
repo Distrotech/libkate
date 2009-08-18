@@ -7,10 +7,10 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "KATEDJ" 1 "2 january 2009" "libkate @VERSION@ "libkate documentation"
+.TH "KATEDJ" 1 "18 august 2009" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
-KateDJ \- remixes Kate streams in Ogg
+KateDJ \- edits and remixes Kate streams in Ogg
 
 .SH SYNOPSIS
 .B KateDJ
@@ -18,8 +18,8 @@ KateDJ \- remixes Kate streams in Ogg
 
 .SH DESCRIPTION
 .B KateDJ
-allows extracting Kate tracks embedded in an Ogg stream, and rebuilding this Ogg stream after the
-Kate tracks are modified.
+allows extracting Kate tracks embedded in an Ogg stream, editing them, and rebuilding the
+Ogg stream after the Kate tracks are modified.
 
 .B KateDJ
 is a simple GUI program, so usage is UI driven, rather than command line driven.
@@ -35,7 +35,8 @@ All Kate streams will be decoded to a text description and placed in this tempor
 and a list of them, along with their serial number, language, and category, will be displayed
 in a list.
 
-Those files may then be edited with your favorite text editor. Any modification may be done,
+Those files may then be edited at will, either in the embedded editor by double clicking on
+the stream in the supplied list, or with your favorite text editor. Any modification may be done,
 including removing some of those files altogether, or even adding some. However, in order
 to be recognized, any new files \fBmust\fR be named according to the same naming convention
 as the existing ones.
@@ -44,6 +45,9 @@ Once the desired modifications are done, select \fB'Remux file from parts'\fR to
 recreate the Ogg stream. If any error occurs (eg, syntax error in the Kate files), a message
 will inform you. Once the errors are fixed, select \fB'Remux file from parts'\fR again, until
 the operation succeeds.
+
+The embedded editor can test a modified stream, so it more convenient for quick modifications,
+while your editor of choice may be more powerful for complex modification.
 
 .SH OPTIONS
 .TP

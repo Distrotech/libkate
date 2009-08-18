@@ -115,7 +115,7 @@ The procedure consists of:
 - Run KateDJ
 - Click 'Load Ogg stream' and select the file to load
 - Click 'Demux file' to decode Kate streams in a temporary location
-- Edit the Kate streams (a message box tells you where they are placed)
+- Edit the Kate streams
 - When done, click 'Remux file from parts'
 - If any errors are reported, continue editing until the remux step succeeds
 
