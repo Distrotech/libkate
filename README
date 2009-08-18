@@ -61,14 +61,13 @@ KateDJ also depends on the oggz tools, available from www.annodex.net.
 
 For more info on those tools, see the man pages in the doc/man directory.
 
-VLC 0.9 can decode and display basic text and SPU based Kate streams.
-VLC 1.0, soon to be released, will have full rendering support using libtiger.
+VLC 1.0 can decode and display basic text and SPU based Kate streams, and can
+display any Kate stream if compiled with libtiger.
 I have preliminary support for Kate streams for MPlayer, xine, and GStreamer
 (and thus all players that rely on them for decoding), which will be contributed
 to those projects once the Kate bitstream format is stable. The current diffs
 for those can be found in the diffs directory. See the README in the diffs
-directory for more information on those patches. If you want to run some of
-the example streams, you will have to patch GStreamer, xine, or MPlayer.
+directory for more information on those patches.
 NOTE: the diffs tree is not shipped in the tarballs anymore, it is now only
 available in the git tree.
 
