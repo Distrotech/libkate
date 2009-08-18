@@ -253,8 +253,9 @@ class UIMain(wx.Frame):
       'Click \'Load Ogg stream\' to load an Ogg file from disk. All types of Ogg streams are supported '+
       '(eg, audio, video, etc).\n'+
       '\n'+
-      'Then, click \'Demux file\' to extract Kate streams, and decode them to a temporary place on disk '+
-      'You may now edit the decoded Kate streams with your text editor of choice.\n'+
+      'Then, click \'Demux file\' to extract Kate streams, and decode them to a temporary place on disk. '+
+      'You may now edit the decoded Kate streams, either by double clicking on the one you wish to change, '+
+      'or with your text editor of choice.\n'+
       '\n'+
       'When done, click \'Remux file from parts\' to reconstruct the Ogg stream with the modified Kate streams. '+
       'If you are notified of any error (eg, syntax errors in the modified Kate streams), then go back and '+
