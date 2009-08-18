@@ -3,6 +3,7 @@ import wx
 from wx.py.editor import EditorNotebook
 from wx.py.buffer import Buffer
 from wx.py.editor import Editor
+from constants import *
 from tester import Tester
 
 class UIEditor(wx.Dialog):
@@ -36,6 +37,10 @@ class UIEditor(wx.Dialog):
 #    save_all=wx.Button(self,wx.ID_SAVE,'Save all')
 #    save_all.Bind(wx.EVT_BUTTON,self.OnSaveAll)
 #    buttons.Add(save_all)
+
+    help=wx.Button(self,wx.ID_HELP,'Help')
+    help.Bind(wx.EVT_BUTTON,self.OnHelp)
+    buttons.Add(help)
 
     quit=wx.Button(self,wx.ID_EXIT,'Quit')
     quit.Bind(wx.EVT_BUTTON,self.OnQuit)
@@ -95,6 +100,20 @@ class UIEditor(wx.Dialog):
       if buffer.hasChanged():
         changed+=1
     return changed
+
+  def OnHelp(self,event):
+    wx.MessageBox(
+      'Edit the decoded Kate stream, and save when done. '+
+      '\n'+
+      'Make liberal use of the Test button, which will tell you if any error is found in the stream. '+
+      '\n'+
+      'Note that there is no need to save before testing.'+
+      '\n\n'+
+      '',
+      kdj_name+' help',
+      parent=self,
+      style=wx.OK|wx.CENTRE
+    )
 
   def OnQuit(self,event):
     changed=self.getNumChanged()
