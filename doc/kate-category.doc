@@ -35,7 +35,7 @@ For instance, ffmpeg2theora can create such streams, which can be played
 back by VLC, MPlayer (if patched), the Annodex browser plugin (if patched),
 and any player using GStreamer (if patched).
 
-\li \c spu-subtitles Movie (or other) subtitles, as DVD style images, with
+\li \c K-SPU, or \c spu-subtitles Movie (or other) subtitles, as DVD style images, with
 on screen positioning and size information.
 
 For instance, Thoggen (if patched) can create such streams, which can be
