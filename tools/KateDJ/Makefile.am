@@ -1,4 +1,4 @@
-kdj_modules=__init__ constants finder tools muxer demuxer options ui_main ui_editor ui_options
+kdj_modules=__init__ constants finder tools muxer demuxer tester options ui_main ui_editor ui_options
 
 # dummy - this is just for automake to copy py-compile, as it won't do it
 # if it doesn't see anything in a PYTHON variable. KateDJ is Python, but
