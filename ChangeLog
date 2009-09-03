@@ -1,3 +1,6 @@
+0.3.6 - 03 september 2009
+  fix KateDJ installation problem (missing module)
+
 0.3.5 - 01 september 2009
   KateDJ can now edit Kate streams directly
   various other improvements to KateDJ
