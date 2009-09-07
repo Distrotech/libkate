@@ -9,6 +9,7 @@ Recommended prerequisites:
 Optional dependencies:
   liboggz or ogg-tools: to build example streams
   flex and bison: to rebuild the parser
+  wxPython: for KateDJ
 
 Of course, if you want to make use of the patches to third party
 software found in the diffs directory, you will need the relevant
