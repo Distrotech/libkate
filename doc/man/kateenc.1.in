@@ -1,4 +1,4 @@
-.\" Copyright (C) 2008 Vincent Penquerc'h.
+.\" Copyright (C) 2008, 2009 Vincent Penquerc'h.
 .\" This file is part of the Kate codec library.
 .\" Written by Vincent Penquerc'h.
 .\"
@@ -7,7 +7,7 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "KATEENC" 1 "24 august 2008" "libkate @VERSION@ "libkate documentation"
+.TH "KATEENC" 1 "21 september 2009" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
 kateenc \- create Kate streams from text input
@@ -76,7 +76,7 @@ threshold seconds.
 
 Create a Kate stream for Welsh subtitles from a SubRip file:
 
-    kateenc \-t srt \-l cy \-c subtitles \-o output.ogg input.srt
+    kateenc \-t srt \-l cy \-c SUB \-o output.ogg input.srt
 
 .SH SEE ALSO
 .PP
