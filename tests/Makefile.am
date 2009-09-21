@@ -35,8 +35,7 @@ check-local:
 	@echo " Checking Kate namespace"
 	@! @NM@ lib/.libs/*.{a,so} \
 	 | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
-	 | $(GREP) -vE " (_DYNAMIC|_init|_fini|_edata|_end|__bss_start)$$" \
-	 | $(GREP) -vE " _(rest|save)[fg]pr_[0-9]*(|_x)$$" \
+	 | $(GREP) -v "^.\{11\}_" \
 	 | $(GREP) -v "^.\{11\}kate_"
 	@echo " Checking memory allocation routines"
 	@! $(GREP) -EHn '[^_](malloc|realloc|free|calloc|memalign)\(' \
