@@ -54,7 +54,7 @@ int time_seconds(kate_float t)
 
 int time_milliseconds(kate_float t)
 {
-  return (int)(1000*(t-(float)(int)t)+(kate_float)0.5);
+  return ((int)(1000.0f*t+0.5f))%1000;
 }
 
 const char *eat_arg(int argc,char **argv,int *n)
