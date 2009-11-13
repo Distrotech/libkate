@@ -78,6 +78,27 @@ int kate_ogg_encode_text(kate_state *k,kate_float start_time,kate_float stop_tim
 }
 
 /**
+  Encodes a text data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param start_time the start time, in seconds, of the event
+  \param stop_time the stop time, in seconds, of the event
+  \param text the text this event will hold (may be empty if none)
+  \param sz the size, in bytes, of the text
+  \param op the ogg_packet to encode the packet to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
+int kate_ogg_encode_text_raw_times(kate_state *k,kate_int64_t start_time,kate_int64_t stop_time,const char *text,size_t sz,ogg_packet *op)
+{
+  kate_packet kp;
+  int ret=kate_encode_text_raw_times(k,start_time,stop_time,text,sz,&kp);
+  if (ret<0) return ret;
+  kate_packet_create_ogg(&kp,op,k->kes,0);
+  return 0;
+}
+
+/**
   Encodes a repeat data packet to an Ogg packet
   The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
   \param k the kate_state structure to encode headers for
@@ -92,6 +113,26 @@ int kate_ogg_encode_repeat(kate_state *k,kate_float t,kate_float threshold,ogg_p
 {
   kate_packet kp;
   int ret=kate_encode_repeat(k,t,threshold,&kp);
+  if (ret<0) return ret;
+  if (ret>0) kate_packet_create_ogg(&kp,op,k->kes,0);
+  return ret;
+}
+
+/**
+  Encodes a repeat data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param t the time at which to insert the repeat packet
+  \param threshold the minimum age an active event must be for a repeat packet to be encoded
+  \param op the ogg_packet to encode the packet to
+  \returns 0 success, and no repeat packets were needed
+  \returns 1 success, and a repeat packet was encoded
+  \returns KATE_E_* error
+ */
+int kate_ogg_encode_repeat_raw_times(kate_state *k,kate_int64_t t,kate_int64_t threshold,ogg_packet *op)
+{
+  kate_packet kp;
+  int ret=kate_encode_repeat_raw_times(k,t,threshold,&kp);
   if (ret<0) return ret;
   if (ret>0) kate_packet_create_ogg(&kp,op,k->kes,0);
   return ret;
@@ -116,6 +157,24 @@ int kate_ogg_encode_keepalive(kate_state *k,kate_float t,ogg_packet *op)
 }
 
 /**
+  Encodes a keepalive data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  \param k the kate_state structure to encode headers for
+  \param t the time at which to insert the keepalive packet
+  \param op the ogg_packet to encode the packet to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
+int kate_ogg_encode_keepalive_raw_times(kate_state *k,kate_int64_t t,ogg_packet *op)
+{
+  kate_packet kp;
+  int ret=kate_encode_keepalive_raw_times(k,t,&kp);
+  if (ret<0) return ret;
+  kate_packet_create_ogg(&kp,op,k->kes,0);
+  return 0;
+}
+
+/**
   Encodes an end-of-stream data packet to an Ogg packet
   The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
   No other packet may be encoded afer an end of stream packet is encoded.
@@ -129,6 +188,25 @@ int kate_ogg_encode_finish(kate_state *k,kate_float t,ogg_packet *op)
 {
   kate_packet kp;
   int ret=kate_encode_finish(k,t,&kp);
+  if (ret<0) return ret;
+  kate_packet_create_ogg(&kp,op,k->kes,1);
+  return 0;
+}
+
+/**
+  Encodes an end-of-stream data packet to an Ogg packet
+  The kate_state structure should have been initialized with kate_decode_init or kate_encode_init.
+  No other packet may be encoded afer an end of stream packet is encoded.
+  \param k the kate_state structure to encode headers for
+  \param t the time at which to insert the packet
+  \param op the ogg_packet to encode the packet to
+  \returns 0 success
+  \returns KATE_E_* error
+ */
+int kate_ogg_encode_finish_raw_times(kate_state *k,kate_int64_t t,ogg_packet *op)
+{
+  kate_packet kp;
+  int ret=kate_encode_finish_raw_times(k,t,&kp);
   if (ret<0) return ret;
   kate_packet_create_ogg(&kp,op,k->kes,1);
   return 0;

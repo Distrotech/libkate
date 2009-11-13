@@ -42,10 +42,11 @@ kate_int64_t kate_time_granule(const kate_info *ki,kate_float base,kate_float of
   if (!ki) return KATE_E_INVALID_PARAMETER;
   if (base<0 || offset<0) return KATE_E_INVALID_PARAMETER;
 
-  gbase=(kate_int64_t)((base*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
+  gbase=(kate_int64_t)((base*ki->gps_numerator)/ki->gps_denominator);
   actual_base=gbase*(kate_float)ki->gps_denominator/ki->gps_numerator;
   gbase=(kate_int64_t)((actual_base*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
   actual_offset=offset+(base-actual_base);
+  if (actual_offset<0) actual_offset=0;
   goffset=(kate_int64_t)((actual_offset*ki->gps_numerator)/ki->gps_denominator+(kate_float)0.5);
   /* check if the values fit with the granule encoding parameters */
   if (gbase>=(((kate_int64_t)1)<<(63-ki->granule_shift))-1) return KATE_E_LIMIT;

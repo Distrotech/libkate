@@ -583,9 +583,13 @@ extern int kate_comment_query_count(const kate_comment *kc,const char *tag);
 extern int kate_encode_init(kate_state *k,kate_info *ki);
 extern int kate_encode_headers(kate_state *k,kate_comment *kc,kate_packet *kp);
 extern int kate_encode_text(kate_state *k,kate_float start_time,kate_float stop_time,const char *text,size_t sz,kate_packet *kp); /* text is not null terminated */
+extern int kate_encode_text_raw_times(kate_state *k,kate_int64_t start_time,kate_int64_t stop_time,const char *text,size_t sz,kate_packet *kp); /* text is not null terminated */
 extern int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp);
+extern int kate_encode_keepalive_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp);
 extern int kate_encode_repeat(kate_state *k,kate_float t,kate_float threshold,kate_packet *kp);
+extern int kate_encode_repeat_raw_times(kate_state *k,kate_int64_t t,kate_int64_t threshold,kate_packet *kp);
 extern int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp); /* t may be negative to use the end granule of the last event */
+extern int kate_encode_finish_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp); /* t may be negative to use the end granule of the last event */
 extern int kate_encode_set_id(kate_state *k,kate_int32_t id);
 extern int kate_encode_set_language(kate_state *k,const char *language); /* language can be NULL */
 extern int kate_encode_set_text_encoding(kate_state *k,kate_text_encoding text_encoding);

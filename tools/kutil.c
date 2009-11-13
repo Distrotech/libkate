@@ -18,44 +18,36 @@
 #include "kate/kate.h"
 #include "kutil.h"
 
+static int time_total_milliseconds(kate_float t)
+{
+    return (int)(t*1000+(kate_float)0.5);
+}
+
 int time_hours(kate_float t)
 {
-  return (int)(t/3600);
+  return time_total_milliseconds(t)/(60*60*1000);
 }
 
 int time_minutes(kate_float t)
 {
-  int h=(int)(t/3600);
-  t-=h*3600;
-  return t/60;
-}
-
-kate_float time_float_seconds(kate_float t)
-{
-  int h,m;
-
-  h=(int)(t/3600);
-  t-=h*3600;
-  m=(int)(t/60);
-  t-=m*60;
-  return t;
+  return time_total_milliseconds(t)/(60*1000)%60;
 }
 
 int time_seconds(kate_float t)
 {
-  int h,m;
-
-  h=(int)(t/3600);
-  t-=h*3600;
-  m=(int)(t/60);
-  t-=m*60;
-  return t;
+  return time_total_milliseconds(t)/1000%60;
 }
 
 int time_milliseconds(kate_float t)
 {
-  return ((int)(1000.0f*t+0.5f))%1000;
+  return time_total_milliseconds(t)%1000;
 }
+
+kate_float time_float_seconds(kate_float t)
+{
+  return time_milliseconds(t)/(kate_float)1000+time_seconds(t);
+}
+
 
 const char *eat_arg(int argc,char **argv,int *n)
 {

@@ -192,6 +192,11 @@ static kate_float hmsms2s(int h,int m,int s,int ms)
   return h*3600+m*60+s+ms/(kate_float)1000.0;
 }
 
+static kate_int64_t hmsms2ms(int h,int m,int s,int ms)
+{
+  return h*3600000+m*60000+s*1000+ms;
+}
+
 static char *fgets2(char *s,size_t len,FILE *f,int ignore_hash)
 {
   char *ret=fgets(s,len,f);
@@ -285,7 +290,7 @@ static int convert_srt(FILE *fin,FILE *fout)
   int id;
   static char text[4096];
   int h0,m0,s0,ms0,h1,m1,s1,ms1;
-  kate_float t0=(kate_float)0,t1=(kate_float)0;
+  kate_int64_t t0=0,t1=0;
   int line=0;
 
   ret=flush_headers(fout);
@@ -338,8 +343,8 @@ static int convert_srt(FILE *fin,FILE *fout)
           return -1;
         }
         else {
-          t0=hmsms2s(h0,m0,s0,ms0);
-          t1=hmsms2s(h1,m1,s1,ms1);
+          t0=hmsms2ms(h0,m0,s0,ms0);
+          t1=hmsms2ms(h1,m1,s1,ms1);
           if (t1<t0) {
             fprintf(stderr,"Error at line %d: end time must not be less than start time\n",line);
             return -1;
@@ -366,7 +371,7 @@ static int convert_srt(FILE *fin,FILE *fout)
             }
             return ret;
           }
-          ret=kate_ogg_encode_text(&k,t0,t1,text,strlen(text),&op);
+          ret=kate_ogg_encode_text_raw_times(&k,t0,t1,text,strlen(text),&op);
           if (ret<0) {
             fprintf(stderr,"Error encoding text: %d\n",ret);
             return ret;

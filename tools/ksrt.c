@@ -16,18 +16,31 @@
 #include "kutil.h"
 #include "ksrt.h"
 
+static ogg_int64_t granule_to_milliseconds(const kate_info *ki,ogg_int64_t granpos)
+{
+  return (1000*granpos*ki->gps_denominator+ki->gps_numerator/2)/ki->gps_numerator;
+}
+
+static void milliseconds_to_time(ogg_int64_t ms,int *hours,int *minutes,int *seconds,int *milliseconds)
+{
+  *hours=ms/(60*60*1000);
+  *minutes=ms/(60*1000)%60;
+  *seconds=ms/1000%60;
+  *milliseconds=ms%1000;
+}
+
 void write_srt_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index)
 {
-  float t0=ev->start_time;
-  float t1=ev->end_time;
+  int h0,m0,s0,ms0;
+  int h1,m1,s1,ms1;
+
+  milliseconds_to_time(granule_to_milliseconds(ev->ki,ev->start),&h0,&m0,&s0,&ms0);
+  milliseconds_to_time(granule_to_milliseconds(ev->ki,ev->start+ev->duration),&h1,&m1,&s1,&ms1);
 
   (void)granpos;
   (void)data;
   fprintf(fout,"%d\n",event_index+1);
-  fprintf(fout,"%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n",
-    time_hours(t0),time_minutes(t0),time_seconds(t0),time_milliseconds(t0),
-    time_hours(t1),time_minutes(t1),time_seconds(t1),time_milliseconds(t1)
-  );
+  fprintf(fout,"%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n",h0,m0,s0,ms0,h1,m1,s1,ms1);
   fprintf(fout,"%s\n",ev->text);
   fprintf(fout,"\n");
 }

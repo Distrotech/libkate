@@ -15,11 +15,11 @@
 #include "kate/kate.h"
 
 typedef struct kate_event_timing {
-  kate_float start;
-  kate_float end;
+  kate_int64_t start;
+  kate_int64_t end;
 
   kate_int32_t id;
-  kate_float repeat;
+  kate_int64_t repeat;
 
   size_t original_size;
   void *original_data;
@@ -82,11 +82,11 @@ extern int kate_encode_state_add_bitmap(kate_encode_state *kes,const kate_bitmap
 extern int kate_encode_state_add_bitmap_index(kate_encode_state *kes,size_t bitmap) kate_internal;
 extern int kate_encode_state_destroy(kate_encode_state *kes) kate_internal;
 
-extern int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_float end) kate_internal;
-extern int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_float *start,kate_float *end) kate_internal;
-extern int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_float *start,kate_float *end) kate_internal;
-extern int kate_encode_state_trim_events(kate_encode_state *kes,kate_float t) kate_internal;
+extern int kate_encode_state_add_event(kate_encode_state *kes,kate_int64_t start,kate_int64_t end) kate_internal;
+extern int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_int64_t *start,kate_int64_t *end) kate_internal;
+extern int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_int64_t *start,kate_int64_t *end) kate_internal;
+extern int kate_encode_state_trim_events(kate_encode_state *kes,kate_int64_t t) kate_internal;
 extern int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const void *data) kate_internal;
-extern int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float threshold,kate_packet *kp) kate_internal;
+extern int kate_encode_state_get_repeat(kate_encode_state *kes,kate_int64_t t,kate_int64_t threshold,kate_packet *kp) kate_internal;
 
 #endif

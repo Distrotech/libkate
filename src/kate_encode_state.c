@@ -226,7 +226,7 @@ int kate_encode_state_destroy(kate_encode_state *kes)
   return 0;
 }
 
-int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_float end)
+int kate_encode_state_add_event(kate_encode_state *kes,kate_int64_t start,kate_int64_t end)
 {
   kate_event_timing *new_timings;
   int ret;
@@ -254,7 +254,7 @@ int kate_encode_state_add_event(kate_encode_state *kes,kate_float start,kate_flo
   return 0;
 }
 
-int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_float *start,kate_float *end)
+int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_int64_t *start,kate_int64_t *end)
 {
   size_t n;
 
@@ -272,7 +272,7 @@ int kate_encode_state_get_earliest_event(kate_encode_state *kes,kate_float *star
   return 0;
 }
 
-int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_float *start,kate_float *end)
+int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_int64_t *start,kate_int64_t *end)
 {
   size_t n;
 
@@ -289,7 +289,7 @@ int kate_encode_state_get_latest_event(kate_encode_state *kes,kate_float *start,
   return 0;
 }
 
-int kate_encode_state_trim_events(kate_encode_state *kes,kate_float t)
+int kate_encode_state_trim_events(kate_encode_state *kes,kate_int64_t t)
 {
   size_t n;
 
@@ -334,7 +334,7 @@ int kate_encode_state_save_event_buffer(kate_encode_state *kes,size_t size,const
   return 0;
 }
 
-int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float threshold,kate_packet *kp)
+int kate_encode_state_get_repeat(kate_encode_state *kes,kate_int64_t t,kate_int64_t threshold,kate_packet *kp)
 {
   size_t n;
   kate_event_timing *ket;
@@ -345,7 +345,7 @@ int kate_encode_state_get_repeat(kate_encode_state *kes,kate_float t,kate_float 
   for (n=0;n<kes->ntimings;++n) {
     ket=kes->timings+n;
     /* old enough ? */
-    if (threshold==(kate_float)0) {
+    if (threshold==0) {
       if (ket->repeat>=t-threshold) continue;
     }
     else {

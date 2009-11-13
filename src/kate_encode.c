@@ -867,22 +867,22 @@ static int kate_encode_overrides(kate_state *k,kate_pack_buffer *kpb)
   This should always be called when encoding an event, even if the text is NULL.
   After this is called, the event is fully encoded and cannot be added to anymore.
   \param k the kate_state to add the text to
-  \param t0 the start time in seconds of the text
-  \param t1 the end time in seconds of the text
+  \param t0 the start time in granule units of the text
+  \param t1 the end time in granule units of the text
   \param text the text to add (may be NULL)
   \param sz the length in bytes of the text to add
   \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,size_t sz,kate_packet *kp)
+int kate_encode_text_raw_times(kate_state *k,kate_int64_t t0,kate_int64_t t1,const char *text,size_t sz,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t start_granulepos;
   kate_int64_t start;
   kate_int64_t duration;
   kate_int64_t backlink;
-  kate_float earliest_t;
+  kate_int64_t earliest_t;
   int ret;
   size_t n;
 
@@ -901,15 +901,15 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
   ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
   if (ret<0) return ret;
 
-  start_granulepos=kate_time_granule(k->ki,earliest_t,t0-earliest_t);
+  start_granulepos=(earliest_t<<k->ki->granule_shift)|(t0-earliest_t);
   if (start_granulepos<0) return start_granulepos;
   if (kate_check_granule(k,&start_granulepos)<0) return KATE_E_BAD_GRANULE;
 
-  start=kate_duration_granule(k->ki,t0);
+  start=t0;
   if (start<0) return start;
-  duration=kate_duration_granule(k->ki,t1-t0);
+  duration=t1-t0;
   if (duration<0) return duration;
-  backlink=kate_duration_granule(k->ki,t0-earliest_t);
+  backlink=t0-earliest_t;
   if (backlink<0) return backlink;
 
   kpb=&k->kes->kpb;
@@ -966,18 +966,38 @@ int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,
 
 /**
   \ingroup encoding
-  Emits a keepalive packet, to help with seeking.
-  \param k the kate_state to encode to
-  \param t the timestamp for the keepalive packet
+  Encodes a text (which may be NULL) of the given size, starting at t0 and ending at t1.
+  This should always be called when encoding an event, even if the text is NULL.
+  After this is called, the event is fully encoded and cannot be added to anymore.
+  \param k the kate_state to add the text to
+  \param t0 the start time in seconds of the text
+  \param t1 the end time in seconds of the text
+  \param text the text to add (may be NULL)
+  \param sz the length in bytes of the text to add
   \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
+int kate_encode_text(kate_state *k,kate_float t0,kate_float t1,const char *text,size_t sz,kate_packet *kp)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_text_raw_times(k,kate_duration_granule(k->ki,t0),kate_duration_granule(k->ki,t1),text,sz,kp);
+}
+
+/**
+  \ingroup encoding
+  Emits a keepalive packet, to help with seeking.
+  \param k the kate_state to encode to
+  \param t the timestamp (in granule rate units) for the keepalive packet
+  \param kp the packet to encode to
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_keepalive_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
-  kate_float earliest_t;
+  kate_int64_t earliest_t;
   int ret;
 
   if (!k || !kp) return KATE_E_INVALID_PARAMETER;
@@ -995,7 +1015,7 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
   }
   if (ret<0) return ret;
 
-  granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
+  granulepos=(earliest_t<<k->ki->granule_shift)|(t-earliest_t);
   if (granulepos<0) return granulepos;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
@@ -1008,6 +1028,73 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
   kate_pack_write(kpb,0x01,8);
 
   return kate_finalize_packet_buffer(kpb,kp,k);
+}
+
+/**
+  \ingroup encoding
+  Emits a keepalive packet, to help with seeking.
+  \param k the kate_state to encode to
+  \param t the timestamp for the keepalive packet
+  \param kp the packet to encode to
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_keepalive_raw_times(k,kate_duration_granule(k->ki,t),kp);
+}
+
+/**
+  \ingroup encoding
+  Emits a repeat packet, to help with seeking.
+  The first active event at time t, if it or its latest repeat (whichever is
+  the latest) was emitted more than threshold ago, of if threshold is zero,
+  will have a repeat packet emitted.
+  kate_encode_repeat is designed to be called in a loop, as it will return a
+  repeat packet for only one event even if more than one event needs a repeat.
+  When the returned value is 0, no more events need repeating at time t.
+  \param k the kate_state to encode to
+  \param t the timestamp (in granule rate units) for the the packets, if any
+  \param threshold the time threshold (in granule rate units) at which to emit
+         a repeat packets (zero to force a repeat)
+  \param kp the packet to encode to
+  \returns 0 success, and no repeat packet was encoded
+  \returns 1 success, and a repeat packet was encoded
+  \returns KATE_E_* error
+  */
+int kate_encode_repeat_raw_times(kate_state *k,kate_int64_t t,kate_int64_t threshold,kate_packet *kp)
+{
+  kate_int64_t earliest_t;
+  kate_int64_t granulepos;
+  int ret;
+
+  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
+  if (threshold<0) return KATE_E_INVALID_PARAMETER;
+  if (!k->kes) return KATE_E_INIT;
+  if (k->kes->eos) return KATE_E_INIT;
+
+  ret=kate_encode_state_trim_events(k->kes,t);
+  if (ret<0) return ret;
+  ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
+  if (ret==KATE_E_NOT_FOUND) {
+    /* if there are no live events yet, base from now */
+    earliest_t=t;
+  }
+  else if (ret<0) {
+    return ret;
+  }
+  granulepos=(earliest_t<<k->ki->granule_shift)|(t-earliest_t);
+  if (granulepos<0) return granulepos;
+
+  if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
+
+  ret=kate_encode_state_get_repeat(k->kes,t,threshold,kp);
+  if (ret>0) {
+    /* if we encoded a repeat, update encoding state granpos */
+    k->kes->granulepos=granulepos;
+  }
+  return ret;
 }
 
 /**
@@ -1029,36 +1116,8 @@ int kate_encode_keepalive(kate_state *k,kate_float t,kate_packet *kp)
   */
 int kate_encode_repeat(kate_state *k,kate_float t,kate_float threshold,kate_packet *kp)
 {
-  kate_float earliest_t;
-  kate_int64_t granulepos;
-  int ret;
-
-  if (!k || !kp) return KATE_E_INVALID_PARAMETER;
-  if (threshold<(kate_float)0) return KATE_E_INVALID_PARAMETER;
-  if (!k->kes) return KATE_E_INIT;
-  if (k->kes->eos) return KATE_E_INIT;
-
-  ret=kate_encode_state_trim_events(k->kes,t);
-  if (ret<0) return ret;
-  ret=kate_encode_state_get_earliest_event(k->kes,&earliest_t,NULL);
-  if (ret==KATE_E_NOT_FOUND) {
-    /* if there are no live events yet, base from now */
-    earliest_t=t;
-  }
-  else if (ret<0) {
-    return ret;
-  }
-  granulepos=kate_time_granule(k->ki,earliest_t,t-earliest_t);
-  if (granulepos<0) return granulepos;
-
-  if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
-
-  ret=kate_encode_state_get_repeat(k->kes,t,threshold,kp);
-  if (ret>0) {
-    /* if we encoded a repeat, update encoding state granpos */
-    k->kes->granulepos=granulepos;
-  }
-  return ret;
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_repeat_raw_times(k,kate_duration_granule(k->ki,t),kate_duration_granule(k->ki,threshold),kp);
 }
 
 /**
@@ -1066,12 +1125,13 @@ int kate_encode_repeat(kate_state *k,kate_float t,kate_float threshold,kate_pack
   Finalizes the currently encoded stream.
   No more events may be added after this is called.
   \param k the kate_state to encode to
-  \param t the timestamp for the end (if negative, the end time of the last event will be used)
+  \param t the timestamp (in granule rate units) for the end (if negative,
+           the end time of the last event will be used)
   \param kp the packet to encode to
   \returns 0 success
   \returns KATE_E_* error
   */
-int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
+int kate_encode_finish_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp)
 {
   kate_pack_buffer *kpb;
   kate_int64_t granulepos;
@@ -1094,7 +1154,7 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
     if (ret<0) return ret;
   }
 
-  granulepos=kate_time_granule(k->ki,t,0);
+  granulepos=t<<k->ki->granule_shift;
   if (granulepos<0) return granulepos;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
@@ -1106,6 +1166,22 @@ int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
   k->kes->eos=1;
 
   return kate_finalize_packet_buffer(kpb,kp,k);
+}
+
+/**
+  \ingroup encoding
+  Finalizes the currently encoded stream.
+  No more events may be added after this is called.
+  \param k the kate_state to encode to
+  \param t the timestamp for the end (if negative, the end time of the last event will be used)
+  \param kp the packet to encode to
+  \returns 0 success
+  \returns KATE_E_* error
+  */
+int kate_encode_finish(kate_state *k,kate_float t,kate_packet *kp)
+{
+  if (!k) return KATE_E_INVALID_PARAMETER;
+  return kate_encode_finish_raw_times(k,kate_duration_granule(k->ki,t),kp);
 }
 
 /**
