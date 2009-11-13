@@ -187,10 +187,10 @@ static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
 
   kprintf(ks,klt_misc,"An event was found\n");
 
-  kprintf(ks,klt_timing,"event start: %f (%llx)\n",ev->start_time,(long long)ev->start);
+  kprintf(ks,klt_timing,"event start: %f (%lld)\n",ev->start_time,(long long)ev->start);
   kprintf(ks,klt_timing,"event end: %f\n",ev->end_time);
-  kprintf(ks,klt_timing,"event duration: %f\n",ev->end_time-ev->start_time);
-  kprintf(ks,klt_timing,"event backlink: %f (%llx)\n",kate_granule_duration(ev->ki,ev->backlink),(long long)ev->backlink);
+  kprintf(ks,klt_timing,"event duration: %f (%lld)\n",ev->end_time-ev->start_time,(long long)ev->duration);
+  kprintf(ks,klt_timing,"event backlink: %f (%lld)\n",kate_granule_duration(ev->ki,ev->backlink),(long long)ev->backlink);
 
   kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
   kprintf(ks,klt_text,"Text language \"%s\" (%s)\n",ev->language?ev->language:ev->ki->language,ev->language?"overridden":"default");
