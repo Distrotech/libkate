@@ -281,6 +281,45 @@ void update_stream_time(kate_state *k,FILE *fout,kate_float endt)
   }
 }
 
+static void remove_last_newline(char *text)
+{
+  size_t len;
+
+  len=strlen(text);
+  if (len>0 && text[len-1]=='\n') text[--len]=0;
+}
+
+static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char *text)
+{
+  ogg_packet op;
+  size_t len;
+  int ret;
+
+  update_stream_time(&k,fout,t0);
+
+  len=strlen(text);
+  ret=kate_text_validate(kate_utf8,text,len+1);
+  if (ret<0) {
+    if (ret==KATE_E_TEXT) {
+      fprintf(stderr,"Text is not valid UTF-8: %s\n",text);
+    }
+    else {
+      fprintf(stderr,"Failed to validate text: %d\n",ret);
+    }
+    return ret;
+  }
+  ret=kate_ogg_encode_text_raw_times(&k,t0,t1,text,len,&op);
+  if (ret<0) {
+    fprintf(stderr,"Error encoding text: %d\n",ret);
+    return ret;
+  }
+  else {
+    ret=send_packet(fout,&op,t0);
+    if (ret<0) return ret;
+  }
+  return ret;
+}
+
 static int convert_srt(FILE *fin,FILE *fout)
 {
   enum { need_id, need_timing, need_text };
@@ -354,32 +393,9 @@ static int convert_srt(FILE *fin,FILE *fout)
         break;
       case need_text:
         if (is_line_empty(str)) {
-          ogg_packet op;
-          size_t len;
-
-          update_stream_time(&k,fout,t0);
-
-          len=strlen(text);
-          if (len>0 && text[len-1]=='\n') text[--len]=0;
-          ret=kate_text_validate(kate_utf8,text,len+1);
-          if (ret<0) {
-            if (ret==KATE_E_TEXT) {
-              fprintf(stderr,"Text is not valid UTF-8: %s\n",text);
-            }
-            else {
-              fprintf(stderr,"Failed to validate text: %d\n",ret);
-            }
-            return ret;
-          }
-          ret=kate_ogg_encode_text_raw_times(&k,t0,t1,text,strlen(text),&op);
-          if (ret<0) {
-            fprintf(stderr,"Error encoding text: %d\n",ret);
-            return ret;
-          }
-          else {
-            ret=send_packet(fout,&op,t0);
-            if (ret<0) return ret;
-          }
+          remove_last_newline(text);
+          ret=emit_srt_event(fout,t0,t1,text);
+          if (ret<0) return ret;
           need=need_id;
         }
         else {
@@ -391,6 +407,14 @@ static int convert_srt(FILE *fin,FILE *fout)
     }
     fgets2(str,sizeof(str),fin,1);
   }
+
+  /* add any text we've accumulated if there's no empty line at the end */
+  if (need==need_text && text[0]) {
+    remove_last_newline(text);
+    ret=emit_srt_event(fout,t0,t1,text);
+    if (ret<0) return ret;
+  }
+
   return 0;
 }
 
