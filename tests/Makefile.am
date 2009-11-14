@@ -37,7 +37,7 @@ KATEENC_OPTS=-s 0 -c test -l en -K 5 -R 15
 
 check-local:
 	@echo " Checking Kate namespace"
-	@! @NM@ lib/.libs/*.{a,so} \
+	@! @NM@ $(top_builddir)/lib/.libs/*.{a,so} \
 	 | $(GREP) "^[0-9a-z]\{8\} [A-MO-Z] [^\.]" \
 	 | $(GREP) -v "^.\{11\}_" \
 	 | $(GREP) -v "^.\{11\}kate_"
