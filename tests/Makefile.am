@@ -55,7 +55,7 @@ check-local:
 	| $(GREP) .
 if HAVE_OGG
 	@echo " Checking SRT round-trip"
-	@$(foreach loop, "" 0 1 2 3 4 5 6 7 8 9, \
+	@$(foreach loop, - 0 1 2 3 4 5 6 7 8 9, \
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tests/gen_srt $(loop) > $(tmp_srt1) && \
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/kateenc -c SUB -l en -t srt -o $(tmp_ogg1) $(tmp_srt1) && \
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/katedec -t srt -o $(tmp_srt2) $(tmp_ogg1) && \

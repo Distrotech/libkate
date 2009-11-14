@@ -68,7 +68,7 @@ int main(int argc,char **argv)
   int item,items;
   float t=0.0f;
 
-  if (argc==1 || *argv[1]) {
+  if (argc==1 || *argv[1]!='-') {
     srand(argc==1?time(NULL):atoi(argv[1]));
 
     items=argc==1?262144:get_random(256);
