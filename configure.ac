@@ -10,6 +10,8 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE([-Wall -Werror foreign subdir-objects])
 AC_CONFIG_HEADERS([include/config.h])
 
+ifdef([AM_SILENT_RULES],[AM_SILENT_RULES])
+
 dnl  3. If the library source code has changed at all since the last
 dnl     update, then increment REVISION (`C:R:A' becomes `C:r+1:A').
 dnl
