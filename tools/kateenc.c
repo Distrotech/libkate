@@ -410,6 +410,7 @@ static int convert_srt(FILE *fin,FILE *fout)
 
   /* add any text we've accumulated if there's no empty line at the end */
   if (need==need_text && text[0]) {
+    fprintf(stderr, "Warning: last event is not followed by an empty line - input might be truncated\n");
     remove_last_newline(text);
     ret=emit_srt_event(fout,t0,t1,text);
     if (ret<0) return ret;
