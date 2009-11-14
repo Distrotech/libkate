@@ -289,7 +289,7 @@ static void remove_last_newline(char *text)
   if (len>0 && text[len-1]=='\n') text[--len]=0;
 }
 
-static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char *text)
+static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char *text,int allow_srt_markup)
 {
   ogg_packet op;
   size_t len;
@@ -308,6 +308,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
     }
     return ret;
   }
+  if (allow_srt_markup) kate_encode_set_markup_type(&k,kate_markup_simple);
   ret=kate_ogg_encode_text_raw_times(&k,t0,t1,text,len,&op);
   if (ret<0) {
     fprintf(stderr,"Error encoding text: %d\n",ret);
@@ -320,7 +321,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
   return ret;
 }
 
-static int convert_srt(FILE *fin,FILE *fout)
+static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
 {
   enum { need_id, need_timing, need_text };
   int need = need_id;
@@ -394,7 +395,7 @@ static int convert_srt(FILE *fin,FILE *fout)
       case need_text:
         if (is_line_empty(str)) {
           remove_last_newline(text);
-          ret=emit_srt_event(fout,t0,t1,text);
+          ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup);
           if (ret<0) return ret;
           need=need_id;
         }
@@ -412,7 +413,7 @@ static int convert_srt(FILE *fin,FILE *fout)
   if (need==need_text && text[0]) {
     fprintf(stderr, "Warning: last event is not followed by an empty line - input might be truncated\n");
     remove_last_newline(text);
-    ret=emit_srt_event(fout,t0,t1,text);
+    ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup);
     if (ret<0) return ret;
   }
 
@@ -754,6 +755,7 @@ int main(int argc,char **argv)
   const char *arg;
   char *endptr;
   FILE *fin,*fout;
+  int allow_srt_markup=0;
 
   srand(time(NULL)^getpid());
   serial=rand();
@@ -792,6 +794,7 @@ int main(int argc,char **argv)
           printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
           printf("   -K <threshold>      Use keepalive packets with given threshold (seconds)\n");
           printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
+          printf("   -M                  Allow simple markup in SRT files\n");
           exit(0);
         case 'o':
           if (!output_filename) {
@@ -865,6 +868,9 @@ int main(int argc,char **argv)
             fprintf(stderr,"error in keepalive threshold: %s: should be a floating point value\n",arg);
             exit(-1);
           }
+          break;
+        case 'M':
+          allow_srt_markup=1;
           break;
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
@@ -950,7 +956,7 @@ int main(int argc,char **argv)
     ret=convert_kate(fin,fout);
   }
   else if (!strcmp(input_file_type,"srt")) {
-    ret=convert_srt(fin,fout);
+    ret=convert_srt(fin,fout,allow_srt_markup);
   }
   else if (!strcmp(input_file_type,"lrc")) {
     ret=convert_lrc(fin,fout);

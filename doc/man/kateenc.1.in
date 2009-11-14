@@ -7,14 +7,14 @@
 .\" file 'COPYING'. Please read these terms before distributing. */
 
 
-.TH "KATEENC" 1 "21 september 2009" "libkate @VERSION@ "libkate documentation"
+.TH "KATEENC" 1 "14 november 2009" "libkate @VERSION@ "libkate documentation"
 
 .SH NAME
 kateenc \- create Kate streams from text input
 
 .SH SYNOPSIS
 .B kateenc
-.B "[\-hVr]"
+.B "[\-hVrM]"
 .BI "[\-o " outfile ]
 .BI "[\-l " language ]
 .BI "[\-c " category ]
@@ -41,6 +41,11 @@ Show version information.
 .TP
 \fB\-r\fR
 Write raw Kate streams (experimental) rather than Kate\-in\-Ogg.
+.TP
+\fB\-M\fR
+Allow simple HTML-like markup in SRT files. If this parameter is used, strings such as "<i>"
+will be interpreted to mean italics, rather than appear as such. Note that various players
+interpret a slightly different set of HTML tags, and some do not.
 .TP
 \fB\-o\fR outfile
 Write the output Kate stream to the given file name (writes to stdout if not specified).
