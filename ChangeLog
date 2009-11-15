@@ -1,3 +1,8 @@
+0.3.7 - ??
+  fix SRT timing precision problems
+  new -M option to kateenc to allow HTML-like markup in SRT files
+  allow the last event in an SRT file to not be followed by an empty line
+
 0.3.6 - 03 september 2009
   fix KateDJ installation problem (missing module)
 
