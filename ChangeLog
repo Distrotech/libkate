@@ -1,4 +1,4 @@
-0.3.7 - ??
+0.3.7 - 15 november 2009
   new encoding functions to specify timing in granule rate units
   fix SRT timing precision problems
   new -M option to kateenc to allow HTML-like markup in SRT files

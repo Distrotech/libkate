@@ -1,4 +1,4 @@
-AC_INIT([libkate],[0.3.6])
+AC_INIT([libkate],[0.3.7])
 
 AC_CONFIG_SRCDIR([include/kate/kate.h.in])
 AC_CONFIG_AUX_DIR([misc/autotools])
@@ -24,8 +24,8 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBKATE_SHARED_VERSION="2:5:1"
-LIBOGGKATE_SHARED_VERSION="2:0:1"
+LIBKATE_SHARED_VERSION="3:0:2"
+LIBOGGKATE_SHARED_VERSION="3:0:2"
 
 AC_PROG_CC_C_O
 AC_LIBTOOL_DLOPEN
