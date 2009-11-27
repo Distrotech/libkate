@@ -56,7 +56,7 @@ static void gen_text()
     int n,nchars=1+get_random(128);
     for (n=0;n<nchars;++n) {
       int c=26+get_random(100);
-      if (n==0 && c==' ' || strchr("\r\n",c)) ++c;
+      if ((n==0 && c==' ') || strchr("\r\n",c)) ++c;
       printf("%c",c);
     }
     printf("\n");
