@@ -53,12 +53,15 @@ typedef struct {
   struct lrc_data lrc_data;
 } ogg_parser_data;
 
-static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
+static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
 {
   ogg_parser_data *opd=(ogg_parser_data*)data;
   ogg_packet op;
   int ret;
   kate_stream *ks;
+
+  /* check for hole */
+  if (!og) return 0;
 
   /* add the page in the correct stream */
   if (ogg_page_bos(og)) {
@@ -394,6 +397,7 @@ int main(int argc,char **argv)
     opd.output_filename=output_filename;
 
     opf.on_page=&ogg_parser_on_page;
+    opf.on_hole=NULL;
     ret=parse_ogg_stream(fin,signature,signature_size,opf,(kate_uintptr_t)&opd);
 
     /* Force EOS on truncated streams */

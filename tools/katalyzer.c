@@ -153,7 +153,7 @@ static void katalyzer_dump_data(kate_stream *ks,katalyzer_log_type type,const ch
   }
 }
 
-static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
+static void katalyzer_on_ogg_packet(kate_stream *ks,long offset,ogg_packet *op,int is_kate)
 {
   char stype[64];
 
@@ -163,8 +163,9 @@ static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
   else {
     strcpy(stype,"");
   }
-  kprintf(ks,klt_packet,"packet %lld, %ld bytes%s\n",
+  kprintf(ks,klt_packet,"packet %lld at offset %lx, %ld bytes%s\n",
       (long long)op->packetno,
+      offset,
       (long)op->bytes,
       stype);
 
@@ -242,7 +243,7 @@ static void add_to_stats(ogg_parser_data *opd,kate_stream *ks,ogg_packet *op)
   }
 }
 
-static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
+static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
 {
   ogg_parser_data *opd=(ogg_parser_data*)data;
   ogg_packet op;
@@ -261,8 +262,8 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
   }
 
   if (ks) {
-    kprintf(NULL,klt_container,"Ogg page, granpos %016llx, %d bytes, %d packets on this page\n",
-        (long long)ogg_page_granulepos(og),
+    kprintf(NULL,klt_container,"Ogg page at offset %lx, granpos %016llx, %d bytes, %d packets on this page\n",
+        offset,(long long)ogg_page_granulepos(og),
         og->header_len+og->body_len,ogg_page_packets(og));
 
     katalyzer_dump_data(ks,klt_dump,"Page header",og->header,og->header_len);
@@ -278,7 +279,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
         kate_packet_wrap(&kp,op.bytes,op.packet);
         if (kate_decode_is_idheader(&kp)) is_kate=1;
       }
-      katalyzer_on_ogg_packet(ks,&op,is_kate);
+      katalyzer_on_ogg_packet(ks,offset+op.packet-og->body,&op,is_kate);
 
       add_to_stats(opd,ks,&op);
 
@@ -349,6 +350,13 @@ static int ogg_parser_on_page(kate_uintptr_t data,ogg_page *og)
     }
   }
 
+  return 0;
+}
+
+static int ogg_parser_on_hole(kate_uintptr_t data,long offset,long size)
+{
+  (void)data;
+  kprintf(NULL,klt_error,"Hole in data at offset %lx: %ld bytes\n",offset,size);
   return 0;
 }
 
@@ -623,6 +631,7 @@ int main(int argc,char **argv)
     init_ogg_parser_data(&opd);
 
     opf.on_page=&ogg_parser_on_page;
+    opf.on_hole=&ogg_parser_on_hole;
     ret=parse_ogg_stream(fin,signature,signature_size,opf,(kate_uintptr_t)&opd);
 
     output_all_stats(&opd);

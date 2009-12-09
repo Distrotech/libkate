@@ -13,7 +13,8 @@
 #include <stdio.h>
 
 typedef struct {
-  int (*on_page)(kate_uintptr_t data,ogg_page*);
+  int (*on_page)(kate_uintptr_t data,long offset,ogg_page*);
+  int (*on_hole)(kate_uintptr_t data,long offset,long size);
 } ogg_parser_funcs;
 
 extern int read_raw_size_and_packet(FILE *f,char **buffer,ogg_int64_t *bytes);

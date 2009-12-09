@@ -104,6 +104,13 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   ogg_page og;
   ogg_int64_t bytes_read;
   static const size_t buffer_size=4096;
+  size_t offset=0;
+  int ret;
+  long last_returned;
+  long leftover_size=0;
+  int in_hole=0;
+  long first_hole_size=0;
+  long hole_offset;
 
   ogg_sync_init(&oy);
 
@@ -130,11 +137,42 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
     }
     ogg_sync_wrote(&oy,bytes_read);
 
-    while (ogg_sync_pageout(&oy,&og)>0) {
-      if (funcs.on_page) {
-        int ret=(*funcs.on_page)(data,&og);
-        if (ret<0) goto error;
+    last_returned=0;
+    while ((ret=ogg_sync_pageout(&oy,&og))!=0) {
+      if (ret>0) {
+        /* new page */
+        if (in_hole) {
+          long hole_size=first_hole_size+leftover_size+oy.returned-(og.header_len+og.body_len);
+          if (funcs.on_hole) {
+            ret=(*funcs.on_hole)(data,hole_offset,hole_size);
+            if (ret<0) goto error;
+          }
+          offset+=hole_size;
+        }
+        if (funcs.on_page) {
+          ret=(*funcs.on_page)(data,offset,&og);
+          if (ret<0) goto error;
+        }
+        in_hole=0;
+        offset+=og.header_len+og.body_len;
       }
+      else {
+        /* hole in data */
+        first_hole_size=oy.returned-last_returned;
+        hole_offset=offset;
+        in_hole=1;
+      }
+      leftover_size=0;
+      last_returned=oy.returned;
+    }
+    leftover_size+=oy.fill-last_returned;
+  }
+
+  /* detect holes at end of file */
+  if (leftover_size>0) {
+    if (funcs.on_hole) {
+      ret=(*funcs.on_hole)(data,offset,leftover_size);
+      if (ret<0) goto error;
     }
   }
 
