@@ -538,8 +538,8 @@ int main(int argc,char **argv)
               add_log_types(&log_types,new_log_types);
               break;
             default:
-              fprintf(stderr,"Invalid log type modifier: %s\n",argv[arg]);
-              exit(-1);
+              add_log_types(&log_types,argv[arg]+2);
+              break;
           }
           break;
         default:
