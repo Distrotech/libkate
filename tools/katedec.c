@@ -191,6 +191,18 @@ static void print_version(void)
   printf("Kate reference decoder - %s\n",kate_get_version_string());
 }
 
+static void print_help(const char *argv0)
+{
+  printf("usage: %s [options] [filename]\n",argv0);
+  printf("   -V                  version\n");
+  printf("   -v                  verbose\n");
+  printf("   -h                  help\n");
+  printf("   -o <filename>       set output filename\n");
+  printf("   -t <type>           set output format (kate (default), srt, lrc)\n");
+  printf("   -B                  write some bitmaps in /tmp (debug)\n");
+  printf("   -f <number>         fuzz testing with given seed (debug)\n");
+}
+
 int main(int argc,char **argv)
 {
   size_t bytes_read;
@@ -215,19 +227,26 @@ int main(int argc,char **argv)
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
       switch (argv[arg][1]) {
+        case '-':
+          if (!strcmp(argv[arg],"--version")) {
+            print_version();
+            exit(0);
+          }
+          else if (!strcmp(argv[arg],"--help")) {
+            print_help(argv[0]);
+            exit(0);
+          }
+          else {
+            fprintf(stderr,"Invalid option: %s\n",argv[arg]);
+            exit(-1);
+          }
+          break;
         case 'V':
           print_version();
           exit(0);
         case 'h':
           print_version();
-          printf("usage: %s [options] [filename]\n",argv[0]);
-          printf("   -V                  version\n");
-          printf("   -v                  verbose\n");
-          printf("   -h                  help\n");
-          printf("   -o <filename>       set output filename\n");
-          printf("   -t <type>           set output format (kate (default), srt, lrc)\n");
-          printf("   -B                  write some bitmaps in /tmp (debug)\n");
-          printf("   -f <number>         fuzz testing with given seed (debug)\n");
+          print_help(argv[0]);
           exit(0);
         case 'o':
           if (!output_filename) {

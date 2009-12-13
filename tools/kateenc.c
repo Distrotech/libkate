@@ -720,6 +720,24 @@ static void print_version(void)
   printf("Kate reference encoder - %s\n",kate_get_version_string());
 }
 
+static void print_help(const char *argv0)
+{
+  printf("usage: %s [options] [filename]\n",argv0);
+  printf("   -V                  version\n");
+  printf("   -h                  help\n");
+  printf("   -o <filename>       set output filename\n");
+  printf("   -t <type>           set input file type\n");
+  printf("       types can be: kate, srt, lrc\n");
+  printf("   -l <language>       set stream language\n");
+  printf("   -c <category>       set stream category\n");
+  printf("   -s <hex number>     set serial number of output stream\n");
+  printf("   -r                  write raw Kate stream (experimental)\n");
+  printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
+  printf("   -K <threshold>      Use keepalive packets with given threshold (seconds)\n");
+  printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
+  printf("   -M                  Allow simple markup in SRT files\n");
+}
+
 #ifdef DEBUG
 static void print_rle_stats(void)
 {
@@ -776,25 +794,25 @@ int main(int argc,char **argv)
   for (n=1;n<argc;++n) {
     if (argv[n][0]=='-') {
       switch (argv[n][1]) {
+        case '-':
+          if (!strcmp(argv[n],"--version")) {
+            print_version();
+            exit(0);
+          }
+          else if (!strcmp(argv[n],"--help")) {
+            print_help(argv[0]);
+            exit(0);
+          }
+          else {
+            fprintf(stderr,"Invalid option: %s\n",argv[n]);
+            exit(-1);
+          }
+          break;
         case 'V':
           print_version();
           exit(0);
         case 'h':
           print_version();
-          printf("usage: %s [options] [filename]\n",argv[0]);
-          printf("   -V                  version\n");
-          printf("   -h                  help\n");
-          printf("   -o <filename>       set output filename\n");
-          printf("   -t <type>           set input file type\n");
-          printf("       types can be: kate, srt, lrc\n");
-          printf("   -l <language>       set stream language\n");
-          printf("   -c <category>       set stream category\n");
-          printf("   -s <hex number>     set serial number of output stream\n");
-          printf("   -r                  write raw Kate stream (experimental)\n");
-          printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
-          printf("   -K <threshold>      Use keepalive packets with given threshold (seconds)\n");
-          printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
-          printf("   -M                  Allow simple markup in SRT files\n");
           exit(0);
         case 'o':
           if (!output_filename) {

@@ -490,6 +490,23 @@ static void print_version(void)
   printf("Katalyzer, a Kate stream analyzer - %s\n",kate_get_version_string());
 }
 
+static void print_help(const char *argv0)
+{
+  size_t n;
+
+  printf("usage: %s [options] [filename]\n",argv0);
+  printf("   -V                  version\n");
+  printf("   -h                  help\n");
+  printf("   -l <types>          select information to log\n");
+  printf("   -l!                 log everything\n");
+  for (n=0;n<sizeof(log_types_info)/sizeof(log_types_info[0]);++n) {
+    printf("       %c        %s (default %s)\n",
+        log_types_info[n].id,
+        log_types_info[n].desc,
+        log_types_info[n].by_default?"on":"off");
+  }
+}
+
 int main(int argc,char **argv)
 {
   size_t bytes_read;
@@ -510,22 +527,26 @@ int main(int argc,char **argv)
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
       switch (argv[arg][1]) {
+        case '-':
+          if (!strcmp(argv[arg],"--version")) {
+            print_version();
+            exit(0);
+          }
+          else if (!strcmp(argv[arg],"--help")) {
+            print_help(argv[0]);
+            exit(0);
+          }
+          else {
+            fprintf(stderr,"Invalid option: %s\n",argv[arg]);
+            exit(-1);
+          }
+          break;
         case 'V':
           print_version();
           exit(0);
         case 'h':
           print_version();
-          printf("usage: %s [options] [filename]\n",argv[0]);
-          printf("   -V                  version\n");
-          printf("   -h                  help\n");
-          printf("   -l <types>          select information to log\n");
-          printf("   -l!                 log everything\n");
-          for (n=0;n<sizeof(log_types_info)/sizeof(log_types_info[0]);++n) {
-            printf("       %c        %s (default %s)\n",
-                log_types_info[n].id,
-                log_types_info[n].desc,
-                log_types_info[n].by_default?"on":"off");
-          }
+          print_help(argv[0]);
           exit(0);
         case 'l':
           switch (argv[arg][2]) {
