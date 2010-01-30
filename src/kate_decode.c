@@ -158,7 +158,7 @@ static int kate_decode_check_magic(kate_pack_buffer *kpb)
   if (!kpb) return KATE_E_INVALID_PARAMETER;
 
   ret=kate_readbuf(kpb,magic,7);
-  if (ret<0) return ret;
+  if (ret<0) return KATE_E_NOT_KATE;
   if (memcmp(magic,"kate\0\0\0",7)) return KATE_E_NOT_KATE;
 
   return 0;
