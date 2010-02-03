@@ -153,7 +153,7 @@ static void katalyzer_dump_data(kate_stream *ks,katalyzer_log_type type,const ch
   }
 }
 
-static void katalyzer_on_ogg_packet(kate_stream *ks,long offset,ogg_packet *op,int is_kate)
+static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
 {
   char stype[64];
 
@@ -163,9 +163,8 @@ static void katalyzer_on_ogg_packet(kate_stream *ks,long offset,ogg_packet *op,i
   else {
     strcpy(stype,"");
   }
-  kprintf(ks,klt_packet,"packet %lld at offset %lx, %ld bytes%s\n",
+  kprintf(ks,klt_packet,"packet %lld, %ld bytes%s\n",
       (long long)op->packetno,
-      offset,
       (long)op->bytes,
       stype);
 
@@ -279,7 +278,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
         kate_packet_wrap(&kp,op.bytes,op.packet);
         if (kate_decode_is_idheader(&kp)) is_kate=1;
       }
-      katalyzer_on_ogg_packet(ks,offset+op.packet-og->body,&op,is_kate);
+      katalyzer_on_ogg_packet(ks,&op,is_kate);
 
       add_to_stats(opd,ks,&op);
 
