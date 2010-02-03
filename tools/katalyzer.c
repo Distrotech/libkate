@@ -521,7 +521,6 @@ int main(int argc,char **argv)
   int headers_written=0;
   ogg_parser_data opd;
   ogg_parser_funcs opf;
-  size_t n;
 
   for (arg=1;arg<argc;++arg) {
     if (argv[arg][0]=='-') {
