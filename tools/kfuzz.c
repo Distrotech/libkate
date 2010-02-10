@@ -14,6 +14,8 @@
 #include "kate/kate.h"
 #include "kfuzz.h"
 
+#ifdef DEBUG
+
 unsigned long gen_fuzz(unsigned long *seed)
 {
   return *seed=*seed*65521+0x9e370001UL;
@@ -44,4 +46,6 @@ void fuzz_ogg_packet(unsigned long *seed,ogg_packet *op)
 {
   fuzz_packet(seed,op->bytes,op->packet);
 }
+
+#endif
 

@@ -1055,7 +1055,7 @@ int kate_decode_init(kate_state *k,kate_info *ki)
     if (kate_pack_read1(kpb)) { read; } \
   } while(0)
 
-#ifdef DEBUG
+#if 0 && defined DEBUG
 #include <unistd.h>
 #include <sys/types.h>
 #include <time.h>

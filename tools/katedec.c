@@ -42,8 +42,10 @@ typedef struct {
   const char *output_filename;
   int verbose;
   int event_index;
+#ifdef DEBUG
   int fuzz;
   unsigned long fuzz_seed;
+#endif
 
   void (*write_start_function)(FILE*);
   void (*write_end_function)(FILE*);
@@ -199,8 +201,10 @@ static void print_help(const char *argv0)
   printf("   -h                  help\n");
   printf("   -o <filename>       set output filename\n");
   printf("   -t <type>           set output format (kate (default), srt, lrc)\n");
+#ifdef DEBUG
   printf("   -B                  write some bitmaps in /tmp (debug)\n");
   printf("   -f <number>         fuzz testing with given seed (debug)\n");
+#endif
 }
 
 int main(int argc,char **argv)
@@ -218,8 +222,10 @@ int main(int argc,char **argv)
   char *buffer=NULL;
   ogg_int64_t bytes;
   int headers_written=0;
+#ifdef DEBUG
   int fuzz=0;
   unsigned long fuzz_seed=0;
+#endif
   ogg_parser_data opd;
   ogg_parser_funcs opf;
   size_t n;
@@ -260,13 +266,6 @@ int main(int argc,char **argv)
         case 'v':
           ++verbose;
           break;
-        case 'B':
-          write_bitmaps=1;
-          break;
-        case 'f':
-          fuzz=1;
-          fuzz_seed=strtoul(eat_arg(argc,argv,&arg),NULL,10);
-          break;
         case 't':
           if (!output_filename_type) {
             output_filename_type=eat_arg(argc,argv,&arg);
@@ -276,6 +275,15 @@ int main(int argc,char **argv)
             exit(-1);
           }
           break;
+#ifdef DEBUG
+        case 'B':
+          write_bitmaps=1;
+          break;
+        case 'f':
+          fuzz=1;
+          fuzz_seed=strtoul(eat_arg(argc,argv,&arg),NULL,10);
+          break;
+#endif
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[arg]);
           exit(-1);
@@ -368,7 +376,9 @@ int main(int argc,char **argv)
       const kate_event *ev=NULL;
       kate_packet kp;
       kate_packet_wrap(&kp,bytes,buffer);
+#ifdef DEBUG
       if (fuzz) fuzz_kate_packet(&fuzz_seed,&kp);
+#endif
       ret=kate_high_decode_packetin(&k,&kp,&ev);
       if (ret<0) {
         fprintf(stderr,"failed to decode raw kate packet (%d)\n",ret);
@@ -411,8 +421,10 @@ int main(int argc,char **argv)
     opd.n_streams=0;
     opd.verbose=verbose;
     opd.event_index=0;
+#ifdef DEBUG
     opd.fuzz=fuzz;
     opd.fuzz_seed=fuzz_seed;
+#endif
     opd.output_filename=output_filename;
 
     opf.on_page=&ogg_parser_on_page;

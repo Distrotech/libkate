@@ -36,7 +36,9 @@
 #include "kstrings.h"
 #include "kkate.h"
 
+#ifdef DEBUG
 int write_bitmaps=0;
+#endif
 
 void write_kate_start(FILE *f)
 {
@@ -236,7 +238,8 @@ static void write_palette_defs(FILE *f,const kate_palette *kp,size_t indent)
 }
 
 #ifdef DEBUG
-static void write_bitmap(const char *filename,const kate_bitmap *kb,const kate_palette *kp)
+
+static void write_paletted_bitmap(const char *filename,const kate_bitmap *kb,const kate_palette *kp)
 {
   size_t n,x,y;
   FILE *f;
@@ -259,6 +262,20 @@ static void write_bitmap(const char *filename,const kate_bitmap *kb,const kate_p
 
   fclose(f);
 }
+
+static void write_png_bitmap(const char *filename,const kate_bitmap *kb)
+{
+  FILE *f;
+
+  f=fopen(filename,"w");
+  if (!f) {
+    fprintf(stderr,"Failed to open %s: %s\n",filename,strerror(errno));
+    return;
+  }
+  fwrite(kb->pixels,kb->size,1,f);
+  fclose(f);
+}
+
 #endif
 
 static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
@@ -600,12 +617,23 @@ void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gra
     }
   }
 #ifdef DEBUG
-  if (write_bitmaps && ev->bitmap && ev->bitmap->bpp>0 && ev->palette) {
+  if (write_bitmaps && ev->bitmap) {
     static int n=0;
     static char filename[32];
-    snprintf(filename,sizeof(filename),"/tmp/kate-bitmap-%d",n++);
-    filename[sizeof(filename)-1]=0;
-    write_bitmap(filename,ev->bitmap,ev->palette);
+    switch (ev->bitmap->type) {
+      case kate_bitmap_type_paletted:
+        if (ev->bitmap->bpp>0 && ev->palette) {
+          snprintf(filename,sizeof(filename),"/tmp/kate-bitmap-%d",n++);
+          filename[sizeof(filename)-1]=0;
+          write_paletted_bitmap(filename,ev->bitmap,ev->palette);
+        }
+        break;
+      case kate_bitmap_type_png:
+        snprintf(filename,sizeof(filename),"/tmp/kate-bitmap-%d",n++);
+        filename[sizeof(filename)-1]=0;
+        write_png_bitmap(filename,ev->bitmap);
+        break;
+    }
   }
 #endif
   if (ev->nmotions) {

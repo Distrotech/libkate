@@ -189,6 +189,12 @@ fi
 #CWARNFLAGS_LIGHT="$CWARNFLAGS_FULL"
 #endif
 
+AC_ARG_ENABLE(debug, [  --enable-debug          Enable debug code and logs (default disabled)])
+if test "x$enable_debug" = "xyes"
+then
+  CFLAGS_DEBUG="-DDEBUG"
+fi
+
 AC_ARG_ENABLE(fortify_source, [  --enable-fortify-source Build with -D_FORTIFY_SOURCE=2 (default disabled)])
 if test "x$enable_fortify_source" = "xyes"
 then
@@ -216,6 +222,7 @@ AC_SUBST([UINT64_T])
 AC_SUBST([CONST])
 AC_SUBST([CWARNFLAGS_LIGHT])
 AC_SUBST([CWARNFLAGS_FULL])
+AC_SUBST([CFLAGS_DEBUG])
 AC_SUBST([CFLAGS_FORTIFY_SOURCE])
 AC_SUBST([NM])
 AC_SUBST([STREAMS])

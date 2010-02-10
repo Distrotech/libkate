@@ -23,9 +23,9 @@ katalyzer_SOURCES=katalyzer.c kutil.c kstream.c kread.c kstrings.c kstats.c
 kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 katalyzer_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
-kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@ @PNG_CFLAGS@
-katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@
-katalyzer_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @OGG_CFLAGS@
+kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @CFLAGS_DEBUG@ @OGG_CFLAGS@ @PNG_CFLAGS@
+katedec_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @CFLAGS_DEBUG@ @OGG_CFLAGS@
+katalyzer_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @CFLAGS_DEBUG@ @OGG_CFLAGS@
 bin_PROGRAMS=katedec kateenc katalyzer
 BUILT_SOURCES=kate_parser.h
 endif

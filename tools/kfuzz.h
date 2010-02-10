@@ -13,10 +13,12 @@
 #include <ogg/ogg.h>
 #include "kate/kate.h"
 
+#ifdef DEBUG
 extern unsigned long gen_fuzz(unsigned long *seed);
 extern unsigned long gen_fuzz_n(unsigned long *seed,unsigned long n);
 extern void fuzz_kate_packet(unsigned long *seed,kate_packet *kp);
 extern void fuzz_ogg_packet(unsigned long *seed,ogg_packet *op);
+#endif
 
 #endif
 

@@ -10,7 +10,9 @@
 #ifndef KATE_kkate_h_GUARD
 #define KATE_kkate_h_GUARD
 
+#ifdef DEBUG
 extern int write_bitmaps;
+#endif
 
 extern void write_kate_start(FILE *f);
 extern void write_kate_end(FILE *f);
