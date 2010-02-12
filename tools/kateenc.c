@@ -50,7 +50,9 @@ char base_path[4096]="";
 
 static char str[4096];
 static int headers_written=0;
+#ifdef DEBUG
 static int raw=0;
+#endif
 static kate_float repeat_threshold=(kate_float)0;
 static kate_float keepalive_threshold=(kate_float)0;
 static kate_float last_stream_time=(kate_float)0;
@@ -114,6 +116,7 @@ int write_headers(FILE *f)
     }
     if (ret>0) break; /* we're done */
 
+#ifdef DEBUG
     if (raw) {
       int ret=send_packet(f,&op,(kate_float)-1);
       if (ret<0) {
@@ -121,7 +124,9 @@ int write_headers(FILE *f)
         return ret;
       }
     }
-    else {
+    else
+#endif
+    {
       ogg_stream_packetin(&os,&op);
       ogg_packet_clear(&op);
     }
@@ -140,6 +145,7 @@ int send_packet(FILE *f,ogg_packet *op,kate_float t)
   if (t>last_stream_time)
     last_stream_time=t;
 
+#ifdef DEBUG
   if (raw) {
     if (op->packetno>0) {
       ogg_int64_t bytes=op->bytes;
@@ -156,7 +162,9 @@ int send_packet(FILE *f,ogg_packet *op,kate_float t)
     }
     return 0;
   }
-  else {
+  else
+#endif
+  {
     ogg_stream_packetin(&os,op);
     ogg_packet_clear(op);
     return poll_page(f);
@@ -731,11 +739,13 @@ static void print_help(const char *argv0)
   printf("   -l <language>       set stream language\n");
   printf("   -c <category>       set stream category\n");
   printf("   -s <hex number>     set serial number of output stream\n");
-  printf("   -r                  write raw Kate stream (experimental)\n");
   printf("   -R <threshold>      Use repeat packets with given threshold (seconds)\n");
   printf("   -K <threshold>      Use keepalive packets with given threshold (seconds)\n");
   printf("   -C <tag>=<value>    Add comment to the Kate stream\n");
   printf("   -M                  Allow simple markup in SRT files\n");
+#ifdef DEBUG
+  printf("   -r                  write raw Kate stream (experimental)\n");
+#endif
 }
 
 #ifdef DEBUG
@@ -853,9 +863,6 @@ int main(int argc,char **argv)
         case 's':
           serial=strtoul(eat_arg(argc,argv,&n),NULL,16);
           break;
-        case 'r':
-          raw=1;
-          break;
         case 'C':
           comment=eat_arg(argc,argv,&n);
           /* check there's a = sign though */
@@ -890,6 +897,11 @@ int main(int argc,char **argv)
         case 'M':
           allow_srt_markup=1;
           break;
+#ifdef DEBUG
+        case 'r':
+          raw=1;
+          break;
+#endif
         default:
           fprintf(stderr,"Invalid option: %s\n",argv[n]);
           exit(-1);
@@ -967,7 +979,10 @@ int main(int argc,char **argv)
     exit(-1);
   }
 
-  if (!raw) ogg_stream_init(&os,serial);
+#ifdef DEBUG
+  if (!raw)
+#endif
+    ogg_stream_init(&os,serial);
 
   ret=0;
   if (!strcmp(input_file_type,"kate")) {
@@ -999,7 +1014,10 @@ int main(int argc,char **argv)
         failed=ret;
       }
       else {
-        if (!raw) {
+#ifdef DEBUG
+        if (!raw)
+#endif
+        {
           ret=flush_page(fout);
           if (ret<0) {
             fprintf(stderr,"error flushing page: %d\n",ret);
@@ -1010,7 +1028,11 @@ int main(int argc,char **argv)
     }
   }
 
-  if (!raw) ogg_stream_clear(&os);
+#ifdef DEBUG
+  if (!raw)
+#endif
+    ogg_stream_clear(&os);
+
   ret=kate_clear(&k);
   if (ret<0) {
     fprintf(stderr,"kate_clear failed: %d\n",ret);
