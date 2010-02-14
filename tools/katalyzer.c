@@ -271,6 +271,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
     while ((ret=ogg_stream_packetout(&ks->os,&op))) {
       if (ret<0) {
         kprintf(ks,klt_error,"Hole in data\n");
+        continue;
       }
       is_kate=(ks->init>=kstream_header_info);
       if (!is_kate) {
