@@ -822,7 +822,7 @@ int main(int argc,char **argv)
           print_version();
           exit(0);
         case 'h':
-          print_version();
+          print_help(argv[0]);
           exit(0);
         case 'o':
           if (!output_filename) {
