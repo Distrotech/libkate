@@ -2068,6 +2068,22 @@ static void set_canvas_size(unsigned int width,unsigned int height)
   }
 }
 
+static void add_comment(kate_comment *kc,const char *s)
+{
+  /* check for "ENCODER=," as kateenc now sets it and we don't want cycles
+     of decode/encode to duplicate them, and we want the new one to replace
+     any existing one */
+  int different=0;
+  const char *encoder="ENCODER=",*sptr=s;
+  while (*encoder) if ((*encoder++|32)!=(*sptr++|32)) {
+    different=1;
+    break;
+  }
+  if (different) {
+    CHECK_KATE_API_ERROR(kate_comment_add(kc,s));
+  }
+}
+
 static void cleanup_names(char **names,size_t count)
 {
   size_t n;
@@ -2196,7 +2212,7 @@ kd_defs: kd_defs kd_def
 kd_def: LANGUAGE STRING { CHECK_KATE_API_ERROR(kate_info_set_language(&ki,$2)); }
       | CATEGORY STRING { CHECK_KATE_API_ERROR(kate_info_set_category(&ki,$2)); }
       | DIRECTIONALITY directionality { CHECK_KATE_API_ERROR(kate_info_set_text_directionality(&ki,$2)); }
-      | COMMENT STRING { CHECK_KATE_API_ERROR(kate_comment_add(&kc,$2)); }
+      | COMMENT STRING { add_comment(&kc,$2); }
       | DEFINE MACRO {set_macro_mode();} IDENTIFIER {record_macro_name($4);} MACRO_BODY
                      { add_temp_macro($6); unset_macro_mode(); }
       | DEFINE STYLE kd_opt_name {init_style(&kstyle);} '{' kd_style_defs '}' { add_style(&ki,$3,&kstyle); }
