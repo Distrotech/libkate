@@ -772,6 +772,26 @@ static void print_rle_stats(void)
 }
 #endif
 
+static void set_encoder_comment(kate_comment *kc)
+{
+  int ret;
+  const char *base="kateenc - ";
+  const char *version=kate_get_version_string();
+  size_t len=strlen(base)+strlen(version)+1;
+  char *value=(char*)malloc(len);
+  if (!value) {
+    fprintf(stderr,"Failed to allocate %zu bytes\n",len);
+    exit(-1);
+  }
+  sprintf(value,"%s%s",base,version);
+  ret=kate_comment_add_tag(kc,"ENCODER",value);
+  free(value);
+  if (ret<0) {
+    fprintf(stderr,"kate_comment_add_tag failed: %d\n",ret);
+    exit(-1);
+  }
+}
+
 int main(int argc,char **argv)
 {
   int n,ret,failed=0;
@@ -793,6 +813,11 @@ int main(int argc,char **argv)
   ret=kate_comment_init(&kc);
   if (ret<0) {
     fprintf(stderr,"kate_comment_init failed: %d\n",ret);
+    exit(-1);
+  }
+  set_encoder_comment(&kc);
+  if (ret<0) {
+    fprintf(stderr,"Failed to set encoder tag: %d\n",ret);
     exit(-1);
   }
   ret=kate_info_init(&ki);
