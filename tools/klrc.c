@@ -52,11 +52,14 @@ void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gran
   fprintf(fout,"%s\n",ev->text);
   fprintf(fout,"[%d:%02d.%02d]",m1,s1,cs1);
 
+  fflush(fout);
+
   lrc_data->last_event_end_time=t1;
 }
 
 void write_lrc_end(FILE *fout)
 {
   fprintf(fout,"\n");
+  fflush(fout);
 }
 

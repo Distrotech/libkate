@@ -81,6 +81,7 @@ static int flush_page(FILE *f)
       fprintf(stderr,"Write failed (%s)\n",strerror(errno));
       return -1;
     }
+    fflush(f);
   }
   return 0;
 }
@@ -160,6 +161,7 @@ int send_packet(FILE *f,ogg_packet *op,kate_float t)
       fprintf(stderr,"Write failed (%s)\n",strerror(errno));
       return -1;
     }
+    fflush(f);
     return 0;
   }
   else

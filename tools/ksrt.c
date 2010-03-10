@@ -43,5 +43,6 @@ void write_srt_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gran
   fprintf(fout,"%02d:%02d:%02d,%03d --> %02d:%02d:%02d,%03d\n",h0,m0,s0,ms0,h1,m1,s1,ms1);
   fprintf(fout,"%s\n",ev->text);
   fprintf(fout,"\n");
+  fflush(fout);
 }
 
