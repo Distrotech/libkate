@@ -120,6 +120,8 @@ AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 AM_PATH_PYTHON(, HAVE_PYTHON=yes, HAVE_PYTHON=no)
 AM_CONDITIONAL(HAVE_PYTHON,test "${HAVE_PYTHON}" = "yes")
 
+AC_CHECK_PROGS(GENHASH,md5sum md5 sha1sum)
+
 VERSION_MAJOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\1/'`
 VERSION_MINOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\2/'`
 VERSION_PATCH=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\3/'`
