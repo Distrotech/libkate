@@ -4,7 +4,7 @@ from constants import *
 
 base_width=480
 option_height=24
-help_height=80
+help_height=32+16*4
 button_height=32
 hpadding=16
 vpadding=8
@@ -21,16 +21,16 @@ class UIOptions(wx.Dialog):
     self.opt_save_as_copy=self.AddCheckBox(
       'Save remuxed file as a copy of the original Ogg file',
       options.save_as_copy,
-      'If enabled, remuxed files will be saved on a different file, so the source\n'+
-      'file is left untouched. The new file will be named similarly to the old file,\n'+
+      'If enabled, remuxed files will be saved on a different file, so the source '+
+      'file is left untouched. The new file will be named similarly to the old file, '+
       'but with \'.remuxed\' inserted before the extension.'
     )
     self.y+=vpadding
     self.opt_remove=self.AddCheckBox(
       'Remove all temporary files on exit',
       options.remove_temporary_files,
-      'If enabled, any temporary files extracted from an Ogg stream will be,\n'+
-      'removed, even if the file was not remuxed. Any changes that may have\n'+
+      'If enabled, any temporary files extracted from an Ogg stream will be, '+
+      'removed, even if the file was not remuxed. Any changes that may have '+
       'been made to the Kate streams in these temporary files will be lost.'
     )
     self.y+=vpadding
@@ -40,7 +40,7 @@ class UIOptions(wx.Dialog):
     help_inset=(16,24)
     wx.StaticBox(self,label='More info',pos=help_pos,size=help_size)
     help_pos=(help_pos[0]+help_inset[0],help_pos[1]+help_inset[1])
-    help_size=(help_size[0]-2*help_inset[0],help_size[1]-2*help_inset[1])
+    self.help_size=(help_size[0]-2*help_inset[0],help_size[1]-2*help_inset[1])
     self.help_text=wx.StaticText(self,wx.ID_ANY,'',pos=help_pos,size=help_size)
     self.y+=help_height
     self.y+=vpadding
@@ -59,6 +59,7 @@ class UIOptions(wx.Dialog):
 
   def SetHelpTextAndSkip(self,text,ev):
     self.help_text.SetLabel(text)
+    self.help_text.Wrap(self.help_size[0])
     ev.Skip()
 
   def AddButton(self,id,label):
