@@ -10,7 +10,14 @@
 #ifndef KATE_ksrt_h_GUARD
 #define KATE_ksrt_h_GUARD
 
-extern void write_srt_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index);
+struct srt_data {
+  unsigned int event_index;
+};
+
+extern void *new_srt_data(void);
+extern void free_srt_data(void*);
+
+extern void write_srt_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos);
 
 #endif
 

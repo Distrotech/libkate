@@ -163,8 +163,8 @@ int kstream_init(kate_stream *ks,ogg_page *og,int stream_index)
   ks->filename=NULL;
   ks->fout=NULL;
   ks->stream_index=stream_index;
-  ks->event_index=0;
   ks->ret=0;
+  ks->data=NULL;
 
   return 0;
 }

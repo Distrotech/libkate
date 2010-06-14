@@ -41,7 +41,6 @@ typedef struct {
 
   const char *output_filename;
   int verbose;
-  int event_index;
 #ifdef DEBUG
   int fuzz;
   unsigned long fuzz_seed;
@@ -50,9 +49,9 @@ typedef struct {
   void (*write_start_function)(FILE*);
   void (*write_end_function)(FILE*);
   void (*write_headers_function)(FILE*,const kate_info*,const kate_comment*);
-  void (*write_event_function)(FILE*,void*,const kate_event*,ogg_int64_t,int);
-  void *write_event_function_data;
-  struct lrc_data lrc_data;
+  void (*write_event_function)(FILE*,void*,const kate_event*,ogg_int64_t);
+  void *(*new_event_function_data)(void);
+  void (*free_event_function_data)(void*);
 } ogg_parser_data;
 
 static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
@@ -69,6 +68,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
   if (ogg_page_bos(og)) {
     add_kate_stream(&opd->kate_streams,og,opd->n_streams++);
     ks=find_kate_stream_for_page(&opd->kate_streams,og);
+    if (opd->new_event_function_data) ks->data=(*opd->new_event_function_data)();
     if (opd->verbose) {
       printf("found BOS page, serial %08x\n",ogg_page_serialno(og));
     }
@@ -177,7 +177,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
           }
           else if (ret==0) {
             if (opd->write_event_function) {
-              (*opd->write_event_function)(ks->fout,&opd->lrc_data,ev,ogg_page_granulepos(og),opd->event_index++);
+              (*opd->write_event_function)(ks->fout,ks->data,ev,ogg_page_granulepos(og));
             }
           }
         }
@@ -304,21 +304,24 @@ int main(int argc,char **argv)
     opd.write_headers_function=&write_kate_headers;
     opd.write_end_function=&write_kate_end;
     opd.write_event_function=&write_kate_event;
-    opd.write_event_function_data=NULL;
+    opd.new_event_function_data=NULL;
+    opd.free_event_function_data=NULL;
   }
   else if (!strcmp(output_filename_type,"srt")) {
     opd.write_start_function=NULL;
     opd.write_headers_function=NULL;
     opd.write_end_function=NULL;
     opd.write_event_function=&write_srt_event;
-    opd.write_event_function_data=NULL;
+    opd.new_event_function_data=&new_srt_data;
+    opd.free_event_function_data=&free_srt_data;
   }
   else if (!strcmp(output_filename_type,"lrc")) {
     opd.write_start_function=NULL;
     opd.write_headers_function=NULL;
     opd.write_end_function=&write_lrc_end;
     opd.write_event_function=&write_lrc_event;
-    opd.lrc_data.last_event_end_time=(kate_float)-1.0;
+    opd.new_event_function_data=&new_lrc_data;
+    opd.free_event_function_data=&free_lrc_data;
   }
   else {
     fprintf(stderr,"Invalid format type: %s\n",output_filename_type);
@@ -341,8 +344,8 @@ int main(int argc,char **argv)
     /* raw Kate stream */
     kate_state k;
     FILE *fout;
-    int event_index=0;
     int ret;
+    void *write_event_function_data=(*opd.new_event_function_data)();
 
     bytes=64;
     buffer=(char*)kate_malloc(bytes);
@@ -394,9 +397,8 @@ int main(int argc,char **argv)
       }
       if (ev) {
         if (opd.write_event_function) {
-          (*opd.write_event_function)(fout,opd.write_event_function_data,ev,-1,event_index);
+          (*opd.write_event_function)(fout,write_event_function_data,ev,-1);
         }
-        ++event_index;
       }
 
       /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
@@ -411,6 +413,8 @@ int main(int argc,char **argv)
     }
     kate_free(buffer);
 
+    (*opd.free_event_function_data)(write_event_function_data);
+
     if (fout!=stdout) fclose(fout);
   }
   else {
@@ -419,7 +423,6 @@ int main(int argc,char **argv)
     init_kate_stream_set(&opd.kate_streams);
     opd.n_streams=0;
     opd.verbose=verbose;
-    opd.event_index=0;
 #ifdef DEBUG
     opd.fuzz=fuzz;
     opd.fuzz_seed=fuzz_seed;
@@ -437,6 +440,12 @@ int main(int argc,char **argv)
         if (opd.write_end_function) (*opd.write_end_function)(ks->fout);
         ks->init=kstream_eos;
       }
+    }
+
+    /* Clear user data */
+    for (n=0;n<opd.kate_streams.n_kate_streams;++n) {
+      kate_stream *ks=opd.kate_streams.kate_streams[n];
+      if (opd.free_event_function_data) (*opd.free_event_function_data)(ks->data);
     }
 
     clear_kate_stream_set(&opd.kate_streams);

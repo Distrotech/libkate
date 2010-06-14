@@ -14,7 +14,10 @@ struct lrc_data {
   kate_float last_event_end_time;
 };
 
-extern void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index);
+extern void *new_lrc_data(void);
+extern void free_lrc_data(void*);
+
+extern void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos);
 extern void write_lrc_end(FILE *fout);
 
 #endif

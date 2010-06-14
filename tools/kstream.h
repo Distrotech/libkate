@@ -25,8 +25,8 @@ typedef struct kate_stream {
   char *filename;
   FILE *fout;
   unsigned int stream_index;
-  int event_index;
   int ret;
+  void *data;
 } kate_stream;
 
 typedef struct {

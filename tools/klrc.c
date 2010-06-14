@@ -11,10 +11,25 @@
 #include "config.h"
 #endif
 #include <stdio.h>
+#include <stdlib.h>
 #include <ogg/ogg.h>
 #include "kate/kate.h"
 #include "kutil.h"
 #include "klrc.h"
+
+void *new_lrc_data(void)
+{
+  struct lrc_data *lrc_data=kate_malloc(sizeof(struct lrc_data));
+  if (lrc_data) {
+    lrc_data->last_event_end_time=(kate_float)-1;
+  }
+  return lrc_data;
+}
+
+void free_lrc_data(void *data)
+{
+  kate_free(data);
+}
 
 static ogg_int64_t granule_to_centiseconds(const kate_info *ki,ogg_int64_t granpos)
 {
@@ -28,7 +43,7 @@ static void centiseconds_to_time(ogg_int64_t cs,int *minutes,int *seconds,int *c
   *centiseconds=cs%100;
 }
 
-void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index)
+void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos)
 {
   float t0=ev->start_time;
   float t1=ev->end_time;
@@ -41,7 +56,7 @@ void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gran
 
   (void)granpos;
   (void)data;
-  if (event_index==0) {
+  if (lrc_data->last_event_end_time<(kate_float)0) {
     fprintf(fout,"[%d:%02d.%02d]",m0,s0,cs0);
   }
   else if (lrc_data->last_event_end_time<t0) {

@@ -490,13 +490,12 @@ void write_kate_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
   fprintf(f,"\n");
 }
 
-void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index)
+void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos)
 {
   const kate_info *ki=ev->ki;
   float t0=ev->start_time;
   float t1=ev->end_time;
 
-  (void)event_index;
   (void)data;
   fprintf(fout,"  event {\n");
   if (ev->id>=0) {

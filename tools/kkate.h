@@ -17,7 +17,7 @@ extern int write_bitmaps;
 extern void write_kate_start(FILE *f);
 extern void write_kate_end(FILE *f);
 extern void write_kate_headers(FILE *f,const kate_info *ki,const kate_comment *kc);
-extern void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos,int event_index);
+extern void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos);
 
 #endif
 
