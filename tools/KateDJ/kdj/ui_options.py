@@ -34,6 +34,15 @@ class UIOptions(wx.Dialog):
       'been made to the Kate streams in these temporary files will be lost.'
     )
     self.y+=vpadding
+    self.opt_format=self.AddList(
+      'Decode Kate streams as',
+      ['Kate', 'SRT', 'LRC'],
+      options.format,
+      'Selects the text format to use when decoding Kate streams.\n'+
+      'Typically, text based movie subtitles are best decoded as SRT, and other '+
+      'streams as Kate.'
+    )
+    self.y+=vpadding
 
     help_pos=(hpadding,self.y)
     help_size=(base_width,help_height)
@@ -74,9 +83,31 @@ class UIOptions(wx.Dialog):
     self.y+=option_height
     return checkbox
 
+  def AddList(self,text,choices,default,help_text):
+    box=wx.BoxSizer(wx.HORIZONTAL)
+    box.SetDimension(hpadding,self.y,base_width,option_height)
+
+    label=wx.StaticText(self,wx.ID_ANY,text)
+    box.Add(label,flag=wx.ALIGN_CENTER_VERTICAL)
+    label.Bind(wx.EVT_ENTER_WINDOW,lambda ev: self.SetHelpTextAndSkip(help_text,ev))
+    label.Bind(wx.EVT_LEAVE_WINDOW,lambda ev: self.SetHelpTextAndSkip('',ev))
+
+    box.AddSpacer((8,0))
+
+    list=wx.Choice(self, -1, (80,-1),choices=choices)
+    list.SetStringSelection(default)
+    box.Add(list,flag=wx.ALIGN_CENTER_VERTICAL)
+    list.Bind(wx.EVT_ENTER_WINDOW,lambda ev: self.SetHelpTextAndSkip(help_text,ev))
+    list.Bind(wx.EVT_LEAVE_WINDOW,lambda ev: self.SetHelpTextAndSkip('',ev))
+
+    box.Layout()
+    self.y+=option_height
+    return list
+
   def OnOK(self,event):
     self.options.save_as_copy=self.opt_save_as_copy.IsChecked()
     self.options.remove_temporary_files=self.opt_remove.IsChecked()
+    self.options.format=self.opt_format.GetStringSelection().lower()
     self.options.Save()
     event.Skip()
 

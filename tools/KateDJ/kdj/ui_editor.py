@@ -7,12 +7,13 @@ from constants import *
 from tester import Tester
 
 class UIEditor(wx.Dialog):
-  def __init__(self,parent,tools,filename=None):
+  def __init__(self,parent,tools,filename=None,format='kate'):
     pre=wx.PreDialog()
     pre.Create(parent,wx.ID_ANY,title='Editing Kate streams',pos=(100,100),size=(600,400),style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
     self.PostCreate(pre)
 
     self.tools=tools
+    self.format=format
 
     box=wx.BoxSizer(wx.VERTICAL)
     self.SetSizer(box)
@@ -80,7 +81,7 @@ class UIEditor(wx.Dialog):
 
   def OnTest(self,event):
     try:
-      tester=Tester(self.tools,self.current_panel.editor.getText(),'kate')
+      tester=Tester(self.tools,self.current_panel.editor.getText(),self.format)
       wx.MessageBox('No errors found','Success',parent=self,style=wx.OK)
     except Exception,e:
       wx.MessageBox('Error:\n'+str(e),'Test failed',parent=self,style=wx.OK|wx.ICON_ERROR)

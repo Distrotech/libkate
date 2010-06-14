@@ -13,6 +13,7 @@ class Options:
   def SetDefaults(self):
     self.save_as_copy=True
     self.remove_temporary_files=False
+    self.format='kate'
 
   def Load(self):
     f=open(self.rc,'Ur')
@@ -34,6 +35,7 @@ class Options:
     f=open(self.rc,'w')
     f.write('save_as_copy='+self.Bool2String(self.save_as_copy)+'\n')
     f.write('remove_temporary_files='+self.Bool2String(self.remove_temporary_files)+'\n')
+    f.write('format='+self.format.lower()+'\n')
     f.close()
 
   def Bool2String(self,val):
@@ -49,6 +51,16 @@ class Options:
     else:
       return False
 
+  def String2Format(self,val):
+    val=val.lower()
+    if val=='kate':
+      return 'kate'
+    if val=='srt':
+      return 'srt'
+    if val=='lrc':
+      return 'lrc'
+    return 'kate'
+
   def Frob(self,line):
     line=line.split('#')[0]
     line=line.split('\n')[0]
@@ -58,5 +70,6 @@ class Options:
     var,val=line.split('=')[0:2]
     if var.lower()=='save_as_copy': self.save_as_copy=self.String2Bool(val)
     elif var.lower()=='remove_temporary_files': self.remove_temporary_files=self.String2Bool(val)
+    elif var.lower()=='format': self.format=self.String2Format(val)
     #else: print 'unknown variable: '+line
 

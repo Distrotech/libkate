@@ -106,7 +106,7 @@ class UIMain(wx.Frame):
 
   def Edit(self,list_idx=-1):
     wx.BeginBusyCursor()
-    dlg=UIEditor(self,self.tools)
+    dlg=UIEditor(self,self.tools,format=self.options.format)
     try:
       kate_streams=FindKateStreams(self.demuxer.GetDirectory())
       if list_idx>=0:
@@ -184,7 +184,7 @@ class UIMain(wx.Frame):
 
   def OnDemuxButton(self,event):
     try:
-      demuxer=Demuxer(self.tools,self.filename,'kate')
+      demuxer=Demuxer(self.tools,self.filename,self.options.format)
     except Exception,e:
       wx.MessageBox('Failed to demux file:\n'+str(e),'Error',parent=self,style=wx.OK|wx.CENTRE|wx.ICON_ERROR)
       return
