@@ -162,7 +162,7 @@ class UIMain(wx.Frame):
       spec+='*.'+ext+';'
       spec+='*.'+ext.capitalize()+';'
       spec+='*.'+ext.upper()+';'
-    spec+='|All files (*.*)|*.*'
+    spec+='|All files|*;*.*'
     loader=wx.FileDialog(self,message='Load Ogg stream',wildcard=spec)
     ret=loader.ShowModal()
     if ret==wx.ID_OK:
