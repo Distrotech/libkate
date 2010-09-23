@@ -305,7 +305,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
   size_t len;
   int ret;
 
-  update_stream_time(&k,fout,t0);
+  update_stream_time(&k,fout,t0/(kate_float)1000);
 
   len=strlen(text);
   ret=kate_text_validate(kate_utf8,text,len+1);
