@@ -35,7 +35,6 @@ if HAVE_DOXYGEN
 else
 .doc-dummy-target:
 	echo "doxygen not found, cannot build docs"
-	/bin/false
 endif
 
 dist-hook: .doc-dummy-target
