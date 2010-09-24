@@ -1,7 +1,4 @@
-SUBDIRS=. tools tests
-if HAVE_DOXYGEN
-SUBDIRS+=doc
-endif
+SUBDIRS=. tools tests doc
 
 OGGDIR=built-streams
 kateincdir=$(includedir)/kate
