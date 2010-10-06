@@ -98,8 +98,20 @@ int write_headers(FILE *f)
   ogg_packet op;
 
   /* command line overrides */
-  if (language) kate_info_set_language(&ki,language);
-  if (category) kate_info_set_category(&ki,category);
+  if (language) {
+    int ret=kate_info_set_language(&ki,language);
+    if (ret<0) {
+      fprintf(stderr,"Failed to set stream language to '%s': %d\n",language,ret);
+      return ret;
+    }
+  }
+  if (category) {
+    int ret=kate_info_set_category(&ki,category);
+    if (ret<0) {
+      fprintf(stderr,"Failed to set stream category to '%s': %d\n",category,ret);
+      return ret;
+    }
+  }
 
   /* warn if either language or category is missing */
   if (!ki.category || !*ki.category) {
