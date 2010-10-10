@@ -311,7 +311,7 @@ static void remove_last_newline(char *text)
   if (len>0 && text[len-1]=='\n') text[--len]=0;
 }
 
-static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char *text,int allow_srt_markup)
+static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char *text,int allow_srt_markup,int x1,int y1,int x2,int y2)
 {
   ogg_packet op;
   size_t len;
@@ -331,6 +331,20 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
     return ret;
   }
   if (allow_srt_markup) kate_encode_set_markup_type(&k,kate_markup_simple);
+  if (x1!=-INT_MAX && y1!=-INT_MAX && x2!=-INT_MAX && y2!=-INT_MAX) {
+    kate_region kr;
+    kate_region_init(&kr);
+    kr.metric=kate_pixel;
+    kr.x=x1;
+    kr.y=y1;
+    kr.w=x2-x1+1;
+    kr.h=y2-y1+1;
+    ret=kate_encode_set_region(&k,&kr);
+    if (ret<0) {
+      fprintf(stderr,"Error setting region: %d\n",ret);
+      return ret;
+    }
+  }
   ret=kate_ogg_encode_text_raw_times(&k,t0,t1,text,len,&op);
   if (ret<0) {
     fprintf(stderr,"Error encoding text: %d\n",ret);
@@ -352,6 +366,7 @@ static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
   int id;
   static char text[4096];
   int h0,m0,s0,ms0,h1,m1,s1,ms1;
+  int x1,y1,x2,y2;
   kate_int64_t t0=0,t1=0;
   int line=0;
 
@@ -399,25 +414,36 @@ static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
         strcpy(text,"");
         break;
       case need_timing:
-        ret=sscanf(str,"%d:%d:%d%*[,.]%d --> %d:%d:%d%*[,.]%d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1);
-        if (ret!=8 || (h0|m0|s0|ms0)<0 || (h1|m1|s1|ms1)<0) {
-          fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
-          return -1;
-        }
-        else {
-          t0=hmsms2ms(h0,m0,s0,ms0);
-          t1=hmsms2ms(h1,m1,s1,ms1);
-          if (t1<t0) {
-            fprintf(stderr,"Error at line %d: end time must not be less than start time\n",line);
+        ret=sscanf(str,"%d:%d:%d%*[,.]%d --> %d:%d:%d%*[,.]%d %*[xX]1: %d %*[xX]2: %d %*[yY]1: %d %*[yY]2: %d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1,&x1,&x2,&y1,&y2);
+        if (ret!=12) {
+          x1=y1=x2=y2=-INT_MAX;
+          ret=sscanf(str,"%d:%d:%d%*[,.]%d --> %d:%d:%d%*[,.]%d\n",&h0,&m0,&s0,&ms0,&h1,&m1,&s1,&ms1);
+          if (ret!=8) {
+            fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
             return -1;
           }
+        }
+
+        if ((h0|m0|s0|ms0)<0 || (h1|m1|s1|ms1)<0) {
+          fprintf(stderr,"Bad time specification at line %d: %s\n",line,str);
+          return -1;
+        }
+        t0=hmsms2ms(h0,m0,s0,ms0);
+        t1=hmsms2ms(h1,m1,s1,ms1);
+        if (t1<t0) {
+          fprintf(stderr,"Error at line %d: end time must not be less than start time\n",line);
+          return -1;
+        }
+        if (x2<x1 || y2<y1) {
+          fprintf(stderr,"Invalid region coordinates at line %d\n",line);
+          return -1;
         }
         need=need_text;
         break;
       case need_text:
         if (is_line_empty(str)) {
           remove_last_newline(text);
-          ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup);
+          ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup,x1,y1,x2,y2);
           if (ret<0) return ret;
           need=need_id;
         }
@@ -435,7 +461,7 @@ static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
   if (need==need_text && text[0]) {
     fprintf(stderr, "Warning: last event is not followed by an empty line - input might be truncated\n");
     remove_last_newline(text);
-    ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup);
+    ret=emit_srt_event(fout,t0,t1,text,allow_srt_markup,x1,y1,x2,y2);
     if (ret<0) return ret;
   }
 
