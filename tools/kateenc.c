@@ -230,6 +230,7 @@ static char *fgets2(char *s,size_t len,FILE *f,int ignore_hash)
       if (ptr) strcpy(ptr,"\n");
     }
   }
+  else *s=0;
   return ret;
 }
 
@@ -393,7 +394,7 @@ static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
     memmove(str,str+3,strlen(str+3)+1);
   }
 
-  while (!feof(fin)) {
+  while (!feof(fin) || *str) {
     ++line;
     switch (need) {
       case need_id:
@@ -704,7 +705,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
   ret=flush_headers(fout);
   if (ret<0) return ret;
 
-  while (!feof(fin)) {
+  while (!feof(fin) || *str) {
     if (!is_line_empty(str)) {
       f0=f1=-1;
       ret=sscanf(str,"[%d:%d.%n%d%n]%n",&m,&s,&f0,&fs,&f1,&offset);
