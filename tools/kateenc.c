@@ -153,13 +153,12 @@ int write_headers(FILE *f)
 
 int send_packet(FILE *f,ogg_packet *op,kate_float t)
 {
-  int ret;
-
   if (t>last_stream_time)
     last_stream_time=t;
 
 #ifdef DEBUG
   if (raw) {
+    int ret;
     if (op->packetno>0) {
       ogg_int64_t bytes=op->bytes;
       ret=fwrite(&bytes,1,8,f);
