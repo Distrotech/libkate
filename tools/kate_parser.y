@@ -991,7 +991,7 @@ static char *expand_numeric_entities(const char *text)
       /* we don't want to expand characters in "<&>" as they would then be wrongly interpreted,
          so we insert here as entities - note that we don't want to expand them and do another
          pass to reencode them, as we then might pick up others that *were* in the text verbatim */
-      if (code_from_numeric && strchr("<&>",c)) {
+      if (code_from_numeric && (c&~0xff)==0 && strchr("<&>",c)) {
         switch (c) {
           case '<': ret=add_entity("&lt;",&newtextptr,&wlen0); break;
           case '&': ret=add_entity("&amp;",&newtextptr,&wlen0); break;
