@@ -1043,7 +1043,7 @@ static char *getrawline(const char **text)
       *text=ptr; /* do not push past the start of the new line */
       return line;
     }
-    newline=(strchr("\n\r",c)!=NULL);
+    newline=(c=='\r' || c=='\n');
     if (!newline && in_newline) {
       /* we are at the start of a new line */
       char *line=(char*)kate_malloc(ptr-start_of_line+1);
@@ -1078,7 +1078,7 @@ static void trimend(char *line,size_t rlen0,int *eol)
 
   trimend(text,rlen0,eol);
 
-  ws=(strchr(" \t\n\r",c)!=NULL);
+  ws=((c<=0xff) && (strchr(" \t\n\r",c)!=NULL));
   if (*eol && ws) *line=0;
   if (!ws) *eol=0;
 }
@@ -1106,7 +1106,7 @@ static char *trimline(const char *line)
       return NULL;
     }
     c=ret;
-    if (!c || !strchr(" \t",c)) {
+    if (!c || (c!=' ' && c!='\t')) {
       /* we found a non whitespace, or an end of line, stop */
       break;
     }

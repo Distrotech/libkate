@@ -32,7 +32,7 @@ static int is_ok_for_filename(const char *s)
   int c;
   while ((c=*s++)) {
     if (isalnum(c)) continue;
-    if (strchr("-_",c)) continue;
+    if (c<=0xff && strchr("-_",c)) continue;
     return 0;
   }
   return 1;
