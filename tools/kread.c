@@ -47,7 +47,7 @@ static int read_raw_packet(FILE *f,char **buffer,ogg_int64_t bytes)
   *buffer=(char*)kate_realloc(*buffer,bytes);
   if (!*buffer) return -1;
 
-  ret=fread(*buffer,1,bytes,f);
+  ret=read(fileno(f),*buffer,bytes);
   if (ret<(size_t)bytes) return -1;
   return 0;
 }
@@ -58,7 +58,7 @@ int read_raw_size_and_packet(FILE *f,char **buffer,ogg_int64_t *bytes)
   int ret;
 
   /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
-  bytes_read=fread(bytes,1,8,f);
+  bytes_read=read(fileno(f),bytes,8);
   if (bytes_read!=8 || *bytes<=0) {
     fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",bytes_read,(long long)*bytes);
     return -1;
@@ -92,6 +92,7 @@ FILE *open_and_probe_stream(const char *filename)
       fprintf(stderr,"%s: %s\n",filename,strerror(errno));
       return NULL;
     }
+    setvbuf(fin,NULL,_IONBF,0);
   }
 
   return fin;
@@ -131,7 +132,7 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
       fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",buffer_size);
       goto error;
     }
-    bytes_read=fread(ptr,1,buffer_size,f);
+    bytes_read=read(fileno(f),ptr,buffer_size);
     if (bytes_read==0) {
       break;
     }
