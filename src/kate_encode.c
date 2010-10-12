@@ -902,15 +902,15 @@ int kate_encode_text_raw_times(kate_state *k,kate_int64_t t0,kate_int64_t t1,con
   if (ret<0) return ret;
 
   start_granulepos=(earliest_t<<k->ki->granule_shift)|(t0-earliest_t);
-  if (start_granulepos<0) return start_granulepos;
+  if (start_granulepos<0) return KATE_E_BAD_GRANULE;
   if (kate_check_granule(k,&start_granulepos)<0) return KATE_E_BAD_GRANULE;
 
   start=t0;
-  if (start<0) return start;
+  if (start<0) return KATE_E_BAD_GRANULE;
   duration=t1-t0;
-  if (duration<0) return duration;
+  if (duration<0) return KATE_E_BAD_GRANULE;
   backlink=t0-earliest_t;
-  if (backlink<0) return backlink;
+  if (backlink<0) return KATE_E_BAD_GRANULE;
 
   kpb=&k->kes->kpb;
   kate_pack_write(kpb,0x00,8);
