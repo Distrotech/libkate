@@ -63,14 +63,26 @@ static void write_text(FILE *f,const char *text,size_t len0,kate_markup_type tex
     }
     else {
       /* be conservative in what we encode */
-      const char *escape="";
+      const char *escape_list="";
       switch (text_markup_type) {
-        case kate_markup_none: escape="\"\r\n`'|\\"; break;
-        case kate_markup_simple: escape="\"\r\n`'|\\"; break;
+        case kate_markup_none: escape_list="\"\r\n`'|\\"; break;
+        case kate_markup_simple: escape_list="\"\r\n`'|\\"; break;
         default: fprintf(stderr,"Unknown text markup type (%d)\n",text_markup_type); break;
       }
-      if (ret>=32 && ret<127 && !strchr(escape,ret)) {
-        fprintf(f,"%c",ret);
+      if (ret>=32 && (ret>0xff || !strchr(escape_list,ret))) {
+        char utf8[12],*utf8ptr=utf8;
+        size_t wlen0=sizeof(utf8);
+        ret=kate_text_set_character(kate_utf8,ret,&utf8ptr,&wlen0);
+        if (ret<0) {
+          fprintf(stderr,"Error writing character\n");
+          break;
+        }
+        ret=kate_text_set_character(kate_utf8,0,&utf8ptr,&wlen0);
+        if (ret<0) {
+          fprintf(stderr,"Error writing character\n");
+          break;
+        }
+        fprintf(f,"%s",utf8);
       }
       else {
         fprintf(f,"&#%u;",ret);
