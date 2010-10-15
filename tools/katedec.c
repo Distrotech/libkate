@@ -345,7 +345,9 @@ int main(int argc,char **argv)
     kate_state k;
     FILE *fout;
     int ret;
-    void *write_event_function_data=(*opd.new_event_function_data)();
+    void *write_event_function_data=NULL;
+
+    if (opd.new_event_function_data) write_event_function_data=(*opd.new_event_function_data)();
 
     bytes=64;
     buffer=(char*)kate_malloc(bytes);
@@ -413,7 +415,9 @@ int main(int argc,char **argv)
     }
     kate_free(buffer);
 
-    (*opd.free_event_function_data)(write_event_function_data);
+    if (opd.free_event_function_data) {
+      (*opd.free_event_function_data)(write_event_function_data);
+    }
 
     if (fout!=stdout) fclose(fout);
   }
