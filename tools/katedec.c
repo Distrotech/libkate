@@ -219,9 +219,6 @@ int main(int argc,char **argv)
   int arg;
   char signature[64]; /* matches the size of the Kate ID header */
   size_t signature_size;
-  char *buffer=NULL;
-  ogg_int64_t bytes;
-  int headers_written=0;
 #ifdef DEBUG
   int fuzz=0;
   unsigned long fuzz_seed=0;
@@ -331,6 +328,7 @@ int main(int argc,char **argv)
   fin=open_and_probe_stream(input_filename);
   if (!fin) exit(-1);
 
+#ifdef DEBUG
   /* first, read the first few bytes to know if we have a raw Kate stream
      or a Kate-in-Ogg stream */
   bytes_read=fread(signature,1,sizeof(signature),fin);
@@ -339,12 +337,19 @@ int main(int argc,char **argv)
     fprintf(stderr,"Failed to read first %zu bytes of stream\n",sizeof(signature));
     exit(-1);
   }
+#else
+  bytes_read=0;
+#endif
 
+#ifdef DEBUG
   if (!memcmp(signature,"\200kate\0\0\0",8)) {
     /* raw Kate stream */
     kate_state k;
     FILE *fout;
     int ret;
+    char *buffer=NULL;
+    ogg_int64_t bytes;
+    int headers_written=0;
     void *write_event_function_data=NULL;
 
     if (opd.new_event_function_data) write_event_function_data=(*opd.new_event_function_data)();
@@ -421,7 +426,9 @@ int main(int argc,char **argv)
 
     if (fout!=stdout) fclose(fout);
   }
-  else {
+  else
+#endif
+  {
     signature_size=bytes_read;
 
     init_kate_stream_set(&opd.kate_streams);
