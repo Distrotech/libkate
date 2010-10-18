@@ -351,7 +351,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
     return ret;
   }
   else {
-    ret=send_packet(fout,&op,t0);
+    ret=send_packet(fout,&op,t0/(kate_float)1000);
     if (ret<0) return ret;
   }
   return ret;
