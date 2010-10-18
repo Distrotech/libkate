@@ -8,7 +8,7 @@ TESTS_ENVIRONMENT=$(LIBTOOL) -dlopen $(LIBKATE) --mode=execute $(VALGRIND)
 
 TESTS=check_sizes language text overflow
 
-noinst_PROGRAMS=$(TESTS) gen_srt
+noinst_PROGRAMS=$(TESTS) gen_srt gen_lrc
 
 check_sizes_SOURCES=check_sizes.c
 check_sizes_LDADD=$(LIBKATE)
@@ -23,6 +23,8 @@ overflow_SOURCES=overflow.c
 overflow_LDADD=$(LIBKATE)
 
 gen_srt_SOURCES=gen_srt.c
+
+gen_lrc_SOURCES=gen_lrc.c
 
 STREAMS=@STREAMS@
 
@@ -59,6 +61,13 @@ if HAVE_OGG
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tests/gen_srt $(loop) > $(tmp_srt1) && \
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/kateenc -c SUB -l en -t srt -o $(tmp_ogg1) $(tmp_srt1) && \
 	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/katedec -t srt -o $(tmp_srt2) $(tmp_ogg1) && \
+	  diff -u $(tmp_srt1) $(tmp_srt2) && \
+	) rm -f $(tmp_srt1) $(tmp_srt2) $(tmp_ogg1)
+	@echo " Checking LRC round-trip"
+	@$(foreach loop, - 0 1 2 3 4 5 6 7 8 9, \
+	  $(TESTS_ENVIRONMENT) $(top_builddir)/tests/gen_lrc $(loop) > $(tmp_srt1) && \
+	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/kateenc -c LRC -l en -t lrc -o $(tmp_ogg1) $(tmp_srt1) && \
+	  $(TESTS_ENVIRONMENT) $(top_builddir)/tools/katedec -t lrc -o $(tmp_srt2) $(tmp_ogg1) && \
 	  diff -u $(tmp_srt1) $(tmp_srt2) && \
 	) rm -f $(tmp_srt1) $(tmp_srt2) $(tmp_ogg1)
 	@$(foreach stream, $(STREAMS), \
