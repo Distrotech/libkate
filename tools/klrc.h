@@ -11,7 +11,7 @@
 #define KATE_klrc_h_GUARD
 
 struct lrc_data {
-  kate_float last_event_end_time;
+  kate_int64_t last_event_end_time;
 };
 
 extern void *new_lrc_data(void);

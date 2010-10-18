@@ -21,7 +21,7 @@ void *new_lrc_data(void)
 {
   struct lrc_data *lrc_data=kate_malloc(sizeof(struct lrc_data));
   if (lrc_data) {
-    lrc_data->last_event_end_time=(kate_float)-1;
+    lrc_data->last_event_end_time=-1;
   }
   return lrc_data;
 }
@@ -45,8 +45,6 @@ static void centiseconds_to_time(ogg_int64_t cs,int *minutes,int *seconds,int *c
 
 void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos)
 {
-  float t0=ev->start_time;
-  float t1=ev->end_time;
   struct lrc_data *lrc_data=(struct lrc_data*)data;
   int m0,s0,cs0;
   int m1,s1,cs1;
@@ -56,10 +54,10 @@ void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gran
 
   (void)granpos;
   (void)data;
-  if (lrc_data->last_event_end_time<(kate_float)0) {
+  if (lrc_data->last_event_end_time<0) {
     fprintf(fout,"[%d:%02d.%02d]",m0,s0,cs0);
   }
-  else if (lrc_data->last_event_end_time<t0) {
+  else if (lrc_data->last_event_end_time<ev->start) {
     fprintf(fout,"\n");
     fprintf(fout,"[%d:%02d.%02d]",m0,s0,cs0);
   }
@@ -69,7 +67,7 @@ void write_lrc_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gran
 
   fflush(fout);
 
-  lrc_data->last_event_end_time=t1;
+  lrc_data->last_event_end_time=ev->start+ev->duration;
 }
 
 void write_lrc_end(FILE *fout)
