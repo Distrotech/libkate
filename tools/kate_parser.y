@@ -1997,13 +1997,13 @@ static void kd_encode_text(kate_state *kstate,kd_event *ev)
     yyerrorf("failed to set text markup type: %d",ret);
     return;
   }
-  update_stream_time(kstate,katedesc_out,timebase+ev->t0);
+  update_stream_time(kstate,katedesc_out,kate_duration_granule(kstate->ki,timebase+ev->t0));
   ret=kate_ogg_encode_text(kstate,timebase+ev->t0,timebase+ev->t1,ev->text?ev->text:"",ev->text?strlen(ev->text):0,&op);
   if (ret<0) {
     yyerrorf("failed to encode text %s: %d",ev->text?ev->text:"<none>",ret);
     return;
   }
-  ret=send_packet(katedesc_out,&op,timebase+ev->t0);
+  ret=send_packet(katedesc_out,&op,kate_duration_granule(kstate->ki,timebase+ev->t0));
   if (ret<0) {
     yyerrorf("failed to send text packet: %d",ret);
   }

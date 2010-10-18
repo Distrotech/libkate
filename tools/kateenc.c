@@ -55,7 +55,7 @@ static int raw=0;
 #endif
 static kate_float repeat_threshold=(kate_float)0;
 static kate_float keepalive_threshold=(kate_float)0;
-static kate_float last_stream_time=(kate_float)0;
+static kate_int64_t last_stream_time=0;
 static const unsigned char utf8bom[3]={0xef,0xbb,0xbf};
 static const unsigned char utf16lebom[2]={0xff,0xfe};
 static const unsigned char utf16bebom[2]={0xfe,0xff};
@@ -131,7 +131,7 @@ int write_headers(FILE *f)
 
 #ifdef DEBUG
     if (raw) {
-      int ret=send_packet(f,&op,(kate_float)-1);
+      int ret=send_packet(f,&op,-1);
       if (ret<0) {
         fprintf(stderr,"error sending packet: %d\n",ret);
         return ret;
@@ -151,7 +151,7 @@ int write_headers(FILE *f)
   return flush_page(f);
 }
 
-int send_packet(FILE *f,ogg_packet *op,kate_float t)
+int send_packet(FILE *f,ogg_packet *op,kate_int64_t t)
 {
   if (t>last_stream_time)
     last_stream_time=t;
@@ -208,14 +208,9 @@ static const char *eat_arg(int argc,char **argv,int *n)
   return argv[++*n];
 }
 
-static kate_float hmsms2s(int h,int m,int s,int ms)
-{
-  return h*3600+m*60+s+ms/(kate_float)1000.0;
-}
-
 static kate_int64_t hmsms2ms(int h,int m,int s,int ms)
 {
-  return h*3600000+m*60000+s*1000+ms;
+  return h*(kate_int64_t)3600000+m*60000+s*1000+ms;
 }
 
 static char *fgets2(char *s,size_t len,FILE *f,int ignore_hash)
@@ -254,29 +249,31 @@ static int is_line_empty(const char *s)
   return 1;
 }
 
-void update_stream_time(kate_state *k,FILE *fout,kate_float endt)
+void update_stream_time(kate_state *k,FILE *fout,kate_int64_t endt)
 {
   ogg_packet op;
-  kate_float t;
+  kate_int64_t t;
   int ret;
-  kate_float step;
+  kate_int64_t step;
+  kate_int64_t raw_repeat_threshold=kate_duration_granule(k->ki,repeat_threshold);
+  kate_int64_t raw_keepalive_threshold=kate_duration_granule(k->ki,keepalive_threshold);
 
   /* work out the best step to walk the time segment */
-  step=(kate_float)0;
-  if (step==(kate_float)0 || (repeat_threshold>(kate_float)0 && repeat_threshold<step))
-    step=repeat_threshold;
-  if (step==(kate_float)0 || (keepalive_threshold>(kate_float)0 && keepalive_threshold<step))
-    step=keepalive_threshold;
+  step=0;
+  if (step==0 || (raw_repeat_threshold>0 && raw_repeat_threshold<step))
+    step=raw_repeat_threshold;
+  if (step==0 || (raw_keepalive_threshold>0 && raw_keepalive_threshold<step))
+    step=raw_keepalive_threshold;
 
-  if (step<=(kate_float)0) return;
+  if (step<=0) return;
 
   for (t=last_stream_time;t<endt;t+=step) {
     /* try repeats first, no keepalives will be needed if we have one */
-    if (repeat_threshold>(kate_float)0) {
+    if (raw_repeat_threshold>0) {
       while (1) {
-        ret=kate_ogg_encode_repeat(k,t,repeat_threshold,&op);
+        ret=kate_ogg_encode_repeat_raw_times(k,t,raw_repeat_threshold,&op);
         if (ret<0) {
-          fprintf(stderr,"Failed encoding repeat at %f (%d), continuing anyway\n",t,ret);
+          fprintf(stderr,"Failed encoding repeat at %lld (%d), continuing anyway\n",(long long)t,ret);
           return;
         }
         if (ret==0) break;
@@ -288,10 +285,10 @@ void update_stream_time(kate_state *k,FILE *fout,kate_float endt)
       }
     }
     /* keepalives next */
-    if (keepalive_threshold>(kate_float)0 && t-last_stream_time>=keepalive_threshold) {
-      ret=kate_ogg_encode_keepalive(k,t,&op);
+    if (raw_keepalive_threshold>0 && t-last_stream_time>=raw_keepalive_threshold) {
+      ret=kate_ogg_encode_keepalive_raw_times(k,t,&op);
       if (ret<0) {
-        fprintf(stderr,"Failed encoding keepalive at %f (%d), continuing anyway\n",t,ret);
+        fprintf(stderr,"Failed encoding keepalive at %lld (%d), continuing anyway\n",(long long)t,ret);
         return;
       }
       ret=send_packet(fout,&op,t);
@@ -317,7 +314,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
   size_t len;
   int ret;
 
-  update_stream_time(&k,fout,t0/(kate_float)1000);
+  update_stream_time(&k,fout,t0);
 
   len=strlen(text);
   ret=kate_text_validate(kate_utf8,text,len+1);
@@ -351,7 +348,7 @@ static int emit_srt_event(FILE *fout,kate_int64_t t0,kate_int64_t t1,const char 
     return ret;
   }
   else {
-    ret=send_packet(fout,&op,t0/(kate_float)1000);
+    ret=send_packet(fout,&op,t0);
     if (ret<0) return ret;
   }
   return ret;
@@ -468,10 +465,10 @@ static int convert_srt(FILE *fin,FILE *fout,int allow_srt_markup)
   return 0;
 }
 
-static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,size_t len,int line)
+static void add_kate_karaoke_tag(kate_motion *km,kate_int64_t dt,const char *str,size_t len,int line)
 {
   kate_curve *kc;
-  kate_float ptr=(kate_float)-0.5;
+  kate_int64_t ptr=-500; /* minus half a second, in milliseconds */
   int ret;
   kate_curve **new_curves;
   kate_float *new_durations;
@@ -488,7 +485,7 @@ static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,s
       fprintf(stderr, "Error: line %d: failed to get UTF-8 glyph from string\n",line);
       return;
     }
-    ptr+=(kate_float)1.0;
+    ptr+=1000; /* a second, in milliseconds */
   }
   /* ptr now points to the middle of the glyph we're at */
 
@@ -499,7 +496,7 @@ static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,s
     kc->npts=1;
     kc->pts=(kate_float*)kate_malloc(2*sizeof(kate_float));
     if (kc->pts) {
-      kc->pts[0]=ptr;
+      kc->pts[0]=ptr/(kate_float)1000;
       kc->pts[1]=(kate_float)0;
 
       new_curves=(kate_curve**)kate_realloc(km->curves,(km->ncurves+1)*sizeof(kate_curve*));
@@ -510,7 +507,7 @@ static void add_kate_karaoke_tag(kate_motion *km,kate_float dt,const char *str,s
       if (new_curves && new_durations) {
         km->ncurves++;
         km->curves[km->ncurves-1]=kc;
-        km->durations[km->ncurves-1]=dt;
+        km->durations[km->ncurves-1]=dt/(kate_float)1000;
       }
       else {
         fprintf(stderr,"Error: failed to allocate memory to store curve/duration");
@@ -541,13 +538,13 @@ static int fraction_to_milliseconds(int fraction,int digits)
   return fraction;
 }
 
-static kate_motion *process_enhanced_lrc_tags(char *str,kate_float start_time,kate_float end_time,int line)
+static kate_motion *process_enhanced_lrc_tags(char *str,kate_int64_t start_time,kate_int64_t end_time,int line)
 {
   char *start,*end;
   int ret;
   int m,s,fs;
   kate_motion *km=NULL;
-  kate_float current_time=start_time;
+  kate_int64_t current_time=start_time;
   int f0,f1;
 
   if (!str) return NULL;
@@ -570,7 +567,7 @@ static kate_motion *process_enhanced_lrc_tags(char *str,kate_float start_time,ka
       fprintf(stderr,"Error: failed to process enhanced LRC tag (%*.*s) - ignored\n",(int)(end-start+1),(int)(end-start+1),start);
     }
     else {
-      kate_float tag_time=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
+      kate_int64_t tag_time=hmsms2ms(0,m,s,fraction_to_milliseconds(fs,f1-f0));
 
       /* if this is the first tag in this line, create a kate motion */
       if (!km) {
@@ -622,13 +619,14 @@ static void add_kate_karaoke_style(kate_info *ki,unsigned char r,unsigned char g
       fprintf(stderr,"WARNING - failed to allocate memory for Kate karaoke style\n");
     }
 }
+
 static int convert_lrc(FILE *fin,FILE *fout)
 {
   int ret;
   static char text[4096];
   int m,s,fs;
-  kate_float t;
-  kate_float start_time=(kate_float)-1.0;
+  kate_int64_t t;
+  kate_int64_t start_time=-1;
   int offset;
   int line=0;
   fpos_t start;
@@ -712,8 +710,8 @@ static int convert_lrc(FILE *fin,FILE *fout)
         fprintf(stderr,"Syntax error at line %d: %s\n",line,str);
         return -1;
       }
-      t=hmsms2s(0,m,s,fraction_to_milliseconds(fs,f1-f0));
-      if (start_time>=0.0 && !is_line_empty(text)) {
+      t=hmsms2ms(0,m,s,fraction_to_milliseconds(fs,f1-f0));
+      if (start_time>=0 && !is_line_empty(text)) {
         ogg_packet op;
 
         update_stream_time(&k,fout,start_time);
@@ -746,7 +744,7 @@ static int convert_lrc(FILE *fin,FILE *fout)
           }
           return ret;
         }
-        ret=kate_ogg_encode_text(&k,start_time,t,text,len,&op);
+        ret=kate_ogg_encode_text_raw_times(&k,start_time,t,text,len,&op);
         if (ret<0) {
           fprintf(stderr,"Failed to add lyrics (%d)\n",ret);
           return ret;
@@ -1073,7 +1071,7 @@ int main(int argc,char **argv)
       failed=ret;
     }
     else {
-      ret=send_packet(fout,&op,(kate_float)-1);
+      ret=send_packet(fout,&op,-1);
       if (ret<0) {
         fprintf(stderr,"error sending end packet: %d\n",ret);
         failed=ret;

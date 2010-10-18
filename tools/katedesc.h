@@ -21,8 +21,8 @@ extern void add_macro(const char *name,const char *body);
 extern void free_macros(void);
 
 extern int write_headers(FILE *f);
-extern void update_stream_time(kate_state *k,FILE *fout,kate_float endt);
-extern int send_packet(FILE *f,ogg_packet *op,kate_float t);
+extern void update_stream_time(kate_state *k,FILE *fout,kate_int64_t endt);
+extern int send_packet(FILE *f,ogg_packet *op,kate_int64_t t);
 extern void cancel_packet(ogg_packet *op);
 
 extern void cleanup_lexer(void);
