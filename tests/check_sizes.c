@@ -7,7 +7,6 @@
    file 'COPYING'. Please read these terms before distributing. */
 
 
-#include <stdint.h>
 #include <stdio.h>
 #include "kate/kate.h"
 
