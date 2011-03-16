@@ -180,7 +180,7 @@ static void write_curve_defs(FILE *f,const kate_curve *kc,size_t indent)
   fprintf(f,"%s%s\n",sindent,curve2text(kc->type));
   if (kc->npts>0) {
     size_t pt;
-    fprintf(f,"%s%zu points {\n",sindent,kc->npts);
+    fprintf(f,"%s%lu points {\n",sindent,(unsigned long)kc->npts);
     for (pt=0;pt<kc->npts;++pt) fprintf(f,"%s  %.16g %.16g\n",sindent,kc->pts[pt*2],kc->pts[pt*2+1]);
     fprintf(f,"%s}\n",sindent);
   }
@@ -239,7 +239,7 @@ static void write_palette_defs(FILE *f,const kate_palette *kp,size_t indent)
   for (n=0;n<indent;++n) sindent[n]=' ';
   sindent[indent]=0;
 
-  fprintf(f,"%s%zu colors {\n",sindent,kp->ncolors);
+  fprintf(f,"%s%lu colors {\n",sindent,(unsigned long)kp->ncolors);
   for (s=0;s<kp->ncolors;++s) {
     const kate_color *kc=kp->colors+s;
     fprintf(f,"%s  { %d %d %d %d },\n",sindent,kc->r,kc->g,kc->b,kc->a);
@@ -262,7 +262,7 @@ static void write_paletted_bitmap(const char *filename,const kate_bitmap *kb,con
     return;
   }
 
-  fprintf(f,"P6\n%zu %zu\n255\n",kb->width,kb->height);
+  fprintf(f,"P6\n%lu %lu\n255\n",(unsigned long)kb->width,(unsigned long)kb->height);
   n=0;
   for (y=0;y<kb->height;++y) {
     for (x=0;x<kb->width;++x) {
@@ -300,7 +300,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
 
   switch (kb->type) {
     case kate_bitmap_type_png:
-      fprintf(f,"%s%zux%zu png %zu {\n",sindent,kb->width,kb->height,kb->size);
+      fprintf(f,"%s%lux%lu png %lu {\n",sindent,(unsigned long)kb->width,(unsigned long)kb->height,(unsigned long)kb->size);
       for (p=0;p<kb->size;++p) {
         if (p%16==0) fprintf(f,"%s",sindent);
         fprintf(f," %3d",kb->pixels[p]);
@@ -309,7 +309,7 @@ static void write_bitmap_defs(FILE *f,const kate_bitmap *kb,size_t indent)
       fprintf(f,"%s}\n",sindent);
       break;
     case kate_bitmap_type_paletted:
-      fprintf(f,"%s%zux%zux%d {\n",sindent,kb->width,kb->height,kb->bpp);
+      fprintf(f,"%s%lux%lux%d {\n",sindent,(unsigned long)kb->width,(unsigned long)kb->height,kb->bpp);
       p=0;
       for (h=0;h<kb->height;++h) {
         fprintf(f,"%s ",sindent);
@@ -392,7 +392,7 @@ static void write_canvas_size(FILE *f,const kate_info *ki,size_t indent)
   sindent[indent]=0;
 
   if (ki->original_canvas_width>0 || ki->original_canvas_height>0) {
-    fprintf(f,"%scanvas size %zu %zu\n",sindent,ki->original_canvas_width,ki->original_canvas_height);
+    fprintf(f,"%scanvas size %lu %lu\n",sindent,(unsigned long)ki->original_canvas_width,(unsigned long)ki->original_canvas_height);
   }
 
   kate_free(sindent);

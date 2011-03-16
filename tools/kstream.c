@@ -177,13 +177,13 @@ kate_stream *add_kate_stream(kate_stream_set *streams,ogg_page *og,int stream_in
 
   ks=(kate_stream*)kate_malloc(sizeof(kate_stream));
   if (!ks) {
-    fprintf(stderr,"failed to allocate %zu bytes\n",sizeof(kate_stream));
+    fprintf(stderr,"failed to allocate %lu bytes\n",(unsigned long)sizeof(kate_stream));
     exit(-1);
   }
   new_streams=(kate_stream**)kate_realloc(streams->kate_streams,(streams->n_kate_streams+1)*sizeof(kate_stream*));
   if (!new_streams) {
     kate_free(ks);
-    fprintf(stderr,"failed to allocate %zu bytes\n",(streams->n_kate_streams+1)*sizeof(kate_stream*));
+    fprintf(stderr,"failed to allocate %lu bytes\n",(unsigned long)((streams->n_kate_streams+1)*sizeof(kate_stream*)));
     exit(-1);
   }
   streams->kate_streams=new_streams;

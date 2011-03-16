@@ -13,6 +13,8 @@
 #include "config.h"
 #endif
 
+#define __STDC_FORMAT_MACROS
+
 #include <stddef.h>
 #include <limits.h>
 #include <sys/types.h>

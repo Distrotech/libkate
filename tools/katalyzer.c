@@ -130,12 +130,12 @@ static void katalyzer_dump_data(kate_stream *ks,katalyzer_log_type type,const ch
   if (!strchr(log_types,log_types_info[type].id)) return;
 
   print_log_header(ks,type);
-  printf("%s (%zu bytes):\n",header?header:"data",len);
+  printf("%s (%lu bytes):\n",header?header:"data",(unsigned long)len);
 
   while (len>0) {
     size_t n,limit;
     print_log_header(ks,type);
-    printf("%08zx:  ",offset);
+    printf("%08lx:  ",(unsigned long)offset);
     limit=len>16?16:len;
     for (n=0;n<16;++n) {
       if (n<limit)
@@ -163,8 +163,8 @@ static void katalyzer_on_ogg_packet(kate_stream *ks,ogg_packet *op,int is_kate)
   else {
     strcpy(stype,"");
   }
-  kprintf(ks,klt_packet,"packet %lld, %ld bytes%s\n",
-      (long long)op->packetno,
+  kprintf(ks,klt_packet,"packet %"PRId64", %ld bytes%s\n",
+      op->packetno,
       (long)op->bytes,
       stype);
 
@@ -187,10 +187,10 @@ static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
 
   kprintf(ks,klt_misc,"An event was found\n");
 
-  kprintf(ks,klt_timing,"event start: %f (%lld)\n",ev->start_time,(long long)ev->start);
+  kprintf(ks,klt_timing,"event start: %f (%"PRId64")\n",ev->start_time,ev->start);
   kprintf(ks,klt_timing,"event end: %f\n",ev->end_time);
-  kprintf(ks,klt_timing,"event duration: %f (%lld)\n",ev->end_time-ev->start_time,(long long)ev->duration);
-  kprintf(ks,klt_timing,"event backlink: %f (%lld)\n",kate_granule_duration(ev->ki,ev->backlink),(long long)ev->backlink);
+  kprintf(ks,klt_timing,"event duration: %f (%"PRId64")\n",ev->end_time-ev->start_time,ev->duration);
+  kprintf(ks,klt_timing,"event backlink: %f (%"PRId64")\n",kate_granule_duration(ev->ki,ev->backlink),ev->backlink);
 
   kprintf(ks,klt_text,"Text encoding %d (%s)\n",ev->text_encoding,encoding2text(ev->text_encoding));
   kprintf(ks,klt_text,"Text language \"%s\" (%s)\n",ev->language?ev->language:ev->ki->language,ev->language?"overridden":"default");
@@ -198,10 +198,10 @@ static void katalyzer_on_event(kate_stream *ks,const kate_event *ev)
 
   ret=kate_text_validate(ev->text_encoding,ev->text,ev->len0);
   if (ret<0) {
-    kprintf(ks,klt_error,"Text length %zu bytes, invalid\n",ev->len);
+    kprintf(ks,klt_error,"Text length %lu bytes, invalid\n",(unsigned long)ev->len);
   }
   else {
-    kprintf(ks,klt_text,"Text length %zu bytes, %zu glyphs\n",ev->len,get_num_glyphs(ev));
+    kprintf(ks,klt_text,"Text length %lu bytes, %lu glyphs\n",(unsigned long)ev->len,(unsigned long)get_num_glyphs(ev));
   }
 
   katalyzer_dump_data(ks,klt_text,"Event text",(const unsigned char*)ev->text,ev->len);
@@ -261,8 +261,8 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
   }
 
   if (ks) {
-    kprintf(NULL,klt_container,"Ogg page at offset %lx, granpos %016llx, %d bytes, %d packets on this page\n",
-        offset,(long long)ogg_page_granulepos(og),
+    kprintf(NULL,klt_container,"Ogg page at offset %lx, granpos %016"PRIx64", %d bytes, %d packets on this page\n",
+        offset,ogg_page_granulepos(og),
         og->header_len+og->body_len,ogg_page_packets(og));
 
     katalyzer_dump_data(ks,klt_dump,"Page header",og->header,og->header_len);
@@ -314,7 +314,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
             kprintf(ks,klt_misc,"Bitstream is not Kate\n");
           }
           else {
-            kprintf(ks,klt_error,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
+            kprintf(ks,klt_error,"kate_decode_headerin: packetno %"PRId64": %d\n",op.packetno,ret);
             ks->ret=ret;
           }
           clear_and_remove_kate_stream(ks,&opd->kate_streams);
@@ -366,14 +366,14 @@ static void katalyzer_output_stats(const katalyzer_stats *stats)
   int n;
 
   kprintf(ks,klt_stats,"Statistics:\n");
-  kprintf(ks,klt_stats,"Stream: %lld bytes, %lld packets\n",(long long)stats->stream_length,(long long)stats->n_packets_total);
+  kprintf(ks,klt_stats,"Stream: %"PRId64" bytes, %"PRId64" packets\n",stats->stream_length,stats->n_packets_total);
   for (n=0;n<256;++n) {
     int type=n^0x80;
     if (stats->n_packets[type]==0) continue;
-    kprintf(ks,klt_stats,"Packet type %02x: %lld packets, size %lld - %lld (acc %lld, %.2f%% total)\n",
-        type,(long long)stats->n_packets[type],
-        (long long)stats->min_size[type],(long long)stats->max_size[type],
-        (long long)stats->total_size[type],stats->total_size[type]*100.0f/stats->stream_length);
+    kprintf(ks,klt_stats,"Packet type %02x: %"PRId64" packets, size %"PRId64" - %"PRId64" (acc %"PRId64", %.2f%% total)\n",
+        type,stats->n_packets[type],
+        stats->min_size[type],stats->max_size[type],
+        stats->total_size[type],stats->total_size[type]*100.0f/stats->stream_length);
   }
 }
 
@@ -589,7 +589,7 @@ int main(int argc,char **argv)
   bytes_read=fread(signature,1,sizeof(signature),fin);
   if (bytes_read!=sizeof(signature)) {
     /* A Kate stream's first packet is 64 bytes, so this cannot be one */
-    fprintf(stderr,"Failed to read first %zu bytes of stream\n",sizeof(signature));
+    fprintf(stderr,"Failed to read first %lu bytes of stream\n",(unsigned long)sizeof(signature));
     exit(-1);
   }
 
@@ -601,7 +601,7 @@ int main(int argc,char **argv)
     bytes=64;
     buffer=(char*)kate_malloc(bytes);
     if (!buffer) {
-      fprintf(stderr,"failed to allocate %lld bytes\n",(long long)bytes);
+      fprintf(stderr,"failed to allocate %"PRId64" bytes\n",bytes);
       exit(-1);
     }
     memcpy(buffer,signature,bytes);

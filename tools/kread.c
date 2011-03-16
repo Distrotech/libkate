@@ -60,12 +60,12 @@ int read_raw_size_and_packet(FILE *f,char **buffer,ogg_int64_t *bytes)
   /* all subsequent packets are prefixed with 64 bits (signed) of the packet length in bytes */
   bytes_read=read(fileno(f),bytes,8);
   if (bytes_read!=8 || *bytes<=0) {
-    fprintf(stderr,"failed to read raw kate packet size (read %zu, bytes %lld)\n",bytes_read,(long long)*bytes);
+    fprintf(stderr,"failed to read raw kate packet size (read %lu, bytes %"PRId64")\n",(unsigned long)bytes_read,*bytes);
     return -1;
   }
   ret=read_raw_packet(f,buffer,*bytes);
   if (ret<0) {
-    fprintf(stderr,"failed to read raw kate packet (%lld bytes)\n",(long long)*bytes);
+    fprintf(stderr,"failed to read raw kate packet (%"PRId64" bytes)\n",*bytes);
     return -1;
   }
 
@@ -119,7 +119,7 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   if (pre_buffer && pre_bytes) {
     ptr=ogg_sync_buffer(&oy,pre_bytes);
     if (!ptr) {
-      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",pre_bytes);
+      fprintf(stderr,"Failed to get sync buffer for %lu bytes\n",(unsigned long)pre_bytes);
       goto error;
     }
     memcpy(ptr,pre_buffer,pre_bytes);
@@ -129,7 +129,7 @@ int parse_ogg_stream(FILE *f,const char *pre_buffer,size_t pre_bytes,ogg_parser_
   while (1) {
     ptr=ogg_sync_buffer(&oy,buffer_size);
     if (!ptr) {
-      fprintf(stderr,"Failed to get sync buffer for %zu bytes\n",buffer_size);
+      fprintf(stderr,"Failed to get sync buffer for %lu bytes\n",(unsigned long)buffer_size);
       goto error;
     }
     bytes_read=read(fileno(f),ptr,buffer_size);

@@ -150,7 +150,7 @@ static int ogg_parser_on_page(kate_uintptr_t data,long offset,ogg_page *og)
             /* Bitstream is not Kate, ignore */
           }
           else {
-            fprintf(stderr,"kate_decode_headerin: packetno %lld: %d\n",(long long)op.packetno,ret);
+            fprintf(stderr,"kate_decode_headerin: packetno %"PRId64": %d\n",op.packetno,ret);
             ks->ret=ret;
           }
           clear_and_remove_kate_stream(ks,&opd->kate_streams);
@@ -334,7 +334,7 @@ int main(int argc,char **argv)
   bytes_read=fread(signature,1,sizeof(signature),fin);
   if (bytes_read!=sizeof(signature)) {
     /* A Kate stream's first packet is 64 bytes, so this cannot be one */
-    fprintf(stderr,"Failed to read first %zu bytes of stream\n",sizeof(signature));
+    fprintf(stderr,"Failed to read first %lu bytes of stream\n",(unsigned long)sizeof(signature));
     exit(-1);
   }
 #else
@@ -357,7 +357,7 @@ int main(int argc,char **argv)
     bytes=64;
     buffer=(char*)kate_malloc(bytes);
     if (!buffer) {
-      fprintf(stderr,"failed to allocate %lld bytes\n",(long long)bytes);
+      fprintf(stderr,"failed to allocate %"PRId64" bytes\n",bytes);
       exit(-1);
     }
     memcpy(buffer,signature,bytes);

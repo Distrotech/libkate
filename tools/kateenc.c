@@ -273,7 +273,7 @@ void update_stream_time(kate_state *k,FILE *fout,kate_int64_t endt)
       while (1) {
         ret=kate_ogg_encode_repeat_raw_times(k,t,raw_repeat_threshold,&op);
         if (ret<0) {
-          fprintf(stderr,"Failed encoding repeat at %lld (%d), continuing anyway\n",(long long)t,ret);
+          fprintf(stderr,"Failed encoding repeat at %"PRId64" (%d), continuing anyway\n",t,ret);
           return;
         }
         if (ret==0) break;
@@ -288,7 +288,7 @@ void update_stream_time(kate_state *k,FILE *fout,kate_int64_t endt)
     if (raw_keepalive_threshold>0 && t-last_stream_time>=raw_keepalive_threshold) {
       ret=kate_ogg_encode_keepalive_raw_times(k,t,&op);
       if (ret<0) {
-        fprintf(stderr,"Failed encoding keepalive at %lld (%d), continuing anyway\n",(long long)t,ret);
+        fprintf(stderr,"Failed encoding keepalive at %"PRId64" (%d), continuing anyway\n",t,ret);
         return;
       }
       ret=send_packet(fout,&op,t);
@@ -818,7 +818,7 @@ static void set_encoder_comment(kate_comment *kc)
   size_t len=strlen(base)+strlen(version)+1;
   char *value=(char*)kate_malloc(len);
   if (!value) {
-    fprintf(stderr,"Failed to allocate %zu bytes\n",len);
+    fprintf(stderr,"Failed to allocate %lu bytes\n",(unsigned long)len);
     exit(-1);
   }
   sprintf(value,"%s%s",base,version);
