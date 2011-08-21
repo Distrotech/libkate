@@ -1,4 +1,4 @@
-AC_INIT([libkate],[0.3.8])
+AC_INIT([libkate],[0.4.0])
 
 AC_CONFIG_SRCDIR([include/kate/kate.h.in])
 AC_CONFIG_AUX_DIR([misc/autotools])

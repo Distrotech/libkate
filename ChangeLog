@@ -1,3 +1,11 @@
+0.4.0 - 21 august 2011
+  timed and object metadata support
+  fix various precision issues with large timestamps
+  fix KateDJ editor with newer versions of wxPython
+  katedec now tries to avoid escaping non ASCII glyphs
+  misc error handling improvements/fixes
+  misc build and documentation fixes
+
 0.3.8 - 10 august 2010
   various build fixes
   KateDJ can now decode to LRC and SRT formats
