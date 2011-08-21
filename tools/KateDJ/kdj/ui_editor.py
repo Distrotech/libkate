@@ -70,13 +70,17 @@ class UIEditor(wx.Dialog):
      buffer.addEditor(editor)
      buffer.open(filename)
      self.notebook.AddPage(page=panel,text=buffer.name,select=True)
+     if (self.notebook.GetPageCount()==1):
+       self.OnPageSelected(0)
      self.buffers.append(buffer)
      editor.setFocus()
 
+  def OnPageSelected(self,idx):
+    self.current_panel=self.notebook.GetPage(idx)
+
   def OnPageChanged(self,event):
     new=event.GetSelection()
-    window=self.notebook.GetPage(new)
-    self.current_panel=window
+    self.OnPageSelected(new)
     event.Skip()
 
   def OnTest(self,event):
