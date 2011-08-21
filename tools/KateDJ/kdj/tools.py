@@ -78,10 +78,13 @@ class Tools:
     try:
       try:
         popen=subprocess.Popen(params,stdin=subprocess.PIPE,stdout=subprocess.PIPE,stderr=subprocess.PIPE,universal_newlines=True)
-        (stdoutdata,stderrdata)=popen.communicate(stdin)
+        if stdin==None:
+          (stdoutdata,stderrdata)=popen.communicate(stdin)
+        else:
+          (stdoutdata,stderrdata)=popen.communicate(stdin.encode('utf8'))
         ret=popen.returncode
         # oggz tools can return 0 when they fail, so do not test ret
-        msg=stderrdata
+        msg=stderrdata.encode('utf8')
         if msg!=None and msg!='':
           raise Exception,msg
       except:
