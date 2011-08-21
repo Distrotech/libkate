@@ -1016,7 +1016,7 @@ int kate_encode_keepalive_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp
   if (ret<0) return ret;
 
   granulepos=(earliest_t<<k->ki->granule_shift)|(t-earliest_t);
-  if (granulepos<0) return granulepos;
+  if (granulepos<0) return KATE_E_BAD_GRANULE;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
   k->kes->granulepos=granulepos;
@@ -1085,7 +1085,7 @@ int kate_encode_repeat_raw_times(kate_state *k,kate_int64_t t,kate_int64_t thres
     return ret;
   }
   granulepos=(earliest_t<<k->ki->granule_shift)|(t-earliest_t);
-  if (granulepos<0) return granulepos;
+  if (granulepos<0) return KATE_E_BAD_GRANULE;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
 
@@ -1155,7 +1155,7 @@ int kate_encode_finish_raw_times(kate_state *k,kate_int64_t t,kate_packet *kp)
   }
 
   granulepos=t<<k->ki->granule_shift;
-  if (granulepos<0) return granulepos;
+  if (granulepos<0) return KATE_E_BAD_GRANULE;
 
   if (kate_check_granule(k,&granulepos)<0) return KATE_E_BAD_GRANULE;
   k->kes->granulepos=granulepos;
