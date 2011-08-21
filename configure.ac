@@ -24,8 +24,8 @@ dnl
 dnl  6. If any interfaces have been removed since the last public release,
 dnl     then set AGE to 0.
 
-LIBKATE_SHARED_VERSION="3:1:2"
-LIBOGGKATE_SHARED_VERSION="3:1:2"
+LIBKATE_SHARED_VERSION="4:0:3"
+LIBOGGKATE_SHARED_VERSION="3:2:2"
 
 AC_PROG_CC_C_O
 AC_LIBTOOL_DLOPEN
