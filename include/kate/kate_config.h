@@ -103,15 +103,15 @@ typedef long long int kate_int64_t;
 typedef uint64_t kate_uint64_t;
 #elif defined uint64_t
 typedef uint64_t kate_uint64_t;
-#elif defined UINT_MAX && UINT_MAX>2147483647
+#elif defined UINT_MAX && UINT_MAX>4294967295u
 typedef unsigned int kate_uint64_t;
-#elif defined USHRT_MAX && USHRT_MAX>2147483647
+#elif defined USHRT_MAX && USHRT_MAX>4294967295u
 typedef unsigned short int kate_uint64_t;
-#elif defined ULONG_MAX && ULONG_MAX>2147483647
+#elif defined ULONG_MAX && ULONG_MAX>4294967295ul
 typedef unsigned long int kate_uint64_t;
-#elif defined ULLONG_MAX && ULLONG_MAX>2147483647
+#elif defined ULLONG_MAX && ULLONG_MAX>4294967295ull
 typedef unsigned long long int kate_uint64_t;
-#elif defined ULONG_LONG_MAX && ULONG_LONG_MAX>2147483647
+#elif defined ULONG_LONG_MAX && ULONG_LONG_MAX>4294967295ull
 typedef unsigned long long int kate_uint64_t;
 #elif defined __GNUC__ && __GNUC__>=4 && defined __WORDSIZE && __WORDSIZE==64
 /* this case matches glibc, check conservative GCC version just in case */
