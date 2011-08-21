@@ -1,3 +1,6 @@
+0.4.1 - 21 august 2011
+  update bitstream and shared library versioning missed from 0.4.0
+
 0.4.0 - 21 august 2011
   timed and object metadata support
   fix various precision issues with large timestamps
