@@ -26,7 +26,7 @@
 /** \name Bitstream version */
 /** @{ */
 #define KATE_BITSTREAM_VERSION_MAJOR 0   /**< major version number of the highest bitstream version this version of libkate supports */
-#define KATE_BITSTREAM_VERSION_MINOR 6   /**< minor version number of the highest bitstream version this version of libkate supports */
+#define KATE_BITSTREAM_VERSION_MINOR 7   /**< minor version number of the highest bitstream version this version of libkate supports */
 /** @} */
 
 /** defines the character encoding used by text */
