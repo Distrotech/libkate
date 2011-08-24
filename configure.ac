@@ -120,6 +120,20 @@ AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 AM_PATH_PYTHON(, HAVE_PYTHON=yes, HAVE_PYTHON=no)
 AM_CONDITIONAL(HAVE_PYTHON,test "${HAVE_PYTHON}" = "yes")
 
+if test "x$HAVE_PYTHON" = "xyes"
+then
+  AC_MSG_CHECKING([for wxpython])
+  "$PYTHON" -c "import wx" >/dev/null 2>&1
+  if test "$?" = "0"
+  then
+    HAVE_WXPYTHON="yes"
+  else
+    HAVE_WXPYTHON="no"
+  fi
+  AC_MSG_RESULT(${HAVE_WXPYTHON})
+fi
+AM_CONDITIONAL(HAVE_WXPYTHON,test "${HAVE_WXPYTHON}" = "yes")
+
 AC_CHECK_PROGS(GENHASH,md5sum md5 sha1sum)
 
 VERSION_MAJOR=`echo $VERSION | $SED 's/\([[0-9]]*\)\.\([[0-9]]*\)\.\([[0-9]]*\)/\1/'`

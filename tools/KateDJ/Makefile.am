@@ -6,6 +6,7 @@ kdj_modules=__init__ constants finder tools muxer demuxer tester options ui_main
 # do anything for Python sources at build time, only at install time.
 noinst_PYTHON=KateDJ
 
+if HAVE_WXPYTHON
 install-exec-local:
 	${mkinstalldirs} "$(DESTDIR)$(pythondir)/kdj"
 	for module in $(kdj_modules); do \
@@ -18,6 +19,7 @@ install-exec-local:
 	done
 	${mkinstalldirs} "$(DESTDIR)$(bindir)"
 	${INSTALL_SCRIPT} "${top_srcdir}/tools/KateDJ/KateDJ" "$(DESTDIR)$(bindir)"
+endif
 
 uninstall-local:
 	for module in $(kdj_modules); do \
