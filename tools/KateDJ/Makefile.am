@@ -7,6 +7,7 @@ kdj_modules=__init__ constants finder tools muxer demuxer tester options ui_main
 noinst_PYTHON=KateDJ
 
 if HAVE_WXPYTHON
+if HAVE_OGGZ_TOOLS
 install-exec-local:
 	${mkinstalldirs} "$(DESTDIR)$(pythondir)/kdj"
 	for module in $(kdj_modules); do \
@@ -19,6 +20,13 @@ install-exec-local:
 	done
 	${mkinstalldirs} "$(DESTDIR)$(bindir)"
 	${INSTALL_SCRIPT} "${top_srcdir}/tools/KateDJ/KateDJ" "$(DESTDIR)$(bindir)"
+else
+install-exec-local:
+	echo "Could not find oggz tools, KateDJ will not be installed"
+endif
+else
+install-exec-local:
+	echo "Could not find wxPython, KateDJ will not be installed"
 endif
 
 uninstall-local:

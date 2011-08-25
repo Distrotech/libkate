@@ -115,6 +115,7 @@ else
     fi
   fi
 fi
+AM_CONDITIONAL(HAVE_OGGZ_TOOLS,test "x${OGGZ}" != "x")
 AM_CONDITIONAL(HAVE_OGG_MERGE,test "x${OGG_MERGE}" != "x")
 
 AM_PATH_PYTHON(, HAVE_PYTHON=yes, HAVE_PYTHON=no)
@@ -267,4 +268,12 @@ AC_CONFIG_FILES(
   [doc/kate.doxygen]
 )
 AC_OUTPUT
+
+katedj_deps=
+if test "x$HAVE_WXPYTHON" != "xyes"; then katedj_deps="${katedj_deps}, wxPython"; fi
+if test "x$OGGZ" = "x"; then katedj_deps="${katedj_deps}, oggz tools"; fi
+if test "x$katedj_deps" != "x"
+then
+  AC_MSG_WARN([KateDJ will not be installed due to dependencies not being found$katedj_deps.])
+fi
 
