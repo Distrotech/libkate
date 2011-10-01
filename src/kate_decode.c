@@ -181,7 +181,7 @@ static int kate_read_metadata(kate_pack_buffer *kpb,kate_meta **km)
     tag[len]=0;
 
     len=kate_read32v(kpb);
-    if (len<=0) goto error_bad_packet;
+    if (len<0) goto error_bad_packet;
     value=(char*)KMG_MALLOC(len+1);
     if (!value) goto error_out_of_memory;
     kate_readbuf(kpb,value,len);
