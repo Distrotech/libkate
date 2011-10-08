@@ -3,12 +3,6 @@
 #include <string.h>
 #include "kate/kate.h"
 
-/** \defgroup text Text manipulation */
-//extern int kate_text_get_character(kate_text_encoding text_encoding,const char ** const text,size_t *len0);
-//extern int kate_text_set_character(kate_text_encoding text_encoding,int c,char ** const text,size_t *len0);
-//extern int kate_text_remove_markup(kate_text_encoding text_encoding,char *text,size_t *len0);
-//extern int kate_text_validate(kate_text_encoding text_encoding,const char *text,size_t len0);
-
 static char *dupstr(const char *s)
 {
   size_t len=strlen(s);
