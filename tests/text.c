@@ -124,7 +124,7 @@ int main()
   CHECK_VALID("íŸ¿");
   CHECK_VALID("î€€");
   CHECK_VALID("ï¿½");
-  CHECK_VALID("ô¿¿");
+  CHECK_INVALID("ô¿¿");
   CHECK_VALID2("ô€€");
 
   /* 3.1  Unexpected continuation bytes */
