@@ -54,14 +54,17 @@ static int count_glyphs(const char *text)
     free(removed); \
   } while(0)
 
-#define CHECK_VALID(text) \
+#define CHECK_VALID_LEN(text,len) \
   do { \
-    int ret=kate_text_validate(kate_utf8,text,strlen(text)+1); \
+    int ret=kate_text_validate(kate_utf8,text,len); \
     if (ret<0) { \
       fprintf(stderr,"line %u: %s: supposed to be valid, but kate_text_validate returned an error (%d)\n",__LINE__,text,ret); \
       return 1; \
     } \
   } while(0)
+
+#define CHECK_VALID(text) \
+  CHECK_VALID_LEN(text,strlen(text)+1)
 
 #define CHECK_INVALID(text) \
   do { \
@@ -99,7 +102,7 @@ int main()
   CHECK_VALID("κόσμε");
 
   /* 2.1  First possible sequence of a certain length */
-  CHECK_VALID("\0");
+  CHECK_VALID_LEN("\0",2);
   CHECK_VALID("");
   CHECK_VALID("ࠀ");
   CHECK_VALID("𐀀");
