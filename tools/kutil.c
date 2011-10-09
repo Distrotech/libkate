@@ -48,6 +48,17 @@ kate_float time_float_seconds(kate_float t)
   return time_milliseconds(t)/(kate_float)1000+time_seconds(t);
 }
 
+void granule_to_hmsms(const kate_info *ki,ogg_int64_t granpos,int *h,int *m,int *s,int *ms)
+{
+  *h=(granpos*ki->gps_denominator)/ki->gps_numerator/(60*60);
+  granpos-=(*h*ki->gps_numerator+ki->gps_denominator/2)/ki->gps_denominator*60*60;
+  *m=(granpos*ki->gps_denominator)/ki->gps_numerator/60;
+  granpos-=(*m*ki->gps_numerator+ki->gps_denominator/2)/ki->gps_denominator*60;
+  *s=(granpos*ki->gps_denominator)/ki->gps_numerator;
+  granpos-=(*s*ki->gps_numerator+ki->gps_denominator/2)/ki->gps_denominator;
+  *ms=(1000*granpos*ki->gps_denominator)/ki->gps_numerator;
+}
+
 
 const char *eat_arg(int argc,char **argv,int *n)
 {

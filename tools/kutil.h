@@ -15,6 +15,7 @@ extern int time_minutes(kate_float t);
 extern kate_float time_float_seconds(kate_float t);
 extern int time_seconds(kate_float t);
 extern int time_milliseconds(kate_float t);
+extern void granule_to_hmsms(const kate_info *ki,ogg_int64_t granpos,int *h,int *m,int *s,int *ms);
 
 extern const char *eat_arg(int argc,char **argv,int *n);
 

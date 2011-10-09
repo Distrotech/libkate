@@ -568,8 +568,8 @@ void write_kate_headers(FILE *f,const kate_info *ki,const kate_comment *kc)
 void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t granpos)
 {
   const kate_info *ki=ev->ki;
-  float t0=ev->start_time;
-  float t1=ev->end_time;
+  int h0,m0,s0,ms0;
+  int h1,m1,s1,ms1;
 
   (void)data;
   fprintf(fout,"  event {\n");
@@ -587,10 +587,10 @@ void write_kate_event(FILE *fout,void *data,const kate_event *ev,ogg_int64_t gra
     );
 #endif
   }
-  fprintf(fout,"    %02d:%02d:%02.8g --> %02d:%02d:%02.8g\n",
-    time_hours(t0),time_minutes(t0),time_float_seconds(t0),
-    time_hours(t1),time_minutes(t1),time_float_seconds(t1)
-  );
+  granule_to_hmsms(ki,ev->start,&h0,&m0,&s0,&ms0);
+  granule_to_hmsms(ki,ev->start+ev->duration,&h1,&m1,&s1,&ms1);
+  fprintf(fout,"    %02d:%02d:%02d.%03d --> %02d:%02d:%02d.%03d\n",
+    h0,m0,s0,ms0,h1,m1,s1,ms1);
   if (ev->language) {
     fprintf(fout,"    language \"%s\"\n",ev->language);
   }
