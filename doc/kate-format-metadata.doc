@@ -1,0 +1,39 @@
+/* Copyright (C) 2009-2011 Vincent Penquerc'h.
+   This file is part of the Kate codec library.
+   Written by Vincent Penquerc'h.
+
+   Use, distribution and reproduction of this library is governed
+   by a BSD style source license included with this source in the
+   file 'COPYING'. Please read these terms before distributing. */
+
+
+/**
+
+\page format_metadata Format - metadata
+
+A metadata definition consists of:
+
+\li a bit, being 0 if the metadata set is empty, 1 otherwise.
+
+Then, if the set is not empty:
+
+\li a \ref format_32v "variable length integer" representing the number of metadata pairs present in the set.
+
+Then, for that number:
+
+\li a \ref format_32v "variable length integer" representing the number of bytes in the tag name.
+\li that same number of bytes, representing the tag name. The typical C string terminating NUL is not included.
+\li a \ref format_32v "variable length integer" representing the number of bytes in the value.
+\li that same number of bytes, representing the value. This value may be any stream of arbitrary data, but is
+    encouraged to be UTF-8, though this is not mandatory and should not be assumed. No terminating NUL.
+    Note that a terminating NUL might not make sense in the first place if the metadata contents are binary.
+\li a \ref format_warp "warp".
+
+Then, the data for this metadata pair ends.
+
+Next, we have a \ref format_warp "warp".
+
+Next, the data ends.
+
+*/
+
