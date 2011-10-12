@@ -1242,7 +1242,7 @@ static int kate_decode_text_packet(kate_state *k,kate_pack_buffer *kpb,int repea
   text[len+2]=0;
   text[len+3]=0;
   /* we can't validate the text yet, as we don't know whether there's a text encoding override later,
-     so we delay validatation till we've read the overrides */
+     so we delay validation till we've read the overrides */
 
   ev->text=text;
   ev->len=len;
