@@ -45,7 +45,7 @@ static void test_bitwise_size(size_t bits,kate_uint32_t start_rnd)
   }
 
   if (kate_pack_bits(&kpb)!=bits) {
-    fprintf(stderr,"Expected %d bits, got %d\n",bits,kate_pack_bits(&kpb));
+    fprintf(stderr,"Expected %zu bits, got %ld\n",bits,kate_pack_bits(&kpb));
     exit(1);
   }
 
@@ -62,7 +62,7 @@ static void test_bitwise_size(size_t bits,kate_uint32_t start_rnd)
     if (d>=data_size) break;
     read=kate_pack_read(&kpb,b);
     if (r!=read) {
-      fprintf(stderr,"Read %d from %zu bits at bit offset %zu, expected %zu\n",read,b,n,r);
+      fprintf(stderr,"Read %d from %u bits at bit offset %zu, expected %u\n",read,b,n,r);
       exit(1);
     }
     n+=b;
