@@ -20,7 +20,7 @@ kateenc_SOURCES+=kpng.c
 endif
 katedec_SOURCES=katedec.c kkate.c ksrt.c klrc.c kutil.c kfuzz.c kstream.c kread.c kstrings.c
 katalyzer_SOURCES=katalyzer.c kutil.c kstream.c kread.c kstrings.c kstats.c
-kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ @LEXLIB@
+kateenc_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@ @PNG_LIBS@ #@LEXLIB@
 katedec_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 katalyzer_LDADD=../lib/liboggkate.la ../lib/libkate.la @OGG_LIBS@
 kateenc_CFLAGS=@CWARNFLAGS_LIGHT@ @CFLAGS_FORTIFY_SOURCE@ @CFLAGS_DEBUG@ @OGG_CFLAGS@ @PNG_CFLAGS@
