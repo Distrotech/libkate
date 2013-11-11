@@ -1,0 +1,6034 @@
+Terminals unused in grammar
+
+   BASE
+
+
+Grammar
+
+    0 $accept: kd_kate $end
+
+    1 $@1: /* empty */
+
+    2 $@2: /* empty */
+
+    3 kd_kate: $@1 KATE '{' kd_opt_defs $@2 kd_events '}'
+
+    4 kd_opt_defs: DEFS '{' kd_defs '}'
+    5            | /* empty */
+
+    6 kd_defs: kd_defs kd_def
+    7        | /* empty */
+
+    8 kd_def: LANGUAGE STRING
+    9       | CATEGORY STRING
+   10       | DIRECTIONALITY directionality
+   11       | COMMENT STRING
+
+   12 $@3: /* empty */
+
+   13 $@4: /* empty */
+
+   14 kd_def: DEFINE MACRO $@3 IDENTIFIER $@4 MACRO_BODY
+
+   15 $@5: /* empty */
+
+   16 kd_def: DEFINE STYLE kd_opt_name $@5 '{' kd_style_defs '}'
+
+   17 $@6: /* empty */
+
+   18 kd_def: DEFINE REGION kd_opt_name $@6 '{' kd_region_defs '}'
+
+   19 $@7: /* empty */
+
+   20 kd_def: DEFINE CURVE kd_opt_name $@7 '{' kd_curve_defs '}'
+
+   21 $@8: /* empty */
+
+   22 kd_def: DEFINE MOTION kd_opt_name $@8 '{' kd_motion_defs '}'
+
+   23 $@9: /* empty */
+
+   24 kd_def: DEFINE PALETTE kd_opt_name $@9 '{' kd_palette_defs '}'
+
+   25 $@10: /* empty */
+
+   26 kd_def: DEFINE BITMAP kd_opt_name $@10 '{' kd_bitmap_defs '}'
+
+   27 $@11: /* empty */
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name $@11 '{' kd_font_range_defs '}'
+
+   29 $@12: /* empty */
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name $@12 '{' kd_font_mapping_defs '}'
+   31       | TIMEBASE timespec
+   32       | GRANULE RATE UNUMBER '/' UNUMBER
+   33       | GRANULE SHIFT UNUMBER
+   34       | CANVAS SIZE UNUMBER UNUMBER
+
+   35 kd_style_defs: kd_style_defs kd_style_def
+   36              | /* empty */
+
+   37 kd_style_def: HALIGN float
+   38             | VALIGN float
+   39             | HLEFT
+   40             | HCENTER
+   41             | HRIGHT
+   42             | VTOP
+   43             | VCENTER
+   44             | VBOTTOM
+   45             | TEXT COLOR kd_color
+   46             | BACKGROUND COLOR kd_color
+   47             | DRAW COLOR kd_color
+   48             | BOLD
+   49             | ITALICS
+   50             | UNDERLINE
+   51             | STRIKE
+   52             | JUSTIFY
+   53             | WRAP kd_wrap_mode
+   54             | FONT STRING
+   55             | FONT SIZE float kd_opt_space_metric
+   56             | FONT WIDTH float kd_opt_space_metric
+   57             | FONT HEIGHT float kd_opt_space_metric
+   58             | LEFT MARGIN float kd_opt_space_metric
+   59             | TOP MARGIN float kd_opt_space_metric
+   60             | RIGHT MARGIN float kd_opt_space_metric
+   61             | BOTTOM MARGIN float kd_opt_space_metric
+   62             | MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
+   63             | META STRING '=' STRING
+
+   64 $@13: /* empty */
+
+   65 kd_style_def: META STRING '=' UNUMBER $@13 '{' kd_byte_stream '}'
+
+   66 kd_opt_space_metric: '%'
+   67                    | 'm'
+   68                    | /* empty */
+
+   69 kd_region_defs: kd_region_defs kd_region_def
+   70               | /* empty */
+
+   71 kd_region_def: METRIC
+   72              | POSITION float float
+   73              | SIZE float float
+   74              | CLIP
+   75              | DEFAULT STYLE kd_style_name_or_index
+   76              | META STRING '=' STRING
+
+   77 $@14: /* empty */
+
+   78 kd_region_def: META STRING '=' UNUMBER $@14 '{' kd_byte_stream '}'
+
+   79 kd_curve_defs: kd_curve_defs kd_curve_def
+   80              | /* empty */
+
+   81 kd_curve_def: kd_curvetype
+
+   82 $@15: /* empty */
+
+   83 kd_curve_def: UNUMBER POINTS $@15 '{' kd_curve_points '}'
+
+   84 $@16: /* empty */
+
+   85 kd_curve_def: POINTS $@16 '{' kd_curve_points '}'
+
+   86 kd_palette_defs: kd_palette_defs kd_palette_def
+   87                | /* empty */
+
+   88 $@17: /* empty */
+
+   89 kd_palette_def: UNUMBER COLORS $@17 '{' kd_palette_colors '}'
+   90               | SOURCE STRING
+
+   91 kd_bitmap_defs: kd_bitmap_defs kd_bitmap_def
+   92               | /* empty */
+
+   93 $@18: /* empty */
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER $@18 '{' kd_bitmap_pixels '}'
+
+   95 $@19: /* empty */
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER $@19 '{' kd_png_bitmap_pixels '}'
+   97              | SOURCE STRING
+   98              | DEFAULT PALETTE kd_palette_name_or_index
+   99              | OFFSET bitmap_x_offset bitmap_y_offset
+  100              | META STRING '=' STRING
+
+  101 $@20: /* empty */
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER $@20 '{' kd_byte_stream '}'
+
+  103 kd_color: UNUMBER UNUMBER UNUMBER
+  104         | UNUMBER UNUMBER UNUMBER UNUMBER
+  105         | COLORSPEC
+  106         | COLORSPEC ALPHA UNUMBER
+
+  107 kd_wrap_mode: NONE
+  108             | WORD
+
+  109 kd_curvetype: NONE
+  110             | STATIC
+  111             | LINEAR
+  112             | CATMULL_ROM
+  113             | BEZIER_CUBIC
+  114             | BSPLINE
+
+  115 kd_curve_points: kd_curve_points float
+  116                | /* empty */
+
+  117 kd_palette_colors: kd_palette_colors '{' kd_color '}' kd_opt_comma
+  118                  | /* empty */
+
+  119 kd_bitmap_pixels: kd_bitmap_pixels UNUMBER kd_opt_comma
+  120                 | /* empty */
+
+  121 kd_png_bitmap_pixels: kd_png_bitmap_pixels UNUMBER kd_opt_comma
+  122                     | /* empty */
+
+  123 kd_byte_stream: kd_byte_stream UNUMBER kd_opt_comma
+  124               | /* empty */
+
+  125 kd_opt_name: STRING
+  126            | /* empty */
+
+  127 kd_style_name_or_index: STRING
+  128                       | UNUMBER
+
+  129 kd_region_name_or_index: STRING
+  130                        | UNUMBER
+
+  131 kd_curve_name_or_index: STRING
+  132                       | UNUMBER
+
+  133 kd_motion_name_or_index: STRING
+  134                        | UNUMBER
+
+  135 kd_palette_name_or_index: STRING
+  136                         | UNUMBER
+
+  137 kd_bitmap_name_or_index: STRING
+  138                        | UNUMBER
+
+  139 kd_font_range_name_or_index: STRING
+  140                            | UNUMBER
+
+  141 kd_font_mapping_name_or_index: STRING
+  142                              | UNUMBER
+
+  143 kd_curve_def_name_or_index: kd_curve_name_or_index
+
+  144 $@21: /* empty */
+
+  145 kd_curve_def_name_or_index: $@21 '{' kd_curve_defs '}'
+
+  146 $@22: /* empty */
+
+  147 kd_curve_def_name_or_index: kd_curve_name_or_index $@22 '{' kd_curve_defs '}'
+
+  148 float: FLOAT
+  149      | UNUMBER
+  150      | NUMBER
+
+  151 bitmap_x_offset: UNUMBER
+  152                | NUMBER
+  153                | float '%'
+
+  154 bitmap_y_offset: UNUMBER
+  155                | NUMBER
+  156                | float '%'
+
+  157 timespec: UNUMBER ':' unumber60 ':' float60
+  158         | UNUMBER ':' float60
+  159         | float60
+
+  160 kd_events: kd_events kd_event
+  161          | /* empty */
+
+  162 $@23: /* empty */
+
+  163 kd_event: EVENT $@23 '{' kd_event_defs '}'
+
+  164 $@24: /* empty */
+
+  165 kd_event: EVENT $@24 kd_event_defs
+
+  166 kd_event_defs: kd_event_defs kd_event_def
+  167              | /* empty */
+
+  168 kd_event_def: ID UNUMBER
+  169             | LANGUAGE STRING
+  170             | DIRECTIONALITY directionality
+  171             | STARTS AT timespec
+  172             | ENDS AT timespec
+  173             | START TIME timespec
+  174             | END TIME timespec
+  175             | FROM timespec TO timespec
+  176             | DURATION timespec
+  177             | FROM timespec FOR timespec
+  178             | timespec ARROW timespec
+  179             | REGION kd_region_name_or_index
+
+  180 $@25: /* empty */
+
+  181 kd_event_def: REGION kd_region_name_or_index $@25 '{' kd_region_defs '}'
+
+  182 $@26: /* empty */
+
+  183 kd_event_def: REGION $@26 '{' kd_region_defs '}'
+  184             | kd_optional_secondary STYLE kd_style_name_or_index
+
+  185 $@27: /* empty */
+
+  186 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index $@27 '{' kd_style_defs '}'
+
+  187 $@28: /* empty */
+
+  188 kd_event_def: kd_optional_secondary STYLE $@28 '{' kd_style_defs '}'
+  189             | TEXT strings
+  190             | PRE TEXT strings
+  191             | MARKUP strings
+  192             | PRE MARKUP strings
+  193             | TEXT SOURCE STRING
+  194             | PRE TEXT SOURCE STRING
+  195             | MARKUP SOURCE STRING
+  196             | PRE MARKUP SOURCE STRING
+  197             | strings
+
+  198 $@29: /* empty */
+
+  199 kd_event_def: MOTION $@29 '{' kd_motion_defs '}'
+  200             | MOTION kd_motion_name_or_index
+
+  201 $@30: /* empty */
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER $@30 '{' kd_simple_timed_glyph_marker_defs '}'
+
+  203 $@31: /* empty */
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH $@31 '{' kd_simple_timed_glyph_style_morph_defs '}'
+  205             | FONT MAPPING kd_font_mapping_name_or_index
+  206             | PALETTE kd_palette_name_or_index
+
+  207 $@32: /* empty */
+
+  208 kd_event_def: PALETTE $@32 '{' kd_palette_defs '}'
+  209             | BITMAP kd_bitmap_name_or_index
+
+  210 $@33: /* empty */
+
+  211 kd_event_def: BITMAP $@33 '{' kd_bitmap_defs '}'
+
+  212 $@34: /* empty */
+
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name $@34 '{' kd_bitmap_defs '}'
+  214             | DEFINE LOCAL BITMAP kd_opt_name '=' kd_bitmap_name_or_index
+  215             | META STRING '=' STRING
+  216             | META STRING '=' kd_meta_byte_stream_def
+
+  217 $@35: /* empty */
+
+  218 kd_meta_byte_stream_def: UNUMBER $@35 '{' kd_byte_stream '}'
+
+  219 kd_optional_secondary: SECONDARY
+  220                      | /* empty */
+
+  221 strings: strings '+' STRING
+  222        | STRING
+
+  223 kd_motion_defs: kd_motion_defs kd_motion_def
+  224               | /* empty */
+
+  225 kd_motion_def: MAPPING kd_motion_mapping
+  226              | MAPPING kd_motion_mapping kd_motion_mapping
+  227              | SEMANTICS kd_motion_semantics
+  228              | CURVE kd_curve_def_name_or_index kd_optional_curve_duration
+  229              | PERIODIC
+
+  230 kd_optional_curve_duration: FOR float
+  231                           | FOR float '%'
+  232                           | FOR float 'm'
+  233                           | /* empty */
+
+  234 kd_motion_mapping: NONE
+  235                  | FRAME
+  236                  | REGION
+  237                  | EVENT DURATION
+  238                  | BITMAP SIZE
+  239                  | USER UNUMBER
+
+  240 kd_motion_semantics: TIME
+  241                    | REGION POSITION
+  242                    | REGION SIZE
+  243                    | TEXT ALIGNMENT
+  244                    | INTERNAL TEXT ALIGNMENT
+  245                    | EXTERNAL TEXT ALIGNMENT
+  246                    | TEXT POSITION
+  247                    | TEXT SIZE
+  248                    | MARKER UNUMBER POSITION
+  249                    | GLYPH POINTER UNUMBER
+  250                    | TEXT COLOR RG
+  251                    | TEXT COLOR BA
+  252                    | BACKGROUND COLOR RG
+  253                    | BACKGROUND COLOR BA
+  254                    | DRAW COLOR RG
+  255                    | DRAW COLOR BA
+  256                    | STYLE MORPH
+  257                    | TEXT PATH
+  258                    | TEXT PATH SECTION
+  259                    | DRAW
+  260                    | VISIBLE SECTION
+  261                    | 'z'
+  262                    | HORIZONTAL MARGINS
+  263                    | VERTICAL MARGINS
+  264                    | BITMAP POSITION
+  265                    | BITMAP SIZE
+  266                    | MARKER UNUMBER BITMAP
+  267                    | GLYPH POINTER UNUMBER BITMAP
+  268                    | DRAW WIDTH
+  269                    | USER UNUMBER
+
+  270 kd_simple_timed_glyph_marker_defs: kd_simple_timed_glyph_marker_defs kd_simple_timed_glyph_marker_def
+  271                                  | /* empty */
+
+  272 kd_simple_timed_glyph_marker_def: GLYPH POINTER UNUMBER
+  273                                 | 'Y' MAPPING kd_motion_mapping
+  274                                 | HEIGHT FROM float TO float
+  275                                 | PAUSE FOR timespec
+  276                                 | GLYPH UNUMBER IN timespec
+  277                                 | GLYPH UNUMBER AT timespec
+
+  278 kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs kd_simple_timed_glyph_style_morph_def
+  279                                       | /* empty */
+
+  280 kd_simple_timed_glyph_style_morph_def: GLYPH POINTER UNUMBER
+  281                                      | FROM STYLE kd_style_name_or_index TO STYLE kd_style_name_or_index
+  282                                      | PAUSE FOR timespec
+  283                                      | GLYPH UNUMBER IN timespec
+  284                                      | GLYPH UNUMBER AT timespec
+  285                                      | STRING IN timespec
+  286                                      | STRING AT timespec
+
+  287 $@36: /* empty */
+
+  288 unumber60: UNUMBER $@36
+
+  289 $@37: /* empty */
+
+  290 float60: float $@37
+
+  291 kd_opt_comma: ','
+  292             | /* empty */
+
+  293 directionality: L2R_T2B
+  294               | R2L_T2B
+  295               | T2B_R2L
+  296               | T2B_L2R
+
+  297 kd_font_range_defs: kd_font_range_defs kd_font_range_def
+  298                   | /* empty */
+
+  299 kd_font_range_def: FIRST CODE POINT STRING
+  300                  | FIRST CODE POINT UNUMBER
+  301                  | LAST CODE POINT STRING
+  302                  | LAST CODE POINT UNUMBER
+  303                  | FIRST BITMAP kd_bitmap_name_or_index
+
+  304 kd_font_mapping_defs: kd_font_mapping_defs kd_font_mapping_def
+  305                     | /* empty */
+
+  306 $@38: /* empty */
+
+  307 kd_font_mapping_def: RANGE $@38 '{' kd_font_range_defs '}'
+  308                    | RANGE kd_font_range_name_or_index
+
+
+Terminals, with rules where they appear
+
+$end (0) 0
+'%' (37) 66 153 156 231
+'+' (43) 221
+',' (44) 291
+'/' (47) 32
+':' (58) 157 158
+'=' (61) 63 65 76 78 100 102 214 215 216
+'Y' (89) 273
+'m' (109) 67 232
+'x' (120) 94 96
+'z' (122) 261
+'{' (123) 3 4 16 18 20 22 24 26 28 30 65 78 83 85 89 94 96 102 117
+    145 147 163 181 183 186 188 199 202 204 208 211 213 218 307
+'}' (125) 3 4 16 18 20 22 24 26 28 30 65 78 83 85 89 94 96 102 117
+    145 147 163 181 183 186 188 199 202 204 208 211 213 218 307
+error (256)
+KATE (258) 3
+DEFS (259) 4
+LANGUAGE (260) 8 169
+COMMENT (261) 11
+CATEGORY (262) 9
+DEFINE (263) 14 16 18 20 22 24 26 28 30 213 214
+MACRO (264) 14
+STYLE (265) 16 75 184 186 188 256 281
+REGION (266) 18 179 181 183 236 241 242
+CURVE (267) 20 228
+TEXT (268) 45 189 190 193 194 243 244 245 246 247 250 251 257 258
+BACKGROUND (269) 46 252 253
+COLOR (270) 45 46 47 250 251 252 253 254 255
+POSITION (271) 72 241 246 248 264
+SIZE (272) 34 55 73 238 242 247 265
+DEFAULT (273) 75 98
+METRIC (274) 71
+HALIGN (275) 37
+VALIGN (276) 38
+HLEFT (277) 39
+HCENTER (278) 40
+HRIGHT (279) 41
+VTOP (280) 42
+VCENTER (281) 43
+VBOTTOM (282) 44
+POINTS (283) 83 85
+EVENT (284) 163 165 237
+STARTS (285) 171
+ENDS (286) 172
+AT (287) 171 172 277 284 286
+START (288) 173
+END (289) 174
+TIME (290) 173 174 240
+DURATION (291) 176 237
+ARROW (292) 178
+FROM (293) 175 177 274 281
+TO (294) 175 274 281
+MAPPING (295) 30 205 225 226 273
+NONE (296) 107 109 234
+FRAME (297) 235
+MOTION (298) 22 199 200
+BEZIER_CUBIC (299) 113
+LINEAR (300) 111
+CATMULL_ROM (301) 112
+BSPLINE (302) 114
+STATIC (303) 110
+SEMANTICS (304) 227
+EXTERNAL (305) 245
+INTERNAL (306) 244
+ALIGNMENT (307) 243 244 245
+RG (308) 250 252 254
+BA (309) 251 253 255
+FOR (310) 177 230 231 232 275 282
+ALPHA (311) 106
+TIMEBASE (312) 31
+MARKER (313) 248 266
+POINTER (314) 249 267 272 280
+SIMPLE_TIMED_GLYPH_MARKER (315) 202
+SIMPLE_TIMED_GLYPH_STYLE_MORPH (316) 204
+GLYPH (317) 249 267 272 276 277 280 283 284
+PAUSE (318) 275 282
+IN (319) 276 283 285
+MORPH (320) 256
+SECONDARY (321) 219
+PATH (322) 257 258
+SECTION (323) 258 260
+PERIODIC (324) 229
+DIRECTIONALITY (325) 10 170
+L2R_T2B (326) 293
+R2L_T2B (327) 294
+T2B_R2L (328) 295
+T2B_L2R (329) 296
+BITMAP (330) 26 209 211 213 214 238 264 265 266 267 303
+PALETTE (331) 24 98 206 208
+COLORS (332) 89
+FONT (333) 28 30 54 55 56 57 205
+RANGE (334) 28 307 308
+FIRST (335) 299 300 303
+LAST (336) 301 302
+CODE (337) 299 300 301 302
+POINT (338) 299 300 301 302
+USER (339) 239 269
+SOURCE (340) 90 97 193 194 195 196
+PNG (341) 96
+DRAW (342) 47 254 255 259 268
+VISIBLE (343) 260
+ID (344) 168
+BOLD (345) 48
+ITALICS (346) 49
+UNDERLINE (347) 50
+STRIKE (348) 51
+JUSTIFY (349) 52
+BASE (350)
+OFFSET (351) 99
+GRANULE (352) 32 33
+RATE (353) 32
+SHIFT (354) 33
+WIDTH (355) 56 268
+HEIGHT (356) 57 274
+CANVAS (357) 34
+LEFT (358) 58
+TOP (359) 59
+RIGHT (360) 60
+BOTTOM (361) 61
+MARGIN (362) 58 59 60 61
+MARGINS (363) 62 262 263
+HORIZONTAL (364) 262
+VERTICAL (365) 263
+CLIP (366) 74
+PRE (367) 190 192 194 196
+MARKUP (368) 191 192 195 196
+LOCAL (369) 213 214
+WRAP (370) 53
+WORD (371) 108
+META (372) 63 65 76 78 100 102 215 216
+NUMBER (373) 150 152 155
+UNUMBER (374) 32 33 34 65 78 83 89 94 96 102 103 104 106 119 121 123
+    128 130 132 134 136 138 140 142 149 151 154 157 158 168 218 239
+    248 249 266 267 269 272 276 277 280 283 284 288 300 302
+STRING (375) 8 9 11 54 63 65 76 78 90 97 100 102 125 127 129 131 133
+    135 137 139 141 169 193 194 195 196 215 216 221 222 285 286 299
+    301
+FLOAT (376) 148
+COLORSPEC (377) 105 106
+IDENTIFIER (378) 14
+MACRO_BODY (379) 14
+
+
+Nonterminals, with rules where they appear
+
+$accept (137)
+    on left: 0
+kd_kate (138)
+    on left: 3, on right: 0
+$@1 (139)
+    on left: 1, on right: 3
+$@2 (140)
+    on left: 2, on right: 3
+kd_opt_defs (141)
+    on left: 4 5, on right: 3
+kd_defs (142)
+    on left: 6 7, on right: 4 6
+kd_def (143)
+    on left: 8 9 10 11 14 16 18 20 22 24 26 28 30 31 32 33 34, on right:
+    6
+$@3 (144)
+    on left: 12, on right: 14
+$@4 (145)
+    on left: 13, on right: 14
+$@5 (146)
+    on left: 15, on right: 16
+$@6 (147)
+    on left: 17, on right: 18
+$@7 (148)
+    on left: 19, on right: 20
+$@8 (149)
+    on left: 21, on right: 22
+$@9 (150)
+    on left: 23, on right: 24
+$@10 (151)
+    on left: 25, on right: 26
+$@11 (152)
+    on left: 27, on right: 28
+$@12 (153)
+    on left: 29, on right: 30
+kd_style_defs (154)
+    on left: 35 36, on right: 16 35 186 188
+kd_style_def (155)
+    on left: 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54
+    55 56 57 58 59 60 61 62 63 65, on right: 35
+$@13 (156)
+    on left: 64, on right: 65
+kd_opt_space_metric (157)
+    on left: 66 67 68, on right: 55 56 57 58 59 60 61 62
+kd_region_defs (158)
+    on left: 69 70, on right: 18 69 181 183
+kd_region_def (159)
+    on left: 71 72 73 74 75 76 78, on right: 69
+$@14 (160)
+    on left: 77, on right: 78
+kd_curve_defs (161)
+    on left: 79 80, on right: 20 79 145 147
+kd_curve_def (162)
+    on left: 81 83 85, on right: 79
+$@15 (163)
+    on left: 82, on right: 83
+$@16 (164)
+    on left: 84, on right: 85
+kd_palette_defs (165)
+    on left: 86 87, on right: 24 86 208
+kd_palette_def (166)
+    on left: 89 90, on right: 86
+$@17 (167)
+    on left: 88, on right: 89
+kd_bitmap_defs (168)
+    on left: 91 92, on right: 26 91 211 213
+kd_bitmap_def (169)
+    on left: 94 96 97 98 99 100 102, on right: 91
+$@18 (170)
+    on left: 93, on right: 94
+$@19 (171)
+    on left: 95, on right: 96
+$@20 (172)
+    on left: 101, on right: 102
+kd_color (173)
+    on left: 103 104 105 106, on right: 45 46 47 117
+kd_wrap_mode (174)
+    on left: 107 108, on right: 53
+kd_curvetype (175)
+    on left: 109 110 111 112 113 114, on right: 81
+kd_curve_points (176)
+    on left: 115 116, on right: 83 85 115
+kd_palette_colors (177)
+    on left: 117 118, on right: 89 117
+kd_bitmap_pixels (178)
+    on left: 119 120, on right: 94 119
+kd_png_bitmap_pixels (179)
+    on left: 121 122, on right: 96 121
+kd_byte_stream (180)
+    on left: 123 124, on right: 65 78 102 123 218
+kd_opt_name (181)
+    on left: 125 126, on right: 16 18 20 22 24 26 28 30 213 214
+kd_style_name_or_index (182)
+    on left: 127 128, on right: 75 184 186 281
+kd_region_name_or_index (183)
+    on left: 129 130, on right: 179 181
+kd_curve_name_or_index (184)
+    on left: 131 132, on right: 143 147
+kd_motion_name_or_index (185)
+    on left: 133 134, on right: 200
+kd_palette_name_or_index (186)
+    on left: 135 136, on right: 98 206
+kd_bitmap_name_or_index (187)
+    on left: 137 138, on right: 209 214 303
+kd_font_range_name_or_index (188)
+    on left: 139 140, on right: 308
+kd_font_mapping_name_or_index (189)
+    on left: 141 142, on right: 205
+kd_curve_def_name_or_index (190)
+    on left: 143 145 147, on right: 228
+$@21 (191)
+    on left: 144, on right: 145
+$@22 (192)
+    on left: 146, on right: 147
+float (193)
+    on left: 148 149 150, on right: 37 38 55 56 57 58 59 60 61 62 72
+    73 115 153 156 230 231 232 274 290
+bitmap_x_offset (194)
+    on left: 151 152 153, on right: 99
+bitmap_y_offset (195)
+    on left: 154 155 156, on right: 99
+timespec (196)
+    on left: 157 158 159, on right: 31 171 172 173 174 175 176 177
+    178 275 276 277 282 283 284 285 286
+kd_events (197)
+    on left: 160 161, on right: 3 160
+kd_event (198)
+    on left: 163 165, on right: 160
+$@23 (199)
+    on left: 162, on right: 163
+$@24 (200)
+    on left: 164, on right: 165
+kd_event_defs (201)
+    on left: 166 167, on right: 163 165 166
+kd_event_def (202)
+    on left: 168 169 170 171 172 173 174 175 176 177 178 179 181 183
+    184 186 188 189 190 191 192 193 194 195 196 197 199 200 202 204
+    205 206 208 209 211 213 214 215 216, on right: 166
+$@25 (203)
+    on left: 180, on right: 181
+$@26 (204)
+    on left: 182, on right: 183
+$@27 (205)
+    on left: 185, on right: 186
+$@28 (206)
+    on left: 187, on right: 188
+$@29 (207)
+    on left: 198, on right: 199
+$@30 (208)
+    on left: 201, on right: 202
+$@31 (209)
+    on left: 203, on right: 204
+$@32 (210)
+    on left: 207, on right: 208
+$@33 (211)
+    on left: 210, on right: 211
+$@34 (212)
+    on left: 212, on right: 213
+kd_meta_byte_stream_def (213)
+    on left: 218, on right: 216
+$@35 (214)
+    on left: 217, on right: 218
+kd_optional_secondary (215)
+    on left: 219 220, on right: 184 186 188
+strings (216)
+    on left: 221 222, on right: 189 190 191 192 197 221
+kd_motion_defs (217)
+    on left: 223 224, on right: 22 199 223
+kd_motion_def (218)
+    on left: 225 226 227 228 229, on right: 223
+kd_optional_curve_duration (219)
+    on left: 230 231 232 233, on right: 228
+kd_motion_mapping (220)
+    on left: 234 235 236 237 238 239, on right: 225 226 273
+kd_motion_semantics (221)
+    on left: 240 241 242 243 244 245 246 247 248 249 250 251 252 253
+    254 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269,
+    on right: 227
+kd_simple_timed_glyph_marker_defs (222)
+    on left: 270 271, on right: 202 270
+kd_simple_timed_glyph_marker_def (223)
+    on left: 272 273 274 275 276 277, on right: 270
+kd_simple_timed_glyph_style_morph_defs (224)
+    on left: 278 279, on right: 204 278
+kd_simple_timed_glyph_style_morph_def (225)
+    on left: 280 281 282 283 284 285 286, on right: 278
+unumber60 (226)
+    on left: 288, on right: 157
+$@36 (227)
+    on left: 287, on right: 288
+float60 (228)
+    on left: 290, on right: 157 158 159
+$@37 (229)
+    on left: 289, on right: 290
+kd_opt_comma (230)
+    on left: 291 292, on right: 117 119 121 123
+directionality (231)
+    on left: 293 294 295 296, on right: 10 170
+kd_font_range_defs (232)
+    on left: 297 298, on right: 28 297 307
+kd_font_range_def (233)
+    on left: 299 300 301 302 303, on right: 297
+kd_font_mapping_defs (234)
+    on left: 304 305, on right: 30 304
+kd_font_mapping_def (235)
+    on left: 307 308, on right: 304
+$@38 (236)
+    on left: 306, on right: 307
+
+
+State 0
+
+    0 $accept: . kd_kate $end
+
+    $default  reduce using rule 1 ($@1)
+
+    kd_kate  go to state 1
+    $@1      go to state 2
+
+
+State 1
+
+    0 $accept: kd_kate . $end
+
+    $end  shift, and go to state 3
+
+
+State 2
+
+    3 kd_kate: $@1 . KATE '{' kd_opt_defs $@2 kd_events '}'
+
+    KATE  shift, and go to state 4
+
+
+State 3
+
+    0 $accept: kd_kate $end .
+
+    $default  accept
+
+
+State 4
+
+    3 kd_kate: $@1 KATE . '{' kd_opt_defs $@2 kd_events '}'
+
+    '{'  shift, and go to state 5
+
+
+State 5
+
+    3 kd_kate: $@1 KATE '{' . kd_opt_defs $@2 kd_events '}'
+
+    DEFS  shift, and go to state 6
+
+    $default  reduce using rule 5 (kd_opt_defs)
+
+    kd_opt_defs  go to state 7
+
+
+State 6
+
+    4 kd_opt_defs: DEFS . '{' kd_defs '}'
+
+    '{'  shift, and go to state 8
+
+
+State 7
+
+    3 kd_kate: $@1 KATE '{' kd_opt_defs . $@2 kd_events '}'
+
+    $default  reduce using rule 2 ($@2)
+
+    $@2  go to state 9
+
+
+State 8
+
+    4 kd_opt_defs: DEFS '{' . kd_defs '}'
+
+    $default  reduce using rule 7 (kd_defs)
+
+    kd_defs  go to state 10
+
+
+State 9
+
+    3 kd_kate: $@1 KATE '{' kd_opt_defs $@2 . kd_events '}'
+
+    $default  reduce using rule 161 (kd_events)
+
+    kd_events  go to state 11
+
+
+State 10
+
+    4 kd_opt_defs: DEFS '{' kd_defs . '}'
+    6 kd_defs: kd_defs . kd_def
+
+    LANGUAGE        shift, and go to state 12
+    COMMENT         shift, and go to state 13
+    CATEGORY        shift, and go to state 14
+    DEFINE          shift, and go to state 15
+    TIMEBASE        shift, and go to state 16
+    DIRECTIONALITY  shift, and go to state 17
+    GRANULE         shift, and go to state 18
+    CANVAS          shift, and go to state 19
+    '}'             shift, and go to state 20
+
+    kd_def  go to state 21
+
+
+State 11
+
+    3 kd_kate: $@1 KATE '{' kd_opt_defs $@2 kd_events . '}'
+  160 kd_events: kd_events . kd_event
+
+    EVENT  shift, and go to state 22
+    '}'    shift, and go to state 23
+
+    kd_event  go to state 24
+
+
+State 12
+
+    8 kd_def: LANGUAGE . STRING
+
+    STRING  shift, and go to state 25
+
+
+State 13
+
+   11 kd_def: COMMENT . STRING
+
+    STRING  shift, and go to state 26
+
+
+State 14
+
+    9 kd_def: CATEGORY . STRING
+
+    STRING  shift, and go to state 27
+
+
+State 15
+
+   14 kd_def: DEFINE . MACRO $@3 IDENTIFIER $@4 MACRO_BODY
+   16       | DEFINE . STYLE kd_opt_name $@5 '{' kd_style_defs '}'
+   18       | DEFINE . REGION kd_opt_name $@6 '{' kd_region_defs '}'
+   20       | DEFINE . CURVE kd_opt_name $@7 '{' kd_curve_defs '}'
+   22       | DEFINE . MOTION kd_opt_name $@8 '{' kd_motion_defs '}'
+   24       | DEFINE . PALETTE kd_opt_name $@9 '{' kd_palette_defs '}'
+   26       | DEFINE . BITMAP kd_opt_name $@10 '{' kd_bitmap_defs '}'
+   28       | DEFINE . FONT RANGE kd_opt_name $@11 '{' kd_font_range_defs '}'
+   30       | DEFINE . FONT MAPPING kd_opt_name $@12 '{' kd_font_mapping_defs '}'
+
+    MACRO    shift, and go to state 28
+    STYLE    shift, and go to state 29
+    REGION   shift, and go to state 30
+    CURVE    shift, and go to state 31
+    MOTION   shift, and go to state 32
+    BITMAP   shift, and go to state 33
+    PALETTE  shift, and go to state 34
+    FONT     shift, and go to state 35
+
+
+State 16
+
+   31 kd_def: TIMEBASE . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 40
+    float60   go to state 41
+
+
+State 17
+
+   10 kd_def: DIRECTIONALITY . directionality
+
+    L2R_T2B  shift, and go to state 42
+    R2L_T2B  shift, and go to state 43
+    T2B_R2L  shift, and go to state 44
+    T2B_L2R  shift, and go to state 45
+
+    directionality  go to state 46
+
+
+State 18
+
+   32 kd_def: GRANULE . RATE UNUMBER '/' UNUMBER
+   33       | GRANULE . SHIFT UNUMBER
+
+    RATE   shift, and go to state 47
+    SHIFT  shift, and go to state 48
+
+
+State 19
+
+   34 kd_def: CANVAS . SIZE UNUMBER UNUMBER
+
+    SIZE  shift, and go to state 49
+
+
+State 20
+
+    4 kd_opt_defs: DEFS '{' kd_defs '}' .
+
+    $default  reduce using rule 4 (kd_opt_defs)
+
+
+State 21
+
+    6 kd_defs: kd_defs kd_def .
+
+    $default  reduce using rule 6 (kd_defs)
+
+
+State 22
+
+  163 kd_event: EVENT . $@23 '{' kd_event_defs '}'
+  165         | EVENT . $@24 kd_event_defs
+
+    '{'       reduce using rule 162 ($@23)
+    $default  reduce using rule 164 ($@24)
+
+    $@23  go to state 50
+    $@24  go to state 51
+
+
+State 23
+
+    3 kd_kate: $@1 KATE '{' kd_opt_defs $@2 kd_events '}' .
+
+    $default  reduce using rule 3 (kd_kate)
+
+
+State 24
+
+  160 kd_events: kd_events kd_event .
+
+    $default  reduce using rule 160 (kd_events)
+
+
+State 25
+
+    8 kd_def: LANGUAGE STRING .
+
+    $default  reduce using rule 8 (kd_def)
+
+
+State 26
+
+   11 kd_def: COMMENT STRING .
+
+    $default  reduce using rule 11 (kd_def)
+
+
+State 27
+
+    9 kd_def: CATEGORY STRING .
+
+    $default  reduce using rule 9 (kd_def)
+
+
+State 28
+
+   14 kd_def: DEFINE MACRO . $@3 IDENTIFIER $@4 MACRO_BODY
+
+    $default  reduce using rule 12 ($@3)
+
+    $@3  go to state 52
+
+
+State 29
+
+   16 kd_def: DEFINE STYLE . kd_opt_name $@5 '{' kd_style_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 54
+
+
+State 30
+
+   18 kd_def: DEFINE REGION . kd_opt_name $@6 '{' kd_region_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 55
+
+
+State 31
+
+   20 kd_def: DEFINE CURVE . kd_opt_name $@7 '{' kd_curve_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 56
+
+
+State 32
+
+   22 kd_def: DEFINE MOTION . kd_opt_name $@8 '{' kd_motion_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 57
+
+
+State 33
+
+   26 kd_def: DEFINE BITMAP . kd_opt_name $@10 '{' kd_bitmap_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 58
+
+
+State 34
+
+   24 kd_def: DEFINE PALETTE . kd_opt_name $@9 '{' kd_palette_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 59
+
+
+State 35
+
+   28 kd_def: DEFINE FONT . RANGE kd_opt_name $@11 '{' kd_font_range_defs '}'
+   30       | DEFINE FONT . MAPPING kd_opt_name $@12 '{' kd_font_mapping_defs '}'
+
+    MAPPING  shift, and go to state 60
+    RANGE    shift, and go to state 61
+
+
+State 36
+
+  150 float: NUMBER .
+
+    $default  reduce using rule 150 (float)
+
+
+State 37
+
+  149 float: UNUMBER .
+  157 timespec: UNUMBER . ':' unumber60 ':' float60
+  158         | UNUMBER . ':' float60
+
+    ':'  shift, and go to state 62
+
+    $default  reduce using rule 149 (float)
+
+
+State 38
+
+  148 float: FLOAT .
+
+    $default  reduce using rule 148 (float)
+
+
+State 39
+
+  290 float60: float . $@37
+
+    $default  reduce using rule 289 ($@37)
+
+    $@37  go to state 63
+
+
+State 40
+
+   31 kd_def: TIMEBASE timespec .
+
+    $default  reduce using rule 31 (kd_def)
+
+
+State 41
+
+  159 timespec: float60 .
+
+    $default  reduce using rule 159 (timespec)
+
+
+State 42
+
+  293 directionality: L2R_T2B .
+
+    $default  reduce using rule 293 (directionality)
+
+
+State 43
+
+  294 directionality: R2L_T2B .
+
+    $default  reduce using rule 294 (directionality)
+
+
+State 44
+
+  295 directionality: T2B_R2L .
+
+    $default  reduce using rule 295 (directionality)
+
+
+State 45
+
+  296 directionality: T2B_L2R .
+
+    $default  reduce using rule 296 (directionality)
+
+
+State 46
+
+   10 kd_def: DIRECTIONALITY directionality .
+
+    $default  reduce using rule 10 (kd_def)
+
+
+State 47
+
+   32 kd_def: GRANULE RATE . UNUMBER '/' UNUMBER
+
+    UNUMBER  shift, and go to state 64
+
+
+State 48
+
+   33 kd_def: GRANULE SHIFT . UNUMBER
+
+    UNUMBER  shift, and go to state 65
+
+
+State 49
+
+   34 kd_def: CANVAS SIZE . UNUMBER UNUMBER
+
+    UNUMBER  shift, and go to state 66
+
+
+State 50
+
+  163 kd_event: EVENT $@23 . '{' kd_event_defs '}'
+
+    '{'  shift, and go to state 67
+
+
+State 51
+
+  165 kd_event: EVENT $@24 . kd_event_defs
+
+    $default  reduce using rule 167 (kd_event_defs)
+
+    kd_event_defs  go to state 68
+
+
+State 52
+
+   14 kd_def: DEFINE MACRO $@3 . IDENTIFIER $@4 MACRO_BODY
+
+    IDENTIFIER  shift, and go to state 69
+
+
+State 53
+
+  125 kd_opt_name: STRING .
+
+    $default  reduce using rule 125 (kd_opt_name)
+
+
+State 54
+
+   16 kd_def: DEFINE STYLE kd_opt_name . $@5 '{' kd_style_defs '}'
+
+    $default  reduce using rule 15 ($@5)
+
+    $@5  go to state 70
+
+
+State 55
+
+   18 kd_def: DEFINE REGION kd_opt_name . $@6 '{' kd_region_defs '}'
+
+    $default  reduce using rule 17 ($@6)
+
+    $@6  go to state 71
+
+
+State 56
+
+   20 kd_def: DEFINE CURVE kd_opt_name . $@7 '{' kd_curve_defs '}'
+
+    $default  reduce using rule 19 ($@7)
+
+    $@7  go to state 72
+
+
+State 57
+
+   22 kd_def: DEFINE MOTION kd_opt_name . $@8 '{' kd_motion_defs '}'
+
+    $default  reduce using rule 21 ($@8)
+
+    $@8  go to state 73
+
+
+State 58
+
+   26 kd_def: DEFINE BITMAP kd_opt_name . $@10 '{' kd_bitmap_defs '}'
+
+    $default  reduce using rule 25 ($@10)
+
+    $@10  go to state 74
+
+
+State 59
+
+   24 kd_def: DEFINE PALETTE kd_opt_name . $@9 '{' kd_palette_defs '}'
+
+    $default  reduce using rule 23 ($@9)
+
+    $@9  go to state 75
+
+
+State 60
+
+   30 kd_def: DEFINE FONT MAPPING . kd_opt_name $@12 '{' kd_font_mapping_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 76
+
+
+State 61
+
+   28 kd_def: DEFINE FONT RANGE . kd_opt_name $@11 '{' kd_font_range_defs '}'
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 77
+
+
+State 62
+
+  157 timespec: UNUMBER ':' . unumber60 ':' float60
+  158         | UNUMBER ':' . float60
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 78
+    FLOAT    shift, and go to state 38
+
+    float      go to state 39
+    unumber60  go to state 79
+    float60    go to state 80
+
+
+State 63
+
+  290 float60: float $@37 .
+
+    $default  reduce using rule 290 (float60)
+
+
+State 64
+
+   32 kd_def: GRANULE RATE UNUMBER . '/' UNUMBER
+
+    '/'  shift, and go to state 81
+
+
+State 65
+
+   33 kd_def: GRANULE SHIFT UNUMBER .
+
+    $default  reduce using rule 33 (kd_def)
+
+
+State 66
+
+   34 kd_def: CANVAS SIZE UNUMBER . UNUMBER
+
+    UNUMBER  shift, and go to state 82
+
+
+State 67
+
+  163 kd_event: EVENT $@23 '{' . kd_event_defs '}'
+
+    $default  reduce using rule 167 (kd_event_defs)
+
+    kd_event_defs  go to state 83
+
+
+State 68
+
+  165 kd_event: EVENT $@24 kd_event_defs .
+  166 kd_event_defs: kd_event_defs . kd_event_def
+
+    LANGUAGE                        shift, and go to state 84
+    DEFINE                          shift, and go to state 85
+    REGION                          shift, and go to state 86
+    TEXT                            shift, and go to state 87
+    STARTS                          shift, and go to state 88
+    ENDS                            shift, and go to state 89
+    START                           shift, and go to state 90
+    END                             shift, and go to state 91
+    DURATION                        shift, and go to state 92
+    FROM                            shift, and go to state 93
+    MOTION                          shift, and go to state 94
+    SIMPLE_TIMED_GLYPH_MARKER       shift, and go to state 95
+    SIMPLE_TIMED_GLYPH_STYLE_MORPH  shift, and go to state 96
+    SECONDARY                       shift, and go to state 97
+    DIRECTIONALITY                  shift, and go to state 98
+    BITMAP                          shift, and go to state 99
+    PALETTE                         shift, and go to state 100
+    FONT                            shift, and go to state 101
+    ID                              shift, and go to state 102
+    PRE                             shift, and go to state 103
+    MARKUP                          shift, and go to state 104
+    META                            shift, and go to state 105
+    NUMBER                          shift, and go to state 36
+    UNUMBER                         shift, and go to state 37
+    STRING                          shift, and go to state 106
+    FLOAT                           shift, and go to state 38
+
+    STYLE     reduce using rule 220 (kd_optional_secondary)
+    $default  reduce using rule 165 (kd_event)
+
+    float                  go to state 39
+    timespec               go to state 107
+    kd_event_def           go to state 108
+    kd_optional_secondary  go to state 109
+    strings                go to state 110
+    float60                go to state 41
+
+
+State 69
+
+   14 kd_def: DEFINE MACRO $@3 IDENTIFIER . $@4 MACRO_BODY
+
+    $default  reduce using rule 13 ($@4)
+
+    $@4  go to state 111
+
+
+State 70
+
+   16 kd_def: DEFINE STYLE kd_opt_name $@5 . '{' kd_style_defs '}'
+
+    '{'  shift, and go to state 112
+
+
+State 71
+
+   18 kd_def: DEFINE REGION kd_opt_name $@6 . '{' kd_region_defs '}'
+
+    '{'  shift, and go to state 113
+
+
+State 72
+
+   20 kd_def: DEFINE CURVE kd_opt_name $@7 . '{' kd_curve_defs '}'
+
+    '{'  shift, and go to state 114
+
+
+State 73
+
+   22 kd_def: DEFINE MOTION kd_opt_name $@8 . '{' kd_motion_defs '}'
+
+    '{'  shift, and go to state 115
+
+
+State 74
+
+   26 kd_def: DEFINE BITMAP kd_opt_name $@10 . '{' kd_bitmap_defs '}'
+
+    '{'  shift, and go to state 116
+
+
+State 75
+
+   24 kd_def: DEFINE PALETTE kd_opt_name $@9 . '{' kd_palette_defs '}'
+
+    '{'  shift, and go to state 117
+
+
+State 76
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name . $@12 '{' kd_font_mapping_defs '}'
+
+    $default  reduce using rule 29 ($@12)
+
+    $@12  go to state 118
+
+
+State 77
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name . $@11 '{' kd_font_range_defs '}'
+
+    $default  reduce using rule 27 ($@11)
+
+    $@11  go to state 119
+
+
+State 78
+
+  149 float: UNUMBER .
+  288 unumber60: UNUMBER . $@36
+
+    ':'       reduce using rule 287 ($@36)
+    $default  reduce using rule 149 (float)
+
+    $@36  go to state 120
+
+
+State 79
+
+  157 timespec: UNUMBER ':' unumber60 . ':' float60
+
+    ':'  shift, and go to state 121
+
+
+State 80
+
+  158 timespec: UNUMBER ':' float60 .
+
+    $default  reduce using rule 158 (timespec)
+
+
+State 81
+
+   32 kd_def: GRANULE RATE UNUMBER '/' . UNUMBER
+
+    UNUMBER  shift, and go to state 122
+
+
+State 82
+
+   34 kd_def: CANVAS SIZE UNUMBER UNUMBER .
+
+    $default  reduce using rule 34 (kd_def)
+
+
+State 83
+
+  163 kd_event: EVENT $@23 '{' kd_event_defs . '}'
+  166 kd_event_defs: kd_event_defs . kd_event_def
+
+    LANGUAGE                        shift, and go to state 84
+    DEFINE                          shift, and go to state 85
+    REGION                          shift, and go to state 86
+    TEXT                            shift, and go to state 87
+    STARTS                          shift, and go to state 88
+    ENDS                            shift, and go to state 89
+    START                           shift, and go to state 90
+    END                             shift, and go to state 91
+    DURATION                        shift, and go to state 92
+    FROM                            shift, and go to state 93
+    MOTION                          shift, and go to state 94
+    SIMPLE_TIMED_GLYPH_MARKER       shift, and go to state 95
+    SIMPLE_TIMED_GLYPH_STYLE_MORPH  shift, and go to state 96
+    SECONDARY                       shift, and go to state 97
+    DIRECTIONALITY                  shift, and go to state 98
+    BITMAP                          shift, and go to state 99
+    PALETTE                         shift, and go to state 100
+    FONT                            shift, and go to state 101
+    ID                              shift, and go to state 102
+    PRE                             shift, and go to state 103
+    MARKUP                          shift, and go to state 104
+    META                            shift, and go to state 105
+    NUMBER                          shift, and go to state 36
+    UNUMBER                         shift, and go to state 37
+    STRING                          shift, and go to state 106
+    FLOAT                           shift, and go to state 38
+    '}'                             shift, and go to state 123
+
+    $default  reduce using rule 220 (kd_optional_secondary)
+
+    float                  go to state 39
+    timespec               go to state 107
+    kd_event_def           go to state 108
+    kd_optional_secondary  go to state 109
+    strings                go to state 110
+    float60                go to state 41
+
+
+State 84
+
+  169 kd_event_def: LANGUAGE . STRING
+
+    STRING  shift, and go to state 124
+
+
+State 85
+
+  213 kd_event_def: DEFINE . LOCAL BITMAP kd_opt_name $@34 '{' kd_bitmap_defs '}'
+  214             | DEFINE . LOCAL BITMAP kd_opt_name '=' kd_bitmap_name_or_index
+
+    LOCAL  shift, and go to state 125
+
+
+State 86
+
+  179 kd_event_def: REGION . kd_region_name_or_index
+  181             | REGION . kd_region_name_or_index $@25 '{' kd_region_defs '}'
+  183             | REGION . $@26 '{' kd_region_defs '}'
+
+    UNUMBER  shift, and go to state 126
+    STRING   shift, and go to state 127
+
+    $default  reduce using rule 182 ($@26)
+
+    kd_region_name_or_index  go to state 128
+    $@26                     go to state 129
+
+
+State 87
+
+  189 kd_event_def: TEXT . strings
+  193             | TEXT . SOURCE STRING
+
+    SOURCE  shift, and go to state 130
+    STRING  shift, and go to state 106
+
+    strings  go to state 131
+
+
+State 88
+
+  171 kd_event_def: STARTS . AT timespec
+
+    AT  shift, and go to state 132
+
+
+State 89
+
+  172 kd_event_def: ENDS . AT timespec
+
+    AT  shift, and go to state 133
+
+
+State 90
+
+  173 kd_event_def: START . TIME timespec
+
+    TIME  shift, and go to state 134
+
+
+State 91
+
+  174 kd_event_def: END . TIME timespec
+
+    TIME  shift, and go to state 135
+
+
+State 92
+
+  176 kd_event_def: DURATION . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 136
+    float60   go to state 41
+
+
+State 93
+
+  175 kd_event_def: FROM . timespec TO timespec
+  177             | FROM . timespec FOR timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 137
+    float60   go to state 41
+
+
+State 94
+
+  199 kd_event_def: MOTION . $@29 '{' kd_motion_defs '}'
+  200             | MOTION . kd_motion_name_or_index
+
+    UNUMBER  shift, and go to state 138
+    STRING   shift, and go to state 139
+
+    $default  reduce using rule 198 ($@29)
+
+    kd_motion_name_or_index  go to state 140
+    $@29                     go to state 141
+
+
+State 95
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER . $@30 '{' kd_simple_timed_glyph_marker_defs '}'
+
+    $default  reduce using rule 201 ($@30)
+
+    $@30  go to state 142
+
+
+State 96
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH . $@31 '{' kd_simple_timed_glyph_style_morph_defs '}'
+
+    $default  reduce using rule 203 ($@31)
+
+    $@31  go to state 143
+
+
+State 97
+
+  219 kd_optional_secondary: SECONDARY .
+
+    $default  reduce using rule 219 (kd_optional_secondary)
+
+
+State 98
+
+  170 kd_event_def: DIRECTIONALITY . directionality
+
+    L2R_T2B  shift, and go to state 42
+    R2L_T2B  shift, and go to state 43
+    T2B_R2L  shift, and go to state 44
+    T2B_L2R  shift, and go to state 45
+
+    directionality  go to state 144
+
+
+State 99
+
+  209 kd_event_def: BITMAP . kd_bitmap_name_or_index
+  211             | BITMAP . $@33 '{' kd_bitmap_defs '}'
+
+    UNUMBER  shift, and go to state 145
+    STRING   shift, and go to state 146
+
+    $default  reduce using rule 210 ($@33)
+
+    kd_bitmap_name_or_index  go to state 147
+    $@33                     go to state 148
+
+
+State 100
+
+  206 kd_event_def: PALETTE . kd_palette_name_or_index
+  208             | PALETTE . $@32 '{' kd_palette_defs '}'
+
+    UNUMBER  shift, and go to state 149
+    STRING   shift, and go to state 150
+
+    $default  reduce using rule 207 ($@32)
+
+    kd_palette_name_or_index  go to state 151
+    $@32                      go to state 152
+
+
+State 101
+
+  205 kd_event_def: FONT . MAPPING kd_font_mapping_name_or_index
+
+    MAPPING  shift, and go to state 153
+
+
+State 102
+
+  168 kd_event_def: ID . UNUMBER
+
+    UNUMBER  shift, and go to state 154
+
+
+State 103
+
+  190 kd_event_def: PRE . TEXT strings
+  192             | PRE . MARKUP strings
+  194             | PRE . TEXT SOURCE STRING
+  196             | PRE . MARKUP SOURCE STRING
+
+    TEXT    shift, and go to state 155
+    MARKUP  shift, and go to state 156
+
+
+State 104
+
+  191 kd_event_def: MARKUP . strings
+  195             | MARKUP . SOURCE STRING
+
+    SOURCE  shift, and go to state 157
+    STRING  shift, and go to state 106
+
+    strings  go to state 158
+
+
+State 105
+
+  215 kd_event_def: META . STRING '=' STRING
+  216             | META . STRING '=' kd_meta_byte_stream_def
+
+    STRING  shift, and go to state 159
+
+
+State 106
+
+  222 strings: STRING .
+
+    $default  reduce using rule 222 (strings)
+
+
+State 107
+
+  178 kd_event_def: timespec . ARROW timespec
+
+    ARROW  shift, and go to state 160
+
+
+State 108
+
+  166 kd_event_defs: kd_event_defs kd_event_def .
+
+    $default  reduce using rule 166 (kd_event_defs)
+
+
+State 109
+
+  184 kd_event_def: kd_optional_secondary . STYLE kd_style_name_or_index
+  186             | kd_optional_secondary . STYLE kd_style_name_or_index $@27 '{' kd_style_defs '}'
+  188             | kd_optional_secondary . STYLE $@28 '{' kd_style_defs '}'
+
+    STYLE  shift, and go to state 161
+
+
+State 110
+
+  197 kd_event_def: strings .
+  221 strings: strings . '+' STRING
+
+    '+'  shift, and go to state 162
+
+    $default  reduce using rule 197 (kd_event_def)
+
+
+State 111
+
+   14 kd_def: DEFINE MACRO $@3 IDENTIFIER $@4 . MACRO_BODY
+
+    MACRO_BODY  shift, and go to state 163
+
+
+State 112
+
+   16 kd_def: DEFINE STYLE kd_opt_name $@5 '{' . kd_style_defs '}'
+
+    $default  reduce using rule 36 (kd_style_defs)
+
+    kd_style_defs  go to state 164
+
+
+State 113
+
+   18 kd_def: DEFINE REGION kd_opt_name $@6 '{' . kd_region_defs '}'
+
+    $default  reduce using rule 70 (kd_region_defs)
+
+    kd_region_defs  go to state 165
+
+
+State 114
+
+   20 kd_def: DEFINE CURVE kd_opt_name $@7 '{' . kd_curve_defs '}'
+
+    $default  reduce using rule 80 (kd_curve_defs)
+
+    kd_curve_defs  go to state 166
+
+
+State 115
+
+   22 kd_def: DEFINE MOTION kd_opt_name $@8 '{' . kd_motion_defs '}'
+
+    $default  reduce using rule 224 (kd_motion_defs)
+
+    kd_motion_defs  go to state 167
+
+
+State 116
+
+   26 kd_def: DEFINE BITMAP kd_opt_name $@10 '{' . kd_bitmap_defs '}'
+
+    $default  reduce using rule 92 (kd_bitmap_defs)
+
+    kd_bitmap_defs  go to state 168
+
+
+State 117
+
+   24 kd_def: DEFINE PALETTE kd_opt_name $@9 '{' . kd_palette_defs '}'
+
+    $default  reduce using rule 87 (kd_palette_defs)
+
+    kd_palette_defs  go to state 169
+
+
+State 118
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name $@12 . '{' kd_font_mapping_defs '}'
+
+    '{'  shift, and go to state 170
+
+
+State 119
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name $@11 . '{' kd_font_range_defs '}'
+
+    '{'  shift, and go to state 171
+
+
+State 120
+
+  288 unumber60: UNUMBER $@36 .
+
+    $default  reduce using rule 288 (unumber60)
+
+
+State 121
+
+  157 timespec: UNUMBER ':' unumber60 ':' . float60
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float    go to state 39
+    float60  go to state 173
+
+
+State 122
+
+   32 kd_def: GRANULE RATE UNUMBER '/' UNUMBER .
+
+    $default  reduce using rule 32 (kd_def)
+
+
+State 123
+
+  163 kd_event: EVENT $@23 '{' kd_event_defs '}' .
+
+    $default  reduce using rule 163 (kd_event)
+
+
+State 124
+
+  169 kd_event_def: LANGUAGE STRING .
+
+    $default  reduce using rule 169 (kd_event_def)
+
+
+State 125
+
+  213 kd_event_def: DEFINE LOCAL . BITMAP kd_opt_name $@34 '{' kd_bitmap_defs '}'
+  214             | DEFINE LOCAL . BITMAP kd_opt_name '=' kd_bitmap_name_or_index
+
+    BITMAP  shift, and go to state 174
+
+
+State 126
+
+  130 kd_region_name_or_index: UNUMBER .
+
+    $default  reduce using rule 130 (kd_region_name_or_index)
+
+
+State 127
+
+  129 kd_region_name_or_index: STRING .
+
+    $default  reduce using rule 129 (kd_region_name_or_index)
+
+
+State 128
+
+  179 kd_event_def: REGION kd_region_name_or_index .
+  181             | REGION kd_region_name_or_index . $@25 '{' kd_region_defs '}'
+
+    '{'       reduce using rule 180 ($@25)
+    $default  reduce using rule 179 (kd_event_def)
+
+    $@25  go to state 175
+
+
+State 129
+
+  183 kd_event_def: REGION $@26 . '{' kd_region_defs '}'
+
+    '{'  shift, and go to state 176
+
+
+State 130
+
+  193 kd_event_def: TEXT SOURCE . STRING
+
+    STRING  shift, and go to state 177
+
+
+State 131
+
+  189 kd_event_def: TEXT strings .
+  221 strings: strings . '+' STRING
+
+    '+'  shift, and go to state 162
+
+    $default  reduce using rule 189 (kd_event_def)
+
+
+State 132
+
+  171 kd_event_def: STARTS AT . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 178
+    float60   go to state 41
+
+
+State 133
+
+  172 kd_event_def: ENDS AT . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 179
+    float60   go to state 41
+
+
+State 134
+
+  173 kd_event_def: START TIME . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 180
+    float60   go to state 41
+
+
+State 135
+
+  174 kd_event_def: END TIME . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 181
+    float60   go to state 41
+
+
+State 136
+
+  176 kd_event_def: DURATION timespec .
+
+    $default  reduce using rule 176 (kd_event_def)
+
+
+State 137
+
+  175 kd_event_def: FROM timespec . TO timespec
+  177             | FROM timespec . FOR timespec
+
+    TO   shift, and go to state 182
+    FOR  shift, and go to state 183
+
+
+State 138
+
+  134 kd_motion_name_or_index: UNUMBER .
+
+    $default  reduce using rule 134 (kd_motion_name_or_index)
+
+
+State 139
+
+  133 kd_motion_name_or_index: STRING .
+
+    $default  reduce using rule 133 (kd_motion_name_or_index)
+
+
+State 140
+
+  200 kd_event_def: MOTION kd_motion_name_or_index .
+
+    $default  reduce using rule 200 (kd_event_def)
+
+
+State 141
+
+  199 kd_event_def: MOTION $@29 . '{' kd_motion_defs '}'
+
+    '{'  shift, and go to state 184
+
+
+State 142
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER $@30 . '{' kd_simple_timed_glyph_marker_defs '}'
+
+    '{'  shift, and go to state 185
+
+
+State 143
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH $@31 . '{' kd_simple_timed_glyph_style_morph_defs '}'
+
+    '{'  shift, and go to state 186
+
+
+State 144
+
+  170 kd_event_def: DIRECTIONALITY directionality .
+
+    $default  reduce using rule 170 (kd_event_def)
+
+
+State 145
+
+  138 kd_bitmap_name_or_index: UNUMBER .
+
+    $default  reduce using rule 138 (kd_bitmap_name_or_index)
+
+
+State 146
+
+  137 kd_bitmap_name_or_index: STRING .
+
+    $default  reduce using rule 137 (kd_bitmap_name_or_index)
+
+
+State 147
+
+  209 kd_event_def: BITMAP kd_bitmap_name_or_index .
+
+    $default  reduce using rule 209 (kd_event_def)
+
+
+State 148
+
+  211 kd_event_def: BITMAP $@33 . '{' kd_bitmap_defs '}'
+
+    '{'  shift, and go to state 187
+
+
+State 149
+
+  136 kd_palette_name_or_index: UNUMBER .
+
+    $default  reduce using rule 136 (kd_palette_name_or_index)
+
+
+State 150
+
+  135 kd_palette_name_or_index: STRING .
+
+    $default  reduce using rule 135 (kd_palette_name_or_index)
+
+
+State 151
+
+  206 kd_event_def: PALETTE kd_palette_name_or_index .
+
+    $default  reduce using rule 206 (kd_event_def)
+
+
+State 152
+
+  208 kd_event_def: PALETTE $@32 . '{' kd_palette_defs '}'
+
+    '{'  shift, and go to state 188
+
+
+State 153
+
+  205 kd_event_def: FONT MAPPING . kd_font_mapping_name_or_index
+
+    UNUMBER  shift, and go to state 189
+    STRING   shift, and go to state 190
+
+    kd_font_mapping_name_or_index  go to state 191
+
+
+State 154
+
+  168 kd_event_def: ID UNUMBER .
+
+    $default  reduce using rule 168 (kd_event_def)
+
+
+State 155
+
+  190 kd_event_def: PRE TEXT . strings
+  194             | PRE TEXT . SOURCE STRING
+
+    SOURCE  shift, and go to state 192
+    STRING  shift, and go to state 106
+
+    strings  go to state 193
+
+
+State 156
+
+  192 kd_event_def: PRE MARKUP . strings
+  196             | PRE MARKUP . SOURCE STRING
+
+    SOURCE  shift, and go to state 194
+    STRING  shift, and go to state 106
+
+    strings  go to state 195
+
+
+State 157
+
+  195 kd_event_def: MARKUP SOURCE . STRING
+
+    STRING  shift, and go to state 196
+
+
+State 158
+
+  191 kd_event_def: MARKUP strings .
+  221 strings: strings . '+' STRING
+
+    '+'  shift, and go to state 162
+
+    $default  reduce using rule 191 (kd_event_def)
+
+
+State 159
+
+  215 kd_event_def: META STRING . '=' STRING
+  216             | META STRING . '=' kd_meta_byte_stream_def
+
+    '='  shift, and go to state 197
+
+
+State 160
+
+  178 kd_event_def: timespec ARROW . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 198
+    float60   go to state 41
+
+
+State 161
+
+  184 kd_event_def: kd_optional_secondary STYLE . kd_style_name_or_index
+  186             | kd_optional_secondary STYLE . kd_style_name_or_index $@27 '{' kd_style_defs '}'
+  188             | kd_optional_secondary STYLE . $@28 '{' kd_style_defs '}'
+
+    UNUMBER  shift, and go to state 199
+    STRING   shift, and go to state 200
+
+    $default  reduce using rule 187 ($@28)
+
+    kd_style_name_or_index  go to state 201
+    $@28                    go to state 202
+
+
+State 162
+
+  221 strings: strings '+' . STRING
+
+    STRING  shift, and go to state 203
+
+
+State 163
+
+   14 kd_def: DEFINE MACRO $@3 IDENTIFIER $@4 MACRO_BODY .
+
+    $default  reduce using rule 14 (kd_def)
+
+
+State 164
+
+   16 kd_def: DEFINE STYLE kd_opt_name $@5 '{' kd_style_defs . '}'
+   35 kd_style_defs: kd_style_defs . kd_style_def
+
+    TEXT        shift, and go to state 204
+    BACKGROUND  shift, and go to state 205
+    HALIGN      shift, and go to state 206
+    VALIGN      shift, and go to state 207
+    HLEFT       shift, and go to state 208
+    HCENTER     shift, and go to state 209
+    HRIGHT      shift, and go to state 210
+    VTOP        shift, and go to state 211
+    VCENTER     shift, and go to state 212
+    VBOTTOM     shift, and go to state 213
+    FONT        shift, and go to state 214
+    DRAW        shift, and go to state 215
+    BOLD        shift, and go to state 216
+    ITALICS     shift, and go to state 217
+    UNDERLINE   shift, and go to state 218
+    STRIKE      shift, and go to state 219
+    JUSTIFY     shift, and go to state 220
+    LEFT        shift, and go to state 221
+    TOP         shift, and go to state 222
+    RIGHT       shift, and go to state 223
+    BOTTOM      shift, and go to state 224
+    MARGINS     shift, and go to state 225
+    WRAP        shift, and go to state 226
+    META        shift, and go to state 227
+    '}'         shift, and go to state 228
+
+    kd_style_def  go to state 229
+
+
+State 165
+
+   18 kd_def: DEFINE REGION kd_opt_name $@6 '{' kd_region_defs . '}'
+   69 kd_region_defs: kd_region_defs . kd_region_def
+
+    POSITION  shift, and go to state 230
+    SIZE      shift, and go to state 231
+    DEFAULT   shift, and go to state 232
+    METRIC    shift, and go to state 233
+    CLIP      shift, and go to state 234
+    META      shift, and go to state 235
+    '}'       shift, and go to state 236
+
+    kd_region_def  go to state 237
+
+
+State 166
+
+   20 kd_def: DEFINE CURVE kd_opt_name $@7 '{' kd_curve_defs . '}'
+   79 kd_curve_defs: kd_curve_defs . kd_curve_def
+
+    POINTS        shift, and go to state 238
+    NONE          shift, and go to state 239
+    BEZIER_CUBIC  shift, and go to state 240
+    LINEAR        shift, and go to state 241
+    CATMULL_ROM   shift, and go to state 242
+    BSPLINE       shift, and go to state 243
+    STATIC        shift, and go to state 244
+    UNUMBER       shift, and go to state 245
+    '}'           shift, and go to state 246
+
+    kd_curve_def  go to state 247
+    kd_curvetype  go to state 248
+
+
+State 167
+
+   22 kd_def: DEFINE MOTION kd_opt_name $@8 '{' kd_motion_defs . '}'
+  223 kd_motion_defs: kd_motion_defs . kd_motion_def
+
+    CURVE      shift, and go to state 249
+    MAPPING    shift, and go to state 250
+    SEMANTICS  shift, and go to state 251
+    PERIODIC   shift, and go to state 252
+    '}'        shift, and go to state 253
+
+    kd_motion_def  go to state 254
+
+
+State 168
+
+   26 kd_def: DEFINE BITMAP kd_opt_name $@10 '{' kd_bitmap_defs . '}'
+   91 kd_bitmap_defs: kd_bitmap_defs . kd_bitmap_def
+
+    DEFAULT  shift, and go to state 255
+    SOURCE   shift, and go to state 256
+    OFFSET   shift, and go to state 257
+    META     shift, and go to state 258
+    UNUMBER  shift, and go to state 259
+    '}'      shift, and go to state 260
+
+    kd_bitmap_def  go to state 261
+
+
+State 169
+
+   24 kd_def: DEFINE PALETTE kd_opt_name $@9 '{' kd_palette_defs . '}'
+   86 kd_palette_defs: kd_palette_defs . kd_palette_def
+
+    SOURCE   shift, and go to state 262
+    UNUMBER  shift, and go to state 263
+    '}'      shift, and go to state 264
+
+    kd_palette_def  go to state 265
+
+
+State 170
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name $@12 '{' . kd_font_mapping_defs '}'
+
+    $default  reduce using rule 305 (kd_font_mapping_defs)
+
+    kd_font_mapping_defs  go to state 266
+
+
+State 171
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name $@11 '{' . kd_font_range_defs '}'
+
+    $default  reduce using rule 298 (kd_font_range_defs)
+
+    kd_font_range_defs  go to state 267
+
+
+State 172
+
+  149 float: UNUMBER .
+
+    $default  reduce using rule 149 (float)
+
+
+State 173
+
+  157 timespec: UNUMBER ':' unumber60 ':' float60 .
+
+    $default  reduce using rule 157 (timespec)
+
+
+State 174
+
+  213 kd_event_def: DEFINE LOCAL BITMAP . kd_opt_name $@34 '{' kd_bitmap_defs '}'
+  214             | DEFINE LOCAL BITMAP . kd_opt_name '=' kd_bitmap_name_or_index
+
+    STRING  shift, and go to state 53
+
+    $default  reduce using rule 126 (kd_opt_name)
+
+    kd_opt_name  go to state 268
+
+
+State 175
+
+  181 kd_event_def: REGION kd_region_name_or_index $@25 . '{' kd_region_defs '}'
+
+    '{'  shift, and go to state 269
+
+
+State 176
+
+  183 kd_event_def: REGION $@26 '{' . kd_region_defs '}'
+
+    $default  reduce using rule 70 (kd_region_defs)
+
+    kd_region_defs  go to state 270
+
+
+State 177
+
+  193 kd_event_def: TEXT SOURCE STRING .
+
+    $default  reduce using rule 193 (kd_event_def)
+
+
+State 178
+
+  171 kd_event_def: STARTS AT timespec .
+
+    $default  reduce using rule 171 (kd_event_def)
+
+
+State 179
+
+  172 kd_event_def: ENDS AT timespec .
+
+    $default  reduce using rule 172 (kd_event_def)
+
+
+State 180
+
+  173 kd_event_def: START TIME timespec .
+
+    $default  reduce using rule 173 (kd_event_def)
+
+
+State 181
+
+  174 kd_event_def: END TIME timespec .
+
+    $default  reduce using rule 174 (kd_event_def)
+
+
+State 182
+
+  175 kd_event_def: FROM timespec TO . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 271
+    float60   go to state 41
+
+
+State 183
+
+  177 kd_event_def: FROM timespec FOR . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 272
+    float60   go to state 41
+
+
+State 184
+
+  199 kd_event_def: MOTION $@29 '{' . kd_motion_defs '}'
+
+    $default  reduce using rule 224 (kd_motion_defs)
+
+    kd_motion_defs  go to state 273
+
+
+State 185
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER $@30 '{' . kd_simple_timed_glyph_marker_defs '}'
+
+    $default  reduce using rule 271 (kd_simple_timed_glyph_marker_defs)
+
+    kd_simple_timed_glyph_marker_defs  go to state 274
+
+
+State 186
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH $@31 '{' . kd_simple_timed_glyph_style_morph_defs '}'
+
+    $default  reduce using rule 279 (kd_simple_timed_glyph_style_morph_defs)
+
+    kd_simple_timed_glyph_style_morph_defs  go to state 275
+
+
+State 187
+
+  211 kd_event_def: BITMAP $@33 '{' . kd_bitmap_defs '}'
+
+    $default  reduce using rule 92 (kd_bitmap_defs)
+
+    kd_bitmap_defs  go to state 276
+
+
+State 188
+
+  208 kd_event_def: PALETTE $@32 '{' . kd_palette_defs '}'
+
+    $default  reduce using rule 87 (kd_palette_defs)
+
+    kd_palette_defs  go to state 277
+
+
+State 189
+
+  142 kd_font_mapping_name_or_index: UNUMBER .
+
+    $default  reduce using rule 142 (kd_font_mapping_name_or_index)
+
+
+State 190
+
+  141 kd_font_mapping_name_or_index: STRING .
+
+    $default  reduce using rule 141 (kd_font_mapping_name_or_index)
+
+
+State 191
+
+  205 kd_event_def: FONT MAPPING kd_font_mapping_name_or_index .
+
+    $default  reduce using rule 205 (kd_event_def)
+
+
+State 192
+
+  194 kd_event_def: PRE TEXT SOURCE . STRING
+
+    STRING  shift, and go to state 278
+
+
+State 193
+
+  190 kd_event_def: PRE TEXT strings .
+  221 strings: strings . '+' STRING
+
+    '+'  shift, and go to state 162
+
+    $default  reduce using rule 190 (kd_event_def)
+
+
+State 194
+
+  196 kd_event_def: PRE MARKUP SOURCE . STRING
+
+    STRING  shift, and go to state 279
+
+
+State 195
+
+  192 kd_event_def: PRE MARKUP strings .
+  221 strings: strings . '+' STRING
+
+    '+'  shift, and go to state 162
+
+    $default  reduce using rule 192 (kd_event_def)
+
+
+State 196
+
+  195 kd_event_def: MARKUP SOURCE STRING .
+
+    $default  reduce using rule 195 (kd_event_def)
+
+
+State 197
+
+  215 kd_event_def: META STRING '=' . STRING
+  216             | META STRING '=' . kd_meta_byte_stream_def
+
+    UNUMBER  shift, and go to state 280
+    STRING   shift, and go to state 281
+
+    kd_meta_byte_stream_def  go to state 282
+
+
+State 198
+
+  178 kd_event_def: timespec ARROW timespec .
+
+    $default  reduce using rule 178 (kd_event_def)
+
+
+State 199
+
+  128 kd_style_name_or_index: UNUMBER .
+
+    $default  reduce using rule 128 (kd_style_name_or_index)
+
+
+State 200
+
+  127 kd_style_name_or_index: STRING .
+
+    $default  reduce using rule 127 (kd_style_name_or_index)
+
+
+State 201
+
+  184 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index .
+  186             | kd_optional_secondary STYLE kd_style_name_or_index . $@27 '{' kd_style_defs '}'
+
+    '{'       reduce using rule 185 ($@27)
+    $default  reduce using rule 184 (kd_event_def)
+
+    $@27  go to state 283
+
+
+State 202
+
+  188 kd_event_def: kd_optional_secondary STYLE $@28 . '{' kd_style_defs '}'
+
+    '{'  shift, and go to state 284
+
+
+State 203
+
+  221 strings: strings '+' STRING .
+
+    $default  reduce using rule 221 (strings)
+
+
+State 204
+
+   45 kd_style_def: TEXT . COLOR kd_color
+
+    COLOR  shift, and go to state 285
+
+
+State 205
+
+   46 kd_style_def: BACKGROUND . COLOR kd_color
+
+    COLOR  shift, and go to state 286
+
+
+State 206
+
+   37 kd_style_def: HALIGN . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 287
+
+
+State 207
+
+   38 kd_style_def: VALIGN . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 288
+
+
+State 208
+
+   39 kd_style_def: HLEFT .
+
+    $default  reduce using rule 39 (kd_style_def)
+
+
+State 209
+
+   40 kd_style_def: HCENTER .
+
+    $default  reduce using rule 40 (kd_style_def)
+
+
+State 210
+
+   41 kd_style_def: HRIGHT .
+
+    $default  reduce using rule 41 (kd_style_def)
+
+
+State 211
+
+   42 kd_style_def: VTOP .
+
+    $default  reduce using rule 42 (kd_style_def)
+
+
+State 212
+
+   43 kd_style_def: VCENTER .
+
+    $default  reduce using rule 43 (kd_style_def)
+
+
+State 213
+
+   44 kd_style_def: VBOTTOM .
+
+    $default  reduce using rule 44 (kd_style_def)
+
+
+State 214
+
+   54 kd_style_def: FONT . STRING
+   55             | FONT . SIZE float kd_opt_space_metric
+   56             | FONT . WIDTH float kd_opt_space_metric
+   57             | FONT . HEIGHT float kd_opt_space_metric
+
+    SIZE    shift, and go to state 289
+    WIDTH   shift, and go to state 290
+    HEIGHT  shift, and go to state 291
+    STRING  shift, and go to state 292
+
+
+State 215
+
+   47 kd_style_def: DRAW . COLOR kd_color
+
+    COLOR  shift, and go to state 293
+
+
+State 216
+
+   48 kd_style_def: BOLD .
+
+    $default  reduce using rule 48 (kd_style_def)
+
+
+State 217
+
+   49 kd_style_def: ITALICS .
+
+    $default  reduce using rule 49 (kd_style_def)
+
+
+State 218
+
+   50 kd_style_def: UNDERLINE .
+
+    $default  reduce using rule 50 (kd_style_def)
+
+
+State 219
+
+   51 kd_style_def: STRIKE .
+
+    $default  reduce using rule 51 (kd_style_def)
+
+
+State 220
+
+   52 kd_style_def: JUSTIFY .
+
+    $default  reduce using rule 52 (kd_style_def)
+
+
+State 221
+
+   58 kd_style_def: LEFT . MARGIN float kd_opt_space_metric
+
+    MARGIN  shift, and go to state 294
+
+
+State 222
+
+   59 kd_style_def: TOP . MARGIN float kd_opt_space_metric
+
+    MARGIN  shift, and go to state 295
+
+
+State 223
+
+   60 kd_style_def: RIGHT . MARGIN float kd_opt_space_metric
+
+    MARGIN  shift, and go to state 296
+
+
+State 224
+
+   61 kd_style_def: BOTTOM . MARGIN float kd_opt_space_metric
+
+    MARGIN  shift, and go to state 297
+
+
+State 225
+
+   62 kd_style_def: MARGINS . float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 298
+
+
+State 226
+
+   53 kd_style_def: WRAP . kd_wrap_mode
+
+    NONE  shift, and go to state 299
+    WORD  shift, and go to state 300
+
+    kd_wrap_mode  go to state 301
+
+
+State 227
+
+   63 kd_style_def: META . STRING '=' STRING
+   65             | META . STRING '=' UNUMBER $@13 '{' kd_byte_stream '}'
+
+    STRING  shift, and go to state 302
+
+
+State 228
+
+   16 kd_def: DEFINE STYLE kd_opt_name $@5 '{' kd_style_defs '}' .
+
+    $default  reduce using rule 16 (kd_def)
+
+
+State 229
+
+   35 kd_style_defs: kd_style_defs kd_style_def .
+
+    $default  reduce using rule 35 (kd_style_defs)
+
+
+State 230
+
+   72 kd_region_def: POSITION . float float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 303
+
+
+State 231
+
+   73 kd_region_def: SIZE . float float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 304
+
+
+State 232
+
+   75 kd_region_def: DEFAULT . STYLE kd_style_name_or_index
+
+    STYLE  shift, and go to state 305
+
+
+State 233
+
+   71 kd_region_def: METRIC .
+
+    $default  reduce using rule 71 (kd_region_def)
+
+
+State 234
+
+   74 kd_region_def: CLIP .
+
+    $default  reduce using rule 74 (kd_region_def)
+
+
+State 235
+
+   76 kd_region_def: META . STRING '=' STRING
+   78              | META . STRING '=' UNUMBER $@14 '{' kd_byte_stream '}'
+
+    STRING  shift, and go to state 306
+
+
+State 236
+
+   18 kd_def: DEFINE REGION kd_opt_name $@6 '{' kd_region_defs '}' .
+
+    $default  reduce using rule 18 (kd_def)
+
+
+State 237
+
+   69 kd_region_defs: kd_region_defs kd_region_def .
+
+    $default  reduce using rule 69 (kd_region_defs)
+
+
+State 238
+
+   85 kd_curve_def: POINTS . $@16 '{' kd_curve_points '}'
+
+    $default  reduce using rule 84 ($@16)
+
+    $@16  go to state 307
+
+
+State 239
+
+  109 kd_curvetype: NONE .
+
+    $default  reduce using rule 109 (kd_curvetype)
+
+
+State 240
+
+  113 kd_curvetype: BEZIER_CUBIC .
+
+    $default  reduce using rule 113 (kd_curvetype)
+
+
+State 241
+
+  111 kd_curvetype: LINEAR .
+
+    $default  reduce using rule 111 (kd_curvetype)
+
+
+State 242
+
+  112 kd_curvetype: CATMULL_ROM .
+
+    $default  reduce using rule 112 (kd_curvetype)
+
+
+State 243
+
+  114 kd_curvetype: BSPLINE .
+
+    $default  reduce using rule 114 (kd_curvetype)
+
+
+State 244
+
+  110 kd_curvetype: STATIC .
+
+    $default  reduce using rule 110 (kd_curvetype)
+
+
+State 245
+
+   83 kd_curve_def: UNUMBER . POINTS $@15 '{' kd_curve_points '}'
+
+    POINTS  shift, and go to state 308
+
+
+State 246
+
+   20 kd_def: DEFINE CURVE kd_opt_name $@7 '{' kd_curve_defs '}' .
+
+    $default  reduce using rule 20 (kd_def)
+
+
+State 247
+
+   79 kd_curve_defs: kd_curve_defs kd_curve_def .
+
+    $default  reduce using rule 79 (kd_curve_defs)
+
+
+State 248
+
+   81 kd_curve_def: kd_curvetype .
+
+    $default  reduce using rule 81 (kd_curve_def)
+
+
+State 249
+
+  228 kd_motion_def: CURVE . kd_curve_def_name_or_index kd_optional_curve_duration
+
+    UNUMBER  shift, and go to state 309
+    STRING   shift, and go to state 310
+
+    $default  reduce using rule 144 ($@21)
+
+    kd_curve_name_or_index      go to state 311
+    kd_curve_def_name_or_index  go to state 312
+    $@21                        go to state 313
+
+
+State 250
+
+  225 kd_motion_def: MAPPING . kd_motion_mapping
+  226              | MAPPING . kd_motion_mapping kd_motion_mapping
+
+    REGION  shift, and go to state 314
+    EVENT   shift, and go to state 315
+    NONE    shift, and go to state 316
+    FRAME   shift, and go to state 317
+    BITMAP  shift, and go to state 318
+    USER    shift, and go to state 319
+
+    kd_motion_mapping  go to state 320
+
+
+State 251
+
+  227 kd_motion_def: SEMANTICS . kd_motion_semantics
+
+    STYLE       shift, and go to state 321
+    REGION      shift, and go to state 322
+    TEXT        shift, and go to state 323
+    BACKGROUND  shift, and go to state 324
+    TIME        shift, and go to state 325
+    EXTERNAL    shift, and go to state 326
+    INTERNAL    shift, and go to state 327
+    MARKER      shift, and go to state 328
+    GLYPH       shift, and go to state 329
+    BITMAP      shift, and go to state 330
+    USER        shift, and go to state 331
+    DRAW        shift, and go to state 332
+    VISIBLE     shift, and go to state 333
+    HORIZONTAL  shift, and go to state 334
+    VERTICAL    shift, and go to state 335
+    'z'         shift, and go to state 336
+
+    kd_motion_semantics  go to state 337
+
+
+State 252
+
+  229 kd_motion_def: PERIODIC .
+
+    $default  reduce using rule 229 (kd_motion_def)
+
+
+State 253
+
+   22 kd_def: DEFINE MOTION kd_opt_name $@8 '{' kd_motion_defs '}' .
+
+    $default  reduce using rule 22 (kd_def)
+
+
+State 254
+
+  223 kd_motion_defs: kd_motion_defs kd_motion_def .
+
+    $default  reduce using rule 223 (kd_motion_defs)
+
+
+State 255
+
+   98 kd_bitmap_def: DEFAULT . PALETTE kd_palette_name_or_index
+
+    PALETTE  shift, and go to state 338
+
+
+State 256
+
+   97 kd_bitmap_def: SOURCE . STRING
+
+    STRING  shift, and go to state 339
+
+
+State 257
+
+   99 kd_bitmap_def: OFFSET . bitmap_x_offset bitmap_y_offset
+
+    NUMBER   shift, and go to state 340
+    UNUMBER  shift, and go to state 341
+    FLOAT    shift, and go to state 38
+
+    float            go to state 342
+    bitmap_x_offset  go to state 343
+
+
+State 258
+
+  100 kd_bitmap_def: META . STRING '=' STRING
+  102              | META . STRING '=' UNUMBER $@20 '{' kd_byte_stream '}'
+
+    STRING  shift, and go to state 344
+
+
+State 259
+
+   94 kd_bitmap_def: UNUMBER . 'x' UNUMBER 'x' UNUMBER $@18 '{' kd_bitmap_pixels '}'
+   96              | UNUMBER . 'x' UNUMBER PNG UNUMBER $@19 '{' kd_png_bitmap_pixels '}'
+
+    'x'  shift, and go to state 345
+
+
+State 260
+
+   26 kd_def: DEFINE BITMAP kd_opt_name $@10 '{' kd_bitmap_defs '}' .
+
+    $default  reduce using rule 26 (kd_def)
+
+
+State 261
+
+   91 kd_bitmap_defs: kd_bitmap_defs kd_bitmap_def .
+
+    $default  reduce using rule 91 (kd_bitmap_defs)
+
+
+State 262
+
+   90 kd_palette_def: SOURCE . STRING
+
+    STRING  shift, and go to state 346
+
+
+State 263
+
+   89 kd_palette_def: UNUMBER . COLORS $@17 '{' kd_palette_colors '}'
+
+    COLORS  shift, and go to state 347
+
+
+State 264
+
+   24 kd_def: DEFINE PALETTE kd_opt_name $@9 '{' kd_palette_defs '}' .
+
+    $default  reduce using rule 24 (kd_def)
+
+
+State 265
+
+   86 kd_palette_defs: kd_palette_defs kd_palette_def .
+
+    $default  reduce using rule 86 (kd_palette_defs)
+
+
+State 266
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name $@12 '{' kd_font_mapping_defs . '}'
+  304 kd_font_mapping_defs: kd_font_mapping_defs . kd_font_mapping_def
+
+    RANGE  shift, and go to state 348
+    '}'    shift, and go to state 349
+
+    kd_font_mapping_def  go to state 350
+
+
+State 267
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name $@11 '{' kd_font_range_defs . '}'
+  297 kd_font_range_defs: kd_font_range_defs . kd_font_range_def
+
+    FIRST  shift, and go to state 351
+    LAST   shift, and go to state 352
+    '}'    shift, and go to state 353
+
+    kd_font_range_def  go to state 354
+
+
+State 268
+
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name . $@34 '{' kd_bitmap_defs '}'
+  214             | DEFINE LOCAL BITMAP kd_opt_name . '=' kd_bitmap_name_or_index
+
+    '='  shift, and go to state 355
+
+    $default  reduce using rule 212 ($@34)
+
+    $@34  go to state 356
+
+
+State 269
+
+  181 kd_event_def: REGION kd_region_name_or_index $@25 '{' . kd_region_defs '}'
+
+    $default  reduce using rule 70 (kd_region_defs)
+
+    kd_region_defs  go to state 357
+
+
+State 270
+
+   69 kd_region_defs: kd_region_defs . kd_region_def
+  183 kd_event_def: REGION $@26 '{' kd_region_defs . '}'
+
+    POSITION  shift, and go to state 230
+    SIZE      shift, and go to state 231
+    DEFAULT   shift, and go to state 232
+    METRIC    shift, and go to state 233
+    CLIP      shift, and go to state 234
+    META      shift, and go to state 235
+    '}'       shift, and go to state 358
+
+    kd_region_def  go to state 237
+
+
+State 271
+
+  175 kd_event_def: FROM timespec TO timespec .
+
+    $default  reduce using rule 175 (kd_event_def)
+
+
+State 272
+
+  177 kd_event_def: FROM timespec FOR timespec .
+
+    $default  reduce using rule 177 (kd_event_def)
+
+
+State 273
+
+  199 kd_event_def: MOTION $@29 '{' kd_motion_defs . '}'
+  223 kd_motion_defs: kd_motion_defs . kd_motion_def
+
+    CURVE      shift, and go to state 249
+    MAPPING    shift, and go to state 250
+    SEMANTICS  shift, and go to state 251
+    PERIODIC   shift, and go to state 252
+    '}'        shift, and go to state 359
+
+    kd_motion_def  go to state 254
+
+
+State 274
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER $@30 '{' kd_simple_timed_glyph_marker_defs . '}'
+  270 kd_simple_timed_glyph_marker_defs: kd_simple_timed_glyph_marker_defs . kd_simple_timed_glyph_marker_def
+
+    GLYPH   shift, and go to state 360
+    PAUSE   shift, and go to state 361
+    HEIGHT  shift, and go to state 362
+    '}'     shift, and go to state 363
+    'Y'     shift, and go to state 364
+
+    kd_simple_timed_glyph_marker_def  go to state 365
+
+
+State 275
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH $@31 '{' kd_simple_timed_glyph_style_morph_defs . '}'
+  278 kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs . kd_simple_timed_glyph_style_morph_def
+
+    FROM    shift, and go to state 366
+    GLYPH   shift, and go to state 367
+    PAUSE   shift, and go to state 368
+    STRING  shift, and go to state 369
+    '}'     shift, and go to state 370
+
+    kd_simple_timed_glyph_style_morph_def  go to state 371
+
+
+State 276
+
+   91 kd_bitmap_defs: kd_bitmap_defs . kd_bitmap_def
+  211 kd_event_def: BITMAP $@33 '{' kd_bitmap_defs . '}'
+
+    DEFAULT  shift, and go to state 255
+    SOURCE   shift, and go to state 256
+    OFFSET   shift, and go to state 257
+    META     shift, and go to state 258
+    UNUMBER  shift, and go to state 259
+    '}'      shift, and go to state 372
+
+    kd_bitmap_def  go to state 261
+
+
+State 277
+
+   86 kd_palette_defs: kd_palette_defs . kd_palette_def
+  208 kd_event_def: PALETTE $@32 '{' kd_palette_defs . '}'
+
+    SOURCE   shift, and go to state 262
+    UNUMBER  shift, and go to state 263
+    '}'      shift, and go to state 373
+
+    kd_palette_def  go to state 265
+
+
+State 278
+
+  194 kd_event_def: PRE TEXT SOURCE STRING .
+
+    $default  reduce using rule 194 (kd_event_def)
+
+
+State 279
+
+  196 kd_event_def: PRE MARKUP SOURCE STRING .
+
+    $default  reduce using rule 196 (kd_event_def)
+
+
+State 280
+
+  218 kd_meta_byte_stream_def: UNUMBER . $@35 '{' kd_byte_stream '}'
+
+    $default  reduce using rule 217 ($@35)
+
+    $@35  go to state 374
+
+
+State 281
+
+  215 kd_event_def: META STRING '=' STRING .
+
+    $default  reduce using rule 215 (kd_event_def)
+
+
+State 282
+
+  216 kd_event_def: META STRING '=' kd_meta_byte_stream_def .
+
+    $default  reduce using rule 216 (kd_event_def)
+
+
+State 283
+
+  186 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index $@27 . '{' kd_style_defs '}'
+
+    '{'  shift, and go to state 375
+
+
+State 284
+
+  188 kd_event_def: kd_optional_secondary STYLE $@28 '{' . kd_style_defs '}'
+
+    $default  reduce using rule 36 (kd_style_defs)
+
+    kd_style_defs  go to state 376
+
+
+State 285
+
+   45 kd_style_def: TEXT COLOR . kd_color
+
+    UNUMBER    shift, and go to state 377
+    COLORSPEC  shift, and go to state 378
+
+    kd_color  go to state 379
+
+
+State 286
+
+   46 kd_style_def: BACKGROUND COLOR . kd_color
+
+    UNUMBER    shift, and go to state 377
+    COLORSPEC  shift, and go to state 378
+
+    kd_color  go to state 380
+
+
+State 287
+
+   37 kd_style_def: HALIGN float .
+
+    $default  reduce using rule 37 (kd_style_def)
+
+
+State 288
+
+   38 kd_style_def: VALIGN float .
+
+    $default  reduce using rule 38 (kd_style_def)
+
+
+State 289
+
+   55 kd_style_def: FONT SIZE . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 381
+
+
+State 290
+
+   56 kd_style_def: FONT WIDTH . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 382
+
+
+State 291
+
+   57 kd_style_def: FONT HEIGHT . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 383
+
+
+State 292
+
+   54 kd_style_def: FONT STRING .
+
+    $default  reduce using rule 54 (kd_style_def)
+
+
+State 293
+
+   47 kd_style_def: DRAW COLOR . kd_color
+
+    UNUMBER    shift, and go to state 377
+    COLORSPEC  shift, and go to state 378
+
+    kd_color  go to state 384
+
+
+State 294
+
+   58 kd_style_def: LEFT MARGIN . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 385
+
+
+State 295
+
+   59 kd_style_def: TOP MARGIN . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 386
+
+
+State 296
+
+   60 kd_style_def: RIGHT MARGIN . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 387
+
+
+State 297
+
+   61 kd_style_def: BOTTOM MARGIN . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 388
+
+
+State 298
+
+   62 kd_style_def: MARGINS float . kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 391
+
+
+State 299
+
+  107 kd_wrap_mode: NONE .
+
+    $default  reduce using rule 107 (kd_wrap_mode)
+
+
+State 300
+
+  108 kd_wrap_mode: WORD .
+
+    $default  reduce using rule 108 (kd_wrap_mode)
+
+
+State 301
+
+   53 kd_style_def: WRAP kd_wrap_mode .
+
+    $default  reduce using rule 53 (kd_style_def)
+
+
+State 302
+
+   63 kd_style_def: META STRING . '=' STRING
+   65             | META STRING . '=' UNUMBER $@13 '{' kd_byte_stream '}'
+
+    '='  shift, and go to state 392
+
+
+State 303
+
+   72 kd_region_def: POSITION float . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 393
+
+
+State 304
+
+   73 kd_region_def: SIZE float . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 394
+
+
+State 305
+
+   75 kd_region_def: DEFAULT STYLE . kd_style_name_or_index
+
+    UNUMBER  shift, and go to state 199
+    STRING   shift, and go to state 200
+
+    kd_style_name_or_index  go to state 395
+
+
+State 306
+
+   76 kd_region_def: META STRING . '=' STRING
+   78              | META STRING . '=' UNUMBER $@14 '{' kd_byte_stream '}'
+
+    '='  shift, and go to state 396
+
+
+State 307
+
+   85 kd_curve_def: POINTS $@16 . '{' kd_curve_points '}'
+
+    '{'  shift, and go to state 397
+
+
+State 308
+
+   83 kd_curve_def: UNUMBER POINTS . $@15 '{' kd_curve_points '}'
+
+    $default  reduce using rule 82 ($@15)
+
+    $@15  go to state 398
+
+
+State 309
+
+  132 kd_curve_name_or_index: UNUMBER .
+
+    $default  reduce using rule 132 (kd_curve_name_or_index)
+
+
+State 310
+
+  131 kd_curve_name_or_index: STRING .
+
+    $default  reduce using rule 131 (kd_curve_name_or_index)
+
+
+State 311
+
+  143 kd_curve_def_name_or_index: kd_curve_name_or_index .
+  147                           | kd_curve_name_or_index . $@22 '{' kd_curve_defs '}'
+
+    '{'       reduce using rule 146 ($@22)
+    $default  reduce using rule 143 (kd_curve_def_name_or_index)
+
+    $@22  go to state 399
+
+
+State 312
+
+  228 kd_motion_def: CURVE kd_curve_def_name_or_index . kd_optional_curve_duration
+
+    FOR  shift, and go to state 400
+
+    $default  reduce using rule 233 (kd_optional_curve_duration)
+
+    kd_optional_curve_duration  go to state 401
+
+
+State 313
+
+  145 kd_curve_def_name_or_index: $@21 . '{' kd_curve_defs '}'
+
+    '{'  shift, and go to state 402
+
+
+State 314
+
+  236 kd_motion_mapping: REGION .
+
+    $default  reduce using rule 236 (kd_motion_mapping)
+
+
+State 315
+
+  237 kd_motion_mapping: EVENT . DURATION
+
+    DURATION  shift, and go to state 403
+
+
+State 316
+
+  234 kd_motion_mapping: NONE .
+
+    $default  reduce using rule 234 (kd_motion_mapping)
+
+
+State 317
+
+  235 kd_motion_mapping: FRAME .
+
+    $default  reduce using rule 235 (kd_motion_mapping)
+
+
+State 318
+
+  238 kd_motion_mapping: BITMAP . SIZE
+
+    SIZE  shift, and go to state 404
+
+
+State 319
+
+  239 kd_motion_mapping: USER . UNUMBER
+
+    UNUMBER  shift, and go to state 405
+
+
+State 320
+
+  225 kd_motion_def: MAPPING kd_motion_mapping .
+  226              | MAPPING kd_motion_mapping . kd_motion_mapping
+
+    REGION  shift, and go to state 314
+    EVENT   shift, and go to state 315
+    NONE    shift, and go to state 316
+    FRAME   shift, and go to state 317
+    BITMAP  shift, and go to state 318
+    USER    shift, and go to state 319
+
+    $default  reduce using rule 225 (kd_motion_def)
+
+    kd_motion_mapping  go to state 406
+
+
+State 321
+
+  256 kd_motion_semantics: STYLE . MORPH
+
+    MORPH  shift, and go to state 407
+
+
+State 322
+
+  241 kd_motion_semantics: REGION . POSITION
+  242                    | REGION . SIZE
+
+    POSITION  shift, and go to state 408
+    SIZE      shift, and go to state 409
+
+
+State 323
+
+  243 kd_motion_semantics: TEXT . ALIGNMENT
+  246                    | TEXT . POSITION
+  247                    | TEXT . SIZE
+  250                    | TEXT . COLOR RG
+  251                    | TEXT . COLOR BA
+  257                    | TEXT . PATH
+  258                    | TEXT . PATH SECTION
+
+    COLOR      shift, and go to state 410
+    POSITION   shift, and go to state 411
+    SIZE       shift, and go to state 412
+    ALIGNMENT  shift, and go to state 413
+    PATH       shift, and go to state 414
+
+
+State 324
+
+  252 kd_motion_semantics: BACKGROUND . COLOR RG
+  253                    | BACKGROUND . COLOR BA
+
+    COLOR  shift, and go to state 415
+
+
+State 325
+
+  240 kd_motion_semantics: TIME .
+
+    $default  reduce using rule 240 (kd_motion_semantics)
+
+
+State 326
+
+  245 kd_motion_semantics: EXTERNAL . TEXT ALIGNMENT
+
+    TEXT  shift, and go to state 416
+
+
+State 327
+
+  244 kd_motion_semantics: INTERNAL . TEXT ALIGNMENT
+
+    TEXT  shift, and go to state 417
+
+
+State 328
+
+  248 kd_motion_semantics: MARKER . UNUMBER POSITION
+  266                    | MARKER . UNUMBER BITMAP
+
+    UNUMBER  shift, and go to state 418
+
+
+State 329
+
+  249 kd_motion_semantics: GLYPH . POINTER UNUMBER
+  267                    | GLYPH . POINTER UNUMBER BITMAP
+
+    POINTER  shift, and go to state 419
+
+
+State 330
+
+  264 kd_motion_semantics: BITMAP . POSITION
+  265                    | BITMAP . SIZE
+
+    POSITION  shift, and go to state 420
+    SIZE      shift, and go to state 421
+
+
+State 331
+
+  269 kd_motion_semantics: USER . UNUMBER
+
+    UNUMBER  shift, and go to state 422
+
+
+State 332
+
+  254 kd_motion_semantics: DRAW . COLOR RG
+  255                    | DRAW . COLOR BA
+  259                    | DRAW .
+  268                    | DRAW . WIDTH
+
+    COLOR  shift, and go to state 423
+    WIDTH  shift, and go to state 424
+
+    $default  reduce using rule 259 (kd_motion_semantics)
+
+
+State 333
+
+  260 kd_motion_semantics: VISIBLE . SECTION
+
+    SECTION  shift, and go to state 425
+
+
+State 334
+
+  262 kd_motion_semantics: HORIZONTAL . MARGINS
+
+    MARGINS  shift, and go to state 426
+
+
+State 335
+
+  263 kd_motion_semantics: VERTICAL . MARGINS
+
+    MARGINS  shift, and go to state 427
+
+
+State 336
+
+  261 kd_motion_semantics: 'z' .
+
+    $default  reduce using rule 261 (kd_motion_semantics)
+
+
+State 337
+
+  227 kd_motion_def: SEMANTICS kd_motion_semantics .
+
+    $default  reduce using rule 227 (kd_motion_def)
+
+
+State 338
+
+   98 kd_bitmap_def: DEFAULT PALETTE . kd_palette_name_or_index
+
+    UNUMBER  shift, and go to state 149
+    STRING   shift, and go to state 150
+
+    kd_palette_name_or_index  go to state 428
+
+
+State 339
+
+   97 kd_bitmap_def: SOURCE STRING .
+
+    $default  reduce using rule 97 (kd_bitmap_def)
+
+
+State 340
+
+  150 float: NUMBER .
+  152 bitmap_x_offset: NUMBER .
+
+    '%'       reduce using rule 150 (float)
+    $default  reduce using rule 152 (bitmap_x_offset)
+
+
+State 341
+
+  149 float: UNUMBER .
+  151 bitmap_x_offset: UNUMBER .
+
+    '%'       reduce using rule 149 (float)
+    $default  reduce using rule 151 (bitmap_x_offset)
+
+
+State 342
+
+  153 bitmap_x_offset: float . '%'
+
+    '%'  shift, and go to state 429
+
+
+State 343
+
+   99 kd_bitmap_def: OFFSET bitmap_x_offset . bitmap_y_offset
+
+    NUMBER   shift, and go to state 430
+    UNUMBER  shift, and go to state 431
+    FLOAT    shift, and go to state 38
+
+    float            go to state 432
+    bitmap_y_offset  go to state 433
+
+
+State 344
+
+  100 kd_bitmap_def: META STRING . '=' STRING
+  102              | META STRING . '=' UNUMBER $@20 '{' kd_byte_stream '}'
+
+    '='  shift, and go to state 434
+
+
+State 345
+
+   94 kd_bitmap_def: UNUMBER 'x' . UNUMBER 'x' UNUMBER $@18 '{' kd_bitmap_pixels '}'
+   96              | UNUMBER 'x' . UNUMBER PNG UNUMBER $@19 '{' kd_png_bitmap_pixels '}'
+
+    UNUMBER  shift, and go to state 435
+
+
+State 346
+
+   90 kd_palette_def: SOURCE STRING .
+
+    $default  reduce using rule 90 (kd_palette_def)
+
+
+State 347
+
+   89 kd_palette_def: UNUMBER COLORS . $@17 '{' kd_palette_colors '}'
+
+    $default  reduce using rule 88 ($@17)
+
+    $@17  go to state 436
+
+
+State 348
+
+  307 kd_font_mapping_def: RANGE . $@38 '{' kd_font_range_defs '}'
+  308                    | RANGE . kd_font_range_name_or_index
+
+    UNUMBER  shift, and go to state 437
+    STRING   shift, and go to state 438
+
+    $default  reduce using rule 306 ($@38)
+
+    kd_font_range_name_or_index  go to state 439
+    $@38                         go to state 440
+
+
+State 349
+
+   30 kd_def: DEFINE FONT MAPPING kd_opt_name $@12 '{' kd_font_mapping_defs '}' .
+
+    $default  reduce using rule 30 (kd_def)
+
+
+State 350
+
+  304 kd_font_mapping_defs: kd_font_mapping_defs kd_font_mapping_def .
+
+    $default  reduce using rule 304 (kd_font_mapping_defs)
+
+
+State 351
+
+  299 kd_font_range_def: FIRST . CODE POINT STRING
+  300                  | FIRST . CODE POINT UNUMBER
+  303                  | FIRST . BITMAP kd_bitmap_name_or_index
+
+    BITMAP  shift, and go to state 441
+    CODE    shift, and go to state 442
+
+
+State 352
+
+  301 kd_font_range_def: LAST . CODE POINT STRING
+  302                  | LAST . CODE POINT UNUMBER
+
+    CODE  shift, and go to state 443
+
+
+State 353
+
+   28 kd_def: DEFINE FONT RANGE kd_opt_name $@11 '{' kd_font_range_defs '}' .
+
+    $default  reduce using rule 28 (kd_def)
+
+
+State 354
+
+  297 kd_font_range_defs: kd_font_range_defs kd_font_range_def .
+
+    $default  reduce using rule 297 (kd_font_range_defs)
+
+
+State 355
+
+  214 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name '=' . kd_bitmap_name_or_index
+
+    UNUMBER  shift, and go to state 145
+    STRING   shift, and go to state 146
+
+    kd_bitmap_name_or_index  go to state 444
+
+
+State 356
+
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name $@34 . '{' kd_bitmap_defs '}'
+
+    '{'  shift, and go to state 445
+
+
+State 357
+
+   69 kd_region_defs: kd_region_defs . kd_region_def
+  181 kd_event_def: REGION kd_region_name_or_index $@25 '{' kd_region_defs . '}'
+
+    POSITION  shift, and go to state 230
+    SIZE      shift, and go to state 231
+    DEFAULT   shift, and go to state 232
+    METRIC    shift, and go to state 233
+    CLIP      shift, and go to state 234
+    META      shift, and go to state 235
+    '}'       shift, and go to state 446
+
+    kd_region_def  go to state 237
+
+
+State 358
+
+  183 kd_event_def: REGION $@26 '{' kd_region_defs '}' .
+
+    $default  reduce using rule 183 (kd_event_def)
+
+
+State 359
+
+  199 kd_event_def: MOTION $@29 '{' kd_motion_defs '}' .
+
+    $default  reduce using rule 199 (kd_event_def)
+
+
+State 360
+
+  272 kd_simple_timed_glyph_marker_def: GLYPH . POINTER UNUMBER
+  276                                 | GLYPH . UNUMBER IN timespec
+  277                                 | GLYPH . UNUMBER AT timespec
+
+    POINTER  shift, and go to state 447
+    UNUMBER  shift, and go to state 448
+
+
+State 361
+
+  275 kd_simple_timed_glyph_marker_def: PAUSE . FOR timespec
+
+    FOR  shift, and go to state 449
+
+
+State 362
+
+  274 kd_simple_timed_glyph_marker_def: HEIGHT . FROM float TO float
+
+    FROM  shift, and go to state 450
+
+
+State 363
+
+  202 kd_event_def: SIMPLE_TIMED_GLYPH_MARKER $@30 '{' kd_simple_timed_glyph_marker_defs '}' .
+
+    $default  reduce using rule 202 (kd_event_def)
+
+
+State 364
+
+  273 kd_simple_timed_glyph_marker_def: 'Y' . MAPPING kd_motion_mapping
+
+    MAPPING  shift, and go to state 451
+
+
+State 365
+
+  270 kd_simple_timed_glyph_marker_defs: kd_simple_timed_glyph_marker_defs kd_simple_timed_glyph_marker_def .
+
+    $default  reduce using rule 270 (kd_simple_timed_glyph_marker_defs)
+
+
+State 366
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM . STYLE kd_style_name_or_index TO STYLE kd_style_name_or_index
+
+    STYLE  shift, and go to state 452
+
+
+State 367
+
+  280 kd_simple_timed_glyph_style_morph_def: GLYPH . POINTER UNUMBER
+  283                                      | GLYPH . UNUMBER IN timespec
+  284                                      | GLYPH . UNUMBER AT timespec
+
+    POINTER  shift, and go to state 453
+    UNUMBER  shift, and go to state 454
+
+
+State 368
+
+  282 kd_simple_timed_glyph_style_morph_def: PAUSE . FOR timespec
+
+    FOR  shift, and go to state 455
+
+
+State 369
+
+  285 kd_simple_timed_glyph_style_morph_def: STRING . IN timespec
+  286                                      | STRING . AT timespec
+
+    AT  shift, and go to state 456
+    IN  shift, and go to state 457
+
+
+State 370
+
+  204 kd_event_def: SIMPLE_TIMED_GLYPH_STYLE_MORPH $@31 '{' kd_simple_timed_glyph_style_morph_defs '}' .
+
+    $default  reduce using rule 204 (kd_event_def)
+
+
+State 371
+
+  278 kd_simple_timed_glyph_style_morph_defs: kd_simple_timed_glyph_style_morph_defs kd_simple_timed_glyph_style_morph_def .
+
+    $default  reduce using rule 278 (kd_simple_timed_glyph_style_morph_defs)
+
+
+State 372
+
+  211 kd_event_def: BITMAP $@33 '{' kd_bitmap_defs '}' .
+
+    $default  reduce using rule 211 (kd_event_def)
+
+
+State 373
+
+  208 kd_event_def: PALETTE $@32 '{' kd_palette_defs '}' .
+
+    $default  reduce using rule 208 (kd_event_def)
+
+
+State 374
+
+  218 kd_meta_byte_stream_def: UNUMBER $@35 . '{' kd_byte_stream '}'
+
+    '{'  shift, and go to state 458
+
+
+State 375
+
+  186 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index $@27 '{' . kd_style_defs '}'
+
+    $default  reduce using rule 36 (kd_style_defs)
+
+    kd_style_defs  go to state 459
+
+
+State 376
+
+   35 kd_style_defs: kd_style_defs . kd_style_def
+  188 kd_event_def: kd_optional_secondary STYLE $@28 '{' kd_style_defs . '}'
+
+    TEXT        shift, and go to state 204
+    BACKGROUND  shift, and go to state 205
+    HALIGN      shift, and go to state 206
+    VALIGN      shift, and go to state 207
+    HLEFT       shift, and go to state 208
+    HCENTER     shift, and go to state 209
+    HRIGHT      shift, and go to state 210
+    VTOP        shift, and go to state 211
+    VCENTER     shift, and go to state 212
+    VBOTTOM     shift, and go to state 213
+    FONT        shift, and go to state 214
+    DRAW        shift, and go to state 215
+    BOLD        shift, and go to state 216
+    ITALICS     shift, and go to state 217
+    UNDERLINE   shift, and go to state 218
+    STRIKE      shift, and go to state 219
+    JUSTIFY     shift, and go to state 220
+    LEFT        shift, and go to state 221
+    TOP         shift, and go to state 222
+    RIGHT       shift, and go to state 223
+    BOTTOM      shift, and go to state 224
+    MARGINS     shift, and go to state 225
+    WRAP        shift, and go to state 226
+    META        shift, and go to state 227
+    '}'         shift, and go to state 460
+
+    kd_style_def  go to state 229
+
+
+State 377
+
+  103 kd_color: UNUMBER . UNUMBER UNUMBER
+  104         | UNUMBER . UNUMBER UNUMBER UNUMBER
+
+    UNUMBER  shift, and go to state 461
+
+
+State 378
+
+  105 kd_color: COLORSPEC .
+  106         | COLORSPEC . ALPHA UNUMBER
+
+    ALPHA  shift, and go to state 462
+
+    $default  reduce using rule 105 (kd_color)
+
+
+State 379
+
+   45 kd_style_def: TEXT COLOR kd_color .
+
+    $default  reduce using rule 45 (kd_style_def)
+
+
+State 380
+
+   46 kd_style_def: BACKGROUND COLOR kd_color .
+
+    $default  reduce using rule 46 (kd_style_def)
+
+
+State 381
+
+   55 kd_style_def: FONT SIZE float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 463
+
+
+State 382
+
+   56 kd_style_def: FONT WIDTH float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 464
+
+
+State 383
+
+   57 kd_style_def: FONT HEIGHT float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 465
+
+
+State 384
+
+   47 kd_style_def: DRAW COLOR kd_color .
+
+    $default  reduce using rule 47 (kd_style_def)
+
+
+State 385
+
+   58 kd_style_def: LEFT MARGIN float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 466
+
+
+State 386
+
+   59 kd_style_def: TOP MARGIN float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 467
+
+
+State 387
+
+   60 kd_style_def: RIGHT MARGIN float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 468
+
+
+State 388
+
+   61 kd_style_def: BOTTOM MARGIN float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 469
+
+
+State 389
+
+   66 kd_opt_space_metric: '%' .
+
+    $default  reduce using rule 66 (kd_opt_space_metric)
+
+
+State 390
+
+   67 kd_opt_space_metric: 'm' .
+
+    $default  reduce using rule 67 (kd_opt_space_metric)
+
+
+State 391
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric . float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 470
+
+
+State 392
+
+   63 kd_style_def: META STRING '=' . STRING
+   65             | META STRING '=' . UNUMBER $@13 '{' kd_byte_stream '}'
+
+    UNUMBER  shift, and go to state 471
+    STRING   shift, and go to state 472
+
+
+State 393
+
+   72 kd_region_def: POSITION float float .
+
+    $default  reduce using rule 72 (kd_region_def)
+
+
+State 394
+
+   73 kd_region_def: SIZE float float .
+
+    $default  reduce using rule 73 (kd_region_def)
+
+
+State 395
+
+   75 kd_region_def: DEFAULT STYLE kd_style_name_or_index .
+
+    $default  reduce using rule 75 (kd_region_def)
+
+
+State 396
+
+   76 kd_region_def: META STRING '=' . STRING
+   78              | META STRING '=' . UNUMBER $@14 '{' kd_byte_stream '}'
+
+    UNUMBER  shift, and go to state 473
+    STRING   shift, and go to state 474
+
+
+State 397
+
+   85 kd_curve_def: POINTS $@16 '{' . kd_curve_points '}'
+
+    $default  reduce using rule 116 (kd_curve_points)
+
+    kd_curve_points  go to state 475
+
+
+State 398
+
+   83 kd_curve_def: UNUMBER POINTS $@15 . '{' kd_curve_points '}'
+
+    '{'  shift, and go to state 476
+
+
+State 399
+
+  147 kd_curve_def_name_or_index: kd_curve_name_or_index $@22 . '{' kd_curve_defs '}'
+
+    '{'  shift, and go to state 477
+
+
+State 400
+
+  230 kd_optional_curve_duration: FOR . float
+  231                           | FOR . float '%'
+  232                           | FOR . float 'm'
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 478
+
+
+State 401
+
+  228 kd_motion_def: CURVE kd_curve_def_name_or_index kd_optional_curve_duration .
+
+    $default  reduce using rule 228 (kd_motion_def)
+
+
+State 402
+
+  145 kd_curve_def_name_or_index: $@21 '{' . kd_curve_defs '}'
+
+    $default  reduce using rule 80 (kd_curve_defs)
+
+    kd_curve_defs  go to state 479
+
+
+State 403
+
+  237 kd_motion_mapping: EVENT DURATION .
+
+    $default  reduce using rule 237 (kd_motion_mapping)
+
+
+State 404
+
+  238 kd_motion_mapping: BITMAP SIZE .
+
+    $default  reduce using rule 238 (kd_motion_mapping)
+
+
+State 405
+
+  239 kd_motion_mapping: USER UNUMBER .
+
+    $default  reduce using rule 239 (kd_motion_mapping)
+
+
+State 406
+
+  226 kd_motion_def: MAPPING kd_motion_mapping kd_motion_mapping .
+
+    $default  reduce using rule 226 (kd_motion_def)
+
+
+State 407
+
+  256 kd_motion_semantics: STYLE MORPH .
+
+    $default  reduce using rule 256 (kd_motion_semantics)
+
+
+State 408
+
+  241 kd_motion_semantics: REGION POSITION .
+
+    $default  reduce using rule 241 (kd_motion_semantics)
+
+
+State 409
+
+  242 kd_motion_semantics: REGION SIZE .
+
+    $default  reduce using rule 242 (kd_motion_semantics)
+
+
+State 410
+
+  250 kd_motion_semantics: TEXT COLOR . RG
+  251                    | TEXT COLOR . BA
+
+    RG  shift, and go to state 480
+    BA  shift, and go to state 481
+
+
+State 411
+
+  246 kd_motion_semantics: TEXT POSITION .
+
+    $default  reduce using rule 246 (kd_motion_semantics)
+
+
+State 412
+
+  247 kd_motion_semantics: TEXT SIZE .
+
+    $default  reduce using rule 247 (kd_motion_semantics)
+
+
+State 413
+
+  243 kd_motion_semantics: TEXT ALIGNMENT .
+
+    $default  reduce using rule 243 (kd_motion_semantics)
+
+
+State 414
+
+  257 kd_motion_semantics: TEXT PATH .
+  258                    | TEXT PATH . SECTION
+
+    SECTION  shift, and go to state 482
+
+    $default  reduce using rule 257 (kd_motion_semantics)
+
+
+State 415
+
+  252 kd_motion_semantics: BACKGROUND COLOR . RG
+  253                    | BACKGROUND COLOR . BA
+
+    RG  shift, and go to state 483
+    BA  shift, and go to state 484
+
+
+State 416
+
+  245 kd_motion_semantics: EXTERNAL TEXT . ALIGNMENT
+
+    ALIGNMENT  shift, and go to state 485
+
+
+State 417
+
+  244 kd_motion_semantics: INTERNAL TEXT . ALIGNMENT
+
+    ALIGNMENT  shift, and go to state 486
+
+
+State 418
+
+  248 kd_motion_semantics: MARKER UNUMBER . POSITION
+  266                    | MARKER UNUMBER . BITMAP
+
+    POSITION  shift, and go to state 487
+    BITMAP    shift, and go to state 488
+
+
+State 419
+
+  249 kd_motion_semantics: GLYPH POINTER . UNUMBER
+  267                    | GLYPH POINTER . UNUMBER BITMAP
+
+    UNUMBER  shift, and go to state 489
+
+
+State 420
+
+  264 kd_motion_semantics: BITMAP POSITION .
+
+    $default  reduce using rule 264 (kd_motion_semantics)
+
+
+State 421
+
+  265 kd_motion_semantics: BITMAP SIZE .
+
+    $default  reduce using rule 265 (kd_motion_semantics)
+
+
+State 422
+
+  269 kd_motion_semantics: USER UNUMBER .
+
+    $default  reduce using rule 269 (kd_motion_semantics)
+
+
+State 423
+
+  254 kd_motion_semantics: DRAW COLOR . RG
+  255                    | DRAW COLOR . BA
+
+    RG  shift, and go to state 490
+    BA  shift, and go to state 491
+
+
+State 424
+
+  268 kd_motion_semantics: DRAW WIDTH .
+
+    $default  reduce using rule 268 (kd_motion_semantics)
+
+
+State 425
+
+  260 kd_motion_semantics: VISIBLE SECTION .
+
+    $default  reduce using rule 260 (kd_motion_semantics)
+
+
+State 426
+
+  262 kd_motion_semantics: HORIZONTAL MARGINS .
+
+    $default  reduce using rule 262 (kd_motion_semantics)
+
+
+State 427
+
+  263 kd_motion_semantics: VERTICAL MARGINS .
+
+    $default  reduce using rule 263 (kd_motion_semantics)
+
+
+State 428
+
+   98 kd_bitmap_def: DEFAULT PALETTE kd_palette_name_or_index .
+
+    $default  reduce using rule 98 (kd_bitmap_def)
+
+
+State 429
+
+  153 bitmap_x_offset: float '%' .
+
+    $default  reduce using rule 153 (bitmap_x_offset)
+
+
+State 430
+
+  150 float: NUMBER .
+  155 bitmap_y_offset: NUMBER .
+
+    '%'       reduce using rule 150 (float)
+    $default  reduce using rule 155 (bitmap_y_offset)
+
+
+State 431
+
+  149 float: UNUMBER .
+  154 bitmap_y_offset: UNUMBER .
+
+    '%'       reduce using rule 149 (float)
+    $default  reduce using rule 154 (bitmap_y_offset)
+
+
+State 432
+
+  156 bitmap_y_offset: float . '%'
+
+    '%'  shift, and go to state 492
+
+
+State 433
+
+   99 kd_bitmap_def: OFFSET bitmap_x_offset bitmap_y_offset .
+
+    $default  reduce using rule 99 (kd_bitmap_def)
+
+
+State 434
+
+  100 kd_bitmap_def: META STRING '=' . STRING
+  102              | META STRING '=' . UNUMBER $@20 '{' kd_byte_stream '}'
+
+    UNUMBER  shift, and go to state 493
+    STRING   shift, and go to state 494
+
+
+State 435
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER . 'x' UNUMBER $@18 '{' kd_bitmap_pixels '}'
+   96              | UNUMBER 'x' UNUMBER . PNG UNUMBER $@19 '{' kd_png_bitmap_pixels '}'
+
+    PNG  shift, and go to state 495
+    'x'  shift, and go to state 496
+
+
+State 436
+
+   89 kd_palette_def: UNUMBER COLORS $@17 . '{' kd_palette_colors '}'
+
+    '{'  shift, and go to state 497
+
+
+State 437
+
+  140 kd_font_range_name_or_index: UNUMBER .
+
+    $default  reduce using rule 140 (kd_font_range_name_or_index)
+
+
+State 438
+
+  139 kd_font_range_name_or_index: STRING .
+
+    $default  reduce using rule 139 (kd_font_range_name_or_index)
+
+
+State 439
+
+  308 kd_font_mapping_def: RANGE kd_font_range_name_or_index .
+
+    $default  reduce using rule 308 (kd_font_mapping_def)
+
+
+State 440
+
+  307 kd_font_mapping_def: RANGE $@38 . '{' kd_font_range_defs '}'
+
+    '{'  shift, and go to state 498
+
+
+State 441
+
+  303 kd_font_range_def: FIRST BITMAP . kd_bitmap_name_or_index
+
+    UNUMBER  shift, and go to state 145
+    STRING   shift, and go to state 146
+
+    kd_bitmap_name_or_index  go to state 499
+
+
+State 442
+
+  299 kd_font_range_def: FIRST CODE . POINT STRING
+  300                  | FIRST CODE . POINT UNUMBER
+
+    POINT  shift, and go to state 500
+
+
+State 443
+
+  301 kd_font_range_def: LAST CODE . POINT STRING
+  302                  | LAST CODE . POINT UNUMBER
+
+    POINT  shift, and go to state 501
+
+
+State 444
+
+  214 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name '=' kd_bitmap_name_or_index .
+
+    $default  reduce using rule 214 (kd_event_def)
+
+
+State 445
+
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name $@34 '{' . kd_bitmap_defs '}'
+
+    $default  reduce using rule 92 (kd_bitmap_defs)
+
+    kd_bitmap_defs  go to state 502
+
+
+State 446
+
+  181 kd_event_def: REGION kd_region_name_or_index $@25 '{' kd_region_defs '}' .
+
+    $default  reduce using rule 181 (kd_event_def)
+
+
+State 447
+
+  272 kd_simple_timed_glyph_marker_def: GLYPH POINTER . UNUMBER
+
+    UNUMBER  shift, and go to state 503
+
+
+State 448
+
+  276 kd_simple_timed_glyph_marker_def: GLYPH UNUMBER . IN timespec
+  277                                 | GLYPH UNUMBER . AT timespec
+
+    AT  shift, and go to state 504
+    IN  shift, and go to state 505
+
+
+State 449
+
+  275 kd_simple_timed_glyph_marker_def: PAUSE FOR . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 506
+    float60   go to state 41
+
+
+State 450
+
+  274 kd_simple_timed_glyph_marker_def: HEIGHT FROM . float TO float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 507
+
+
+State 451
+
+  273 kd_simple_timed_glyph_marker_def: 'Y' MAPPING . kd_motion_mapping
+
+    REGION  shift, and go to state 314
+    EVENT   shift, and go to state 315
+    NONE    shift, and go to state 316
+    FRAME   shift, and go to state 317
+    BITMAP  shift, and go to state 318
+    USER    shift, and go to state 319
+
+    kd_motion_mapping  go to state 508
+
+
+State 452
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM STYLE . kd_style_name_or_index TO STYLE kd_style_name_or_index
+
+    UNUMBER  shift, and go to state 199
+    STRING   shift, and go to state 200
+
+    kd_style_name_or_index  go to state 509
+
+
+State 453
+
+  280 kd_simple_timed_glyph_style_morph_def: GLYPH POINTER . UNUMBER
+
+    UNUMBER  shift, and go to state 510
+
+
+State 454
+
+  283 kd_simple_timed_glyph_style_morph_def: GLYPH UNUMBER . IN timespec
+  284                                      | GLYPH UNUMBER . AT timespec
+
+    AT  shift, and go to state 511
+    IN  shift, and go to state 512
+
+
+State 455
+
+  282 kd_simple_timed_glyph_style_morph_def: PAUSE FOR . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 513
+    float60   go to state 41
+
+
+State 456
+
+  286 kd_simple_timed_glyph_style_morph_def: STRING AT . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 514
+    float60   go to state 41
+
+
+State 457
+
+  285 kd_simple_timed_glyph_style_morph_def: STRING IN . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 515
+    float60   go to state 41
+
+
+State 458
+
+  218 kd_meta_byte_stream_def: UNUMBER $@35 '{' . kd_byte_stream '}'
+
+    $default  reduce using rule 124 (kd_byte_stream)
+
+    kd_byte_stream  go to state 516
+
+
+State 459
+
+   35 kd_style_defs: kd_style_defs . kd_style_def
+  186 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index $@27 '{' kd_style_defs . '}'
+
+    TEXT        shift, and go to state 204
+    BACKGROUND  shift, and go to state 205
+    HALIGN      shift, and go to state 206
+    VALIGN      shift, and go to state 207
+    HLEFT       shift, and go to state 208
+    HCENTER     shift, and go to state 209
+    HRIGHT      shift, and go to state 210
+    VTOP        shift, and go to state 211
+    VCENTER     shift, and go to state 212
+    VBOTTOM     shift, and go to state 213
+    FONT        shift, and go to state 214
+    DRAW        shift, and go to state 215
+    BOLD        shift, and go to state 216
+    ITALICS     shift, and go to state 217
+    UNDERLINE   shift, and go to state 218
+    STRIKE      shift, and go to state 219
+    JUSTIFY     shift, and go to state 220
+    LEFT        shift, and go to state 221
+    TOP         shift, and go to state 222
+    RIGHT       shift, and go to state 223
+    BOTTOM      shift, and go to state 224
+    MARGINS     shift, and go to state 225
+    WRAP        shift, and go to state 226
+    META        shift, and go to state 227
+    '}'         shift, and go to state 517
+
+    kd_style_def  go to state 229
+
+
+State 460
+
+  188 kd_event_def: kd_optional_secondary STYLE $@28 '{' kd_style_defs '}' .
+
+    $default  reduce using rule 188 (kd_event_def)
+
+
+State 461
+
+  103 kd_color: UNUMBER UNUMBER . UNUMBER
+  104         | UNUMBER UNUMBER . UNUMBER UNUMBER
+
+    UNUMBER  shift, and go to state 518
+
+
+State 462
+
+  106 kd_color: COLORSPEC ALPHA . UNUMBER
+
+    UNUMBER  shift, and go to state 519
+
+
+State 463
+
+   55 kd_style_def: FONT SIZE float kd_opt_space_metric .
+
+    $default  reduce using rule 55 (kd_style_def)
+
+
+State 464
+
+   56 kd_style_def: FONT WIDTH float kd_opt_space_metric .
+
+    $default  reduce using rule 56 (kd_style_def)
+
+
+State 465
+
+   57 kd_style_def: FONT HEIGHT float kd_opt_space_metric .
+
+    $default  reduce using rule 57 (kd_style_def)
+
+
+State 466
+
+   58 kd_style_def: LEFT MARGIN float kd_opt_space_metric .
+
+    $default  reduce using rule 58 (kd_style_def)
+
+
+State 467
+
+   59 kd_style_def: TOP MARGIN float kd_opt_space_metric .
+
+    $default  reduce using rule 59 (kd_style_def)
+
+
+State 468
+
+   60 kd_style_def: RIGHT MARGIN float kd_opt_space_metric .
+
+    $default  reduce using rule 60 (kd_style_def)
+
+
+State 469
+
+   61 kd_style_def: BOTTOM MARGIN float kd_opt_space_metric .
+
+    $default  reduce using rule 61 (kd_style_def)
+
+
+State 470
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float . kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 520
+
+
+State 471
+
+   65 kd_style_def: META STRING '=' UNUMBER . $@13 '{' kd_byte_stream '}'
+
+    $default  reduce using rule 64 ($@13)
+
+    $@13  go to state 521
+
+
+State 472
+
+   63 kd_style_def: META STRING '=' STRING .
+
+    $default  reduce using rule 63 (kd_style_def)
+
+
+State 473
+
+   78 kd_region_def: META STRING '=' UNUMBER . $@14 '{' kd_byte_stream '}'
+
+    $default  reduce using rule 77 ($@14)
+
+    $@14  go to state 522
+
+
+State 474
+
+   76 kd_region_def: META STRING '=' STRING .
+
+    $default  reduce using rule 76 (kd_region_def)
+
+
+State 475
+
+   85 kd_curve_def: POINTS $@16 '{' kd_curve_points . '}'
+  115 kd_curve_points: kd_curve_points . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+    '}'      shift, and go to state 523
+
+    float  go to state 524
+
+
+State 476
+
+   83 kd_curve_def: UNUMBER POINTS $@15 '{' . kd_curve_points '}'
+
+    $default  reduce using rule 116 (kd_curve_points)
+
+    kd_curve_points  go to state 525
+
+
+State 477
+
+  147 kd_curve_def_name_or_index: kd_curve_name_or_index $@22 '{' . kd_curve_defs '}'
+
+    $default  reduce using rule 80 (kd_curve_defs)
+
+    kd_curve_defs  go to state 526
+
+
+State 478
+
+  230 kd_optional_curve_duration: FOR float .
+  231                           | FOR float . '%'
+  232                           | FOR float . 'm'
+
+    '%'  shift, and go to state 527
+    'm'  shift, and go to state 528
+
+    $default  reduce using rule 230 (kd_optional_curve_duration)
+
+
+State 479
+
+   79 kd_curve_defs: kd_curve_defs . kd_curve_def
+  145 kd_curve_def_name_or_index: $@21 '{' kd_curve_defs . '}'
+
+    POINTS        shift, and go to state 238
+    NONE          shift, and go to state 239
+    BEZIER_CUBIC  shift, and go to state 240
+    LINEAR        shift, and go to state 241
+    CATMULL_ROM   shift, and go to state 242
+    BSPLINE       shift, and go to state 243
+    STATIC        shift, and go to state 244
+    UNUMBER       shift, and go to state 245
+    '}'           shift, and go to state 529
+
+    kd_curve_def  go to state 247
+    kd_curvetype  go to state 248
+
+
+State 480
+
+  250 kd_motion_semantics: TEXT COLOR RG .
+
+    $default  reduce using rule 250 (kd_motion_semantics)
+
+
+State 481
+
+  251 kd_motion_semantics: TEXT COLOR BA .
+
+    $default  reduce using rule 251 (kd_motion_semantics)
+
+
+State 482
+
+  258 kd_motion_semantics: TEXT PATH SECTION .
+
+    $default  reduce using rule 258 (kd_motion_semantics)
+
+
+State 483
+
+  252 kd_motion_semantics: BACKGROUND COLOR RG .
+
+    $default  reduce using rule 252 (kd_motion_semantics)
+
+
+State 484
+
+  253 kd_motion_semantics: BACKGROUND COLOR BA .
+
+    $default  reduce using rule 253 (kd_motion_semantics)
+
+
+State 485
+
+  245 kd_motion_semantics: EXTERNAL TEXT ALIGNMENT .
+
+    $default  reduce using rule 245 (kd_motion_semantics)
+
+
+State 486
+
+  244 kd_motion_semantics: INTERNAL TEXT ALIGNMENT .
+
+    $default  reduce using rule 244 (kd_motion_semantics)
+
+
+State 487
+
+  248 kd_motion_semantics: MARKER UNUMBER POSITION .
+
+    $default  reduce using rule 248 (kd_motion_semantics)
+
+
+State 488
+
+  266 kd_motion_semantics: MARKER UNUMBER BITMAP .
+
+    $default  reduce using rule 266 (kd_motion_semantics)
+
+
+State 489
+
+  249 kd_motion_semantics: GLYPH POINTER UNUMBER .
+  267                    | GLYPH POINTER UNUMBER . BITMAP
+
+    BITMAP  shift, and go to state 530
+
+    $default  reduce using rule 249 (kd_motion_semantics)
+
+
+State 490
+
+  254 kd_motion_semantics: DRAW COLOR RG .
+
+    $default  reduce using rule 254 (kd_motion_semantics)
+
+
+State 491
+
+  255 kd_motion_semantics: DRAW COLOR BA .
+
+    $default  reduce using rule 255 (kd_motion_semantics)
+
+
+State 492
+
+  156 bitmap_y_offset: float '%' .
+
+    $default  reduce using rule 156 (bitmap_y_offset)
+
+
+State 493
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER . $@20 '{' kd_byte_stream '}'
+
+    $default  reduce using rule 101 ($@20)
+
+    $@20  go to state 531
+
+
+State 494
+
+  100 kd_bitmap_def: META STRING '=' STRING .
+
+    $default  reduce using rule 100 (kd_bitmap_def)
+
+
+State 495
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG . UNUMBER $@19 '{' kd_png_bitmap_pixels '}'
+
+    UNUMBER  shift, and go to state 532
+
+
+State 496
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' . UNUMBER $@18 '{' kd_bitmap_pixels '}'
+
+    UNUMBER  shift, and go to state 533
+
+
+State 497
+
+   89 kd_palette_def: UNUMBER COLORS $@17 '{' . kd_palette_colors '}'
+
+    $default  reduce using rule 118 (kd_palette_colors)
+
+    kd_palette_colors  go to state 534
+
+
+State 498
+
+  307 kd_font_mapping_def: RANGE $@38 '{' . kd_font_range_defs '}'
+
+    $default  reduce using rule 298 (kd_font_range_defs)
+
+    kd_font_range_defs  go to state 535
+
+
+State 499
+
+  303 kd_font_range_def: FIRST BITMAP kd_bitmap_name_or_index .
+
+    $default  reduce using rule 303 (kd_font_range_def)
+
+
+State 500
+
+  299 kd_font_range_def: FIRST CODE POINT . STRING
+  300                  | FIRST CODE POINT . UNUMBER
+
+    UNUMBER  shift, and go to state 536
+    STRING   shift, and go to state 537
+
+
+State 501
+
+  301 kd_font_range_def: LAST CODE POINT . STRING
+  302                  | LAST CODE POINT . UNUMBER
+
+    UNUMBER  shift, and go to state 538
+    STRING   shift, and go to state 539
+
+
+State 502
+
+   91 kd_bitmap_defs: kd_bitmap_defs . kd_bitmap_def
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name $@34 '{' kd_bitmap_defs . '}'
+
+    DEFAULT  shift, and go to state 255
+    SOURCE   shift, and go to state 256
+    OFFSET   shift, and go to state 257
+    META     shift, and go to state 258
+    UNUMBER  shift, and go to state 259
+    '}'      shift, and go to state 540
+
+    kd_bitmap_def  go to state 261
+
+
+State 503
+
+  272 kd_simple_timed_glyph_marker_def: GLYPH POINTER UNUMBER .
+
+    $default  reduce using rule 272 (kd_simple_timed_glyph_marker_def)
+
+
+State 504
+
+  277 kd_simple_timed_glyph_marker_def: GLYPH UNUMBER AT . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 541
+    float60   go to state 41
+
+
+State 505
+
+  276 kd_simple_timed_glyph_marker_def: GLYPH UNUMBER IN . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 542
+    float60   go to state 41
+
+
+State 506
+
+  275 kd_simple_timed_glyph_marker_def: PAUSE FOR timespec .
+
+    $default  reduce using rule 275 (kd_simple_timed_glyph_marker_def)
+
+
+State 507
+
+  274 kd_simple_timed_glyph_marker_def: HEIGHT FROM float . TO float
+
+    TO  shift, and go to state 543
+
+
+State 508
+
+  273 kd_simple_timed_glyph_marker_def: 'Y' MAPPING kd_motion_mapping .
+
+    $default  reduce using rule 273 (kd_simple_timed_glyph_marker_def)
+
+
+State 509
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM STYLE kd_style_name_or_index . TO STYLE kd_style_name_or_index
+
+    TO  shift, and go to state 544
+
+
+State 510
+
+  280 kd_simple_timed_glyph_style_morph_def: GLYPH POINTER UNUMBER .
+
+    $default  reduce using rule 280 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 511
+
+  284 kd_simple_timed_glyph_style_morph_def: GLYPH UNUMBER AT . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 545
+    float60   go to state 41
+
+
+State 512
+
+  283 kd_simple_timed_glyph_style_morph_def: GLYPH UNUMBER IN . timespec
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 37
+    FLOAT    shift, and go to state 38
+
+    float     go to state 39
+    timespec  go to state 546
+    float60   go to state 41
+
+
+State 513
+
+  282 kd_simple_timed_glyph_style_morph_def: PAUSE FOR timespec .
+
+    $default  reduce using rule 282 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 514
+
+  286 kd_simple_timed_glyph_style_morph_def: STRING AT timespec .
+
+    $default  reduce using rule 286 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 515
+
+  285 kd_simple_timed_glyph_style_morph_def: STRING IN timespec .
+
+    $default  reduce using rule 285 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 516
+
+  123 kd_byte_stream: kd_byte_stream . UNUMBER kd_opt_comma
+  218 kd_meta_byte_stream_def: UNUMBER $@35 '{' kd_byte_stream . '}'
+
+    UNUMBER  shift, and go to state 547
+    '}'      shift, and go to state 548
+
+
+State 517
+
+  186 kd_event_def: kd_optional_secondary STYLE kd_style_name_or_index $@27 '{' kd_style_defs '}' .
+
+    $default  reduce using rule 186 (kd_event_def)
+
+
+State 518
+
+  103 kd_color: UNUMBER UNUMBER UNUMBER .
+  104         | UNUMBER UNUMBER UNUMBER . UNUMBER
+
+    UNUMBER  shift, and go to state 549
+
+    $default  reduce using rule 103 (kd_color)
+
+
+State 519
+
+  106 kd_color: COLORSPEC ALPHA UNUMBER .
+
+    $default  reduce using rule 106 (kd_color)
+
+
+State 520
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float kd_opt_space_metric . float kd_opt_space_metric float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 550
+
+
+State 521
+
+   65 kd_style_def: META STRING '=' UNUMBER $@13 . '{' kd_byte_stream '}'
+
+    '{'  shift, and go to state 551
+
+
+State 522
+
+   78 kd_region_def: META STRING '=' UNUMBER $@14 . '{' kd_byte_stream '}'
+
+    '{'  shift, and go to state 552
+
+
+State 523
+
+   85 kd_curve_def: POINTS $@16 '{' kd_curve_points '}' .
+
+    $default  reduce using rule 85 (kd_curve_def)
+
+
+State 524
+
+  115 kd_curve_points: kd_curve_points float .
+
+    $default  reduce using rule 115 (kd_curve_points)
+
+
+State 525
+
+   83 kd_curve_def: UNUMBER POINTS $@15 '{' kd_curve_points . '}'
+  115 kd_curve_points: kd_curve_points . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+    '}'      shift, and go to state 553
+
+    float  go to state 524
+
+
+State 526
+
+   79 kd_curve_defs: kd_curve_defs . kd_curve_def
+  147 kd_curve_def_name_or_index: kd_curve_name_or_index $@22 '{' kd_curve_defs . '}'
+
+    POINTS        shift, and go to state 238
+    NONE          shift, and go to state 239
+    BEZIER_CUBIC  shift, and go to state 240
+    LINEAR        shift, and go to state 241
+    CATMULL_ROM   shift, and go to state 242
+    BSPLINE       shift, and go to state 243
+    STATIC        shift, and go to state 244
+    UNUMBER       shift, and go to state 245
+    '}'           shift, and go to state 554
+
+    kd_curve_def  go to state 247
+    kd_curvetype  go to state 248
+
+
+State 527
+
+  231 kd_optional_curve_duration: FOR float '%' .
+
+    $default  reduce using rule 231 (kd_optional_curve_duration)
+
+
+State 528
+
+  232 kd_optional_curve_duration: FOR float 'm' .
+
+    $default  reduce using rule 232 (kd_optional_curve_duration)
+
+
+State 529
+
+  145 kd_curve_def_name_or_index: $@21 '{' kd_curve_defs '}' .
+
+    $default  reduce using rule 145 (kd_curve_def_name_or_index)
+
+
+State 530
+
+  267 kd_motion_semantics: GLYPH POINTER UNUMBER BITMAP .
+
+    $default  reduce using rule 267 (kd_motion_semantics)
+
+
+State 531
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER $@20 . '{' kd_byte_stream '}'
+
+    '{'  shift, and go to state 555
+
+
+State 532
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER . $@19 '{' kd_png_bitmap_pixels '}'
+
+    $default  reduce using rule 95 ($@19)
+
+    $@19  go to state 556
+
+
+State 533
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER . $@18 '{' kd_bitmap_pixels '}'
+
+    $default  reduce using rule 93 ($@18)
+
+    $@18  go to state 557
+
+
+State 534
+
+   89 kd_palette_def: UNUMBER COLORS $@17 '{' kd_palette_colors . '}'
+  117 kd_palette_colors: kd_palette_colors . '{' kd_color '}' kd_opt_comma
+
+    '{'  shift, and go to state 558
+    '}'  shift, and go to state 559
+
+
+State 535
+
+  297 kd_font_range_defs: kd_font_range_defs . kd_font_range_def
+  307 kd_font_mapping_def: RANGE $@38 '{' kd_font_range_defs . '}'
+
+    FIRST  shift, and go to state 351
+    LAST   shift, and go to state 352
+    '}'    shift, and go to state 560
+
+    kd_font_range_def  go to state 354
+
+
+State 536
+
+  300 kd_font_range_def: FIRST CODE POINT UNUMBER .
+
+    $default  reduce using rule 300 (kd_font_range_def)
+
+
+State 537
+
+  299 kd_font_range_def: FIRST CODE POINT STRING .
+
+    $default  reduce using rule 299 (kd_font_range_def)
+
+
+State 538
+
+  302 kd_font_range_def: LAST CODE POINT UNUMBER .
+
+    $default  reduce using rule 302 (kd_font_range_def)
+
+
+State 539
+
+  301 kd_font_range_def: LAST CODE POINT STRING .
+
+    $default  reduce using rule 301 (kd_font_range_def)
+
+
+State 540
+
+  213 kd_event_def: DEFINE LOCAL BITMAP kd_opt_name $@34 '{' kd_bitmap_defs '}' .
+
+    $default  reduce using rule 213 (kd_event_def)
+
+
+State 541
+
+  277 kd_simple_timed_glyph_marker_def: GLYPH UNUMBER AT timespec .
+
+    $default  reduce using rule 277 (kd_simple_timed_glyph_marker_def)
+
+
+State 542
+
+  276 kd_simple_timed_glyph_marker_def: GLYPH UNUMBER IN timespec .
+
+    $default  reduce using rule 276 (kd_simple_timed_glyph_marker_def)
+
+
+State 543
+
+  274 kd_simple_timed_glyph_marker_def: HEIGHT FROM float TO . float
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 561
+
+
+State 544
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM STYLE kd_style_name_or_index TO . STYLE kd_style_name_or_index
+
+    STYLE  shift, and go to state 562
+
+
+State 545
+
+  284 kd_simple_timed_glyph_style_morph_def: GLYPH UNUMBER AT timespec .
+
+    $default  reduce using rule 284 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 546
+
+  283 kd_simple_timed_glyph_style_morph_def: GLYPH UNUMBER IN timespec .
+
+    $default  reduce using rule 283 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 547
+
+  123 kd_byte_stream: kd_byte_stream UNUMBER . kd_opt_comma
+
+    ','  shift, and go to state 563
+
+    $default  reduce using rule 292 (kd_opt_comma)
+
+    kd_opt_comma  go to state 564
+
+
+State 548
+
+  218 kd_meta_byte_stream_def: UNUMBER $@35 '{' kd_byte_stream '}' .
+
+    $default  reduce using rule 218 (kd_meta_byte_stream_def)
+
+
+State 549
+
+  104 kd_color: UNUMBER UNUMBER UNUMBER UNUMBER .
+
+    $default  reduce using rule 104 (kd_color)
+
+
+State 550
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float kd_opt_space_metric float . kd_opt_space_metric float kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 565
+
+
+State 551
+
+   65 kd_style_def: META STRING '=' UNUMBER $@13 '{' . kd_byte_stream '}'
+
+    $default  reduce using rule 124 (kd_byte_stream)
+
+    kd_byte_stream  go to state 566
+
+
+State 552
+
+   78 kd_region_def: META STRING '=' UNUMBER $@14 '{' . kd_byte_stream '}'
+
+    $default  reduce using rule 124 (kd_byte_stream)
+
+    kd_byte_stream  go to state 567
+
+
+State 553
+
+   83 kd_curve_def: UNUMBER POINTS $@15 '{' kd_curve_points '}' .
+
+    $default  reduce using rule 83 (kd_curve_def)
+
+
+State 554
+
+  147 kd_curve_def_name_or_index: kd_curve_name_or_index $@22 '{' kd_curve_defs '}' .
+
+    $default  reduce using rule 147 (kd_curve_def_name_or_index)
+
+
+State 555
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER $@20 '{' . kd_byte_stream '}'
+
+    $default  reduce using rule 124 (kd_byte_stream)
+
+    kd_byte_stream  go to state 568
+
+
+State 556
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER $@19 . '{' kd_png_bitmap_pixels '}'
+
+    '{'  shift, and go to state 569
+
+
+State 557
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER $@18 . '{' kd_bitmap_pixels '}'
+
+    '{'  shift, and go to state 570
+
+
+State 558
+
+  117 kd_palette_colors: kd_palette_colors '{' . kd_color '}' kd_opt_comma
+
+    UNUMBER    shift, and go to state 377
+    COLORSPEC  shift, and go to state 378
+
+    kd_color  go to state 571
+
+
+State 559
+
+   89 kd_palette_def: UNUMBER COLORS $@17 '{' kd_palette_colors '}' .
+
+    $default  reduce using rule 89 (kd_palette_def)
+
+
+State 560
+
+  307 kd_font_mapping_def: RANGE $@38 '{' kd_font_range_defs '}' .
+
+    $default  reduce using rule 307 (kd_font_mapping_def)
+
+
+State 561
+
+  274 kd_simple_timed_glyph_marker_def: HEIGHT FROM float TO float .
+
+    $default  reduce using rule 274 (kd_simple_timed_glyph_marker_def)
+
+
+State 562
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM STYLE kd_style_name_or_index TO STYLE . kd_style_name_or_index
+
+    UNUMBER  shift, and go to state 199
+    STRING   shift, and go to state 200
+
+    kd_style_name_or_index  go to state 572
+
+
+State 563
+
+  291 kd_opt_comma: ',' .
+
+    $default  reduce using rule 291 (kd_opt_comma)
+
+
+State 564
+
+  123 kd_byte_stream: kd_byte_stream UNUMBER kd_opt_comma .
+
+    $default  reduce using rule 123 (kd_byte_stream)
+
+
+State 565
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric . float kd_opt_space_metric
+
+    NUMBER   shift, and go to state 36
+    UNUMBER  shift, and go to state 172
+    FLOAT    shift, and go to state 38
+
+    float  go to state 573
+
+
+State 566
+
+   65 kd_style_def: META STRING '=' UNUMBER $@13 '{' kd_byte_stream . '}'
+  123 kd_byte_stream: kd_byte_stream . UNUMBER kd_opt_comma
+
+    UNUMBER  shift, and go to state 547
+    '}'      shift, and go to state 574
+
+
+State 567
+
+   78 kd_region_def: META STRING '=' UNUMBER $@14 '{' kd_byte_stream . '}'
+  123 kd_byte_stream: kd_byte_stream . UNUMBER kd_opt_comma
+
+    UNUMBER  shift, and go to state 547
+    '}'      shift, and go to state 575
+
+
+State 568
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER $@20 '{' kd_byte_stream . '}'
+  123 kd_byte_stream: kd_byte_stream . UNUMBER kd_opt_comma
+
+    UNUMBER  shift, and go to state 547
+    '}'      shift, and go to state 576
+
+
+State 569
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER $@19 '{' . kd_png_bitmap_pixels '}'
+
+    $default  reduce using rule 122 (kd_png_bitmap_pixels)
+
+    kd_png_bitmap_pixels  go to state 577
+
+
+State 570
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER $@18 '{' . kd_bitmap_pixels '}'
+
+    $default  reduce using rule 120 (kd_bitmap_pixels)
+
+    kd_bitmap_pixels  go to state 578
+
+
+State 571
+
+  117 kd_palette_colors: kd_palette_colors '{' kd_color . '}' kd_opt_comma
+
+    '}'  shift, and go to state 579
+
+
+State 572
+
+  281 kd_simple_timed_glyph_style_morph_def: FROM STYLE kd_style_name_or_index TO STYLE kd_style_name_or_index .
+
+    $default  reduce using rule 281 (kd_simple_timed_glyph_style_morph_def)
+
+
+State 573
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float . kd_opt_space_metric
+
+    '%'  shift, and go to state 389
+    'm'  shift, and go to state 390
+
+    $default  reduce using rule 68 (kd_opt_space_metric)
+
+    kd_opt_space_metric  go to state 580
+
+
+State 574
+
+   65 kd_style_def: META STRING '=' UNUMBER $@13 '{' kd_byte_stream '}' .
+
+    $default  reduce using rule 65 (kd_style_def)
+
+
+State 575
+
+   78 kd_region_def: META STRING '=' UNUMBER $@14 '{' kd_byte_stream '}' .
+
+    $default  reduce using rule 78 (kd_region_def)
+
+
+State 576
+
+  102 kd_bitmap_def: META STRING '=' UNUMBER $@20 '{' kd_byte_stream '}' .
+
+    $default  reduce using rule 102 (kd_bitmap_def)
+
+
+State 577
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER $@19 '{' kd_png_bitmap_pixels . '}'
+  121 kd_png_bitmap_pixels: kd_png_bitmap_pixels . UNUMBER kd_opt_comma
+
+    UNUMBER  shift, and go to state 581
+    '}'      shift, and go to state 582
+
+
+State 578
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER $@18 '{' kd_bitmap_pixels . '}'
+  119 kd_bitmap_pixels: kd_bitmap_pixels . UNUMBER kd_opt_comma
+
+    UNUMBER  shift, and go to state 583
+    '}'      shift, and go to state 584
+
+
+State 579
+
+  117 kd_palette_colors: kd_palette_colors '{' kd_color '}' . kd_opt_comma
+
+    ','  shift, and go to state 563
+
+    $default  reduce using rule 292 (kd_opt_comma)
+
+    kd_opt_comma  go to state 585
+
+
+State 580
+
+   62 kd_style_def: MARGINS float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric float kd_opt_space_metric .
+
+    $default  reduce using rule 62 (kd_style_def)
+
+
+State 581
+
+  121 kd_png_bitmap_pixels: kd_png_bitmap_pixels UNUMBER . kd_opt_comma
+
+    ','  shift, and go to state 563
+
+    $default  reduce using rule 292 (kd_opt_comma)
+
+    kd_opt_comma  go to state 586
+
+
+State 582
+
+   96 kd_bitmap_def: UNUMBER 'x' UNUMBER PNG UNUMBER $@19 '{' kd_png_bitmap_pixels '}' .
+
+    $default  reduce using rule 96 (kd_bitmap_def)
+
+
+State 583
+
+  119 kd_bitmap_pixels: kd_bitmap_pixels UNUMBER . kd_opt_comma
+
+    ','  shift, and go to state 563
+
+    $default  reduce using rule 292 (kd_opt_comma)
+
+    kd_opt_comma  go to state 587
+
+
+State 584
+
+   94 kd_bitmap_def: UNUMBER 'x' UNUMBER 'x' UNUMBER $@18 '{' kd_bitmap_pixels '}' .
+
+    $default  reduce using rule 94 (kd_bitmap_def)
+
+
+State 585
+
+  117 kd_palette_colors: kd_palette_colors '{' kd_color '}' kd_opt_comma .
+
+    $default  reduce using rule 117 (kd_palette_colors)
+
+
+State 586
+
+  121 kd_png_bitmap_pixels: kd_png_bitmap_pixels UNUMBER kd_opt_comma .
+
+    $default  reduce using rule 121 (kd_png_bitmap_pixels)
+
+
+State 587
+
+  119 kd_bitmap_pixels: kd_bitmap_pixels UNUMBER kd_opt_comma .
+
+    $default  reduce using rule 119 (kd_bitmap_pixels)
